@@ -1014,18 +1014,18 @@ ul{margin:0; padding:0; list-style:none;}
 
       <div id="adminDashboard" class="admin-wrap">
         <div class="admin-bar">
-          <div><h1 style="font-size:22px;">لوحة تحكم المنتجات</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;">أضف وعدّل وامسح المنتجات والأقسام، وحمّل ملف التحديث لرفعه على الاستضافة.</p></div>
+          <div><h1 style="font-size:22px;">لوحة تحكم المنتجات</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;">أضف وعدّل وامسح المنتجات والأقسام — أي تعديل بيظهر لكل زوار الموقع فورًا.</p></div>
           <div class="admin-actions">
             <button class="btn btn-outline btn-sm" id="adminImportBtn" type="button">استيراد ملف بيانات</button>
             <input type="file" id="adminImportFile" accept="application/json" hidden>
-            <button class="btn btn-sky btn-sm" id="adminExportBtn" type="button">⬇️ تنزيل ملف التحديث</button>
+            <button class="btn btn-sky btn-sm" id="adminExportBtn" type="button">⬇️ نسخة احتياطية</button>
             <button class="btn btn-outline btn-sm" id="adminResetBtn" type="button">استعادة الافتراضي</button>
             <button class="btn btn-outline btn-sm" id="adminLogoutBtn" type="button">خروج</button>
           </div>
         </div>
 
         <div class="admin-note">
-          بعد أي تعديل، دوس على <strong>"تنزيل ملف التحديث"</strong> وهيتنزلك ملف اسمه <code>products.json</code>. ارفع الملف ده في نفس مجلد صفحة الموقع على الاستضافة (استبدال القديم لو موجود) — وقتها كل زوار الموقع هيشوفوا التحديثات. لحد ما تعمل كده، التعديلات بتتحفظ تلقائيًا في المتصفح ده بس عشان تقدر تكمل شغل عليها براحتك.
+          أي تعديل بتعمله هنا (إضافة/تعديل/حذف منتج أو قسم) بيتحفظ ويظهر لكل زوار الموقع أوتوماتيك خلال ثواني — من غير ما تحتاج ترفع أي ملف بنفسك. زرار <strong>"نسخة احتياطية"</strong> بس لو حابب تحتفظ بملف <code>products.json</code> عندك كنسخة أمان.
         </div>
 
         <div class="admin-grid" style="margin-top:20px;">
@@ -1252,7 +1252,8 @@ function catName(id){ return CAT_MAP[id] ? CAT_MAP[id].name : ""; }
 function fmt(n){ return n.toLocaleString("ar-EG"); }
 function stars(r){ var full=Math.round(r); return "★★★★★".slice(0,full)+"☆☆☆☆☆".slice(0,5-full); }
 
-/* ---------- Data source: this browser's draft > products.json on the server > built-in defaults ---------- */
+/* ---------- Data source: /api/products (shared, live for every visitor) > this
+   browser's last-known copy (offline fallback only) > built-in defaults ---------- */
 var DATA_KEY = "aa_store_data";
 function applyData(data){
   if(data && Array.isArray(data.categories) && data.categories.length) CATS = data.categories;
@@ -1260,19 +1261,39 @@ function applyData(data){
   rebuildCatMap();
 }
 function saveDraft(){
-  try{
-    localStorage.setItem(DATA_KEY, JSON.stringify({categories:CATS, products:PRODUCTS}));
-  }catch(e){
-    if(typeof showToast==="function") showToast("⚠️ مساحة التخزين المؤقت امتلأت (كتر صور). دوس \"تنزيل ملف التحديث\" حالاً عشان تحفظ شغلك.");
-  }
+  /* offline safety net only, not the source of truth anymore — see saveProductsToServer() */
+  try{ localStorage.setItem(DATA_KEY, JSON.stringify({categories:CATS, products:PRODUCTS})); }catch(e){}
 }
 function loadInitialData(done){
-  var draft = null;
-  try{ draft = JSON.parse(localStorage.getItem(DATA_KEY) || "null"); }catch(e){ draft = null; }
-  if(draft && draft.products && draft.products.length){ applyData(draft); done(); return; }
-  fetch("products.json", {cache:"no-store"}).then(function(r){ if(!r.ok) throw 0; return r.json(); })
-    .then(function(data){ applyData(data); done(); })
-    .catch(function(){ done(); });
+  fetch("/api/products", {cache:"no-store"}).then(function(r){ if(!r.ok) throw 0; return r.json(); })
+    .then(function(data){
+      if(data){ applyData(data); saveDraft(); }
+      done();
+    })
+    .catch(function(){
+      /* couldn't reach the server (offline, or Functions/KV not set up yet) — fall
+         back to this browser's last-known copy, else the defaults baked into the page */
+      try{
+        var cached = JSON.parse(localStorage.getItem(DATA_KEY) || "null");
+        if(cached) applyData(cached);
+      }catch(e){}
+      done();
+    });
+}
+/* Pushes the current in-memory catalog (CATS/PRODUCTS) to the server so every
+   visitor sees admin changes immediately — called after every admin save. */
+function saveProductsToServer(onDone){
+  saveDraft();
+  fetch("/api/products", {
+    method: "POST",
+    headers: Object.assign({ "content-type":"application/json" }, adminAuthHeaders()),
+    body: JSON.stringify({ categories: CATS, products: PRODUCTS })
+  }).then(function(r){ return r.json().then(function(j){ return {status:r.status, body:j}; }); })
+    .then(function(res){
+      if(res.status===200 && res.body && res.body.ok){ if(onDone) onDone(true); }
+      else { if(onDone) onDone(false); showToast("⚠️ اتحفظ التعديل عندك بس، لكن معرفناش نبعته للسيرفر. جرّب تاني وانت متأكد إنك لسه مسجل دخول."); }
+    })
+    .catch(function(){ if(onDone) onDone(false); showToast("⚠️ اتحفظ التعديل عندك بس، لكن السيرفر مش راضي يستجيب دلوقتي — جرّب تاني كمان شوية."); });
 }
 
 /* ---------- Theme ---------- */
@@ -1705,34 +1726,37 @@ document.getElementById("contactSubmit").addEventListener("click", function(){
 });
 
 /* ---------- Admin ---------- */
-/* NOTE for the store owner: this username/password only hide the panel from casual
-   visitors — they live in this browser's storage, so this is not real security. Treat it
-   as a light lock, not a login system, and don't put anything truly sensitive behind it.
-   Password recovery checks the recovery email AND recovery phone together (both must
-   match what's saved in "⚙️ إعدادات حساب الدخول") before showing a new password on
-   screen — no email is actually sent, this is just a two-piece check that isn't only
-   "type your username" so a random visitor can't reset it. There is deliberately NO
-   working default username/password baked into this file anymore — the very first time
-   you open the admin link on a browser, you'll be asked to CREATE your own username and
-   password (see "adminSetup" below) before the panel unlocks. That closes the old gap
-   where anyone reading "View Source" could find a real, working login. After you set it
-   once, the saved copy in this browser's storage is what actually matters. */
-var ADMIN_ACCOUNT_KEY = "aa_admin_account";
-function hasAdminAccount(){
-  try{
-    var raw = localStorage.getItem(ADMIN_ACCOUNT_KEY);
-    if(raw){ var acc = JSON.parse(raw); if(acc && acc.username && acc.password) return true; }
-  }catch(e){}
-  return false;
+/* NOTE for the store owner: the admin account now lives on the server (a small
+   Cloudflare KV store behind /api/admin/*), not just in this browser — so the
+   same username/password work from any device, and your saved products/prices
+   go live for every visitor immediately after you save, no manual upload step.
+   The password itself is hashed before it's stored. That said, this is still a
+   light lock built for a small catalog site, not an enterprise login system —
+   don't put anything truly sensitive behind it. Password recovery checks the
+   recovery email AND recovery phone together (both must match what's saved in
+   "⚙️ إعدادات حساب الدخول") before showing a new password on screen — no email
+   is actually sent, this is just a two-piece check that isn't only "type your
+   username" so a random visitor can't reset it. There is deliberately NO
+   working default username/password baked into this file — the very first
+   time anyone opens the admin link (before an account exists on the server),
+   they'll be asked to CREATE the owner's username and password (see
+   "adminSetup" below) before the panel unlocks. */
+function getAdminSession(){
+  try{ return JSON.parse(sessionStorage.getItem("aa_admin_session") || "null"); }catch(e){ return null; }
 }
-function getAdminAccount(){
+function setAdminSession(username, password, recoveryEmail, recoveryPhone){
   try{
-    var raw = localStorage.getItem(ADMIN_ACCOUNT_KEY);
-    if(raw){ var acc = JSON.parse(raw); if(acc && acc.username && acc.password) return acc; }
+    sessionStorage.setItem("aa_admin_session", JSON.stringify({
+      username: username, password: password,
+      recoveryEmail: recoveryEmail || "", recoveryPhone: recoveryPhone || ""
+    }));
   }catch(e){}
-  return { username:"", password:"", recoveryEmail:"", recoveryPhone:"" };
 }
-function saveAdminAccount(acc){ try{ localStorage.setItem(ADMIN_ACCOUNT_KEY, JSON.stringify(acc)); }catch(e){} }
+function clearAdminSession(){ try{ sessionStorage.removeItem("aa_admin_session"); }catch(e){} }
+function adminAuthHeaders(){
+  var s = getAdminSession();
+  return s ? { "X-Admin-User": s.username, "X-Admin-Pass": s.password } : {};
+}
 /* ---------- Admin: login attempt lockout ----------
    بيحسب المحاولات الغلط المتتالية، وبعد 5 محاولات بيقفل الدخول 5 دقايق. القفل محفوظ في
    localStorage عشان يفضل شغال حتى لو حد قفل التاب وفتحه تاني (مش حماية حقيقية زي أي حاجة
@@ -1762,18 +1786,16 @@ function remainingLockMinutes(){
   if(msLeft <= 0) return 0;
   return Math.ceil(msLeft / 60000);
 }
-/* يتأكد من الإيميل الاحتياطي ورقم الموبايل الاحتياطي مع بعض، ولو مطابقين
-   يولّد باسورد جديد ويوريه على الشاشة فورًا — من غير إرسال أي إيميل حقيقي. */
+/* يتأكد من الإيميل الاحتياطي ورقم الموبايل الاحتياطي مع بعض عند السيرفر، ولو
+   مطابقين يولّد باسورد جديد ويوريه على الشاشة فورًا — من غير إرسال أي إيميل حقيقي. */
 function resetAdminPassword(email, phone, callback){
-  var acc = getAdminAccount();
-  email = (email || "").trim().toLowerCase();
-  phone = (phone || "").trim();
-  if(!acc.recoveryEmail || !acc.recoveryPhone){ callback({ok:false, reason:"not_configured"}); return; }
-  if(acc.recoveryEmail.toLowerCase() !== email || acc.recoveryPhone !== phone){ callback({ok:false, reason:"mismatch"}); return; }
-  var newPass = generateCustomerPassword();
-  acc.password = newPass;
-  saveAdminAccount(acc);
-  callback({ok:true, password:newPass});
+  fetch("/api/admin/reset", {
+    method: "POST",
+    headers: { "content-type":"application/json" },
+    body: JSON.stringify({ email:email, phone:phone })
+  }).then(function(r){ return r.json(); })
+    .then(function(res){ callback(res); })
+    .catch(function(){ callback({ ok:false, reason:"network" }); });
 }
 var COLOR_PRESETS = [
   {label:"وردي", value:"var(--pink-pale)"},
@@ -1812,18 +1834,37 @@ function updateImagePreview(previewId, dataUrl){
 }
 
 function slugId(prefix){ return prefix + "_" + Date.now().toString(36) + Math.floor(Math.random()*999); }
-function isAdminAuthed(){ try{ return sessionStorage.getItem("aa_admin_ok")==="1"; }catch(e){ return false; } }
-function setAdminAuthed(v){ try{ if(v) sessionStorage.setItem("aa_admin_ok","1"); else sessionStorage.removeItem("aa_admin_ok"); }catch(e){} }
+function isAdminAuthed(){ return !!getAdminSession(); }
+function setAdminAuthed(v){ if(!v) clearAdminSession(); }
+
+/* Server truth for "does an admin account exist yet" — cached after the first
+   check so we don't re-fetch on every re-render, only when admin state changes. */
+var ADMIN_ACCOUNT_EXISTS = null;
+function checkAdminStatus(){
+  return fetch("/api/admin/status", {cache:"no-store"}).then(function(r){ return r.json(); })
+    .then(function(data){ ADMIN_ACCOUNT_EXISTS = !!data.exists; return ADMIN_ACCOUNT_EXISTS; })
+    .catch(function(){ return null; });
+}
 
 function showAdmin(){
   var authed = isAdminAuthed();
-  var hasAcc = hasAdminAccount();
-  document.getElementById("adminSetup").style.display = (!authed && !hasAcc) ? "flex" : "none";
-  document.getElementById("adminLogin").style.display = (!authed && hasAcc) ? "flex" : "none";
-  document.getElementById("adminDashboard").classList.toggle("active", authed);
-  if(authed){ renderAdminAll(); }
-  else if(!hasAcc){ updateLockoutUI(); }
-  else { updateLockoutUI(); }
+  if(authed){
+    document.getElementById("adminSetup").style.display = "none";
+    document.getElementById("adminLogin").style.display = "none";
+    document.getElementById("adminDashboard").classList.add("active");
+    renderAdminAll();
+    return;
+  }
+  document.getElementById("adminDashboard").classList.remove("active");
+  checkAdminStatus().then(function(exists){
+    /* couldn't reach the server (offline, or the backend isn't set up yet) —
+       default to the login screen so we never mistakenly offer to overwrite
+       an account that already exists on the server */
+    if(exists === null) exists = true;
+    document.getElementById("adminSetup").style.display = exists ? "none" : "flex";
+    document.getElementById("adminLogin").style.display = exists ? "flex" : "none";
+    if(exists) updateLockoutUI();
+  });
 }
 function updateLockoutUI(){
   var mins = remainingLockMinutes();
@@ -1842,20 +1883,37 @@ document.getElementById("adminLoginBtn").addEventListener("click", function(){
   if(remainingLockMinutes() > 0){ updateLockoutUI(); return; }
   var user = document.getElementById("adminUserInput").value.trim();
   var val = document.getElementById("adminPassInput").value.trim();
-  var acc = getAdminAccount();
-  if(user && val && user === acc.username && val === acc.password){
-    clearLockoutState();
-    setAdminAuthed(true);
-    document.getElementById("adminLoginError").style.display="none";
-    document.getElementById("adminUserInput").value="";
-    document.getElementById("adminPassInput").value="";
-    showAdmin();
-    updateAccountLabel();
-  } else {
-    document.getElementById("adminLoginError").style.display="block";
-    registerFailedLogin();
-    updateLockoutUI();
-  }
+  var errEl = document.getElementById("adminLoginError");
+  if(!user || !val) return;
+  var btn = this;
+  btn.disabled = true;
+  fetch("/api/admin/login", {
+    method: "POST",
+    headers: { "content-type":"application/json" },
+    body: JSON.stringify({ username:user, password:val })
+  }).then(function(r){ return r.json(); })
+    .then(function(res){
+      btn.disabled = (remainingLockMinutes() > 0);
+      if(res.ok){
+        clearLockoutState();
+        setAdminSession(user, val, res.recoveryEmail, res.recoveryPhone);
+        errEl.style.display="none";
+        document.getElementById("adminUserInput").value="";
+        document.getElementById("adminPassInput").value="";
+        showAdmin();
+        updateAccountLabel();
+      } else {
+        errEl.textContent = "بيانات الدخول غير صحيحة";
+        errEl.style.display="block";
+        registerFailedLogin();
+        updateLockoutUI();
+      }
+    })
+    .catch(function(){
+      btn.disabled = false;
+      errEl.textContent = "تعذر الاتصال بالسيرفر، تأكد من الإنترنت وجرّب تاني.";
+      errEl.style.display="block";
+    });
 });
 document.getElementById("adminUserInput").addEventListener("keydown", function(e){ if(e.key==="Enter"){ e.preventDefault(); document.getElementById("adminLoginBtn").click(); } });
 document.getElementById("adminPassShow").addEventListener("change", function(){
@@ -1877,17 +1935,34 @@ document.getElementById("adminSetupBtn").addEventListener("click", function(){
   if(pass.length < 6){ showErr("كلمة المرور لازم تكون 6 حروف/أرقام على الأقل."); return; }
   if(pass !== confirm){ showErr("كلمة المرور والتأكيد مش متطابقين."); return; }
   errEl.style.display = "none";
-  saveAdminAccount({ username:user, password:pass, recoveryEmail:email, recoveryPhone:phone });
-  clearLockoutState();
-  setAdminAuthed(true);
-  document.getElementById("suUserInput").value="";
-  document.getElementById("suPassInput").value="";
-  document.getElementById("suPassConfirm").value="";
-  document.getElementById("suRecoveryEmail").value="";
-  document.getElementById("suRecoveryPhone").value="";
-  showAdmin();
-  updateAccountLabel();
-  showToast("✅ اتعمل الحساب بنجاح — متنساش تحفظ اليوزر والباسورد في مكان أمين");
+  var btn = this;
+  btn.disabled = true;
+  fetch("/api/admin/setup", {
+    method: "POST",
+    headers: { "content-type":"application/json" },
+    body: JSON.stringify({ username:user, password:pass, recoveryEmail:email, recoveryPhone:phone })
+  }).then(function(r){ return r.json().then(function(j){ return {status:r.status, body:j}; }); })
+    .then(function(res){
+      btn.disabled = false;
+      if(res.body && res.body.ok){
+        clearLockoutState();
+        setAdminSession(user, pass, email, phone);
+        document.getElementById("suUserInput").value="";
+        document.getElementById("suPassInput").value="";
+        document.getElementById("suPassConfirm").value="";
+        document.getElementById("suRecoveryEmail").value="";
+        document.getElementById("suRecoveryPhone").value="";
+        showAdmin();
+        updateAccountLabel();
+        showToast("✅ اتعمل الحساب بنجاح — متنساش تحفظ اليوزر والباسورد في مكان أمين");
+      } else if(res.status===409){
+        showErr("في حساب اتعمل بالفعل — سجّل دخول بدل ما تعمل حساب جديد.");
+        showAdmin();
+      } else {
+        showErr("حصل خطأ، جرّب تاني.");
+      }
+    })
+    .catch(function(){ btn.disabled = false; showErr("تعذر الاتصال بالسيرفر، تأكد من الإنترنت وجرّب تاني."); });
 });
 document.getElementById("suPassShow").addEventListener("change", function(){
   var type = this.checked ? "text" : "password";
@@ -1913,6 +1988,9 @@ document.getElementById("adminForgotBtn").addEventListener("click", function(){
     } else if(res.reason==="not_configured"){
       msg.style.color = "var(--pink-deep)";
       msg.textContent = "لسه محددتش الإيميل ورقم الموبايل الاحتياطيين — لازم تسجل دخول عادي الأول وتحددهم من ⚙️ إعدادات حساب الدخول.";
+    } else if(res.reason==="network"){
+      msg.style.color = "var(--pink-deep)";
+      msg.textContent = "تعذر الاتصال بالسيرفر، تأكد من الإنترنت وجرّب تاني.";
     } else {
       msg.style.color = "var(--pink-deep)";
       msg.textContent = "الإيميل أو رقم الموبايل مش مطابقين للبيانات المسجلة.";
@@ -2267,27 +2345,40 @@ function renderAdminCatsTable(){
   }).join("");
 }
 function fillAdminSettingsForm(){
-  var acc = getAdminAccount();
-  document.getElementById("asUsername").value = acc.username;
+  var s = getAdminSession();
+  if(!s) return;
+  document.getElementById("asUsername").value = s.username;
   document.getElementById("asPassword").value = "";
-  document.getElementById("asRecoveryEmail").value = acc.recoveryEmail || "";
-  document.getElementById("asRecoveryPhone").value = acc.recoveryPhone || "";
+  document.getElementById("asRecoveryEmail").value = s.recoveryEmail || "";
+  document.getElementById("asRecoveryPhone").value = s.recoveryPhone || "";
 }
 document.getElementById("adminSettingsForm").addEventListener("submit", function(e){
   e.preventDefault();
-  var acc = getAdminAccount();
   var newUser = document.getElementById("asUsername").value.trim();
   var newPass = document.getElementById("asPassword").value;
   var newRecoveryEmail = document.getElementById("asRecoveryEmail").value.trim();
   var newRecoveryPhone = document.getElementById("asRecoveryPhone").value.trim();
   if(!newUser) return;
-  acc.username = newUser;
-  if(newPass) acc.password = newPass;
-  acc.recoveryEmail = newRecoveryEmail;
-  acc.recoveryPhone = newRecoveryPhone;
-  saveAdminAccount(acc);
-  document.getElementById("asPassword").value = "";
-  showToast("✅ اتحفظت إعدادات الحساب");
+  if(newPass && newPass.length < 6){ showToast("⚠️ كلمة المرور الجديدة لازم تكون 6 حروف/أرقام على الأقل."); return; }
+  var submitBtn = e.target.querySelector('[type="submit"]');
+  if(submitBtn) submitBtn.disabled = true;
+  fetch("/api/admin/settings", {
+    method: "POST",
+    headers: Object.assign({ "content-type":"application/json" }, adminAuthHeaders()),
+    body: JSON.stringify({ username:newUser, password:newPass, recoveryEmail:newRecoveryEmail, recoveryPhone:newRecoveryPhone })
+  }).then(function(r){ return r.json(); })
+    .then(function(res){
+      if(submitBtn) submitBtn.disabled = false;
+      if(res.ok){
+        setAdminSession(res.username, newPass || (getAdminSession()||{}).password, res.recoveryEmail, res.recoveryPhone);
+        document.getElementById("asPassword").value = "";
+        updateAccountLabel();
+        showToast("✅ اتحفظت إعدادات الحساب");
+      } else {
+        showToast("⚠️ معرفناش نحفظ الإعدادات — سجّل دخول تاني وحاول.");
+      }
+    })
+    .catch(function(){ if(submitBtn) submitBtn.disabled = false; showToast("⚠️ تعذر الاتصال بالسيرفر، جرّب تاني."); });
 });
 function renderAdminAll(){
   fillCatSelect();
@@ -2298,7 +2389,7 @@ function renderAdminAll(){
   fillAdminSettingsForm();
 }
 function refreshPublicViews(){
-  saveDraft();
+  saveProductsToServer();
   renderCategoryRow();
   renderBestSellers();
   renderNewArrivals();
@@ -2431,7 +2522,7 @@ document.getElementById("adminImportFile").addEventListener("change", function(e
   e.target.value = "";
 });
 document.getElementById("adminResetBtn").addEventListener("click", function(){
-  if(!confirm("هيرجع كل حاجة للبيانات الافتراضية (هيمسح تعديلاتك الحالية في المتصفح ده). متأكد؟")) return;
+  if(!confirm("هيرجع كل حاجة للبيانات الافتراضية على الموقع لكل الزوار (هيمسح تعديلاتك الحالية). متأكد؟")) return;
   CATS = DEFAULT_CATS.map(function(c){ return Object.assign({}, c); });
   PRODUCTS = DEFAULT_PRODUCTS.map(function(p){ return Object.assign({}, p); });
   rebuildCatMap();

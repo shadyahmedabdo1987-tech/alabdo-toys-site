@@ -2000,6 +2000,13 @@ function setAdminSession(username, password, recoveryEmail, recoveryPhone){
   }catch(e){}
 }
 function clearAdminSession(){ try{ sessionStorage.removeItem("aa_admin_session"); }catch(e){} }
+/* جلسة الأدمن متخزنة في sessionStorage (خاصة بكل تاب لوحده عمدًا)، فمفيش
+   طريقة تلقائية تاب تانِ يعرف بيها إن أدمن سجّل دخول في تاب مختلف. عشان
+   نقفل جلسة الأدمن في كل التابات فورًا لو عميل سجّل دخول في أي تاب، بنبعت
+   "إشارة" صغيرة عبر localStorage (اللي بطبيعته بيبلّغ باقي التابات المفتوحة
+   عن أي تغيير فيه عن طريق حدث storage) بدل ما ننقل بيانات الأدمن نفسها. */
+var ADMIN_KILL_KEY = "aa_admin_kill_signal";
+function broadcastAdminKill(){ try{ localStorage.setItem(ADMIN_KILL_KEY, String(Date.now())); }catch(e){} }
 function adminAuthHeaders(){
   var s = getAdminSession();
   return s ? { "X-Admin-User": s.username, "X-Admin-Pass": s.password } : {};
@@ -2442,6 +2449,7 @@ function renderAccountModal(){
           if(res.body && res.body.ok){
             setCustomerSession(res.body.phone, res.body.password, res.body.name, res.body.email);
             setAdminAuthed(false);
+            broadcastAdminKill();
             acctState.registerResult = { identifier:res.body.phone, password:res.body.password };
             renderAccountModal();
           } else if(res.status===409){
@@ -2481,9 +2489,11 @@ function renderAccountModal(){
             return;
           }
           setCustomerSession(identifier, password, res.name, res.email);
-          /* تسجيل دخول العميل بيقفل أي جلسة أدمن نشطة في نفس المتصفح تلقائيًا،
-             عشان الجلستين ميتداخلوش. */
+          /* تسجيل دخول العميل بيقفل أي جلسة أدمن نشطة تلقائيًا - في نفس
+             التاب فورًا، وفي أي تاب تاني مفتوح بنفس المتصفح عن طريق إشارة
+             broadcastAdminKill (شوف تعريفها فوق). */
           setAdminAuthed(false);
+          broadcastAdminKill();
           refreshFavoritesFromServer(refreshFavoriteViews);
           updateAccountLabel();
           closeAllPanels();
@@ -2916,6 +2926,29 @@ window.addEventListener("hashchange", function(){
   goToView(v);
   if(v==="products") renderProductsView();
   if(v==="admin") showAdmin();
+});
+
+/* ---------- منع تداخل جلسة الأدمن والعميل عبر التابات ----------
+   حدث "storage" بيتطلق تلقائيًا في أي تاب تاني مفتوح على نفس الموقع لما
+   localStorage يتغيّر من تاب مختلف (مش بيتطلق في نفس التاب اللي عمل
+   التغيير). بنستخدمه هنا في اتجاهين: (1) لو عميل سجّل دخول/خروج في تاب،
+   باقي التابات بتحدّث حالتها فورًا (مفضلة، اسم الحساب)، و(2) لو عميل سجّل
+   دخول في أي تاب، أي تاب تاني فيه جلسة أدمن شغالة (sessionStorage، خاصة
+   بكل تاب فمنقدرش نشوفها من تاب تاني مباشرة) بيتقفل فورًا برضه عن طريق
+   إشارة ADMIN_KILL_KEY. */
+window.addEventListener("storage", function(e){
+  if(e.key === CUSTOMER_SESSION_KEY){
+    refreshFavoritesFromServer(refreshFavoriteViews);
+    updateAccountLabel();
+  } else if(e.key === ADMIN_KILL_KEY && e.newValue && isAdminAuthed()){
+    setAdminAuthed(false);
+    var wasOnAdmin = document.getElementById("view-admin").classList.contains("active");
+    updateAccountLabel();
+    if(wasOnAdmin){
+      goToView("home");
+      showToast("⚠️ اتسجّل خروجك من لوحة التحكم — حصل تسجيل دخول عميل في تاب تاني بنفس المتصفح");
+    }
+  }
 });
 
 /* ---------- فهرس صفحات الشروط/الخصوصية: تمرير سلس من غير ما يغيّر الـ hash

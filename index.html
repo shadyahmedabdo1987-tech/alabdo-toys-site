@@ -1120,7 +1120,7 @@ ul{margin:0; padding:0; list-style:none;}
             </div>
           </div>
 
-          <div class="admin-card">
+          <div class="admin-card" style="grid-column:1 / -1;">
             <h3>🧾 الطلبات المسجّلة (<span id="adminOrderCount">0</span>)</h3>
             <p style="color:var(--ink-soft); font-size:12.5px;">الطلبات اللي بتظهر هنا هي بس اللي بتتم من عميل مسجّل دخول وقت إتمام الطلب — ده أساس التحقق اللي العميل بيقدر بيه يقيّم منتج اشتراه فعلاً.</p>
             <div style="overflow-x:auto;">
@@ -1454,6 +1454,12 @@ document.getElementById("checkoutBtn").addEventListener("click", function(e){
   if(!f){ e.preventDefault(); return; }
   this.href = waLink(buildOrderLines(items, f.name, f.phone, f.address).join("\n"));
   recordOrderIfLoggedIn(items, f);
+  /* بمجرد ما العميل يدوس "اطلب عبر واتساب" بنعتبر طلبه اتسجّل (زي بالظبط
+     خيار "اطلب من هنا وهنكلمك") — نفضي السلة، ونوريه رسالة تأكيد فورية،
+     عشان يحس إن طلبه استلم، من غير ما ننتظر رد فعلي من واتساب (مفيش طريقة
+     نتأكد بيها إنه بعت الرسالة فعلاً، فده أفضل مؤشر متاح). */
+  clearCart();
+  showOrderSuccessModal(f.phone);
 });
 document.getElementById("checkoutPhone").addEventListener("input", function(){
   if(this.value.trim()) document.getElementById("checkoutPhoneError").style.display = "none";

@@ -1359,6 +1359,14 @@ function clearCart(){
   cart = {};
   saveCart(); renderCartBadge(); renderCartDrawer();
 }
+/* بيمسح بيانات فورم الشحن (الاسم/الموبايل/العنوان) بعد أي طلب ناجح، عشان
+   السلة تبقى فاضية تمامًا وجاهزة لطلب جديد من غير أي بيانات قديمة باقية. */
+function resetCheckoutFields(){
+  document.getElementById("checkoutName").value = "";
+  document.getElementById("checkoutPhone").value = "";
+  document.getElementById("checkoutAddress").value = "";
+  document.getElementById("checkoutPhoneError").style.display = "none";
+}
 
 function renderCartBadge(){ document.getElementById("cartCount").textContent = cartCount(); }
 
@@ -1455,10 +1463,12 @@ document.getElementById("checkoutBtn").addEventListener("click", function(e){
   this.href = waLink(buildOrderLines(items, f.name, f.phone, f.address).join("\n"));
   recordOrderIfLoggedIn(items, f);
   /* بمجرد ما العميل يدوس "اطلب عبر واتساب" بنعتبر طلبه اتسجّل (زي بالظبط
-     خيار "اطلب من هنا وهنكلمك") — نفضي السلة، ونوريه رسالة تأكيد فورية،
-     عشان يحس إن طلبه استلم، من غير ما ننتظر رد فعلي من واتساب (مفيش طريقة
-     نتأكد بيها إنه بعت الرسالة فعلاً، فده أفضل مؤشر متاح). */
+     خيار "اطلب من هنا وهنكلمك") — نفضي السلة وبيانات الفورم بالكامل،
+     ونوريه رسالة تأكيد فورية، عشان يحس إن طلبه استلم ويبقى جاهز لطلب
+     جديد من غير أي بيانات قديمة باقية، من غير ما ننتظر رد فعلي من واتساب
+     (مفيش طريقة نتأكد بيها إنه بعت الرسالة فعلاً، فده أفضل مؤشر متاح). */
   clearCart();
+  resetCheckoutFields();
   showOrderSuccessModal(f.phone);
 });
 document.getElementById("checkoutPhone").addEventListener("input", function(){
@@ -1519,6 +1529,7 @@ document.getElementById("checkoutAltBtn").addEventListener("click", function(){
     if(res && res.success){
       recordOrderIfLoggedIn(items, f);
       clearCart();
+      resetCheckoutFields();
       showOrderSuccessModal(f.phone);
     } else {
       msg.style.display = "block";

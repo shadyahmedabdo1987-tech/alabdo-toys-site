@@ -239,8 +239,9 @@ ul{margin:0; padding:0; list-style:none;}
 .card{background:var(--surface); border:1px solid var(--border); border-radius:20px; overflow:hidden; display:flex; flex-direction:column;}
 .card-media{position:relative; aspect-ratio:1/1; display:flex; align-items:center; justify-content:center; font-size:64px;}
 .card-badge{position:absolute; top:10px; inset-inline-start:10px; background:var(--pink); color:#fff; font-weight:800; font-size:12px; padding:4px 10px; border-radius:999px;}
-.card-wish{position:absolute; top:10px; inset-inline-end:10px; width:32px; height:32px; border-radius:50%; background:var(--surface); border:0; display:flex; align-items:center; justify-content:center; box-shadow:0 3px 8px hsl(var(--shadow)/.18);}
-.card-wish svg{width:16px; height:16px;}
+.card-wish{position:absolute; top:10px; inset-inline-end:10px; width:32px; height:32px; border-radius:50%; background:var(--surface); border:0; display:flex; align-items:center; justify-content:center; box-shadow:0 3px 8px hsl(var(--shadow)/.18); cursor:pointer;}
+.card-wish svg{width:16px; height:16px; transition:fill .15s, stroke .15s;}
+.card-wish.active svg{fill:var(--pink-deep); stroke:var(--pink-deep);}
 .card-body{padding:14px; display:flex; flex-direction:column; gap:8px; flex:1;}
 .card-cat{font-size:11.5px; color:var(--ink-faint); font-weight:800;}
 .card-title{font-size:14.5px; font-weight:800; min-height:38px;}
@@ -532,6 +533,7 @@ ul{margin:0; padding:0; list-style:none;}
         <a href="#products" data-view-link="products">جميع المنتجات</a>
         <a href="#products" data-view-link="products" data-badge="new">وصل حديثاً</a>
         <a href="#products" data-view-link="products" data-badge="sale">عروض خاصة</a>
+        <a href="#products" data-view-link="products" data-badge="wish">المفضلة ❤️</a>
         <a href="#about" data-view-link="about">من نحن</a>
         <a href="#contact" data-view-link="contact">تواصل معنا</a>
       </div>
@@ -549,6 +551,7 @@ ul{margin:0; padding:0; list-style:none;}
   </form>
   <a href="#home" data-view-link="home">الرئيسية</a>
   <a href="#products" data-view-link="products">جميع المنتجات</a>
+  <a href="#products" data-view-link="products" data-badge="wish">المفضلة ❤️</a>
   <a href="#about" data-view-link="about">من نحن</a>
   <a href="#contact" data-view-link="contact">تواصل معنا</a>
 </div>
@@ -1335,6 +1338,17 @@ document.getElementById("themeToggle").addEventListener("click", function(){
 var cart = {};
 try{ cart = JSON.parse(localStorage.getItem("aa_cart") || "{}"); }catch(e){ cart = {}; }
 function saveCart(){ try{ localStorage.setItem("aa_cart", JSON.stringify(cart)); }catch(e){} }
+
+/* ---------- المفضلة (Wishlist) ---------- محفوظة محليًا في المتصفح، زي السلة بالظبط. */
+var FAVORITES = {};
+try{ FAVORITES = JSON.parse(localStorage.getItem("aa_favorites") || "{}"); }catch(e){ FAVORITES = {}; }
+function saveFavorites(){ try{ localStorage.setItem("aa_favorites", JSON.stringify(FAVORITES)); }catch(e){} }
+function toggleFavorite(id){
+  if(FAVORITES[id]) delete FAVORITES[id]; else FAVORITES[id] = true;
+  saveFavorites();
+  document.querySelectorAll('[data-wish="'+id+'"]').forEach(function(b){ b.classList.toggle("active", !!FAVORITES[id]); });
+  if(state.badge==="wish" && document.getElementById("view-products").classList.contains("active")) renderProductsView();
+}
 function cartCount(){ var n=0; Object.keys(cart).forEach(function(k){ n+=cart[k]; }); return n; }
 function cartItems(){
   return Object.keys(cart).map(function(id){
@@ -1615,8 +1629,12 @@ function productCard(p){
     + '<div class="card-media" style="background:'+CAT_MAP[p.cat].color+'">'
       + mediaContent
       + badgeHtml
-      + '<button class="card-wish" aria-label="أضف للمفضلة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.6-9.5-9C.7 8.4 2.3 5 5.6 5 7.6 5 9 6 12 8.5 15 6 16.4 5 18.4 5c3.3 0 4.9 3.4 3.1 7-2.5 4.4-9.5 9-9.5 9Z"/></svg></button>'
+      /* زرار "فتح تفاصيل المنتج" بيغطي كل مساحة الصورة (عشان تقدر تدوس في
+         أي حتة فيها)، فلازم يتكتب هنا الأول، وزرار "المفضلة" بعده في الـ
+         DOM عشان يرسم فوقه ويستقبل الكليكات هو بدل ما زرار التفاصيل الشفاف
+         يسرقها منه (ده كان سبب إن زرار المفضلة مكنش بيستجيب خالص). */
       + '<button class="open-detail" data-open="'+p.id+'" aria-label="عرض تفاصيل '+p.name+'"></button>'
+      + '<button class="card-wish'+(FAVORITES[p.id]?' active':'')+'" data-wish="'+p.id+'" aria-label="'+(FAVORITES[p.id]?'إزالة من المفضلة':'أضف للمفضلة')+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.6-9.5-9C.7 8.4 2.3 5 5.6 5 7.6 5 9 6 12 8.5 15 6 16.4 5 18.4 5c3.3 0 4.9 3.4 3.1 7-2.5 4.4-9.5 9-9.5 9Z"/></svg></button>'
     + '</div>'
     + '<div class="card-body">'
       + '<span class="card-cat">'+catName(p.cat)+'</span>'
@@ -1631,6 +1649,8 @@ function productCard(p){
 document.addEventListener("click", function(e){
   var addBtn = e.target.closest("[data-add]");
   if(addBtn){ addToCart(+addBtn.dataset.add,1); }
+  var wishBtn = e.target.closest("[data-wish]");
+  if(wishBtn){ toggleFavorite(+wishBtn.dataset.wish); return; }
   var openBtn = e.target.closest("[data-open]");
   if(openBtn){ openProductModal(+openBtn.dataset.open); }
 });
@@ -1827,6 +1847,7 @@ function applyProducts(){
   if(state.cat!=="all"){ list = list.filter(function(p){ return p.cat===state.cat; }); }
   if(state.badge==="sale"){ list = list.filter(function(p){ return p.old; }); }
   if(state.badge==="new"){ list = list.filter(function(p){ return p.badge==="new"; }); }
+  if(state.badge==="wish"){ list = list.filter(function(p){ return !!FAVORITES[p.id]; }); }
   if(state.q){ var q=state.q.trim().toLowerCase(); list = list.filter(function(p){ return p.name.toLowerCase().indexOf(q)>-1; }); }
   if(state.sort==="price-asc") list.sort(function(a,b){ return a.price-b.price; });
   else if(state.sort==="price-desc") list.sort(function(a,b){ return b.price-a.price; });
@@ -1840,13 +1861,17 @@ function renderProductsView(){
   var list = applyProducts();
   document.getElementById("productsGrid").innerHTML = list.map(productCard).join("");
   document.getElementById("emptyState").hidden = list.length>0;
+  document.getElementById("emptyState").textContent = (state.badge==="wish")
+    ? "🤍 لسه مفيش منتجات في المفضلة — دوس على أيقونة القلب في أي منتج عشان تضيفه هنا."
+    : "😕 لا توجد منتجات مطابقة لبحثك، جرّب كلمة أخرى.";
   document.getElementById("resultsCount").textContent = "عرض "+list.length+" من "+PRODUCTS.length+" منتج";
   var title = state.cat==="all" ? "جميع المنتجات" : catName(state.cat);
   if(state.badge==="sale") title = "عروض خاصة";
   if(state.badge==="new") title = "وصل حديثاً";
+  if(state.badge==="wish") title = "المفضلة";
   document.getElementById("prodTitle").textContent = title;
   document.getElementById("prodCrumb").textContent = title;
-  document.getElementById("prodSubtitle").textContent = state.q ? 'نتائج البحث عن "'+state.q+'"' : "تصفح كل تشكيلاتنا من الألعاب واختر الأنسب لطفلك";
+  document.getElementById("prodSubtitle").textContent = state.q ? 'نتائج البحث عن "'+state.q+'"' : (state.badge==="wish" ? "المنتجات اللي حطيتها في المفضلة" : "تصفح كل تشكيلاتنا من الألعاب واختر الأنسب لطفلك");
 }
 
 document.getElementById("filterList").addEventListener("click", function(e){

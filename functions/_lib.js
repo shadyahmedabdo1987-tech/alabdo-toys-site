@@ -1,8 +1,8 @@
-/* Shared helpers for متجر آل عبده's Cloudflare Pages Functions (lightweight
-   backend: a single KV namespace bound as STORE_KV holds two keys —
+/* Shared helpers for the store's Cloudflare Pages Functions (lightweight
+   backend: a single KV namespace bound as STORE_KV holds two keys -
    "products" (the catalog: {categories, products}) and "admin" (the store
    owner's account: {username, passwordHash, recoveryEmail, recoveryPhone}).
-   This is deliberately simple (no sessions, no real user system) — it exists
+   This is deliberately simple (no sessions, no real user system) - it exists
    only so the admin dashboard's changes go live for every visitor immediately,
    instead of needing a manual file re-upload each time. */
 
@@ -31,7 +31,9 @@ export async function saveAdminAccount(env, acc){
 
 /* Reads admin credentials off custom request headers (never Authorization/
    WWW-Authenticate, so browsers never pop up a native basic-auth dialog) and
-   checks them against the stored, hashed account. Used to gate every write. */
+   checks them against the stored, hashed account. Used to gate every write.
+   (No em dash anywhere in this file - kept ASCII-only to avoid encoding
+   issues when the file is created through GitHub's web editor.) */
 export async function requireAdmin(request, env){
   var user = request.headers.get("X-Admin-User") || "";
   var pass = request.headers.get("X-Admin-Pass") || "";
@@ -53,4 +55,38 @@ export function generatePassword(len){
   var out = "";
   for(var i=0;i<len;i++) out += randChar();
   return out;
+}
+
+/* Generic helpers for the extra KV collections added for customer accounts,
+   orders and reviews. Each collection is stored as one JSON array under its
+   own KV key (same simple approach as "products" and "admin" above). */
+export async function getList(env, key){
+  var raw = await env.STORE_KV.get(key);
+  if(!raw) return [];
+  try{
+    var v = JSON.parse(raw);
+    return Array.isArray(v) ? v : [];
+  }catch(e){ return []; }
+}
+export async function saveList(env, key, list){
+  await env.STORE_KV.put(key, JSON.stringify(list));
+}
+
+export async function getCustomers(env){ return getList(env, "customers"); }
+export async function saveCustomers(env, list){ return saveList(env, "customers", list); }
+
+/* Reads customer credentials off X-Customer-Id / X-Customer-Pass headers
+   (same pattern as requireAdmin above) and checks them against the stored,
+   hashed customer account. X-Customer-Id is the customer's phone number
+   (their login identifier). */
+export async function requireCustomer(request, env){
+  var id = request.headers.get("X-Customer-Id") || "";
+  var pass = request.headers.get("X-Customer-Pass") || "";
+  if(!id || !pass) return null;
+  var list = await getCustomers(env);
+  var acc = list.find(function(c){ return c.identifier.toLowerCase() === id.toLowerCase(); });
+  if(!acc) return null;
+  var hash = await sha256Hex(pass);
+  if(hash !== acc.passwordHash) return null;
+  return acc;
 }

@@ -2144,6 +2144,10 @@ document.getElementById("adminLoginBtn").addEventListener("click", function(){
       if(res.ok){
         clearLockoutState();
         setAdminSession(user, val, res.recoveryEmail, res.recoveryPhone);
+        /* تسجيل دخول الأدمن بيقفل أي حساب عميل نشط في نفس المتصفح تلقائيًا،
+           عشان الجلستين ميتداخلوش (زي مشكلة المفضلة اللي ظهرت قبل كده). */
+        clearCustomerProfile();
+        FAVORITES = {};
         errEl.style.display="none";
         document.getElementById("adminUserInput").value="";
         document.getElementById("adminPassInput").value="";
@@ -2194,6 +2198,8 @@ document.getElementById("adminSetupBtn").addEventListener("click", function(){
       if(res.body && res.body.ok){
         clearLockoutState();
         setAdminSession(user, pass, email, phone);
+        clearCustomerProfile();
+        FAVORITES = {};
         document.getElementById("suUserInput").value="";
         document.getElementById("suPassInput").value="";
         document.getElementById("suPassConfirm").value="";
@@ -2435,6 +2441,7 @@ function renderAccountModal(){
           btn.disabled = false;
           if(res.body && res.body.ok){
             setCustomerSession(res.body.phone, res.body.password, res.body.name, res.body.email);
+            setAdminAuthed(false);
             acctState.registerResult = { identifier:res.body.phone, password:res.body.password };
             renderAccountModal();
           } else if(res.status===409){
@@ -2474,6 +2481,9 @@ function renderAccountModal(){
             return;
           }
           setCustomerSession(identifier, password, res.name, res.email);
+          /* تسجيل دخول العميل بيقفل أي جلسة أدمن نشطة في نفس المتصفح تلقائيًا،
+             عشان الجلستين ميتداخلوش. */
+          setAdminAuthed(false);
           refreshFavoritesFromServer(refreshFavoriteViews);
           updateAccountLabel();
           closeAllPanels();

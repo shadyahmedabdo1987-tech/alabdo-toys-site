@@ -1339,15 +1339,53 @@ var cart = {};
 try{ cart = JSON.parse(localStorage.getItem("aa_cart") || "{}"); }catch(e){ cart = {}; }
 function saveCart(){ try{ localStorage.setItem("aa_cart", JSON.stringify(cart)); }catch(e){} }
 
-/* ---------- المفضلة (Wishlist) ---------- محفوظة محليًا في المتصفح، زي السلة بالظبط. */
+/* ---------- المفضلة (Wishlist) ---------- محفوظة على حساب العميل نفسه في
+   السيرفر (مش في تخزين المتصفح)، عشان كل عميل يشوف مفضلته هو بس، حتى لو
+   أكتر من حساب بيستخدموا نفس الجهاز/المتصفح (زي جهاز صاحب المتجر وقت
+   التجربة) - بالظبط نفس فكرة الطلبات والتقييمات. محتاجة تسجيل دخول. */
 var FAVORITES = {};
-try{ FAVORITES = JSON.parse(localStorage.getItem("aa_favorites") || "{}"); }catch(e){ FAVORITES = {}; }
-function saveFavorites(){ try{ localStorage.setItem("aa_favorites", JSON.stringify(FAVORITES)); }catch(e){} }
+function refreshFavoritesFromServer(done){
+  if(!isCustomerAuthed()){ FAVORITES = {}; if(done) done(); return; }
+  fetch("/api/customers/favorites", { headers: customerAuthHeaders(), cache:"no-store" }).then(function(r){ return r.json(); })
+    .then(function(res){
+      FAVORITES = {};
+      if(res && res.ok && Array.isArray(res.favorites)){
+        res.favorites.forEach(function(id){ FAVORITES[id] = true; });
+      }
+      if(done) done();
+    })
+    .catch(function(){ if(done) done(); });
+}
+function refreshFavoriteViews(){
+  renderBestSellers();
+  renderNewArrivals();
+  if(document.getElementById("view-products").classList.contains("active")) renderProductsView();
+}
 function toggleFavorite(id){
-  if(FAVORITES[id]) delete FAVORITES[id]; else FAVORITES[id] = true;
-  saveFavorites();
-  document.querySelectorAll('[data-wish="'+id+'"]').forEach(function(b){ b.classList.toggle("active", !!FAVORITES[id]); });
-  if(state.badge==="wish" && document.getElementById("view-products").classList.contains("active")) renderProductsView();
+  if(!isCustomerAuthed()){
+    showToast("سجّل دخول الأول عشان تقدر تضيف للمفضلة (من زرار «حسابي» فوق)");
+    return;
+  }
+  var willBeOn = !FAVORITES[id];
+  if(willBeOn) FAVORITES[id] = true; else delete FAVORITES[id];
+  document.querySelectorAll('[data-wish="'+id+'"]').forEach(function(b){ b.classList.toggle("active", willBeOn); });
+  fetch("/api/customers/favorites", {
+    method: "POST",
+    headers: Object.assign({ "content-type":"application/json" }, customerAuthHeaders()),
+    body: JSON.stringify({ productId:id, on:willBeOn })
+  }).then(function(r){ return r.json(); }).then(function(res){
+    if(res && res.ok && Array.isArray(res.favorites)){
+      FAVORITES = {};
+      res.favorites.forEach(function(fid){ FAVORITES[fid] = true; });
+      document.querySelectorAll('[data-wish="'+id+'"]').forEach(function(b){ b.classList.toggle("active", !!FAVORITES[id]); });
+    }
+    if(state.badge==="wish" && document.getElementById("view-products").classList.contains("active")) renderProductsView();
+  }).catch(function(){
+    /* السيرفر مش راضي يستجيب دلوقتي - نرجّع الأيقونة زي ما كانت عشان منسيبش حالة غلط على الشاشة. */
+    if(willBeOn) delete FAVORITES[id]; else FAVORITES[id] = true;
+    document.querySelectorAll('[data-wish="'+id+'"]').forEach(function(b){ b.classList.toggle("active", !!FAVORITES[id]); });
+    showToast("تعذر حفظ المفضلة، تأكد من الإنترنت");
+  });
 }
 function cartCount(){ var n=0; Object.keys(cart).forEach(function(k){ n+=cart[k]; }); return n; }
 function cartItems(){
@@ -2310,7 +2348,7 @@ function renderAccountModal(){
     + '</div>';
     document.getElementById("modalCard").innerHTML = html;
     document.getElementById("modalCloseBtn").addEventListener("click", closeAllPanels);
-    document.getElementById("acctLogout").addEventListener("click", function(){ clearCustomerProfile(); updateAccountLabel(); goToView("home"); });
+    document.getElementById("acctLogout").addEventListener("click", function(){ clearCustomerProfile(); FAVORITES = {}; refreshFavoriteViews(); updateAccountLabel(); goToView("home"); });
     document.getElementById("acctShowOrders").addEventListener("click", function(){
       var box = document.getElementById("acctOrdersBox");
       box.innerHTML = '<p style="color:var(--ink-soft); font-size:13px;">جاري التحميل...</p>';
@@ -2436,6 +2474,7 @@ function renderAccountModal(){
             return;
           }
           setCustomerSession(identifier, password, res.name, res.email);
+          refreshFavoritesFromServer(refreshFavoriteViews);
           updateAccountLabel();
           closeAllPanels();
           showToast("أهلاً "+(res.name || "بيك")+" 👋");
@@ -2902,15 +2941,17 @@ if("serviceWorker" in navigator && (location.protocol==="https:" || location.hos
 }
 
 loadInitialData(function(){
-  renderCategoryRow();
-  renderBestSellers();
-  renderNewArrivals();
-  renderCartBadge();
-  renderCartDrawer();
-  var initialView = hashToView(location.hash.replace("#","") || "home");
-  goToView(initialView);
-  if(initialView==="products") renderProductsView();
-  if(initialView==="admin") showAdmin();
+  refreshFavoritesFromServer(function(){
+    renderCategoryRow();
+    renderBestSellers();
+    renderNewArrivals();
+    renderCartBadge();
+    renderCartDrawer();
+    var initialView = hashToView(location.hash.replace("#","") || "home");
+    goToView(initialView);
+    if(initialView==="products") renderProductsView();
+    if(initialView==="admin") showAdmin();
+  });
 });
 
 })();

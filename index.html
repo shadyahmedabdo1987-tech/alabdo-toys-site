@@ -2352,6 +2352,57 @@ function renderAccountModal(){
      نسخة منه، (2) بعد الإغلاق تظهر شاشة يدخل فيها رقم سري جديد ويأكّده،
      وبعد الحفظ بيتوجّه لشاشة الدخول. الكود ده مش حاجة بيكتبها العميل تاني -
      المتصفح محتفظ بيه في الذاكرة وبيبعته هو نفسه مع الرقم السري الجديد. */
+  if(acctState.resetFlow && acctState.resetFlow.step==="identify"){
+    var fmR = accountFieldMeta();
+    html += '<div class="modal-info" style="padding:30px 24px;">'
+      + '<span style="font-size:34px;">🔑</span>'
+      + '<h3>استرجاع الرقم السري</h3>'
+      + '<form id="acctForgotForm" style="display:flex; flex-direction:column; gap:12px; margin-top:6px;">'
+        + '<div class="field"><label for="acctForgotIdentifier">'+fmR.label+'</label><input id="acctForgotIdentifier" required type="'+fmR.type+'" inputmode="'+fmR.inputmode+'" placeholder="'+fmR.placeholder+'"></div>'
+        + '<div class="field"><label for="acctForgotRecoveryEmail">الإيميل المسجل</label><input id="acctForgotRecoveryEmail" required type="email" placeholder="example@email.com"></div>'
+        + '<p id="acctForgotMsg" style="color:var(--pink-deep); font-size:13px; display:none;"></p>'
+        + '<button type="submit" class="btn btn-primary btn-block">إرسال</button>'
+      + '</form>'
+      + '<button type="button" id="acctForgotBack" class="acct-owner-link">رجوع لتسجيل الدخول</button>'
+    + '</div>';
+    document.getElementById("modalCard").innerHTML = html;
+    document.getElementById("modalCloseBtn").addEventListener("click", closeAllPanels);
+    document.getElementById("acctForgotBack").addEventListener("click", function(){
+      acctState.resetFlow = null;
+      renderAccountModal();
+    });
+    document.getElementById("acctForgotForm").addEventListener("submit", function(e){
+      e.preventDefault();
+      var identifier = document.getElementById("acctForgotIdentifier").value.trim();
+      var email = document.getElementById("acctForgotRecoveryEmail").value.trim();
+      var msg = document.getElementById("acctForgotMsg");
+      msg.style.display = "none";
+      if(!identifier || !email) return;
+      var btn = e.target.querySelector('[type="submit"]');
+      btn.disabled = true;
+      fetch("/api/customers/reset", {
+        method: "POST",
+        headers: { "content-type":"application/json" },
+        body: JSON.stringify({ phone:identifier, email:email })
+      }).then(function(r){ return r.json(); })
+        .then(function(res){
+          btn.disabled = false;
+          if(res && res.ok){
+            acctState.resetFlow = { step:"code", phone:identifier, code:res.code };
+            renderAccountModal();
+          } else {
+            msg.textContent = "رقم الموبايل أو الإيميل مش مطابقين لحساب مسجّل.";
+            msg.style.display = "block";
+          }
+        })
+        .catch(function(){
+          btn.disabled = false;
+          msg.textContent = "تعذر الاتصال بالسيرفر، تأكد من الإنترنت وجرّب تاني.";
+          msg.style.display = "block";
+        });
+    });
+    return;
+  }
   if(acctState.resetFlow && acctState.resetFlow.step==="code"){
     var rf = acctState.resetFlow;
     html += '<div class="modal-info" style="padding:30px 24px; align-items:center; text-align:center;">'
@@ -2542,13 +2593,7 @@ function renderAccountModal(){
       + '<p id="acctLoginError" style="color:var(--pink-deep); font-size:13px; display:none;">البيانات مش صحيحة، أو الحساب ده اتسجل من جهاز/متصفح تاني</p>'
       + '<button type="submit" class="btn btn-primary btn-block">دخول</button>'
     + '</form>'
-    + '<button type="button" id="acctForgotLink" class="acct-owner-link">نسيت الرقم السري؟</button>'
-    + '<div id="acctForgotBox" class="acct-forgot-box">'
-      + '<input type="'+fm.type+'" id="acctForgotIdentifier" inputmode="'+fm.inputmode+'" placeholder="'+fm.placeholder+'" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">'
-      + '<input type="email" id="acctForgotRecoveryEmail" placeholder="الإيميل المسجل" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">'
-      + '<button type="button" class="btn btn-outline btn-block" id="acctForgotBtn">إرسال</button>'
-      + '<p id="acctForgotMsg" style="font-size:13px; display:none;"></p>'
-    + '</div>';
+    + '<button type="button" id="acctForgotLink" class="acct-owner-link">نسيت الرقم السري؟</button>';
     /* لا يوجد أي رابط أو زر "أنا صاحب المتجر" هنا عمداً — دخول صاحب المتجر بقى
        مش ظاهر للعملاء خالص، ومتاح بس من رابط سري يفتحه صاحب المتجر مباشرة
        (راجع ADMIN_SECRET_HASH في قسم "View router" تحت). */
@@ -2651,44 +2696,10 @@ function renderAccountModal(){
         });
     });
     document.getElementById("acctForgotLink").addEventListener("click", function(){
-      document.getElementById("acctForgotBox").classList.add("show");
-      this.hidden = true;
       var typed = document.getElementById("acctLoginIdentifier").value.trim();
+      acctState.resetFlow = { step:"identify" };
+      renderAccountModal();
       if(typed) document.getElementById("acctForgotIdentifier").value = typed;
-      document.getElementById("acctForgotIdentifier").focus();
-    });
-    /* الاسترجاع محتاج رقم الموبايل + الإيميل المسجلين عند السيرفر يتطابقوا
-       مع بعض — أأمن من مجرد معرفة رقم موبايل حد عشان تدخل حسابه، لأن محدش
-       غير صاحب الحساب يعرف الإيميل اللي سجل بيه. */
-    document.getElementById("acctForgotBtn").addEventListener("click", function(){
-      var identifier = document.getElementById("acctForgotIdentifier").value.trim();
-      var email = document.getElementById("acctForgotRecoveryEmail").value.trim();
-      var msg = document.getElementById("acctForgotMsg");
-      if(!identifier || !email) return;
-      var btn = this;
-      btn.disabled = true;
-      fetch("/api/customers/reset", {
-        method: "POST",
-        headers: { "content-type":"application/json" },
-        body: JSON.stringify({ phone:identifier, email:email })
-      }).then(function(r){ return r.json(); })
-        .then(function(res){
-          btn.disabled = false;
-          if(res && res.ok){
-            acctState.resetFlow = { step:"code", phone:identifier, code:res.code };
-            renderAccountModal();
-          } else {
-            msg.style.color = "var(--pink-deep)";
-            msg.style.display = "block";
-            msg.textContent = "رقم الموبايل أو الإيميل مش مطابقين لحساب مسجّل.";
-          }
-        })
-        .catch(function(){
-          btn.disabled = false;
-          msg.style.color = "var(--pink-deep)";
-          msg.style.display = "block";
-          msg.textContent = "تعذر الاتصال بالسيرفر، تأكد من الإنترنت وجرّب تاني.";
-        });
     });
   }
 }

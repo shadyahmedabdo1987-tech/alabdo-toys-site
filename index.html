@@ -2490,6 +2490,7 @@ function renderAccountModal(){
       + '<span style="font-size:34px;">🔒</span>'
       + '<h3>اختار رقمك السري الجديد</h3>'
       + '<form id="acctResetNewPassForm" style="display:flex; flex-direction:column; gap:12px; margin-top:6px;">'
+        + '<div class="field"><label for="acctResetCode">كود التحقق</label><input id="acctResetCode" required inputmode="numeric" placeholder="الكود اللي ظهرلك في الشاشة اللي فاتت"></div>'
         + '<div class="field"><label for="acctResetPassword">الرقم السري الجديد</label><input id="acctResetPassword" required type="password" minlength="6" placeholder="6 حروف/أرقام على الأقل"></div>'
         + '<div class="field"><label for="acctResetPasswordConfirm">تأكيد الرقم السري الجديد</label><input id="acctResetPasswordConfirm" required type="password" minlength="6" placeholder="اكتب نفس الرقم السري تاني"></div>'
         + '<p id="acctResetError" style="color:var(--pink-deep); font-size:13px; display:none;"></p>'
@@ -2499,10 +2500,12 @@ function renderAccountModal(){
     document.getElementById("modalCloseBtn").addEventListener("click", closeAllPanels);
     document.getElementById("acctResetNewPassForm").addEventListener("submit", function(e){
       e.preventDefault();
+      var code = document.getElementById("acctResetCode").value.trim();
       var pass = document.getElementById("acctResetPassword").value;
       var passConfirm = document.getElementById("acctResetPasswordConfirm").value;
       var errEl = document.getElementById("acctResetError");
       errEl.style.display = "none";
+      if(!code){ errEl.textContent = "لازم تكتب كود التحقق اللي ظهرلك."; errEl.style.display = "block"; return; }
       if(pass.length < 6){ errEl.textContent = "الرقم السري لازم يكون 6 حروف/أرقام على الأقل."; errEl.style.display = "block"; return; }
       if(pass !== passConfirm){ errEl.textContent = "الرقم السري وتأكيده مش متطابقين."; errEl.style.display = "block"; return; }
       var btn = e.target.querySelector('[type="submit"]');
@@ -2510,7 +2513,7 @@ function renderAccountModal(){
       fetch("/api/customers/reset-confirm", {
         method: "POST",
         headers: { "content-type":"application/json" },
-        body: JSON.stringify({ phone:rf2.phone, code:rf2.code, password:pass })
+        body: JSON.stringify({ phone:rf2.phone, code:code, password:pass })
       }).then(function(r){ return r.json(); })
         .then(function(res){
           btn.disabled = false;

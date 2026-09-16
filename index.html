@@ -323,6 +323,12 @@ ul{margin:0; padding:0; list-style:none;}
    وكمان رسالة "تم حفظ بياناتك بنجاح" بعد الطلب) بيستخدم عمود واحد بس في
    النص عشان البيانات ما تفضلش متكدسة على جنب وباقي المساحة فاضية. */
 .modal-card.acct-card{grid-template-columns:1fr; max-width:440px;}
+/* صندوق "نسيت الباسورد" (عميل وأدمن) - display:flex هنا بس، مش inline، عشان
+   [hidden] (اللي بيحط display:none) يقدر يغلبها لما مفيش .show؛ لو حطينا
+   display:flex كـ inline style على العنصر نفسه، الـ inline style بتكسب
+   وتفضل الخانات ظاهرة طول الوقت حتى مع وجود hidden. */
+.acct-forgot-box{display:none; flex-direction:column; gap:10px;}
+.acct-forgot-box.show{display:flex;}
 .modal-close{position:absolute; top:14px; inset-inline-end:14px; width:36px; height:36px; border-radius:50%; background:var(--surface-2); border:0; display:flex; align-items:center; justify-content:center; z-index:2;}
 .modal-close svg{width:17px; height:17px;}
 .modal-media{display:flex; align-items:center; justify-content:center; font-size:110px; min-height:260px; overflow:hidden;}
@@ -1009,7 +1015,7 @@ ul{margin:0; padding:0; list-style:none;}
         <p id="adminLoginError" style="color:var(--pink-deep); font-size:13px; display:none;">بيانات الدخول غير صحيحة</p>
         <p id="adminLockoutMsg" style="color:var(--pink-deep); font-size:13px; display:none;"></p>
         <button type="button" id="adminForgotLink" class="acct-owner-link">نسيت كلمة المرور؟</button>
-        <div id="adminForgotBox" hidden style="display:flex; flex-direction:column; gap:10px;">
+        <div id="adminForgotBox" class="acct-forgot-box">
           <input type="email" id="adminForgotEmail" placeholder="الإيميل الاحتياطي" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
           <input type="tel" id="adminForgotPhone" placeholder="رقم الموبايل الاحتياطي" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
           <button type="button" class="btn btn-outline btn-block" id="adminForgotBtn">استرجاع كلمة المرور الآن</button>
@@ -2248,7 +2254,7 @@ document.getElementById("suPassShow").addEventListener("change", function(){
 
 /* ---------- Admin: forgot password (dedicated admin login page) ---------- */
 document.getElementById("adminForgotLink").addEventListener("click", function(){
-  document.getElementById("adminForgotBox").hidden = false;
+  document.getElementById("adminForgotBox").classList.add("show");
   this.hidden = true;
 });
 document.getElementById("adminForgotBtn").addEventListener("click", function(){
@@ -2469,7 +2475,7 @@ function renderAccountModal(){
       + '<button type="submit" class="btn btn-primary btn-block">دخول</button>'
     + '</form>'
     + '<button type="button" id="acctForgotLink" class="acct-owner-link">نسيت الرقم السري؟</button>'
-    + '<div id="acctForgotBox" hidden style="display:flex; flex-direction:column; gap:10px;">'
+    + '<div id="acctForgotBox" class="acct-forgot-box">'
       + '<input type="'+fm.type+'" id="acctForgotIdentifier" inputmode="'+fm.inputmode+'" placeholder="'+fm.placeholder+'" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">'
       + '<input type="email" id="acctForgotRecoveryEmail" placeholder="الإيميل المسجل" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">'
       + '<button type="button" class="btn btn-outline btn-block" id="acctForgotBtn">استرجاع الباسورد</button>'
@@ -2577,7 +2583,7 @@ function renderAccountModal(){
         });
     });
     document.getElementById("acctForgotLink").addEventListener("click", function(){
-      document.getElementById("acctForgotBox").hidden = false;
+      document.getElementById("acctForgotBox").classList.add("show");
       this.hidden = true;
       var typed = document.getElementById("acctLoginIdentifier").value.trim();
       if(typed) document.getElementById("acctForgotIdentifier").value = typed;

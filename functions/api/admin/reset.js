@@ -1,9 +1,12 @@
-import { json, getAdminAccount, saveAdminAccount, generatePassword, sha256Hex } from "../../_lib.js";
+import { json, getAdminAccount, saveAdminAccount } from "../../_lib.js";
 
-/* POST /api/admin/reset - body {email, phone}. If they match the recovery
-   email AND recovery phone saved via the admin settings screen, generates a
-   fresh password, stores it, and returns it once on screen (no email is
-   actually sent - same trade-off as before, just checked centrally now). */
+/* POST /api/admin/reset - body {email, phone}. Step 1 of the admin
+   password-reset flow (same two-step design as the customer one): if the
+   recovery email AND recovery phone match what was saved via the admin
+   settings screen, generates a one-time 6-digit verification code, stores
+   it on the account (with a 15-minute expiry) and returns it once so it
+   can be shown on screen. The admin picks their own new password in step 2
+   at /api/admin/reset-confirm - this endpoint never sets a password. */
 export async function onRequestPost({ request, env }){
   var body;
   try{ body = await request.json(); }catch(e){ return json({ ok:false, reason:"bad_json" }, 400); }
@@ -17,8 +20,9 @@ export async function onRequestPost({ request, env }){
     return json({ ok:false, reason:"mismatch" });
   }
 
-  var newPass = generatePassword(10);
-  acc.passwordHash = await sha256Hex(newPass);
+  var code = String(Math.floor(100000 + Math.random() * 900000));
+  acc.resetCode = code;
+  acc.resetCodeExpires = Date.now() + 15 * 60 * 1000;
   await saveAdminAccount(env, acc);
-  return json({ ok:true, password: newPass });
+  return json({ ok:true, code: code });
 }

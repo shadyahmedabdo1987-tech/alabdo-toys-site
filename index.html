@@ -1182,6 +1182,14 @@ ul{margin:0; padding:0; list-style:none;}
   </div>
 </aside>
 
+<aside class="drawer" id="acctDrawer" role="dialog" aria-label="حسابي" aria-modal="true">
+  <div class="drawer-head">
+    <h3>🙋 حسابي</h3>
+    <button class="drawer-close" id="acctDrawerClose" aria-label="إغلاق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
+  <div class="drawer-body" id="acctDrawerBody"></div>
+</aside>
+
 <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true">
   <div class="modal-card" id="modalCard"></div>
 </div>
@@ -1272,6 +1280,43 @@ rebuildCatMap();
 function catName(id){ return CAT_MAP[id] ? CAT_MAP[id].name : ""; }
 function fmt(n){ return n.toLocaleString("ar-EG"); }
 function stars(r){ var full=Math.round(r); return "★★★★★".slice(0,full)+"☆☆☆☆☆".slice(0,5-full); }
+/* بيبني كارت فاتورة كامل لطلب واحد (الصنف/الكمية/السعر/الإجمالي وبيانات
+   التوصيل) - مستخدم في شاشة تفاصيل الطلب اللي بتتفتح من قائمة "حسابي". */
+function orderInvoiceHtml(o){
+  var d = new Date(o.createdAt);
+  var rows = (o.items||[]).map(function(it){
+    var line = (+it.price||0) * (+it.qty||0);
+    return '<tr>'
+      + '<td style="padding:3px 0;">'+it.name+'</td>'
+      + '<td class="tabular" style="text-align:center; padding:3px 0;">'+it.qty+'</td>'
+      + '<td class="tabular" style="text-align:center; padding:3px 0;">'+fmt(it.price)+'</td>'
+      + '<td class="tabular" style="text-align:left; padding:3px 0;">'+fmt(line)+'</td>'
+    + '</tr>';
+  }).join("");
+  return '<div style="border:1.5px solid var(--border); border-radius:14px; padding:14px 16px; text-align:right; display:flex; flex-direction:column; gap:10px;">'
+    + '<div style="display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:6px;">'
+      + '<strong style="font-size:13px;">فاتورة #'+String(o.id||"").slice(-6)+'</strong>'
+      + '<span class="tabular" style="font-size:12px; color:var(--ink-soft);">'+d.toLocaleDateString("ar-EG")+'</span>'
+    + '</div>'
+    + '<div style="font-size:12.5px; color:var(--ink-soft); line-height:1.8;">'
+      + '<div>الاسم: '+(o.name||"-")+'</div>'
+      + '<div>الموبايل: '+(o.phone||"-")+'</div>'
+      + '<div>العنوان: '+(o.address||"-")+'</div>'
+    + '</div>'
+    + '<table style="width:100%; border-collapse:collapse; font-size:12.5px;">'
+      + '<thead><tr style="border-bottom:1px solid var(--border); color:var(--ink-soft);">'
+        + '<th style="text-align:right; font-weight:700; padding:4px 0;">الصنف</th>'
+        + '<th style="text-align:center; font-weight:700; padding:4px 0;">الكمية</th>'
+        + '<th style="text-align:center; font-weight:700; padding:4px 0;">السعر</th>'
+        + '<th style="text-align:left; font-weight:700; padding:4px 0;">الإجمالي</th>'
+      + '</tr></thead>'
+      + '<tbody>'+rows+'</tbody>'
+    + '</table>'
+    + '<div style="display:flex; justify-content:space-between; font-weight:800; font-size:13.5px; border-top:1.5px solid var(--border); padding-top:8px;">'
+      + '<span>الإجمالي الكلي</span><span class="tabular">'+fmt(o.total)+' ج.م</span>'
+    + '</div>'
+  + '</div>';
+}
 
 /* أي منتج ممكن يبقى معاه أكتر من صورة (images[]) - القديم اللي كان بيتسجل
    بحقل image واحد لسه شغال زي ما هو (fallback) عشان المنتجات اللي كانت
@@ -1644,6 +1689,7 @@ function showToast(msg){
 /* ---------- Overlay / Drawer / Modal ---------- */
 var overlay = document.getElementById("overlay");
 var cartDrawer = document.getElementById("cartDrawer");
+var acctDrawer = document.getElementById("acctDrawer");
 var mobileNav = document.getElementById("mobileNav");
 var modalBackdrop = document.getElementById("modalBackdrop");
 
@@ -1657,10 +1703,23 @@ function openDrawer(){
 }
 function closeAllPanels(){
   cartDrawer.classList.remove("show");
+  acctDrawer.classList.remove("show");
   mobileNav.classList.remove("show");
   modalBackdrop.classList.remove("show");
+  document.getElementById("modalCard").classList.remove("acct-card");
   overlay.classList.remove("show");
   document.body.style.overflow="";
+}
+/* بيقفل مودال تفاصيل الطلب بس (المفتوح فوق قائمة "حسابي") من غير ما يقفل
+   القائمة الجانبية نفسها - العميل هو اللي يقفلها بنفسه من زرار الإغلاق
+   بتاعها. */
+function closeOrderDetailModal(){
+  modalBackdrop.classList.remove("show");
+  document.getElementById("modalCard").classList.remove("acct-card");
+  if(!acctDrawer.classList.contains("show") && !cartDrawer.classList.contains("show")){
+    overlay.classList.remove("show");
+    document.body.style.overflow="";
+  }
 }
 overlay.addEventListener("click", closeAllPanels);
 document.getElementById("cartClose").addEventListener("click", closeAllPanels);
@@ -1786,7 +1845,11 @@ function openProductModal(id){
   }
   loadProductReviews(p);
 }
-modalBackdrop.addEventListener("click", function(e){ if(e.target===modalBackdrop) closeAllPanels(); });
+modalBackdrop.addEventListener("click", function(e){
+  if(e.target!==modalBackdrop) return;
+  if(acctDrawer.classList.contains("show")) closeOrderDetailModal();
+  else closeAllPanels();
+});
 
 /* بتجيب متوسط التقييم الحقيقي وعدد التقييمات وقائمتها من /api/reviews - ده
    التقييم الحقيقي اللي العملاء كتبوه فعلاً، منفصل عن رقم p.rating/p.reviews
@@ -2503,66 +2566,13 @@ function renderAccountModal(){
     return;
   }
 
-  var customer = getCustomerProfile();
-  if(customer){
-    html += '<div class="modal-info" style="padding:30px 24px;">'
-      + '<span style="font-size:34px;">👋</span>'
-      + '<h3>أهلاً '+(customer.name || "بيك")+'</h3>'
-      + '<p style="color:var(--ink-soft); font-size:13.5px;">مسجّل برقم الموبايل: '+customer.identifier+'</p>'
-      + '<div class="hero-ctas" style="margin-top:16px; justify-content:flex-start;">'
-        + '<button class="btn btn-outline" id="acctShowOrders" type="button">طلباتي</button>'
-        + '<button class="btn btn-outline" id="acctLogout" type="button">تسجيل خروج</button>'
-      + '</div>'
-      + '<div id="acctOrdersBox" style="margin-top:14px; display:flex; flex-direction:column; gap:10px;"></div>'
-    + '</div>';
-    document.getElementById("modalCard").innerHTML = html;
-    document.getElementById("modalCloseBtn").addEventListener("click", closeAllPanels);
-    document.getElementById("acctLogout").addEventListener("click", function(){ clearCustomerProfile(); FAVORITES = {}; refreshFavoriteViews(); updateAccountLabel(); goToView("home"); });
-    document.getElementById("acctShowOrders").addEventListener("click", function(){
-      var box = document.getElementById("acctOrdersBox");
-      box.innerHTML = '<p style="color:var(--ink-soft); font-size:13px;">جاري التحميل...</p>';
-      fetch("/api/orders", { headers: customerAuthHeaders(), cache:"no-store" }).then(function(r){ return r.json(); })
-        .then(function(res){
-          if(!box) return;
-          if(!res || !res.ok || !res.orders.length){ box.innerHTML = '<p style="color:var(--ink-soft); font-size:13px;">لسه مفيش طلبات مسجّلة على حسابك (بتتسجل بس لو طلبت وانت مسجّل دخول).</p>'; return; }
-          box.innerHTML = res.orders.slice().reverse().map(function(o){
-            var d = new Date(o.createdAt);
-            var rows = (o.items||[]).map(function(it){
-              var line = (+it.price||0) * (+it.qty||0);
-              return '<tr>'
-                + '<td style="padding:3px 0;">'+it.name+'</td>'
-                + '<td class="tabular" style="text-align:center; padding:3px 0;">'+it.qty+'</td>'
-                + '<td class="tabular" style="text-align:center; padding:3px 0;">'+fmt(it.price)+'</td>'
-                + '<td class="tabular" style="text-align:left; padding:3px 0;">'+fmt(line)+'</td>'
-              + '</tr>';
-            }).join("");
-            return '<div style="border:1.5px solid var(--border); border-radius:14px; padding:14px 16px; text-align:right; display:flex; flex-direction:column; gap:10px;">'
-              + '<div style="display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:6px;">'
-                + '<strong style="font-size:13px;">فاتورة #'+String(o.id||"").slice(-6)+'</strong>'
-                + '<span class="tabular" style="font-size:12px; color:var(--ink-soft);">'+d.toLocaleDateString("ar-EG")+'</span>'
-              + '</div>'
-              + '<div style="font-size:12.5px; color:var(--ink-soft); line-height:1.8;">'
-                + '<div>الاسم: '+(o.name||"-")+'</div>'
-                + '<div>الموبايل: '+(o.phone||"-")+'</div>'
-                + '<div>العنوان: '+(o.address||"-")+'</div>'
-              + '</div>'
-              + '<table style="width:100%; border-collapse:collapse; font-size:12.5px;">'
-                + '<thead><tr style="border-bottom:1px solid var(--border); color:var(--ink-soft);">'
-                  + '<th style="text-align:right; font-weight:700; padding:4px 0;">الصنف</th>'
-                  + '<th style="text-align:center; font-weight:700; padding:4px 0;">الكمية</th>'
-                  + '<th style="text-align:center; font-weight:700; padding:4px 0;">السعر</th>'
-                  + '<th style="text-align:left; font-weight:700; padding:4px 0;">الإجمالي</th>'
-                + '</tr></thead>'
-                + '<tbody>'+rows+'</tbody>'
-              + '</table>'
-              + '<div style="display:flex; justify-content:space-between; font-weight:800; font-size:13.5px; border-top:1.5px solid var(--border); padding-top:8px;">'
-                + '<span>الإجمالي الكلي</span><span class="tabular">'+fmt(o.total)+' ج.م</span>'
-              + '</div>'
-            + '</div>';
-          }).join("");
-        })
-        .catch(function(){ box.innerHTML = '<p style="color:var(--pink-deep); font-size:13px;">تعذر تحميل الطلبات، جرّب تاني.</p>'; });
-    });
+  /* عميل مسجّل دخول - حسابه بقى بيتفتح كقائمة جانبية (شوف openAcctDrawer)
+     مش المودال ده؛ لو حد استدعى المودال وهو مسجّل دخول أصلاً (مثلاً زرار
+     "تسجيل الدخول الآن" بعد التسجيل، لأن التسجيل بيسجّله دخوله فورًا) نوجّهه
+     لنفس القائمة الجانبية بدل ما يشوف مودال قديم. */
+  if(isCustomerAuthed()){
+    closeAllPanels();
+    openAcctDrawer();
     return;
   }
 
@@ -2711,7 +2721,74 @@ function openAccountModal(){
   renderAccountModal();
   modalBackdrop.classList.add("show"); overlay.classList.add("show"); document.body.style.overflow="hidden";
 }
-document.getElementById("accountBtn").addEventListener("click", openAccountModal);
+
+/* ---------- قائمة "حسابي" الجانبية (عميل مسجّل دخول بس) ----------
+   بتفتح من الشمال زي عربة الشراء بالظبط، وفيها فوق اسم العميل وتحته كل
+   طلباته على طول (من غير ما يدوس زرار إضافي عشان يشوفهم). كل طلب بيتفتح
+   في شاشة منفصلة (مودال) فوق القائمة، وقفل الشاشة دي بيرجّعه للقائمة اللي
+   لسه فاتحة - القائمة نفسها بتفضل مفتوحة لحد ما العميل يقفلها بنفسه. */
+function openAcctDrawer(){
+  renderAcctDrawerBody();
+  acctDrawer.classList.add("show"); overlay.classList.add("show"); document.body.style.overflow="hidden";
+}
+function renderAcctDrawerBody(){
+  var body = document.getElementById("acctDrawerBody");
+  var customer = getCustomerProfile();
+  if(!customer){ return; }
+  var html = '<div style="padding-bottom:4px; border-bottom:1px solid var(--border); margin-bottom:4px;">'
+    + '<div style="font-size:16px; font-weight:800;">👋 '+(customer.name || "أهلاً بيك")+'</div>'
+    + '<div style="color:var(--ink-soft); font-size:12.5px; margin-top:2px;">مسجّل برقم الموبايل: '+customer.identifier+'</div>'
+    + '<button type="button" class="btn btn-outline btn-block" id="acctDrawerLogout" style="margin-top:12px;">تسجيل خروج</button>'
+  + '</div>'
+  + '<div style="font-weight:800; font-size:13.5px; margin-top:4px;">طلباتي</div>'
+  + '<div id="acctDrawerOrders" style="display:flex; flex-direction:column; gap:10px;"><p style="color:var(--ink-soft); font-size:13px;">جاري التحميل...</p></div>';
+  body.innerHTML = html;
+  document.getElementById("acctDrawerLogout").addEventListener("click", function(){
+    clearCustomerProfile(); FAVORITES = {}; refreshFavoriteViews(); updateAccountLabel(); closeAllPanels(); goToView("home");
+  });
+  fetch("/api/orders", { headers: customerAuthHeaders(), cache:"no-store" }).then(function(r){ return r.json(); })
+    .then(function(res){
+      var box = document.getElementById("acctDrawerOrders");
+      if(!box) return;
+      if(!res || !res.ok || !res.orders.length){ box.innerHTML = '<p style="color:var(--ink-soft); font-size:13px;">لسه مفيش طلبات مسجّلة على حسابك (بتتسجل بس لو طلبت وانت مسجّل دخول).</p>'; return; }
+      var orders = res.orders.slice().reverse();
+      box.innerHTML = orders.map(function(o, i){
+        var itemsTxt = (o.items||[]).map(function(it){ return it.name+' ×'+it.qty; }).join("، ");
+        var d = new Date(o.createdAt);
+        return '<button type="button" data-order-row="'+i+'" style="text-align:right; width:100%; border:1.5px solid var(--border); border-radius:12px; padding:10px 12px; background:var(--surface); cursor:pointer;">'
+          + '<div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px;"><strong style="font-size:12.5px;">فاتورة #'+String(o.id||"").slice(-6)+'</strong><span class="tabular" style="font-size:11.5px; color:var(--ink-soft);">'+d.toLocaleDateString("ar-EG")+'</span></div>'
+          + '<div style="font-size:12px; color:var(--ink-soft); margin-top:4px;">'+itemsTxt+'</div>'
+          + '<div class="tabular" style="font-size:12.5px; font-weight:800; margin-top:4px;">'+fmt(o.total)+' ج.م</div>'
+        + '</button>';
+      }).join("");
+      box.querySelectorAll("[data-order-row]").forEach(function(btn){
+        btn.addEventListener("click", function(){ showOrderDetailModal(orders[+btn.dataset.orderRow]); });
+      });
+    })
+    .catch(function(){
+      var box = document.getElementById("acctDrawerOrders");
+      if(box) box.innerHTML = '<p style="color:var(--pink-deep); font-size:13px;">تعذر تحميل الطلبات، جرّب تاني.</p>';
+    });
+}
+document.getElementById("acctDrawerClose").addEventListener("click", closeAllPanels);
+/* بيفتح فاتورة طلب واحد كامل في شاشة (مودال) فوق قائمة "حسابي" - قفلها
+   (زرار الإغلاق أو الدوس برّه الكارت) بيرجّع لنفس القائمة، من غير ما يقفلها. */
+function showOrderDetailModal(order){
+  var html = '<button class="modal-close" id="modalCloseBtn" aria-label="إغلاق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
+    + '<div class="modal-info" style="padding:30px 24px;">'
+      + '<h3 style="margin-bottom:4px;">تفاصيل الطلب</h3>'
+      + orderInvoiceHtml(order)
+    + '</div>';
+  document.getElementById("modalCard").classList.add("acct-card");
+  document.getElementById("modalCard").innerHTML = html;
+  document.getElementById("modalCloseBtn").addEventListener("click", closeOrderDetailModal);
+  modalBackdrop.classList.add("show"); document.body.style.overflow="hidden";
+}
+
+document.getElementById("accountBtn").addEventListener("click", function(){
+  if(isCustomerAuthed() && !isAdminAuthed()){ openAcctDrawer(); }
+  else { openAccountModal(); }
+});
 
 function fillCatSelect(){
   document.getElementById("pfCat").innerHTML = CATS.map(function(c){ return '<option value="'+c.id+'">'+c.name+'</option>'; }).join("");

@@ -1318,6 +1318,16 @@ function saveProductsToServer(onDone){
     })
     .catch(function(){ if(onDone) onDone(false); showToast("⚠️ اتحفظ التعديل عندك بس، لكن السيرفر مش راضي يستجيب دلوقتي — جرّب تاني كمان شوية."); });
 }
+/* بيسحب آخر نسخة من الكتالوج من السيرفر (مش من نسخة المتصفح القديمة اللي
+   ممكن تكون فاتت عليها ساعات) قبل أي إضافة/تعديل/حذف في لوحة التحكم، وبعدين
+   يطبّق التعديل المطلوب فوق النسخة الطازة دي. ده بيمنع مشكلة إن لو فتحت
+   لوحة التحكم من جهازين مختلفين (موبايل ولابتوب مثلاً)، حفظ من جهاز يمسح
+   منتجات اتضافت من الجهاز التاني بعد ما فتحت الصفحة. */
+function refreshThenRun(fn){
+  fetch("/api/products", {cache:"no-store"}).then(function(r){ if(!r.ok) throw 0; return r.json(); })
+    .then(function(data){ if(data) applyData(data); fn(); })
+    .catch(function(){ fn(); });
+}
 
 /* ---------- Theme ---------- */
 var root = document.documentElement;
@@ -2293,7 +2303,12 @@ function updateAccountLabel(){
 }
 
 function accountFieldMeta(){
-  return { label:"رقم الواتساب", type:"tel", placeholder:"01xxxxxxxxx", inputmode:"numeric" };
+  return { label:"رقم الموبايل", type:"tel", placeholder:"01xxxxxxxxx", inputmode:"numeric" };
+}
+/* الدخول (على عكس التسجيل) بيقبل رقم الموبايل أو الإيميل المسجلين - حقل نصي
+   عادي عشان ياخد أي الاتنين. */
+function loginFieldMeta(){
+  return { label:"رقم الموبايل أو الإيميل", type:"text", placeholder:"01xxxxxxxxx أو example@email.com", inputmode:"email" };
 }
 
 /* حسابات العملاء بترقم الموبايل + الاسم بالكامل. الإيميل مطلوب بس لاسترجاع
@@ -2327,14 +2342,24 @@ function renderAccountModal(){
      admin's own recovery flow). */
   if(acctState.registerResult){
     var r = acctState.registerResult;
-    html += '<div class="modal-info" style="padding:30px 24px;">'
-      + '<span style="font-size:34px;">'+(r.kind==="reset"?"🔑":"🎉")+'</span>'
-      + '<h3>'+(r.kind==="reset"?"اتغيّرت كلمة المرور بنجاح":"اتعمل الحساب بنجاح")+'</h3>'
-      + '<p style="color:var(--ink-soft); font-size:13.5px;">ده الباسورد بتاعك - احتفظ بيه كويس، وهتحتاجه دلوقتي عشان تسجل دخولك:</p>'
-      + '<div class="pass-reveal"><span class="code">'+r.password+'</span></div>'
-      + '<div class="hero-ctas" style="margin-top:16px; justify-content:flex-start;">'
-        + '<button class="btn btn-primary" id="acctContinue" type="button">تسجيل الدخول الآن</button>'
-      + '</div></div>';
+    if(r.kind==="reset"){
+      html += '<div class="modal-info" style="padding:30px 24px;">'
+        + '<span style="font-size:34px;">🔑</span>'
+        + '<h3>اتغيّرت كلمة المرور بنجاح</h3>'
+        + '<p style="color:var(--ink-soft); font-size:13.5px;">ده الباسورد بتاعك - احتفظ بيه كويس، وهتحتاجه دلوقتي عشان تسجل دخولك:</p>'
+        + '<div class="pass-reveal"><span class="code">'+r.password+'</span></div>'
+        + '<div class="hero-ctas" style="margin-top:16px; justify-content:flex-start;">'
+          + '<button class="btn btn-primary" id="acctContinue" type="button">تسجيل الدخول الآن</button>'
+        + '</div></div>';
+    } else {
+      html += '<div class="modal-info" style="padding:30px 24px;">'
+        + '<span style="font-size:34px;">🎉</span>'
+        + '<h3>تم التسجيل</h3>'
+        + '<p style="color:var(--ink-soft); font-size:13.5px;">اتعمل حسابك بنجاح. دلوقتي سجّل دخولك برقم الموبايل أو الإيميل والباسورد اللي اخترته:</p>'
+        + '<div class="hero-ctas" style="margin-top:16px; justify-content:flex-start;">'
+          + '<button class="btn btn-primary" id="acctContinue" type="button">تسجيل الدخول الآن</button>'
+        + '</div></div>';
+    }
     document.getElementById("modalCard").innerHTML = html;
     document.getElementById("modalCloseBtn").addEventListener("click", closeAllPanels);
     document.getElementById("acctContinue").addEventListener("click", function(){
@@ -2352,7 +2377,7 @@ function renderAccountModal(){
     html += '<div class="modal-info" style="padding:30px 24px;">'
       + '<span style="font-size:34px;">👋</span>'
       + '<h3>أهلاً '+(customer.name || "بيك")+'</h3>'
-      + '<p style="color:var(--ink-soft); font-size:13.5px;">مسجّل برقم الواتساب: '+customer.identifier+'</p>'
+      + '<p style="color:var(--ink-soft); font-size:13.5px;">مسجّل برقم الموبايل: '+customer.identifier+'</p>'
       + '<div class="hero-ctas" style="margin-top:16px; justify-content:flex-start;">'
         + '<button class="btn btn-outline" id="acctShowOrders" type="button">طلباتي</button>'
         + '<button class="btn btn-outline" id="acctLogout" type="button">تسجيل خروج</button>'
@@ -2370,11 +2395,38 @@ function renderAccountModal(){
           if(!box) return;
           if(!res || !res.ok || !res.orders.length){ box.innerHTML = '<p style="color:var(--ink-soft); font-size:13px;">لسه مفيش طلبات مسجّلة على حسابك (بتتسجل بس لو طلبت وانت مسجّل دخول).</p>'; return; }
           box.innerHTML = res.orders.slice().reverse().map(function(o){
-            var itemsTxt = o.items.map(function(it){ return it.name+' ×'+it.qty; }).join("، ");
             var d = new Date(o.createdAt);
-            return '<div style="border:1.5px solid var(--border); border-radius:12px; padding:10px 12px; text-align:right;">'
-              + '<div style="font-size:13px;">'+itemsTxt+'</div>'
-              + '<div class="tabular" style="font-size:12.5px; color:var(--ink-soft); margin-top:4px;">الإجمالي: '+fmt(o.total)+' ج.م — '+d.toLocaleDateString("ar-EG")+'</div>'
+            var rows = (o.items||[]).map(function(it){
+              var line = (+it.price||0) * (+it.qty||0);
+              return '<tr>'
+                + '<td style="padding:3px 0;">'+it.name+'</td>'
+                + '<td class="tabular" style="text-align:center; padding:3px 0;">'+it.qty+'</td>'
+                + '<td class="tabular" style="text-align:center; padding:3px 0;">'+fmt(it.price)+'</td>'
+                + '<td class="tabular" style="text-align:left; padding:3px 0;">'+fmt(line)+'</td>'
+              + '</tr>';
+            }).join("");
+            return '<div style="border:1.5px solid var(--border); border-radius:14px; padding:14px 16px; text-align:right; display:flex; flex-direction:column; gap:10px;">'
+              + '<div style="display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:6px;">'
+                + '<strong style="font-size:13px;">فاتورة #'+String(o.id||"").slice(-6)+'</strong>'
+                + '<span class="tabular" style="font-size:12px; color:var(--ink-soft);">'+d.toLocaleDateString("ar-EG")+'</span>'
+              + '</div>'
+              + '<div style="font-size:12.5px; color:var(--ink-soft); line-height:1.8;">'
+                + '<div>الاسم: '+(o.name||"-")+'</div>'
+                + '<div>الموبايل: '+(o.phone||"-")+'</div>'
+                + '<div>العنوان: '+(o.address||"-")+'</div>'
+              + '</div>'
+              + '<table style="width:100%; border-collapse:collapse; font-size:12.5px;">'
+                + '<thead><tr style="border-bottom:1px solid var(--border); color:var(--ink-soft);">'
+                  + '<th style="text-align:right; font-weight:700; padding:4px 0;">الصنف</th>'
+                  + '<th style="text-align:center; font-weight:700; padding:4px 0;">الكمية</th>'
+                  + '<th style="text-align:center; font-weight:700; padding:4px 0;">السعر</th>'
+                  + '<th style="text-align:left; font-weight:700; padding:4px 0;">الإجمالي</th>'
+                + '</tr></thead>'
+                + '<tbody>'+rows+'</tbody>'
+              + '</table>'
+              + '<div style="display:flex; justify-content:space-between; font-weight:800; font-size:13.5px; border-top:1.5px solid var(--border); padding-top:8px;">'
+                + '<span>الإجمالي الكلي</span><span class="tabular">'+fmt(o.total)+' ج.م</span>'
+              + '</div>'
             + '</div>';
           }).join("");
         })
@@ -2384,31 +2436,33 @@ function renderAccountModal(){
   }
 
   var fm = accountFieldMeta();
+  var lfm = loginFieldMeta();
   html += '<div class="modal-info" style="padding:30px 24px;">'
     + '<span style="font-size:34px;">🙋</span>'
     + '<h3>حسابي</h3>'
     + '<div class="seg-tabs" style="margin-top:6px;">'
       + '<button type="button" data-acct-tab="login" class="'+(acctState.tab==="login"?"active":"")+'">تسجيل الدخول</button>'
-      + '<button type="button" data-acct-tab="register" class="'+(acctState.tab==="register"?"active":"")+'">حساب جديد</button>'
+      + '<button type="button" data-acct-tab="register" class="'+(acctState.tab==="register"?"active":"")+'">تسجيل جديد</button>'
     + '</div>';
 
   if(acctState.tab==="register"){
     html += '<form id="acctRegisterForm" style="display:flex; flex-direction:column; gap:12px; margin-top:6px;">'
       + '<div class="field"><label for="acctRegName">الاسم بالكامل</label><input id="acctRegName" required placeholder="اسمك بالكامل"></div>'
-      + '<div class="field"><label for="acctRegIdentifier">'+fm.label+'</label><input id="acctRegIdentifier" required type="'+fm.type+'" inputmode="'+fm.inputmode+'" placeholder="'+fm.placeholder+'"></div>'
       + '<div class="field"><label for="acctRegEmail">الإيميل</label><input id="acctRegEmail" required type="email" placeholder="example@email.com"></div>'
+      + '<div class="field"><label for="acctRegIdentifier">'+fm.label+'</label><input id="acctRegIdentifier" required type="'+fm.type+'" inputmode="'+fm.inputmode+'" placeholder="'+fm.placeholder+'"></div>'
+      + '<div class="field"><label for="acctRegPassword">الرقم السري</label><input id="acctRegPassword" required type="password" minlength="6" placeholder="6 حروف/أرقام على الأقل"></div>'
+      + '<div class="field"><label for="acctRegPasswordConfirm">تأكيد الرقم السري</label><input id="acctRegPasswordConfirm" required type="password" minlength="6" placeholder="اكتب نفس الرقم السري تاني"></div>'
       + '<p id="acctRegError" style="color:var(--pink-deep); font-size:13px; display:none;"></p>'
-      + '<p style="color:var(--ink-soft); font-size:12px;">هنولّدلك باسورد جديد ويظهر على الشاشة فورًا بعد إنشاء الحساب. الإيميل مش هيتبعتله أي حاجة — بيتستخدم بس لو نسيت الباسورد بعدين مع رقم الموبايل.</p>'
-      + '<button type="submit" class="btn btn-primary btn-block">إنشاء الحساب</button>'
+      + '<button type="submit" class="btn btn-primary btn-block">تسجيل</button>'
     + '</form>';
   } else {
     html += '<form id="acctLoginForm" style="display:flex; flex-direction:column; gap:12px; margin-top:6px;">'
-      + '<div class="field"><label for="acctLoginIdentifier">'+fm.label+'</label><input id="acctLoginIdentifier" required type="'+fm.type+'" inputmode="'+fm.inputmode+'" placeholder="'+fm.placeholder+'"></div>'
-      + '<div class="field"><label for="acctLoginPassword">الباسورد</label><input id="acctLoginPassword" required placeholder="الباسورد اللي وصلك"></div>'
+      + '<div class="field"><label for="acctLoginIdentifier">'+lfm.label+'</label><input id="acctLoginIdentifier" required type="'+lfm.type+'" inputmode="'+lfm.inputmode+'" placeholder="'+lfm.placeholder+'"></div>'
+      + '<div class="field"><label for="acctLoginPassword">الرقم السري</label><input id="acctLoginPassword" required type="password" placeholder="الرقم السري اللي اخترته"></div>'
       + '<p id="acctLoginError" style="color:var(--pink-deep); font-size:13px; display:none;">البيانات مش صحيحة، أو الحساب ده اتسجل من جهاز/متصفح تاني</p>'
       + '<button type="submit" class="btn btn-primary btn-block">دخول</button>'
     + '</form>'
-    + '<button type="button" id="acctForgotLink" class="acct-owner-link">نسيت الباسورد؟</button>'
+    + '<button type="button" id="acctForgotLink" class="acct-owner-link">نسيت الرقم السري؟</button>'
     + '<div id="acctForgotBox" hidden style="display:flex; flex-direction:column; gap:10px;">'
       + '<input type="'+fm.type+'" id="acctForgotIdentifier" inputmode="'+fm.inputmode+'" placeholder="'+fm.placeholder+'" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">'
       + '<input type="email" id="acctForgotRecoveryEmail" placeholder="الإيميل المسجل" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">'
@@ -2434,26 +2488,33 @@ function renderAccountModal(){
       var name = document.getElementById("acctRegName").value.trim();
       var identifier = document.getElementById("acctRegIdentifier").value.trim();
       var email = document.getElementById("acctRegEmail").value.trim();
+      var password = document.getElementById("acctRegPassword").value;
+      var passwordConfirm = document.getElementById("acctRegPasswordConfirm").value;
       var errEl = document.getElementById("acctRegError");
       errEl.style.display = "none";
-      if(!identifier || !name || !email) return;
+      if(!identifier || !name || !email || !password || !passwordConfirm) return;
+      if(password.length < 6){ errEl.textContent = "الرقم السري لازم يكون 6 حروف/أرقام على الأقل."; errEl.style.display = "block"; return; }
+      if(password !== passwordConfirm){ errEl.textContent = "الرقم السري وتأكيده مش متطابقين."; errEl.style.display = "block"; return; }
       var btn = e.target.querySelector('[type="submit"]');
       btn.disabled = true;
       fetch("/api/customers/register", {
         method: "POST",
         headers: { "content-type":"application/json" },
-        body: JSON.stringify({ phone:identifier, name:name, email:email })
+        body: JSON.stringify({ phone:identifier, name:name, email:email, password:password })
       }).then(function(r){ return r.json().then(function(j){ return {status:r.status, body:j}; }); })
         .then(function(res){
           btn.disabled = false;
           if(res.body && res.body.ok){
-            setCustomerSession(res.body.phone, res.body.password, res.body.name, res.body.email);
+            setCustomerSession(res.body.phone, password, res.body.name, res.body.email);
             setAdminAuthed(false);
             broadcastAdminKill();
-            acctState.registerResult = { identifier:res.body.phone, password:res.body.password };
+            acctState.registerResult = { identifier:res.body.phone };
             renderAccountModal();
           } else if(res.status===409){
             errEl.textContent = "الحساب ده مسجّل قبل كده، جرّب تسجّل الدخول";
+            errEl.style.display = "block";
+          } else if(res.body && res.body.error==="weak_password"){
+            errEl.textContent = "الرقم السري لازم يكون 6 حروف/أرقام على الأقل.";
             errEl.style.display = "block";
           } else {
             errEl.textContent = "تعذر إنشاء الحساب، تأكد من الإنترنت وجرّب تاني.";
@@ -2488,7 +2549,11 @@ function renderAccountModal(){
             errEl.style.display = "block";
             return;
           }
-          setCustomerSession(identifier, password, res.name, res.email);
+          /* لازم نخزّن رقم الموبايل (المعرّف الأساسي للحساب عند السيرفر) في
+             الجلسة، مش أي حاجة كتبها العميل في خانة الدخول - لأنه ممكن يكون
+             دخل بالإيميل، ولازم كل طلب بعد كده (X-Customer-Id) يبعت المعرّف
+             الصحيح عشان requireCustomer في السيرفر يلاقي الحساب. */
+          setCustomerSession(res.phone, password, res.name, res.email);
           /* تسجيل دخول العميل بيقفل أي جلسة أدمن نشطة تلقائيًا - في نفس
              التاب فورًا، وفي أي تاب تاني مفتوح بنفس المتصفح عن طريق إشارة
              broadcastAdminKill (شوف تعريفها فوق). */
@@ -2751,18 +2816,21 @@ document.getElementById("productForm").addEventListener("submit", function(e){
     image: pfImagesData[0] || null
   };
   if(!data.name || !data.cat) return;
-  if(id){
-    var existing = PRODUCTS.find(function(p){ return String(p.id)===String(id); });
-    if(existing) Object.assign(existing, data);
-  } else {
-    data.id = Date.now();
-    PRODUCTS.push(data);
-  }
   var wasEdit = !!id;
-  resetProductForm();
-  renderAdminProductsTable();
-  refreshPublicViews();
-  showToast(wasEdit ? "✅ اتحدث المنتج" : "✅ اتضاف المنتج");
+  refreshThenRun(function(){
+    if(id){
+      var existing = PRODUCTS.find(function(p){ return String(p.id)===String(id); });
+      if(existing) Object.assign(existing, data);
+      else { data.id = id; PRODUCTS.push(data); }
+    } else {
+      data.id = Date.now();
+      PRODUCTS.push(data);
+    }
+    resetProductForm();
+    renderAdminProductsTable();
+    refreshPublicViews();
+    showToast(wasEdit ? "✅ اتحدث المنتج" : "✅ اتضاف المنتج");
+  });
 });
 function resetProductForm(){
   document.getElementById("productForm").reset();
@@ -2803,9 +2871,11 @@ document.getElementById("adminProductsBody").addEventListener("click", function(
   if(delBtn){
     var pid = delBtn.dataset.delProduct;
     if(!confirm("متأكد إنك عايز تمسح المنتج ده؟")) return;
-    PRODUCTS = PRODUCTS.filter(function(x){ return String(x.id)!==pid; });
-    renderAdminProductsTable();
-    refreshPublicViews();
+    refreshThenRun(function(){
+      PRODUCTS = PRODUCTS.filter(function(x){ return String(x.id)!==pid; });
+      renderAdminProductsTable();
+      refreshPublicViews();
+    });
   }
 });
 document.getElementById("catForm").addEventListener("submit", function(e){
@@ -2813,27 +2883,35 @@ document.getElementById("catForm").addEventListener("submit", function(e){
   var name = document.getElementById("cfName").value.trim();
   var icon = document.getElementById("cfIcon").value.trim() || "🎯";
   if(!name) return;
-  CATS.push({id: slugId("cat"), name:name, icon:icon, color:selectedCatColor, image:cfImageData || null});
-  rebuildCatMap();
-  document.getElementById("catForm").reset();
-  selectedCatColor = COLOR_PRESETS[0].value;
-  cfImageData = "";
-  document.getElementById("cfImageInput").value = "";
-  updateImagePreview("cfImagePreview", "");
-  document.getElementById("cfImageRemoveBtn").hidden = true;
-  renderAdminAll();
-  refreshPublicViews();
-  showToast("✅ اتضاف القسم");
+  refreshThenRun(function(){
+    CATS.push({id: slugId("cat"), name:name, icon:icon, color:selectedCatColor, image:cfImageData || null});
+    rebuildCatMap();
+    document.getElementById("catForm").reset();
+    selectedCatColor = COLOR_PRESETS[0].value;
+    cfImageData = "";
+    document.getElementById("cfImageInput").value = "";
+    updateImagePreview("cfImagePreview", "");
+    document.getElementById("cfImageRemoveBtn").hidden = true;
+    renderAdminAll();
+    refreshPublicViews();
+    showToast("✅ اتضاف القسم");
+  });
 });
 document.getElementById("adminCatsBody").addEventListener("click", function(e){
   var delBtn = e.target.closest("[data-del-cat]"); if(!delBtn) return;
   var cid = delBtn.dataset.delCat;
-  if(PRODUCTS.some(function(p){ return p.cat===cid; })){ alert("مينفعش تمسح القسم ده، لسه فيه منتجات جواه. غيّر قسم المنتجات دي الأول."); return; }
-  if(!confirm("متأكد إنك عايز تمسح القسم ده؟")) return;
-  CATS = CATS.filter(function(c){ return c.id!==cid; });
-  rebuildCatMap();
-  renderAdminAll();
-  refreshPublicViews();
+  refreshThenRun(function(){
+    if(PRODUCTS.some(function(p){ return p.cat===cid; })){
+      renderAdminAll();
+      alert("مينفعش تمسح القسم ده، لسه فيه منتجات جواه. غيّر قسم المنتجات دي الأول.");
+      return;
+    }
+    if(!confirm("متأكد إنك عايز تمسح القسم ده؟")) return;
+    CATS = CATS.filter(function(c){ return c.id!==cid; });
+    rebuildCatMap();
+    renderAdminAll();
+    refreshPublicViews();
+  });
 });
 document.getElementById("adminExportBtn").addEventListener("click", function(){
   var blob = new Blob([JSON.stringify({categories:CATS, products:PRODUCTS}, null, 2)], {type:"application/json"});

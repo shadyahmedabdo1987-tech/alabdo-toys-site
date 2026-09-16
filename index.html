@@ -1016,11 +1016,29 @@ ul{margin:0; padding:0; list-style:none;}
         <p id="adminLockoutMsg" style="color:var(--pink-deep); font-size:13px; display:none;"></p>
         <button type="button" id="adminForgotLink" class="acct-owner-link">نسيت كلمة المرور؟</button>
         <div id="adminForgotBox" class="acct-forgot-box">
-          <input type="email" id="adminForgotEmail" placeholder="الإيميل الاحتياطي" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
-          <input type="tel" id="adminForgotPhone" placeholder="رقم الموبايل الاحتياطي" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
-          <button type="button" class="btn btn-outline btn-block" id="adminForgotBtn">استرجاع كلمة المرور الآن</button>
+          <input type="email" id="adminForgotEmail" placeholder="الإيميل الاحتياطي" autocomplete="off" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
+          <input type="tel" id="adminForgotPhone" placeholder="رقم الموبايل الاحتياطي" autocomplete="off" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
+          <button type="button" class="btn btn-outline btn-block" id="adminForgotBtn">إرسال</button>
           <p id="adminForgotMsg" style="font-size:13px; display:none;"></p>
         </div>
+      </div>
+
+      <div id="adminResetCode" class="admin-login" style="display:none;">
+        <span style="font-size:34px;">🔑</span>
+        <h2 style="font-size:19px;">كود التحقق بتاعك</h2>
+        <p style="color:var(--ink-soft); font-size:13.5px;">خد نسخة من الكود ده لو حابب تحتفظ بيه، وبعدين اقفل الشاشة عشان تختار كلمة مرورك الجديدة:</p>
+        <div class="pass-reveal"><span class="code" id="adminResetCodeValue"></span></div>
+        <button class="btn btn-primary btn-block" id="adminResetCodeCloseBtn" type="button">تم، إغلاق</button>
+      </div>
+
+      <div id="adminResetNewPass" class="admin-login" style="display:none;">
+        <span style="font-size:34px;">🔒</span>
+        <h2 style="font-size:19px;">اختار كلمة مرورك الجديدة</h2>
+        <input type="text" id="adminResetCodeInput" placeholder="كود التحقق" autocomplete="off" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
+        <input type="password" id="adminResetNewPassInput" placeholder="كلمة المرور الجديدة (6 حروف/أرقام على الأقل)" autocomplete="new-password" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
+        <input type="password" id="adminResetNewPassConfirm" placeholder="تأكيد كلمة المرور الجديدة" autocomplete="new-password" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
+        <button class="btn btn-primary btn-block" id="adminResetNewPassBtn" type="button">تغيير كلمة المرور</button>
+        <p id="adminResetNewPassError" style="color:var(--pink-deep); font-size:13px; display:none;"></p>
       </div>
 
       <div id="adminDashboard" class="admin-wrap">
@@ -2126,12 +2144,23 @@ function remainingLockMinutes(){
   return Math.ceil(msLeft / 60000);
 }
 /* يتأكد من الإيميل الاحتياطي ورقم الموبايل الاحتياطي مع بعض عند السيرفر، ولو
-   مطابقين يولّد باسورد جديد ويوريه على الشاشة فورًا — من غير إرسال أي إيميل حقيقي. */
+   مطابقين يولّد كود تحقق (مش كلمة مرور جاهزة) ويوريه على الشاشة فورًا —
+   من غير إرسال أي إيميل حقيقي. الخطوة دي بس أول جزء من نفس نظام استرجاع
+   الرقم السري بتاع العميل (كود ثم كلمة مرور جديدة يختارها صاحب المتجر). */
 function resetAdminPassword(email, phone, callback){
   fetch("/api/admin/reset", {
     method: "POST",
     headers: { "content-type":"application/json" },
     body: JSON.stringify({ email:email, phone:phone })
+  }).then(function(r){ return r.json(); })
+    .then(function(res){ callback(res); })
+    .catch(function(){ callback({ ok:false, reason:"network" }); });
+}
+function confirmAdminReset(code, password, callback){
+  fetch("/api/admin/reset-confirm", {
+    method: "POST",
+    headers: { "content-type":"application/json" },
+    body: JSON.stringify({ code:code, password:password })
   }).then(function(r){ return r.json(); })
     .then(function(res){ callback(res); })
     .catch(function(){ callback({ ok:false, reason:"network" }); });
@@ -2186,6 +2215,8 @@ function checkAdminStatus(){
 }
 
 function showAdmin(){
+  document.getElementById("adminResetCode").style.display = "none";
+  document.getElementById("adminResetNewPass").style.display = "none";
   var authed = isAdminAuthed();
   if(authed){
     document.getElementById("adminSetup").style.display = "none";
@@ -2326,11 +2357,17 @@ document.getElementById("adminForgotBtn").addEventListener("click", function(){
   var msg = document.getElementById("adminForgotMsg");
   if(!email || !phone) return;
   resetAdminPassword(email, phone, function(res){
-    msg.style.display = "block";
     if(res.ok){
-      msg.style.color = "var(--mint)";
-      msg.textContent = "كلمة المرور الجديدة: "+res.password+" — احتفظ بيها.";
-    } else if(res.reason==="not_configured"){
+      msg.style.display = "none";
+      document.getElementById("adminForgotEmail").value = "";
+      document.getElementById("adminForgotPhone").value = "";
+      document.getElementById("adminResetCodeValue").textContent = res.code;
+      document.getElementById("adminLogin").style.display = "none";
+      document.getElementById("adminResetCode").style.display = "flex";
+      return;
+    }
+    msg.style.display = "block";
+    if(res.reason==="not_configured"){
       msg.style.color = "var(--pink-deep)";
       msg.textContent = "لسه محددتش الإيميل ورقم الموبايل الاحتياطيين — لازم تسجل دخول عادي الأول وتحددهم من ⚙️ إعدادات حساب الدخول.";
     } else if(res.reason==="network"){
@@ -2339,6 +2376,47 @@ document.getElementById("adminForgotBtn").addEventListener("click", function(){
     } else {
       msg.style.color = "var(--pink-deep)";
       msg.textContent = "الإيميل أو رقم الموبايل مش مطابقين للبيانات المسجلة.";
+    }
+  });
+});
+document.getElementById("adminResetCodeCloseBtn").addEventListener("click", function(){
+  document.getElementById("adminResetCode").style.display = "none";
+  document.getElementById("adminResetCodeInput").value = "";
+  document.getElementById("adminResetNewPassInput").value = "";
+  document.getElementById("adminResetNewPassConfirm").value = "";
+  document.getElementById("adminResetNewPassError").style.display = "none";
+  document.getElementById("adminResetNewPass").style.display = "flex";
+});
+document.getElementById("adminResetNewPassBtn").addEventListener("click", function(){
+  var code = document.getElementById("adminResetCodeInput").value.trim();
+  var pass = document.getElementById("adminResetNewPassInput").value;
+  var passConfirm = document.getElementById("adminResetNewPassConfirm").value;
+  var errEl = document.getElementById("adminResetNewPassError");
+  errEl.style.display = "none";
+  if(!code){ errEl.textContent = "لازم تكتب كود التحقق اللي ظهرلك."; errEl.style.display = "block"; return; }
+  if(pass.length < 6){ errEl.textContent = "كلمة المرور لازم تكون 6 حروف/أرقام على الأقل."; errEl.style.display = "block"; return; }
+  if(pass !== passConfirm){ errEl.textContent = "كلمة المرور وتأكيدها مش متطابقين."; errEl.style.display = "block"; return; }
+  var btn = this;
+  btn.disabled = true;
+  confirmAdminReset(code, pass, function(res){
+    btn.disabled = false;
+    if(res.ok){
+      document.getElementById("adminResetCodeInput").value = "";
+      document.getElementById("adminResetNewPassInput").value = "";
+      document.getElementById("adminResetNewPassConfirm").value = "";
+      document.getElementById("adminResetNewPass").style.display = "none";
+      document.getElementById("adminForgotBox").classList.remove("show");
+      document.getElementById("adminForgotLink").hidden = false;
+      document.getElementById("adminUserInput").value = "";
+      document.getElementById("adminPassInput").value = "";
+      document.getElementById("adminLogin").style.display = "flex";
+      showToast("✅ اتغيّرت كلمة المرور بنجاح، سجّل دخولك بيها");
+    } else if(res.reason==="expired" || res.reason==="bad_code"){
+      errEl.textContent = "الكود ده منتهي أو مش صحيح، جرّب تطلب استرجاع تاني من الأول.";
+      errEl.style.display = "block";
+    } else {
+      errEl.textContent = "تعذر الاتصال بالسيرفر، تأكد من الإنترنت وجرّب تاني.";
+      errEl.style.display = "block";
     }
   });
 });

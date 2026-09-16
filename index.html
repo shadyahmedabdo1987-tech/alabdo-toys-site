@@ -319,6 +319,10 @@ ul{margin:0; padding:0; list-style:none;}
 .modal-backdrop{position:fixed; inset:0; background:rgba(20,10,30,.55); display:flex; align-items:center; justify-content:center; padding:20px; z-index:95; opacity:0; pointer-events:none; transition:opacity .2s;}
 .modal-backdrop.show{opacity:1; pointer-events:auto;}
 .modal-card{background:var(--surface); border-radius:24px; max-width:760px; width:100%; max-height:88vh; overflow-y:auto; display:grid; grid-template-columns:1fr 1fr; position:relative;}
+/* أي مودال مالوش عمود صورة (شاشة الحساب: دخول/تسجيل/استرجاع الباسورد،
+   وكمان رسالة "تم حفظ بياناتك بنجاح" بعد الطلب) بيستخدم عمود واحد بس في
+   النص عشان البيانات ما تفضلش متكدسة على جنب وباقي المساحة فاضية. */
+.modal-card.acct-card{grid-template-columns:1fr; max-width:440px;}
 .modal-close{position:absolute; top:14px; inset-inline-end:14px; width:36px; height:36px; border-radius:50%; background:var(--surface-2); border:0; display:flex; align-items:center; justify-content:center; z-index:2;}
 .modal-close svg{width:17px; height:17px;}
 .modal-media{display:flex; align-items:center; justify-content:center; font-size:110px; min-height:260px; overflow:hidden;}
@@ -1551,6 +1555,7 @@ function showOrderSuccessModal(phone){
       + '<h3 style="margin-top:8px;">تم حفظ بياناتك بنجاح</h3>'
       + '<p style="color:var(--ink-soft); font-size:14.5px; margin-top:2px;">جاري التواصل معكم على رقم <strong>'+phone+'</strong> لإتمام الأوردر.</p>'
     + '</div>';
+  document.getElementById("modalCard").classList.add("acct-card");
   document.getElementById("modalCard").innerHTML = html;
   cartDrawer.classList.remove("show");
   modalBackdrop.classList.add("show");
@@ -1741,6 +1746,7 @@ function openProductModal(id){
       }).join("")
     + '</div>';
   }
+  document.getElementById("modalCard").classList.remove("acct-card");
   document.getElementById("modalCard").innerHTML =
     '<button class="modal-close" id="modalCloseBtn" aria-label="إغلاق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
     + '<div class="modal-media" style="background:'+CAT_MAP[p.cat].color+'">'+modalMediaContent+'</div>'
@@ -2616,6 +2622,7 @@ function openAccountModal(){
   if(!isAdminAuthed() && !getCustomerProfile()){
     acctState = { tab:"login", registerResult:null };
   }
+  document.getElementById("modalCard").classList.add("acct-card");
   renderAccountModal();
   modalBackdrop.classList.add("show"); overlay.classList.add("show"); document.body.style.overflow="hidden";
 }

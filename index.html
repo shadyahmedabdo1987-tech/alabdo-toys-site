@@ -2325,7 +2325,7 @@ function loginFieldMeta(){
 
 /* حسابات العملاء بترقم الموبايل + الاسم بالكامل. الإيميل مطلوب بس لاسترجاع
    كلمة المرور (رقم الموبايل + الإيميل المسجلين لازم يتطابقوا مع بعض). */
-var acctState = { tab:"login", registerResult:null };
+var acctState = { tab:"login", registerResult:null, resetFlow:null };
 
 function renderAccountModal(){
   var html = '<button class="modal-close" id="modalCloseBtn" aria-label="إغلاق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>';
@@ -2347,19 +2347,87 @@ function renderAccountModal(){
     return;
   }
 
-  /* Check the just-registered/reset password reveal BEFORE the logged-in-customer
-     branch: the register/reset endpoints already log the customer in on this
-     device, but they still need to see their new password first (no real
-     email is sent - the server just returns it once, same trade-off as the
-     admin's own recovery flow). */
+  /* استرجاع الرقم السري بقى على خطوتين: (1) بعد ما رقم الموبايل والإيميل
+     يتأكدوا، بيظهر كود تحقق على شاشة صغيرة لوحده يقفلها العميل بعد ما ياخد
+     نسخة منه، (2) بعد الإغلاق تظهر شاشة يدخل فيها رقم سري جديد ويأكّده،
+     وبعد الحفظ بيتوجّه لشاشة الدخول. الكود ده مش حاجة بيكتبها العميل تاني -
+     المتصفح محتفظ بيه في الذاكرة وبيبعته هو نفسه مع الرقم السري الجديد. */
+  if(acctState.resetFlow && acctState.resetFlow.step==="code"){
+    var rf = acctState.resetFlow;
+    html += '<div class="modal-info" style="padding:30px 24px; align-items:center; text-align:center;">'
+      + '<span style="font-size:34px;">🔑</span>'
+      + '<h3>كود التحقق بتاعك</h3>'
+      + '<p style="color:var(--ink-soft); font-size:13.5px;">خد نسخة من الكود ده لو حابب تحتفظ بيه، وبعدين اقفل الشاشة عشان تختار رقمك السري الجديد:</p>'
+      + '<div class="pass-reveal"><span class="code">'+rf.code+'</span></div>'
+      + '<div class="hero-ctas" style="margin-top:16px; justify-content:center;">'
+        + '<button class="btn btn-primary" id="acctResetCodeClose" type="button">تم، إغلاق</button>'
+      + '</div></div>';
+    document.getElementById("modalCard").innerHTML = html;
+    document.getElementById("modalCloseBtn").addEventListener("click", closeAllPanels);
+    document.getElementById("acctResetCodeClose").addEventListener("click", function(){
+      acctState.resetFlow = { step:"newpass", phone:rf.phone, code:rf.code };
+      renderAccountModal();
+    });
+    return;
+  }
+  if(acctState.resetFlow && acctState.resetFlow.step==="newpass"){
+    var rf2 = acctState.resetFlow;
+    html += '<div class="modal-info" style="padding:30px 24px;">'
+      + '<span style="font-size:34px;">🔒</span>'
+      + '<h3>اختار رقمك السري الجديد</h3>'
+      + '<form id="acctResetNewPassForm" style="display:flex; flex-direction:column; gap:12px; margin-top:6px;">'
+        + '<div class="field"><label for="acctResetPassword">الرقم السري الجديد</label><input id="acctResetPassword" required type="password" minlength="6" placeholder="6 حروف/أرقام على الأقل"></div>'
+        + '<div class="field"><label for="acctResetPasswordConfirm">تأكيد الرقم السري الجديد</label><input id="acctResetPasswordConfirm" required type="password" minlength="6" placeholder="اكتب نفس الرقم السري تاني"></div>'
+        + '<p id="acctResetError" style="color:var(--pink-deep); font-size:13px; display:none;"></p>'
+        + '<button type="submit" class="btn btn-primary btn-block">تغيير الرقم السري</button>'
+      + '</form></div>';
+    document.getElementById("modalCard").innerHTML = html;
+    document.getElementById("modalCloseBtn").addEventListener("click", closeAllPanels);
+    document.getElementById("acctResetNewPassForm").addEventListener("submit", function(e){
+      e.preventDefault();
+      var pass = document.getElementById("acctResetPassword").value;
+      var passConfirm = document.getElementById("acctResetPasswordConfirm").value;
+      var errEl = document.getElementById("acctResetError");
+      errEl.style.display = "none";
+      if(pass.length < 6){ errEl.textContent = "الرقم السري لازم يكون 6 حروف/أرقام على الأقل."; errEl.style.display = "block"; return; }
+      if(pass !== passConfirm){ errEl.textContent = "الرقم السري وتأكيده مش متطابقين."; errEl.style.display = "block"; return; }
+      var btn = e.target.querySelector('[type="submit"]');
+      btn.disabled = true;
+      fetch("/api/customers/reset-confirm", {
+        method: "POST",
+        headers: { "content-type":"application/json" },
+        body: JSON.stringify({ phone:rf2.phone, code:rf2.code, password:pass })
+      }).then(function(r){ return r.json(); })
+        .then(function(res){
+          btn.disabled = false;
+          if(res && res.ok){
+            acctState = { tab:"login", registerResult:{ kind:"reset", identifier:res.phone }, resetFlow:null };
+            renderAccountModal();
+          } else {
+            errEl.textContent = "الكود ده منتهي أو مش صحيح، جرّب تطلب استرجاع تاني من الأول.";
+            errEl.style.display = "block";
+          }
+        })
+        .catch(function(){
+          btn.disabled = false;
+          errEl.textContent = "تعذر الاتصال بالسيرفر، تأكد من الإنترنت وجرّب تاني.";
+          errEl.style.display = "block";
+        });
+    });
+    return;
+  }
+
+  /* Check the just-registered success screen BEFORE the logged-in-customer
+     branch: the register endpoint already logs the customer in on this
+     device, but they still need to see the confirmation first. Also used
+     for the final "تم تغيير الرقم السري بنجاح" step of the reset flow above. */
   if(acctState.registerResult){
     var r = acctState.registerResult;
     if(r.kind==="reset"){
       html += '<div class="modal-info" style="padding:30px 24px;">'
-        + '<span style="font-size:34px;">🔑</span>'
-        + '<h3>اتغيّرت كلمة المرور بنجاح</h3>'
-        + '<p style="color:var(--ink-soft); font-size:13.5px;">ده الباسورد بتاعك - احتفظ بيه كويس، وهتحتاجه دلوقتي عشان تسجل دخولك:</p>'
-        + '<div class="pass-reveal"><span class="code">'+r.password+'</span></div>'
+        + '<span style="font-size:34px;">✅</span>'
+        + '<h3>تم تغيير الرقم السري بنجاح</h3>'
+        + '<p style="color:var(--ink-soft); font-size:13.5px;">دلوقتي سجّل دخولك برقم الموبايل أو الإيميل ورقمك السري الجديد:</p>'
         + '<div class="hero-ctas" style="margin-top:16px; justify-content:flex-start;">'
           + '<button class="btn btn-primary" id="acctContinue" type="button">تسجيل الدخول الآن</button>'
         + '</div></div>';
@@ -2376,7 +2444,7 @@ function renderAccountModal(){
     document.getElementById("modalCloseBtn").addEventListener("click", closeAllPanels);
     document.getElementById("acctContinue").addEventListener("click", function(){
       var identifier = r.identifier;
-      acctState = { tab:"login", registerResult:null };
+      acctState = { tab:"login", registerResult:null, resetFlow:null };
       renderAccountModal();
       var idInput = document.getElementById("acctLoginIdentifier");
       if(idInput) idInput.value = identifier;
@@ -2478,7 +2546,7 @@ function renderAccountModal(){
     + '<div id="acctForgotBox" class="acct-forgot-box">'
       + '<input type="'+fm.type+'" id="acctForgotIdentifier" inputmode="'+fm.inputmode+'" placeholder="'+fm.placeholder+'" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">'
       + '<input type="email" id="acctForgotRecoveryEmail" placeholder="الإيميل المسجل" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">'
-      + '<button type="button" class="btn btn-outline btn-block" id="acctForgotBtn">استرجاع الباسورد</button>'
+      + '<button type="button" class="btn btn-outline btn-block" id="acctForgotBtn">إرسال</button>'
       + '<p id="acctForgotMsg" style="font-size:13px; display:none;"></p>'
     + '</div>';
     /* لا يوجد أي رابط أو زر "أنا صاحب المتجر" هنا عمداً — دخول صاحب المتجر بقى
@@ -2607,7 +2675,7 @@ function renderAccountModal(){
         .then(function(res){
           btn.disabled = false;
           if(res && res.ok){
-            acctState.registerResult = { kind:"reset", identifier:identifier, password:res.password };
+            acctState.resetFlow = { step:"code", phone:identifier, code:res.code };
             renderAccountModal();
           } else {
             msg.style.color = "var(--pink-deep)";
@@ -2626,7 +2694,7 @@ function renderAccountModal(){
 }
 function openAccountModal(){
   if(!isAdminAuthed() && !getCustomerProfile()){
-    acctState = { tab:"login", registerResult:null };
+    acctState = { tab:"login", registerResult:null, resetFlow:null };
   }
   document.getElementById("modalCard").classList.add("acct-card");
   renderAccountModal();

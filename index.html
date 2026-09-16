@@ -2560,11 +2560,11 @@ function renderAccountModal(){
     document.getElementById("modalCard").innerHTML = html;
     document.getElementById("modalCloseBtn").addEventListener("click", closeAllPanels);
     document.getElementById("acctContinue").addEventListener("click", function(){
-      var identifier = r.identifier;
+      /* شاشة الدخول اللي بعد كده لازم تفتح فاضية تمامًا - من غير أي بيانات
+         محفوظة من الخطوات اللي فاتت (رقم موبايل، إيميل، كود، رقم سري)،
+         سواء بعد تسجيل حساب جديد أو بعد تغيير الرقم السري. */
       acctState = { tab:"login", registerResult:null, resetFlow:null };
       renderAccountModal();
-      var idInput = document.getElementById("acctLoginIdentifier");
-      if(idInput) idInput.value = identifier;
     });
     return;
   }
@@ -2709,10 +2709,10 @@ function renderAccountModal(){
         });
     });
     document.getElementById("acctForgotLink").addEventListener("click", function(){
-      var typed = document.getElementById("acctLoginIdentifier").value.trim();
+      /* شاشة "استرجاع الرقم السري" لازم تفتح فاضية دايمًا، من غير ما تاخد
+         أي بيانات اتكتبت في فورم الدخول. */
       acctState.resetFlow = { step:"identify" };
       renderAccountModal();
-      if(typed) document.getElementById("acctForgotIdentifier").value = typed;
     });
   }
 }

@@ -1015,12 +1015,17 @@ ul{margin:0; padding:0; list-style:none;}
         <p id="adminLoginError" style="color:var(--pink-deep); font-size:13px; display:none;">بيانات الدخول غير صحيحة</p>
         <p id="adminLockoutMsg" style="color:var(--pink-deep); font-size:13px; display:none;"></p>
         <button type="button" id="adminForgotLink" class="acct-owner-link">نسيت كلمة المرور؟</button>
-        <div id="adminForgotBox" class="acct-forgot-box">
-          <input type="email" id="adminForgotEmail" placeholder="الإيميل الاحتياطي" autocomplete="off" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
-          <input type="tel" id="adminForgotPhone" placeholder="رقم الموبايل الاحتياطي" autocomplete="off" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
-          <button type="button" class="btn btn-outline btn-block" id="adminForgotBtn">إرسال</button>
-          <p id="adminForgotMsg" style="font-size:13px; display:none;"></p>
-        </div>
+      </div>
+
+      <div id="adminForgotIdentify" class="admin-login" style="display:none;">
+        <span style="font-size:34px;">🔑</span>
+        <h2 style="font-size:19px;">استرجاع كلمة المرور</h2>
+        <p style="color:var(--ink-soft); font-size:13.5px;">ادخل الإيميل ورقم الموبايل الاحتياطيين اللي سجلتهم قبل كده:</p>
+        <input type="email" id="adminForgotEmail" placeholder="الإيميل الاحتياطي" autocomplete="off" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
+        <input type="tel" id="adminForgotPhone" placeholder="رقم الموبايل الاحتياطي" autocomplete="off" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
+        <button type="button" class="btn btn-primary btn-block" id="adminForgotBtn">إرسال</button>
+        <p id="adminForgotMsg" style="font-size:13px; display:none;"></p>
+        <button type="button" id="adminForgotBack" class="acct-owner-link">رجوع لتسجيل الدخول</button>
       </div>
 
       <div id="adminResetCode" class="admin-login" style="display:none;">
@@ -2215,6 +2220,7 @@ function checkAdminStatus(){
 }
 
 function showAdmin(){
+  document.getElementById("adminForgotIdentify").style.display = "none";
   document.getElementById("adminResetCode").style.display = "none";
   document.getElementById("adminResetNewPass").style.display = "none";
   var authed = isAdminAuthed();
@@ -2348,8 +2354,18 @@ document.getElementById("suPassShow").addEventListener("change", function(){
 
 /* ---------- Admin: forgot password (dedicated admin login page) ---------- */
 document.getElementById("adminForgotLink").addEventListener("click", function(){
-  document.getElementById("adminForgotBox").classList.add("show");
-  this.hidden = true;
+  document.getElementById("adminForgotEmail").value = "";
+  document.getElementById("adminForgotPhone").value = "";
+  document.getElementById("adminForgotMsg").style.display = "none";
+  document.getElementById("adminLogin").style.display = "none";
+  document.getElementById("adminForgotIdentify").style.display = "flex";
+});
+document.getElementById("adminForgotBack").addEventListener("click", function(){
+  document.getElementById("adminForgotEmail").value = "";
+  document.getElementById("adminForgotPhone").value = "";
+  document.getElementById("adminForgotMsg").style.display = "none";
+  document.getElementById("adminForgotIdentify").style.display = "none";
+  document.getElementById("adminLogin").style.display = "flex";
 });
 document.getElementById("adminForgotBtn").addEventListener("click", function(){
   var email = document.getElementById("adminForgotEmail").value.trim();
@@ -2362,7 +2378,7 @@ document.getElementById("adminForgotBtn").addEventListener("click", function(){
       document.getElementById("adminForgotEmail").value = "";
       document.getElementById("adminForgotPhone").value = "";
       document.getElementById("adminResetCodeValue").textContent = res.code;
-      document.getElementById("adminLogin").style.display = "none";
+      document.getElementById("adminForgotIdentify").style.display = "none";
       document.getElementById("adminResetCode").style.display = "flex";
       return;
     }
@@ -2405,8 +2421,6 @@ document.getElementById("adminResetNewPassBtn").addEventListener("click", functi
       document.getElementById("adminResetNewPassInput").value = "";
       document.getElementById("adminResetNewPassConfirm").value = "";
       document.getElementById("adminResetNewPass").style.display = "none";
-      document.getElementById("adminForgotBox").classList.remove("show");
-      document.getElementById("adminForgotLink").hidden = false;
       document.getElementById("adminUserInput").value = "";
       document.getElementById("adminPassInput").value = "";
       document.getElementById("adminLogin").style.display = "flex";

@@ -3045,18 +3045,151 @@ function renderAdminOrdersPage(){
     .catch(function(){ box.innerHTML = '<p style="color:var(--pink-deep); font-size:13px;">تعذر تحميل الطلبات.</p>'; });
 }
 /* بيفتح فاتورة الطلب كاملة فوق صفحة الطلبات - نفس دالة orderInvoiceHtml
-   المستخدمة في فاتورة العميل، عشان الشكل يبقى موحّد واحترافي في المكانين. */
+   المستخدمة في فاتورة العميل، عشان الشكل يبقى موحّد واحترافي في المكانين -
+   وتحتها للأدمن بس زراري "تعديل" و"حذف" للطلب. */
 function showAdminOrderInvoiceModal(order){
   if(!order) return;
   var html = '<button class="modal-close" id="modalCloseBtn" aria-label="إغلاق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
     + '<div class="modal-info" style="padding:30px 24px;">'
       + '<h3 style="margin-bottom:4px;">تفاصيل الطلب</h3>'
       + orderInvoiceHtml(order)
+      + '<div style="display:flex; gap:10px; margin-top:14px;">'
+        + '<button type="button" class="btn btn-outline" id="aoEditBtn" style="flex:1;">✏️ تعديل الطلب</button>'
+        + '<button type="button" class="btn btn-outline" id="aoDeleteBtn" style="flex:1; color:var(--pink-deep); border-color:var(--pink-deep);">🗑️ حذف الطلب</button>'
+      + '</div>'
     + '</div>';
   document.getElementById("modalCard").classList.add("acct-card");
   document.getElementById("modalCard").innerHTML = html;
   document.getElementById("modalCloseBtn").addEventListener("click", closeAllPanels);
+  document.getElementById("aoEditBtn").addEventListener("click", function(){ showAdminOrderEditForm(order); });
+  document.getElementById("aoDeleteBtn").addEventListener("click", function(){ deleteAdminOrder(order); });
   modalBackdrop.classList.add("show"); overlay.classList.add("show"); document.body.style.overflow="hidden";
+}
+/* صف واحد قابل للتعديل بتاع صنف داخل نموذج تعديل الطلب (اسم/كمية/سعر +
+   زرار حذف الصنف نفسه من الطلب). */
+function adminOrderItemRowHtml(it, idx){
+  return '<div class="field-row" data-item-row="'+idx+'" style="grid-template-columns:2fr 1fr 1fr auto; align-items:end; gap:8px;">'
+    + '<div class="field"><label>الصنف</label><input data-item-name value="'+String(it.name||"").replace(/"/g,"&quot;")+'"></div>'
+    + '<div class="field"><label>الكمية</label><input data-item-qty type="number" min="1" step="1" value="'+(+it.qty||1)+'"></div>'
+    + '<div class="field"><label>السعر</label><input data-item-price type="number" min="0" step="0.01" value="'+(+it.price||0)+'"></div>'
+    + '<button type="button" data-item-remove aria-label="حذف الصنف" style="border:0;background:var(--surface-2);width:38px;height:38px;border-radius:10px;color:var(--pink-deep); flex:none;">🗑️</button>'
+  + '</div>';
+}
+/* نموذج تعديل الطلب (اسم/موبايل/عنوان + الأصناف بكمياتها وأسعارها، والإجمالي
+   بيتحسب لوحده أول بأول) - بيبدّل مكان الفاتورة في نفس المودال، وبيرجع
+   لعرض الفاتورة تاني لو ضغط "إلغاء". */
+function showAdminOrderEditForm(order){
+  var html = '<button class="modal-close" id="modalCloseBtn" aria-label="إغلاق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
+    + '<div class="modal-info" style="padding:30px 24px;">'
+      + '<h3 style="margin-bottom:14px;">✏️ تعديل الطلب #'+String(order.id||"").slice(-6)+'</h3>'
+      + '<div style="display:flex; flex-direction:column; gap:12px;">'
+        + '<div class="field"><label for="aoeName">الاسم</label><input id="aoeName" value="'+String(order.name||"").replace(/"/g,"&quot;")+'"></div>'
+        + '<div class="field"><label for="aoePhone">رقم الموبايل</label><input id="aoePhone" value="'+String(order.phone||"").replace(/"/g,"&quot;")+'"></div>'
+        + '<div class="field"><label for="aoeAddress">العنوان</label><input id="aoeAddress" value="'+String(order.address||"").replace(/"/g,"&quot;")+'"></div>'
+        + '<div>'
+          + '<label style="font-weight:700; font-size:13px;">الأصناف</label>'
+          + '<div id="aoeItems" style="display:flex; flex-direction:column; gap:8px; margin-top:8px;"></div>'
+          + '<button type="button" class="btn btn-outline btn-sm" id="aoeAddItem" style="margin-top:10px;">➕ إضافة صنف</button>'
+        + '</div>'
+        + '<div style="display:flex; justify-content:space-between; font-weight:800; font-size:14.5px; border-top:1.5px solid var(--border); padding-top:10px;">'
+          + '<span>الإجمالي الكلي</span><span class="tabular" id="aoeTotal">0 ج.م</span>'
+        + '</div>'
+        + '<p id="aoeError" style="color:var(--pink-deep); font-size:13px; display:none;"></p>'
+        + '<div style="display:flex; gap:10px;">'
+          + '<button type="button" class="btn btn-primary" id="aoeSaveBtn" style="flex:1;">💾 حفظ التعديلات</button>'
+          + '<button type="button" class="btn btn-outline" id="aoeCancelBtn" style="flex:1;">إلغاء</button>'
+        + '</div>'
+      + '</div>'
+    + '</div>';
+  document.getElementById("modalCard").classList.add("acct-card");
+  document.getElementById("modalCard").innerHTML = html;
+  document.getElementById("modalCloseBtn").addEventListener("click", closeAllPanels);
+
+  var itemsBox = document.getElementById("aoeItems");
+  var items = (order.items||[]).map(function(it){ return { name: it.name, qty: +it.qty||1, price: +it.price||0 }; });
+  if(!items.length) items = [{ name:"", qty:1, price:0 }];
+
+  function updateTotal(){
+    var total = items.reduce(function(sum, it){ return sum + (+it.qty||0)*(+it.price||0); }, 0);
+    document.getElementById("aoeTotal").textContent = fmt(total)+" ج.م";
+  }
+  function renderItemRows(){
+    itemsBox.innerHTML = items.map(function(it, idx){ return adminOrderItemRowHtml(it, idx); }).join("");
+    itemsBox.querySelectorAll("[data-item-row]").forEach(function(row){
+      var idx = +row.dataset.itemRow;
+      row.querySelector("[data-item-name]").addEventListener("input", function(){ items[idx].name = this.value; });
+      row.querySelector("[data-item-qty]").addEventListener("input", function(){ items[idx].qty = +this.value||0; updateTotal(); });
+      row.querySelector("[data-item-price]").addEventListener("input", function(){ items[idx].price = +this.value||0; updateTotal(); });
+      row.querySelector("[data-item-remove]").addEventListener("click", function(){
+        if(items.length<=1) return;
+        items.splice(idx,1);
+        renderItemRows();
+        updateTotal();
+      });
+    });
+  }
+  renderItemRows();
+  updateTotal();
+
+  document.getElementById("aoeAddItem").addEventListener("click", function(){
+    items.push({ name:"", qty:1, price:0 });
+    renderItemRows();
+    updateTotal();
+  });
+  document.getElementById("aoeCancelBtn").addEventListener("click", function(){ showAdminOrderInvoiceModal(order); });
+  document.getElementById("aoeSaveBtn").addEventListener("click", function(){
+    var errEl = document.getElementById("aoeError");
+    errEl.style.display = "none";
+    var cleanItems = items.filter(function(it){ return String(it.name||"").trim(); }).map(function(it){
+      return { name:String(it.name||"").trim(), qty:Math.max(1, Math.round(+it.qty||1)), price:Math.max(0, +it.price||0) };
+    });
+    if(!cleanItems.length){ errEl.textContent = "لازم يكون فيه صنف واحد على الأقل بالاسم."; errEl.style.display = "block"; return; }
+    var total = cleanItems.reduce(function(sum, it){ return sum + it.qty*it.price; }, 0);
+    var btn = this;
+    btn.disabled = true;
+    fetch("/api/orders", {
+      method: "PUT",
+      headers: Object.assign({ "content-type":"application/json" }, adminAuthHeaders()),
+      body: JSON.stringify({
+        id: order.id, items: cleanItems, total: total,
+        name: document.getElementById("aoeName").value.trim(),
+        phone: document.getElementById("aoePhone").value.trim(),
+        address: document.getElementById("aoeAddress").value.trim()
+      })
+    }).then(function(r){ return r.json().then(function(j){ return {status:r.status, body:j}; }); })
+      .then(function(res){
+        btn.disabled = false;
+        if(res.status===200 && res.body && res.body.ok){
+          showToast("✅ اتحفظت تعديلات الطلب");
+          closeAllPanels();
+          renderAdminOrdersPage();
+        } else {
+          errEl.textContent = "تعذر حفظ التعديلات، جرّب تاني.";
+          errEl.style.display = "block";
+        }
+      })
+      .catch(function(){ btn.disabled=false; errEl.textContent = "تعذر الاتصال بالسيرفر."; errEl.style.display = "block"; });
+  });
+}
+/* حذف طلب نهائيًا (بعد تأكيد من الأدمن) وتحديث صفحة الطلبات فورًا. */
+function deleteAdminOrder(order){
+  if(!order) return;
+  if(!confirm("متأكد إنك عايز تحذف الطلب ده نهائيًا؟ الخطوة دي مش هترجع.")) return;
+  fetch("/api/orders", {
+    method: "DELETE",
+    headers: Object.assign({ "content-type":"application/json" }, adminAuthHeaders()),
+    body: JSON.stringify({ id: order.id })
+  }).then(function(r){ return r.json().then(function(j){ return {status:r.status, body:j}; }); })
+    .then(function(res){
+      if(res.status===200 && res.body && res.body.ok){
+        showToast("🗑️ تم حذف الطلب");
+        closeAllPanels();
+        renderAdminOrdersPage();
+      } else {
+        showToast("⚠️ تعذر حذف الطلب، جرّب تاني.");
+      }
+    })
+    .catch(function(){ showToast("⚠️ تعذر الاتصال بالسيرفر."); });
 }
 document.getElementById("adminOrdersBtn").addEventListener("click", openAdminOrdersPage);
 document.getElementById("adminOrdersBackBtn").addEventListener("click", closeAdminOrdersPage);

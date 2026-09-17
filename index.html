@@ -1094,12 +1094,7 @@ ul{margin:0; padding:0; list-style:none;}
                 <div class="field"><label for="pfReviews">عدد التقييمات</label><input id="pfReviews" type="number" min="0" value="0"></div>
               </div>
               <div class="field">
-                <label for="pfEmoji">أيقونة المنتج (إيموجي)</label>
-                <input id="pfEmoji" required placeholder="مثال: 🚗" maxlength="4">
-                <div class="emoji-picker" id="emojiPicker"></div>
-              </div>
-              <div class="field">
-                <label>صور حقيقية للمنتج (اختياري، ممكن تضيف أكتر من صورة)</label>
+                <label>صور حقيقية للمنتج (ممكن تضيف أكتر من صورة)</label>
                 <div class="image-upload-row" style="flex-wrap:wrap;">
                   <div id="pfImagesPreview" style="display:flex; gap:8px; flex-wrap:wrap; width:100%;"></div>
                   <div class="image-upload-actions">
@@ -1107,7 +1102,7 @@ ul{margin:0; padding:0; list-style:none;}
                     <button type="button" class="btn btn-outline btn-sm" id="pfImagePickBtn">إضافة صورة</button>
                   </div>
                 </div>
-                <p style="color:var(--ink-soft); font-size:12px; margin-top:4px;">أول صورة بتضيفها هي اللي بتظهر في كل الموقع، والباقي بيظهر كمعرض جوه تفاصيل المنتج. لو مفيش صور، الإيموجي بيفضل ظاهر بدالها.</p>
+                <p style="color:var(--ink-soft); font-size:12px; margin-top:4px;">أول صورة بتضيفها هي اللي بتظهر في كل الموقع، والباقي بيظهر كمعرض جوه تفاصيل المنتج. لو مفيش صور، أيقونة القسم بتفضل ظاهرة بدالها.</p>
               </div>
               <div class="hero-ctas" style="justify-content:flex-start;">
                 <button type="submit" class="btn btn-primary" id="productFormSubmit">إضافة المنتج</button>
@@ -1118,22 +1113,13 @@ ul{margin:0; padding:0; list-style:none;}
             <h3 style="margin-top:26px;">➕ إضافة قسم جديد</h3>
             <form id="catForm" style="display:flex; flex-direction:column; gap:12px;">
               <div class="field"><label for="cfName">اسم القسم</label><input id="cfName" required placeholder="مثال: ألعاب إلكترونية"></div>
-              <div class="field-row">
-                <div class="field"><label for="cfIcon">أيقونة القسم (إيموجي)</label><input id="cfIcon" required placeholder="مثال: 🎮" maxlength="4"></div>
-                <div class="field"><label>لون القسم</label>
-                  <div class="color-swatches" id="colorSwatches"></div>
-                </div>
-              </div>
               <div class="field">
-                <label>صورة للقسم (اختياري)</label>
-                <div class="image-upload-row">
-                  <div class="image-preview" id="cfImagePreview" style="border-radius:50%;"><span>بدون صورة</span></div>
-                  <div class="image-upload-actions">
-                    <input type="file" id="cfImageInput" accept="image/*" hidden>
-                    <button type="button" class="btn btn-outline btn-sm" id="cfImagePickBtn">اختر صورة</button>
-                    <button type="button" class="btn btn-outline btn-sm" id="cfImageRemoveBtn" hidden>إزالة الصورة</button>
-                  </div>
-                </div>
+                <label for="cfIcon">أيقونة القسم (إيموجي)</label>
+                <input id="cfIcon" required placeholder="مثال: 🎮" maxlength="4">
+                <div class="emoji-picker" id="cfIconPicker"></div>
+              </div>
+              <div class="field"><label>لون القسم</label>
+                <div class="color-swatches" id="colorSwatches"></div>
               </div>
               <button type="submit" class="btn btn-outline" style="align-self:flex-start;">إضافة القسم</button>
             </form>
@@ -1313,6 +1299,10 @@ var CAT_MAP = {};
 function rebuildCatMap(){ CAT_MAP = {}; CATS.forEach(function(c){ CAT_MAP[c.id]=c; }); }
 rebuildCatMap();
 function catName(id){ return CAT_MAP[id] ? CAT_MAP[id].name : ""; }
+/* أيقونة القسم بتاع المنتج - بتظهر مكان صورة المنتج لو المنتج نفسه مفيهوش
+   صور حقيقية مرفوعة (المنتجات بقت من غير إيموجي خاص بيها؛ الإيموجي بقى
+   بتاع القسم بس). */
+function categoryIcon(catId){ return (CAT_MAP[catId] && CAT_MAP[catId].icon) || "🧸"; }
 function fmt(n){ return n.toLocaleString("ar-EG"); }
 function stars(r){ var full=Math.round(r); return "★★★★★".slice(0,full)+"☆☆☆☆☆".slice(0,5-full); }
 /* بيبني كارت فاتورة كامل لطلب واحد (الصنف/الكمية/السعر/الإجمالي وبيانات
@@ -1530,7 +1520,7 @@ function renderCartDrawer(){
   } else {
     body.innerHTML = items.map(function(it){
       var itMainImg = productMainImage(it.p);
-      var thumbContent = itMainImg ? '<img src="'+itMainImg+'" alt="">' : it.p.emoji;
+      var thumbContent = itMainImg ? '<img src="'+itMainImg+'" alt="">' : categoryIcon(it.p.cat);
       return '<div class="cart-line">'
         + '<div class="thumb" style="background:'+CAT_MAP[it.p.cat].color+'">'+thumbContent+'</div>'
         + '<div class="info"><div class="t">'+it.p.name+'</div><div class="p tabular">'+fmt(it.p.price)+' ج.م × '+it.qty+'</div>'
@@ -1777,7 +1767,7 @@ function productCard(p){
   var cardMainImg = productMainImage(p);
   var mediaContent = cardMainImg
     ? '<img class="card-photo" src="'+cardMainImg+'" alt="'+p.name+'" loading="lazy">'
-    : '<span style="font-size:64px;">'+p.emoji+'</span>';
+    : '<span style="font-size:64px;">'+categoryIcon(p.cat)+'</span>';
   return '<article class="card">'
     + '<div class="card-media" style="background:'+CAT_MAP[p.cat].color+'">'
       + mediaContent
@@ -1826,8 +1816,7 @@ function renderNewArrivals(){
 
 function renderCategoryRow(){
   document.getElementById("categoryRow").innerHTML = CATS.map(function(c){
-    var icContent = c.image ? '<img src="'+c.image+'" alt="">' : c.icon;
-    return '<button class="cat-chip" data-goto-cat="'+c.id+'"><span class="ic" style="background:'+c.color+'">'+icContent+'</span>'+c.name+'</button>';
+    return '<button class="cat-chip" data-goto-cat="'+c.id+'"><span class="ic" style="background:'+c.color+'">'+c.icon+'</span>'+c.name+'</button>';
   }).join("");
 }
 
@@ -1837,7 +1826,7 @@ function openProductModal(id){
   if(!p) return;
   var msg = "مرحباً "+STORE.name+" 👋 عايز أطلب: "+p.name+" - "+fmt(p.price)+" ج.م";
   var imgs = productImages(p);
-  var modalMediaContent = imgs.length ? '<img id="modalMainImg" src="'+imgs[0]+'" alt="'+p.name+'">' : ('<span id="modalMainImg">'+p.emoji+'</span>');
+  var modalMediaContent = imgs.length ? '<img id="modalMainImg" src="'+imgs[0]+'" alt="'+p.name+'">' : ('<span id="modalMainImg">'+categoryIcon(p.cat)+'</span>');
   var galleryHtml = "";
   if(imgs.length > 1){
     galleryHtml = '<div class="modal-gallery" style="display:flex; gap:8px; margin:8px 0; flex-wrap:wrap;">'
@@ -2188,10 +2177,21 @@ var COLOR_PRESETS = [
   {label:"دهبي", value:"var(--sunshine-pale)"},
   {label:"أخضر", value:"var(--mint-pale)"}
 ];
-var EMOJI_SUGGESTIONS = ["🧸","🚗","🚙","🚂","🚁","🚲","🧩","🧱","🎨","🎁","👸","🤖","🦕","🦖","🍳","🛒","🎀","🪀","⚽","🏓","🎯","🩺","🖌️","📱","🪁","🎈","👗","🧪","🔤","🪅"];
+/* أيقونات الأقسام المقترحة في لوحة الأدمن - كل قسم بقى بياخد إيموجي بس
+   (مفيش صور أقسام تاني)، فالقايمة دي وسّعناها عشان تغطي أنواع الأقسام
+   المختلفة (عربيات/دراجات، دباديب وعرايس، ألعاب إلكترونية وتعليمية،
+   فنون وأدوات، رياضة، هدايا ومناسبات...). */
+var EMOJI_SUGGESTIONS = [
+  "🧸","🪆","👸","🤴","🦸","🧚","🤖","🦕","🦖","🐉","🐻","🐰","🐱","🐶","🦄",
+  "🚗","🚙","🚓","🚕","🚌","🚂","🚁","🛵","🚲","🛴","✈️","🚀","⛵",
+  "🧩","🧱","🎲","🃏","♟️","🀄","🔧","🛠️","🔬","🧪","🔭","🧮","📐",
+  "🎨","🖌️","✏️","🖍️","📚","🔤","🔡","🎭","🎬","🎤","🎧","📷",
+  "⚽","🏀","🏓","🏸","🥊","🚴","🏊","🛹","🪁","🎯","🎳","🏹",
+  "🎁","🎀","🎈","🎉","🎊","🪅","🎆","🍰","🍭","🍬","🧁",
+  "👗","👕","🎒","👟","💍","👓","⌚"
+];
 var selectedCatColor = COLOR_PRESETS[0].value;
 var pfImagesData = [];
-var cfImageData = "";
 
 /* Reads a chosen image file, resizes it on a canvas so it doesn't bloat
    localStorage/products.json, and returns a compressed JPEG data URL. */
@@ -2212,10 +2212,6 @@ function readImageAsCompressedDataURL(file, maxDim, quality, callback){
     img.src = e.target.result;
   };
   reader.readAsDataURL(file);
-}
-function updateImagePreview(previewId, dataUrl){
-  var box = document.getElementById(previewId);
-  box.innerHTML = dataUrl ? '<img src="'+dataUrl+'" alt="معاينة">' : '<span>بدون صورة</span>';
 }
 
 function slugId(prefix){ return prefix + "_" + Date.now().toString(36) + Math.floor(Math.random()*999); }
@@ -2901,12 +2897,12 @@ document.getElementById("accountBtn").addEventListener("click", function(){
 function fillCatSelect(){
   document.getElementById("pfCat").innerHTML = CATS.map(function(c){ return '<option value="'+c.id+'">'+c.name+'</option>'; }).join("");
 }
-function renderEmojiPicker(){
-  document.getElementById("emojiPicker").innerHTML = EMOJI_SUGGESTIONS.map(function(em){ return '<button type="button" data-emoji="'+em+'">'+em+'</button>'; }).join("");
+function renderCfIconPicker(){
+  document.getElementById("cfIconPicker").innerHTML = EMOJI_SUGGESTIONS.map(function(em){ return '<button type="button" data-emoji="'+em+'">'+em+'</button>'; }).join("");
 }
-document.getElementById("emojiPicker").addEventListener("click", function(e){
+document.getElementById("cfIconPicker").addEventListener("click", function(e){
   var b = e.target.closest("button"); if(!b) return;
-  document.getElementById("pfEmoji").value = b.dataset.emoji;
+  document.getElementById("cfIcon").value = b.dataset.emoji;
 });
 function renderColorSwatches(selected){
   document.getElementById("colorSwatches").innerHTML = COLOR_PRESETS.map(function(c){
@@ -2951,27 +2947,12 @@ document.getElementById("pfImagesPreview").addEventListener("click", function(e)
 });
 renderPfImagesPreview();
 
-document.getElementById("cfImagePickBtn").addEventListener("click", function(){ document.getElementById("cfImageInput").click(); });
-document.getElementById("cfImageInput").addEventListener("change", function(e){
-  var file = e.target.files[0]; if(!file) return;
-  readImageAsCompressedDataURL(file, 400, 0.85, function(dataUrl){
-    cfImageData = dataUrl;
-    updateImagePreview("cfImagePreview", cfImageData);
-    document.getElementById("cfImageRemoveBtn").hidden = false;
-  });
-});
-document.getElementById("cfImageRemoveBtn").addEventListener("click", function(){
-  cfImageData = "";
-  document.getElementById("cfImageInput").value = "";
-  updateImagePreview("cfImagePreview", "");
-  this.hidden = true;
-});
 
 function renderAdminProductsTable(){
   document.getElementById("adminProductCount").textContent = PRODUCTS.length;
   document.getElementById("adminProductsBody").innerHTML = PRODUCTS.map(function(p){
     var pRowMainImg = productMainImage(p);
-    var thumbContent = pRowMainImg ? '<img src="'+pRowMainImg+'" alt="">' : p.emoji;
+    var thumbContent = pRowMainImg ? '<img src="'+pRowMainImg+'" alt="">' : categoryIcon(p.cat);
     return '<tr>'
       + '<td><div class="thumb-sm" style="background:'+(CAT_MAP[p.cat]?CAT_MAP[p.cat].color:'var(--surface-2)')+'">'+thumbContent+'</div></td>'
       + '<td>'+p.name+'</td>'
@@ -2988,9 +2969,8 @@ function renderAdminCatsTable(){
   document.getElementById("adminCatCount").textContent = CATS.length;
   document.getElementById("adminCatsBody").innerHTML = CATS.map(function(c){
     var count = PRODUCTS.filter(function(p){ return p.cat===c.id; }).length;
-    var thumbContent = c.image ? '<img src="'+c.image+'" alt="">' : c.icon;
     return '<tr>'
-      + '<td><div class="thumb-sm" style="background:'+c.color+'; border-radius:50%;">'+thumbContent+'</div></td>'
+      + '<td><div class="thumb-sm" style="background:'+c.color+'; border-radius:50%;">'+c.icon+'</div></td>'
       + '<td>'+c.name+'</td>'
       + '<td class="tabular">'+count+'</td>'
       + '<td><div class="admin-row-actions"><button data-del-cat="'+c.id+'" aria-label="حذف"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button></div></td>'
@@ -3231,7 +3211,7 @@ document.getElementById("adminSettingsForm").addEventListener("submit", function
 });
 function renderAdminAll(){
   fillCatSelect();
-  renderEmojiPicker();
+  renderCfIconPicker();
   renderColorSwatches(selectedCatColor);
   renderAdminProductsTable();
   renderAdminCatsTable();
@@ -3256,7 +3236,6 @@ document.getElementById("productForm").addEventListener("submit", function(e){
     old: document.getElementById("pfOld").value ? +document.getElementById("pfOld").value : null,
     rating: +document.getElementById("pfRating").value || 4.5,
     reviews: +document.getElementById("pfReviews").value || 0,
-    emoji: document.getElementById("pfEmoji").value.trim() || "🧸",
     badge: document.getElementById("pfBadge").value || null,
     images: pfImagesData.slice(),
     image: pfImagesData[0] || null
@@ -3304,7 +3283,6 @@ document.getElementById("adminProductsBody").addEventListener("click", function(
     document.getElementById("pfOld").value = p.old || "";
     document.getElementById("pfRating").value = p.rating;
     document.getElementById("pfReviews").value = p.reviews;
-    document.getElementById("pfEmoji").value = p.emoji;
     document.getElementById("pfBadge").value = p.badge || "";
     pfImagesData = productImages(p).slice();
     document.getElementById("pfImageInput").value = "";
@@ -3330,14 +3308,10 @@ document.getElementById("catForm").addEventListener("submit", function(e){
   var icon = document.getElementById("cfIcon").value.trim() || "🎯";
   if(!name) return;
   refreshThenRun(function(){
-    CATS.push({id: slugId("cat"), name:name, icon:icon, color:selectedCatColor, image:cfImageData || null});
+    CATS.push({id: slugId("cat"), name:name, icon:icon, color:selectedCatColor});
     rebuildCatMap();
     document.getElementById("catForm").reset();
     selectedCatColor = COLOR_PRESETS[0].value;
-    cfImageData = "";
-    document.getElementById("cfImageInput").value = "";
-    updateImagePreview("cfImagePreview", "");
-    document.getElementById("cfImageRemoveBtn").hidden = true;
     renderAdminAll();
     refreshPublicViews();
     showToast("✅ اتضاف القسم");

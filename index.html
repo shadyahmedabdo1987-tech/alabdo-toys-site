@@ -448,6 +448,16 @@ ul{margin:0; padding:0; list-style:none;}
 .admin-note{font-size:12.5px; color:var(--ink-soft); background:var(--surface-2); border-radius:12px; padding:12px 14px; line-height:1.9;}
 .admin-note code{background:var(--surface-3); padding:1px 6px; border-radius:6px;}
 .field-row{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+.order-card{background:var(--surface); border:1.5px solid var(--border); border-radius:16px; padding:16px 18px; text-align:right; cursor:pointer; width:100%; display:flex; flex-direction:column; gap:10px; font-family:inherit; transition:border-color .15s, box-shadow .15s, transform .1s;}
+.order-card:hover{border-color:var(--pink); box-shadow:0 4px 16px rgba(0,0,0,.07); transform:translateY(-1px);}
+.order-card-top{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;}
+.order-card-id{font-weight:800; font-size:14.5px;}
+.order-card-customer{font-size:12.5px; color:var(--ink-soft); margin-top:3px;}
+.order-card-date{font-size:11.5px; color:var(--ink-soft); white-space:nowrap;}
+.order-card-items{font-size:12.5px; color:var(--ink-soft); line-height:1.7;}
+.order-card-bottom{display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding-top:10px;}
+.order-card-total{font-weight:800; font-size:15px; color:var(--pink-deep);}
+.order-card-open{font-size:12px; color:var(--ink-soft); display:flex; align-items:center; gap:4px;}
 @media (max-width:780px){ .admin-grid{grid-template-columns:1fr;} .field-row{grid-template-columns:1fr;} }
 
 /* mobile nav drawer */
@@ -1050,6 +1060,7 @@ ul{margin:0; padding:0; list-style:none;}
         <div class="admin-bar">
           <div><h1 style="font-size:22px;">لوحة تحكم المنتجات</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;">أضف وعدّل وامسح المنتجات والأقسام — أي تعديل بيظهر لكل زوار الموقع فورًا.</p></div>
           <div class="admin-actions">
+            <button class="btn btn-primary btn-sm" id="adminOrdersBtn" type="button">🧾 طلبات العملاء</button>
             <button class="btn btn-outline btn-sm" id="adminImportBtn" type="button">استيراد ملف بيانات</button>
             <input type="file" id="adminImportFile" accept="application/json" hidden>
             <button class="btn btn-sky btn-sm" id="adminExportBtn" type="button">⬇️ نسخة احتياطية</button>
@@ -1155,17 +1166,18 @@ ul{margin:0; padding:0; list-style:none;}
               </table>
             </div>
           </div>
+        </div>
+      </div>
 
-          <div class="admin-card" style="grid-column:1 / -1;">
-            <h3>🧾 الطلبات المسجّلة (<span id="adminOrderCount">0</span>)</h3>
-            <p style="color:var(--ink-soft); font-size:12.5px;">الطلبات اللي بتظهر هنا هي بس اللي بتتم من عميل مسجّل دخول وقت إتمام الطلب — ده أساس التحقق اللي العميل بيقدر بيه يقيّم منتج اشتراه فعلاً.</p>
-            <div style="overflow-x:auto;">
-              <table class="admin-table">
-                <thead><tr><th>العميل</th><th>المنتجات</th><th>الإجمالي</th><th>التاريخ</th></tr></thead>
-                <tbody id="adminOrdersBody"></tbody>
-              </table>
-            </div>
+      <div id="adminOrdersPage" class="admin-wrap">
+        <div class="admin-bar">
+          <div><h1 style="font-size:22px;">🧾 طلبات العملاء (<span id="adminOrderCount">0</span>)</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;">الطلبات اللي بتظهر هنا هي بس اللي بتتم من عميل مسجّل دخول وقت إتمام الطلب. دوس على أي طلب عشان تشوف فاتورته كاملة.</p></div>
+          <div class="admin-actions">
+            <button class="btn btn-outline btn-sm" id="adminOrdersBackBtn" type="button">رجوع للوحة التحكم</button>
           </div>
+        </div>
+        <div id="adminOrdersList" style="display:flex; flex-direction:column; gap:12px;">
+          <p style="color:var(--ink-soft); font-size:13px;">جاري التحميل...</p>
         </div>
       </div>
 
@@ -2223,6 +2235,7 @@ function showAdmin(){
   document.getElementById("adminForgotIdentify").style.display = "none";
   document.getElementById("adminResetCode").style.display = "none";
   document.getElementById("adminResetNewPass").style.display = "none";
+  document.getElementById("adminOrdersPage").classList.remove("active");
   var authed = isAdminAuthed();
   if(authed){
     document.getElementById("adminSetup").style.display = "none";
@@ -2984,32 +2997,69 @@ function renderAdminCatsTable(){
     + '</tr>';
   }).join("");
 }
-/* بتجيب كل الطلبات المسجّلة من /api/orders بصلاحية الأدمن - دي أساس التحقق
-   اللي بيتبنى عليه نظام التقييمات (مراجعة سريعة لصاحب المتجر لكل الطلبات
-   اللي اترسلت وهي مسجّلة دخول عميل). */
-function renderAdminOrdersTable(){
-  var body = document.getElementById("adminOrdersBody");
-  if(!body) return;
-  body.innerHTML = '<tr><td colspan="4" style="color:var(--ink-soft); font-size:13px;">جاري التحميل...</td></tr>';
+/* صفحة "طلبات العملاء" المستقلة بتاعة الأدمن - بتجيب كل الطلبات المسجّلة من
+   /api/orders بصلاحية الأدمن وبتعرضها ككروت، وكل كارت بيفتح فاتورة الطلب
+   كاملة (زي نفس شكل فاتورة "حسابي" بتاعة العميل) في مودال فوقها. */
+var ADMIN_ORDERS_CACHE = [];
+function openAdminOrdersPage(){
+  document.getElementById("adminDashboard").classList.remove("active");
+  document.getElementById("adminOrdersPage").classList.add("active");
+  window.scrollTo({top:0, behavior:"instant" in document.documentElement.style ? "instant" : "auto"});
+  renderAdminOrdersPage();
+}
+function closeAdminOrdersPage(){
+  document.getElementById("adminOrdersPage").classList.remove("active");
+  document.getElementById("adminDashboard").classList.add("active");
+}
+function renderAdminOrdersPage(){
+  var box = document.getElementById("adminOrdersList");
+  if(!box) return;
+  box.innerHTML = '<p style="color:var(--ink-soft); font-size:13px;">جاري التحميل...</p>';
   fetch("/api/orders", { headers: adminAuthHeaders(), cache:"no-store" }).then(function(r){ return r.json(); })
     .then(function(res){
       var list = (res && res.ok) ? res.orders : [];
+      ADMIN_ORDERS_CACHE = list.slice().reverse();
       var countEl = document.getElementById("adminOrderCount");
       if(countEl) countEl.textContent = list.length;
-      if(!list.length){ body.innerHTML = '<tr><td colspan="4" style="color:var(--ink-soft); font-size:13px;">لسه مفيش طلبات مسجّلة.</td></tr>'; return; }
-      body.innerHTML = list.slice().reverse().map(function(o){
+      if(!ADMIN_ORDERS_CACHE.length){ box.innerHTML = '<p style="color:var(--ink-soft); font-size:13px;">لسه مفيش طلبات مسجّلة.</p>'; return; }
+      box.innerHTML = ADMIN_ORDERS_CACHE.map(function(o, i){
         var itemsTxt = (o.items||[]).map(function(it){ return it.name+' ×'+it.qty; }).join("، ");
         var d = new Date(o.createdAt);
-        return '<tr>'
-          + '<td>'+(o.customerName||o.name||"-")+'<br><span style="color:var(--ink-soft); font-size:11.5px;">'+(o.phone||o.customerId||"")+'</span></td>'
-          + '<td>'+itemsTxt+'</td>'
-          + '<td class="tabular">'+fmt(o.total)+' ج.م</td>'
-          + '<td class="tabular" style="font-size:12px;">'+d.toLocaleDateString("ar-EG")+'</td>'
-        + '</tr>';
+        return '<button type="button" class="order-card" data-admin-order-row="'+i+'">'
+          + '<div class="order-card-top">'
+            + '<div><div class="order-card-id">فاتورة #'+String(o.id||"").slice(-6)+'</div>'
+              + '<div class="order-card-customer">'+(o.customerName||o.name||"-")+' — '+(o.phone||o.customerId||"-")+'</div></div>'
+            + '<div class="order-card-date tabular">'+d.toLocaleDateString("ar-EG")+'</div>'
+          + '</div>'
+          + '<div class="order-card-items">'+itemsTxt+'</div>'
+          + '<div class="order-card-bottom">'
+            + '<span class="order-card-open">عرض الفاتورة كاملة ⟵</span>'
+            + '<span class="order-card-total tabular">'+fmt(o.total)+' ج.م</span>'
+          + '</div>'
+        + '</button>';
       }).join("");
+      box.querySelectorAll("[data-admin-order-row]").forEach(function(btn){
+        btn.addEventListener("click", function(){ showAdminOrderInvoiceModal(ADMIN_ORDERS_CACHE[+btn.dataset.adminOrderRow]); });
+      });
     })
-    .catch(function(){ body.innerHTML = '<tr><td colspan="4" style="color:var(--pink-deep); font-size:13px;">تعذر تحميل الطلبات.</td></tr>'; });
+    .catch(function(){ box.innerHTML = '<p style="color:var(--pink-deep); font-size:13px;">تعذر تحميل الطلبات.</p>'; });
 }
+/* بيفتح فاتورة الطلب كاملة فوق صفحة الطلبات - نفس دالة orderInvoiceHtml
+   المستخدمة في فاتورة العميل، عشان الشكل يبقى موحّد واحترافي في المكانين. */
+function showAdminOrderInvoiceModal(order){
+  if(!order) return;
+  var html = '<button class="modal-close" id="modalCloseBtn" aria-label="إغلاق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
+    + '<div class="modal-info" style="padding:30px 24px;">'
+      + '<h3 style="margin-bottom:4px;">تفاصيل الطلب</h3>'
+      + orderInvoiceHtml(order)
+    + '</div>';
+  document.getElementById("modalCard").classList.add("acct-card");
+  document.getElementById("modalCard").innerHTML = html;
+  document.getElementById("modalCloseBtn").addEventListener("click", closeAllPanels);
+  modalBackdrop.classList.add("show"); overlay.classList.add("show"); document.body.style.overflow="hidden";
+}
+document.getElementById("adminOrdersBtn").addEventListener("click", openAdminOrdersPage);
+document.getElementById("adminOrdersBackBtn").addEventListener("click", closeAdminOrdersPage);
 function fillAdminSettingsForm(){
   var s = getAdminSession();
   if(!s) return;
@@ -3052,7 +3102,6 @@ function renderAdminAll(){
   renderColorSwatches(selectedCatColor);
   renderAdminProductsTable();
   renderAdminCatsTable();
-  renderAdminOrdersTable();
   fillAdminSettingsForm();
 }
 function refreshPublicViews(){

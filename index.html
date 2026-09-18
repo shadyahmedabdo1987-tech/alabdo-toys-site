@@ -1534,9 +1534,14 @@ function renderCartDrawer(){
     }).join("");
   }
   document.getElementById("cartTotal").textContent = fmt(cartTotal())+" ج.م";
-  document.getElementById("checkoutBtn").style.display = items.length ? "flex" : "none";
-  document.getElementById("checkoutAltBtn").style.display = items.length ? "flex" : "none";
-  if(!items.length) document.getElementById("checkoutAltMsg").style.display = "none";
+  /* العميل اللي لسه مسجّلش دخول بيشوف زرار الواتساب بس (مفيش زرار "إتمام
+     الطلب من الموقع" ليه، لأن ده بيسجّل الطلب على حساب عميل مسجّل دخول).
+     العميل المسجّل دخول بيشوف زرار "إتمام الطلب من الموقع" بس (بيتم فورًا
+     على حسابه هو) وبيختفي زرار الواتساب خالص. */
+  var authed = isCustomerAuthed();
+  document.getElementById("checkoutBtn").style.display = (items.length && !authed) ? "flex" : "none";
+  document.getElementById("checkoutAltBtn").style.display = (items.length && authed) ? "flex" : "none";
+  if(!items.length || !authed) document.getElementById("checkoutAltMsg").style.display = "none";
 }
 
 document.getElementById("cartBody").addEventListener("click", function(e){

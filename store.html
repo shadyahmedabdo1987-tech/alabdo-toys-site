@@ -1121,15 +1121,6 @@ ul{margin:0; padding:0; list-style:none;}
                 </div>
                 <p style="color:var(--ink-soft); font-size:12px; margin-top:4px;">أول صورة بتضيفها هي اللي بتظهر في كل الموقع، والباقي بيظهر كمعرض جوه تفاصيل المنتج. لو مفيش صور، أيقونة القسم بتفضل ظاهرة بدالها.</p>
               </div>
-              <div class="field">
-                <label for="pfVideoUrl">فيديوهات للمنتج (اختياري، ممكن تضيف أكتر من فيديو)</label>
-                <div style="display:flex; gap:8px;">
-                  <input id="pfVideoUrl" type="url" placeholder="رابط يوتيوب، أو فيسبوك/إنستجرام، أو رابط فيديو مباشر" autocomplete="off" style="flex:1;">
-                  <button type="button" class="btn btn-outline btn-sm" id="pfVideoAddBtn">إضافة</button>
-                </div>
-                <div id="pfVideosPreview" style="display:flex; flex-direction:column; gap:6px; margin-top:8px;"></div>
-                <p style="color:var(--ink-soft); font-size:12px; margin-top:4px;">روابط يوتيوب بتتشغل جوه صفحة المنتج مباشرة، وأي رابط تاني (فيسبوك/إنستجرام...) بيفتح في نافذة جديدة لما العميل يدوس عليه.</p>
-              </div>
               <div class="hero-ctas" style="justify-content:flex-start;">
                 <button type="submit" class="btn btn-primary" id="productFormSubmit">إضافة المنتج</button>
                 <button type="button" class="btn btn-outline" id="productFormCancel" hidden>إلغاء التعديل</button>
@@ -1409,37 +1400,6 @@ function productMainImage(p){
   var imgs = productImages(p);
   return imgs.length ? imgs[0] : null;
 }
-/* فيديوهات المنتج (روابط بس - مفيش رفع ملفات فيديو، عشان متجيبش القالب
-   بيانات ضخمة تتحمّل مع كل منتج في الموقع). */
-function productVideos(p){
-  return Array.isArray(p.videos) ? p.videos.filter(Boolean) : [];
-}
-/* لو الرابط يوتيوب (بأي صيغة من صيغه) بيرجع رابط embed جاهز للعرض جوه
-   iframe؛ غير كده بيرجع null. */
-function youtubeEmbedUrl(url){
-  var m = String(url||"").match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
-  return m ? "https://www.youtube.com/embed/"+m[1] : null;
-}
-/* لو الرابط بيشاور على ملف فيديو مباشر (مش صفحة منصة) بيرجع true عشان
-   نعرضه بـ<video> عادي بدل iframe. */
-function isDirectVideoFile(url){
-  return /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(String(url||""));
-}
-/* بتبني محتوى منطقة العرض الرئيسية لفيديو واحد جوه مودال تفاصيل المنتج:
-   يوتيوب بيتشغل جوه الموقع مباشرة، ملف فيديو مباشر بيتشغل بعنصر <video>
-   عادي، وأي رابط تاني (فيسبوك/إنستجرام...) بيتحول لزرار بيفتح الفيديو في
-   نافذة جديدة (أضمن حل يشتغل مع أي منصة من غير ما نعتمد على SDK خارجي). */
-function videoMediaHtml(url){
-  var yt = youtubeEmbedUrl(url);
-  if(yt){
-    return '<iframe id="modalMainVideo" src="'+yt+'" style="width:100%; height:100%; border:0; display:block;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
-  }
-  if(isDirectVideoFile(url)){
-    return '<video id="modalMainVideo" src="'+url+'" controls playsinline style="width:100%; height:100%; object-fit:contain; background:#000; display:block;"></video>';
-  }
-  return '<a id="modalMainVideo" href="'+url+'" target="_blank" rel="noopener" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; width:100%; height:100%; color:#fff; background:#000; text-decoration:none; font-size:14.5px;"><span style="font-size:44px;">▶️</span>مشاهدة الفيديو (هيفتح في نافذة جديدة)</a>';
-}
-
 /* ---------- Data source: /api/products (shared, live for every visitor) > this
    browser's last-known copy (offline fallback only) > built-in defaults ---------- */
 var DATA_KEY = "aa_store_data";
@@ -2082,27 +2042,21 @@ function openProductModal(id){
   if(!p) return;
   var msg = "مرحباً "+STORE.name+" 👋 عايز أطلب: "+p.name+" - "+fmt(p.price)+" ج.م";
   var imgs = productImages(p);
-  var vids = productVideos(p);
-  var mediaList = imgs.map(function(src){ return {type:"image", src:src}; })
-    .concat(vids.map(function(src){ return {type:"video", src:src}; }));
-  var modalMediaContent = mediaList.length
-    ? (mediaList[0].type==="image" ? '<img id="modalMainImg" src="'+mediaList[0].src+'" alt="'+p.name+'">' : videoMediaHtml(mediaList[0].src))
+  var modalImgContent = imgs.length
+    ? '<img id="modalMainImg" src="'+imgs[0]+'" alt="'+p.name+'">'
     : ('<span id="modalMainImg">'+categoryIcon(p.cat)+'</span>');
   var galleryHtml = "";
-  if(mediaList.length > 1){
+  if(imgs.length > 1){
     galleryHtml = '<div class="modal-gallery" style="display:flex; gap:8px; margin:8px 0; flex-wrap:wrap;">'
-      + mediaList.map(function(m, i){
-        var thumbInner = m.type==="image"
-          ? '<img src="'+m.src+'" alt="" style="width:100%; height:100%; object-fit:cover; display:block;">'
-          : '<span style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#000; color:#fff; font-size:18px;">▶️</span>';
-        return '<button type="button" data-gallery-media="'+i+'" style="width:52px; height:52px; border-radius:10px; overflow:hidden; padding:0; cursor:pointer; border:2px solid '+(i===0?'var(--pink-deep)':'var(--border)')+'; background:'+CAT_MAP[p.cat].color+';">'+thumbInner+'</button>';
+      + imgs.map(function(src, i){
+        return '<button type="button" data-gallery-img="'+i+'" style="width:52px; height:52px; border-radius:10px; overflow:hidden; padding:0; cursor:pointer; border:2px solid '+(i===0?'var(--pink-deep)':'var(--border)')+'; background:'+CAT_MAP[p.cat].color+';"><img src="'+src+'" alt="" style="width:100%; height:100%; object-fit:cover; display:block;"></button>';
       }).join("")
     + '</div>';
   }
   document.getElementById("modalCard").classList.remove("acct-card");
   document.getElementById("modalCard").innerHTML =
     '<button class="modal-close" id="modalCloseBtn" aria-label="إغلاق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
-    + '<div class="modal-media" id="modalMediaBox" style="background:'+CAT_MAP[p.cat].color+'">'+modalMediaContent+'</div>'
+    + '<div class="modal-media" style="background:'+CAT_MAP[p.cat].color+'">'+modalImgContent+'</div>'
     + '<div class="modal-info">'
       + '<span class="card-cat">'+catName(p.cat)+'</span>'
       + '<h3>'+p.name+'</h3>'
@@ -2120,14 +2074,13 @@ function openProductModal(id){
     + '</div>';
   modalBackdrop.classList.add("show"); overlay.classList.add("show"); document.body.style.overflow="hidden";
   document.getElementById("modalCloseBtn").addEventListener("click", closeAllPanels);
-  if(mediaList.length > 1){
-    document.querySelectorAll("[data-gallery-media]").forEach(function(btn){
+  if(imgs.length > 1){
+    document.querySelectorAll("[data-gallery-img]").forEach(function(btn){
       btn.addEventListener("click", function(){
-        var i = +btn.dataset.galleryMedia;
-        var m = mediaList[i];
-        var box = document.getElementById("modalMediaBox");
-        if(box) box.innerHTML = m.type==="image" ? '<img id="modalMainImg" src="'+m.src+'" alt="'+p.name+'">' : videoMediaHtml(m.src);
-        document.querySelectorAll("[data-gallery-media]").forEach(function(b){ b.style.borderColor = "var(--border)"; });
+        var i = +btn.dataset.galleryImg;
+        var mainImg = document.getElementById("modalMainImg");
+        if(mainImg) mainImg.src = imgs[i];
+        document.querySelectorAll("[data-gallery-img]").forEach(function(b){ b.style.borderColor = "var(--border)"; });
         btn.style.borderColor = "var(--pink-deep)";
       });
     });
@@ -2457,7 +2410,6 @@ var EMOJI_SUGGESTIONS = [
 ];
 var selectedCatColor = COLOR_PRESETS[0].value;
 var pfImagesData = [];
-var pfVideosData = [];
 
 /* Reads a chosen image file, resizes it on a canvas so it doesn't bloat
    localStorage/products.json, and returns a compressed JPEG data URL. */
@@ -3213,46 +3165,14 @@ document.getElementById("pfImagesPreview").addEventListener("click", function(e)
 });
 renderPfImagesPreview();
 
-/* ---------- Product video links (roman - links only, no file upload) ---------- */
-function renderPfVideosPreview(){
-  var box = document.getElementById("pfVideosPreview");
-  if(!box) return;
-  if(!pfVideosData.length){ box.innerHTML = ""; return; }
-  box.innerHTML = pfVideosData.map(function(url, i){
-    var label = youtubeEmbedUrl(url) ? "🎬 يوتيوب" : (isDirectVideoFile(url) ? "🎬 فيديو" : "🔗 رابط فيديو");
-    return '<div style="display:flex; align-items:center; gap:8px; border:1.5px solid var(--border); border-radius:10px; padding:6px 10px;">'
-      + '<span style="font-size:12px; color:var(--ink-soft); white-space:nowrap;">'+label+'</span>'
-      + '<span style="font-size:12.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;" dir="ltr">'+url+'</span>'
-      + '<button type="button" data-remove-pf-video="'+i+'" aria-label="إزالة الفيديو" style="border:0; background:var(--surface-2); width:24px; height:24px; border-radius:50%; color:var(--pink-deep); font-size:13px; line-height:1; cursor:pointer; flex:none;">×</button>'
-    + '</div>';
-  }).join("");
-}
-document.getElementById("pfVideoAddBtn").addEventListener("click", function(){
-  var input = document.getElementById("pfVideoUrl");
-  var url = input.value.trim();
-  if(!url) return;
-  if(!/^https?:\/\//i.test(url)){ showToast("⚠️ حط رابط صحيح يبدأ بـ https://"); return; }
-  pfVideosData.push(url);
-  input.value = "";
-  renderPfVideosPreview();
-});
-document.getElementById("pfVideosPreview").addEventListener("click", function(e){
-  var btn = e.target.closest("[data-remove-pf-video]"); if(!btn) return;
-  pfVideosData.splice(+btn.dataset.removePfVideo, 1);
-  renderPfVideosPreview();
-});
-renderPfVideosPreview();
-
-
 function renderAdminProductsTable(){
   document.getElementById("adminProductCount").textContent = PRODUCTS.length;
   document.getElementById("adminProductsBody").innerHTML = PRODUCTS.map(function(p){
     var pRowMainImg = productMainImage(p);
     var thumbContent = pRowMainImg ? '<img src="'+pRowMainImg+'" alt="">' : categoryIcon(p.cat);
-    var videoBadge = productVideos(p).length ? ' <span title="فيه فيديو" style="font-size:12px;">🎬</span>' : "";
     return '<tr>'
       + '<td><div class="thumb-sm" style="background:'+(CAT_MAP[p.cat]?CAT_MAP[p.cat].color:'var(--surface-2)')+'">'+thumbContent+'</div></td>'
-      + '<td>'+p.name+videoBadge+'</td>'
+      + '<td>'+p.name+'</td>'
       + '<td>'+catName(p.cat)+'</td>'
       + '<td class="tabular">'+fmt(p.price)+' ج.م'+(p.old?' <span style="color:var(--ink-faint);text-decoration:line-through;font-size:11px;">'+fmt(p.old)+'</span>':'')+'</td>'
       + '<td><div class="admin-row-actions">'
@@ -3538,8 +3458,7 @@ document.getElementById("productForm").addEventListener("submit", function(e){
     reviews: +document.getElementById("pfReviews").value || 0,
     badge: document.getElementById("pfBadge").value || null,
     images: pfImagesData.slice(),
-    image: pfImagesData[0] || null,
-    videos: pfVideosData.slice()
+    image: pfImagesData[0] || null
   };
   if(!data.name || !data.cat) return;
   var wasEdit = !!id;
@@ -3569,9 +3488,6 @@ function resetProductForm(){
   pfImagesData = [];
   document.getElementById("pfImageInput").value = "";
   renderPfImagesPreview();
-  pfVideosData = [];
-  document.getElementById("pfVideoUrl").value = "";
-  renderPfVideosPreview();
 }
 document.getElementById("productFormCancel").addEventListener("click", resetProductForm);
 document.getElementById("adminProductsBody").addEventListener("click", function(e){
@@ -3591,9 +3507,6 @@ document.getElementById("adminProductsBody").addEventListener("click", function(
     pfImagesData = productImages(p).slice();
     document.getElementById("pfImageInput").value = "";
     renderPfImagesPreview();
-    pfVideosData = productVideos(p).slice();
-    document.getElementById("pfVideoUrl").value = "";
-    renderPfVideosPreview();
     document.getElementById("productFormTitle").textContent = "✏️ تعديل منتج";
     document.getElementById("productFormSubmit").textContent = "حفظ التعديل";
     document.getElementById("productFormCancel").hidden = false;

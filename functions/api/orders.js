@@ -22,8 +22,12 @@ export async function onRequestGet({ request, env }){
 /* POST /api/orders - customer only. A checkout only becomes a real,
    trackable order (and only then counts toward review eligibility) when
    the customer is logged in at checkout time; guest WhatsApp orders are
-   not recorded here. Body: {items:[{id,name,price,qty}], total, name,
-   phone, address}. */
+   not recorded here. Body: {items:[{id,name,price,qty}], subtotal,
+   shipping, total, name, phone, address, paymentMethod, paymentProof}.
+   paymentMethod is one of "cash"/"vodafone"/"instapay"; paymentProof is a
+   compressed base64 data URL screenshot of the transfer, required by the
+   client for vodafone/instapay (not enforced again server-side, since the
+   client already blocks submission without it). */
 export async function onRequestPost({ request, env }){
   var customer = await requireCustomer(request, env);
   if(!customer) return json({ ok:false, error:"unauthorized" }, 401);
@@ -39,10 +43,14 @@ export async function onRequestPost({ request, env }){
     customerId: customer.identifier,
     customerName: customer.name,
     items: body.items,
+    subtotal: +body.subtotal || 0,
+    shipping: +body.shipping || 0,
     total: +body.total || 0,
     name: (body.name || "").trim(),
     phone: (body.phone || "").trim(),
     address: (body.address || "").trim(),
+    paymentMethod: (body.paymentMethod || "").trim(),
+    paymentProof: body.paymentProof || null,
     createdAt: Date.now()
   };
   var list = await getList(env, "orders");

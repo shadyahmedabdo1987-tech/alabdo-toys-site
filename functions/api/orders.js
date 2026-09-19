@@ -23,11 +23,12 @@ export async function onRequestGet({ request, env }){
    trackable order (and only then counts toward review eligibility) when
    the customer is logged in at checkout time; guest WhatsApp orders are
    not recorded here. Body: {items:[{id,name,price,qty}], subtotal,
-   shipping, total, name, phone, address, paymentMethod, paymentProof}.
-   paymentMethod is one of "cash"/"vodafone"/"instapay"; paymentProof is a
-   compressed base64 data URL screenshot of the transfer, required by the
-   client for vodafone/instapay (not enforced again server-side, since the
-   client already blocks submission without it). */
+   shipping, total, name, phone, address, notes, paymentMethod,
+   paymentProof}. paymentMethod is one of "cash"/"vodafone"/"instapay";
+   paymentProof is a compressed base64 data URL screenshot of the
+   transfer, required by the client for vodafone/instapay (not enforced
+   again server-side, since the client already blocks submission without
+   it). notes is an optional free-text field the customer can add. */
 export async function onRequestPost({ request, env }){
   var customer = await requireCustomer(request, env);
   if(!customer) return json({ ok:false, error:"unauthorized" }, 401);
@@ -49,6 +50,7 @@ export async function onRequestPost({ request, env }){
     name: (body.name || "").trim(),
     phone: (body.phone || "").trim(),
     address: (body.address || "").trim(),
+    notes: (body.notes || "").trim(),
     paymentMethod: (body.paymentMethod || "").trim(),
     paymentProof: body.paymentProof || null,
     createdAt: Date.now()

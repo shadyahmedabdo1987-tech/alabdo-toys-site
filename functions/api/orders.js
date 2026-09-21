@@ -1,4 +1,4 @@
-import { json, getList, saveList, requireAdmin, requireCustomer } from "../_lib.js";
+import { json, getList, saveList, requireAdmin, requireCustomer, getCatalog, saveCatalog } from "../_lib.js";
 
 /* GET /api/orders - admin headers return every order (for the admin
    dashboard's order list); customer headers return only that customer's
@@ -58,6 +58,32 @@ export async function onRequestPost({ request, env }){
   var list = await getList(env, "orders");
   list.push(order);
   await saveList(env, "orders", list);
+
+  /* خصم الكمية المتاحة تلقائيًا لكل صنف فيه تتبع كمية مفعّل (منتج أو لون
+     له رقم كمية محدد - مش null). ده بيحصل بس هنا، في مسار طلبات الموقع
+     (عميل مسجّل دخول) - طلبات الواتساب للضيوف مش بتوصل للسيرفر خالص
+     فمفيش خصم تلقائي ليها، وده قيد معروف في تصميم الموقع الحالي. أي خطأ
+     هنا (مثلاً الكتالوج مش موجود) ما يمنعش تسجيل الطلب نفسه. */
+  try{
+    var catalog = await getCatalog(env);
+    if(catalog){
+      var changed = false;
+      body.items.forEach(function(it){
+        var p = catalog.products.find(function(x){ return String(x.id) === String(it.id); });
+        if(!p) return;
+        var colorName = String(it.colorName || "").trim();
+        var qty = Math.max(0, +it.qty || 0);
+        if(colorName && Array.isArray(p.colors)){
+          var c = p.colors.find(function(x){ return x.name === colorName; });
+          if(c && c.stock != null){ c.stock = Math.max(0, (+c.stock||0) - qty); changed = true; }
+        } else if(p.stock != null){
+          p.stock = Math.max(0, (+p.stock||0) - qty); changed = true;
+        }
+      });
+      if(changed) await saveCatalog(env, catalog);
+    }
+  }catch(e){ /* الخصم مش أساسي لنجاح الطلب */ }
+
   return json({ ok:true, orderId: order.id });
 }
 

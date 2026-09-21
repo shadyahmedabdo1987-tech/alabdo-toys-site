@@ -75,6 +75,21 @@ export async function saveList(env, key, list){
 export async function getCustomers(env){ return getList(env, "customers"); }
 export async function saveCustomers(env, list){ return saveList(env, "customers", list); }
 
+/* The "products" key holds one object ({categories, products}), not a plain
+   array, so it needs its own get/save pair instead of getList/saveList.
+   Used by orders.js to auto-decrement stock quantities after an order. */
+export async function getCatalog(env){
+  var raw = await env.STORE_KV.get("products");
+  if(!raw) return null;
+  try{
+    var v = JSON.parse(raw);
+    return (v && Array.isArray(v.products)) ? v : null;
+  }catch(e){ return null; }
+}
+export async function saveCatalog(env, catalog){
+  await env.STORE_KV.put("products", JSON.stringify({ categories: catalog.categories||[], products: catalog.products||[] }));
+}
+
 /* Reads customer credentials off X-Customer-Id / X-Customer-Pass headers
    (same pattern as requireAdmin above) and checks them against the stored,
    hashed customer account. X-Customer-Id is the customer's phone number

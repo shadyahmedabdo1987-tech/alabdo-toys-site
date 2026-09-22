@@ -18,5 +18,5 @@ export async function onRequestPost({ request, env }){
   if(!acct) return json({ ok:false });
   var hash = await sha256Hex(password);
   if(hash !== acct.passwordHash) return json({ ok:false });
-  return json({ ok:true, name: acct.name, phone: acct.identifier, email: acct.email });
+  return json({ ok:true, name: acct.name, phone: acct.identifier, email: acct.email, governorate: acct.governorate || "", address: acct.address || "" });
 }

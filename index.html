@@ -2185,9 +2185,15 @@ var modalBackdrop = document.getElementById("modalBackdrop");
 function openDrawer(){
   cartDrawer.classList.add("show"); overlay.classList.add("show"); document.body.style.overflow="hidden";
   var nameInput = document.getElementById("checkoutName");
-  if(nameInput && !nameInput.value){
-    var c = getCustomerProfile();
-    if(c && c.name) nameInput.value = c.name;
+  var phoneInput = document.getElementById("checkoutPhone");
+  var addressInput = document.getElementById("checkoutAddress");
+  var c = getCustomerProfile();
+  if(c){
+    if(nameInput && !nameInput.value && c.name) nameInput.value = c.name;
+    if(phoneInput && !phoneInput.value && c.identifier) phoneInput.value = c.identifier;
+    if(addressInput && !addressInput.value && c.address){
+      addressInput.value = c.governorate ? (c.governorate+" - "+c.address) : c.address;
+    }
   }
 }
 function closeAllPanels(){
@@ -3093,10 +3099,11 @@ var CUSTOMER_SESSION_KEY = "aa_customer_session";
 function getCustomerProfile(){
   try{ return JSON.parse(localStorage.getItem(CUSTOMER_SESSION_KEY) || "null"); }catch(e){ return null; }
 }
-function setCustomerSession(identifier, password, name, email){
+function setCustomerSession(identifier, password, name, email, governorate, address){
   try{
     localStorage.setItem(CUSTOMER_SESSION_KEY, JSON.stringify({
-      identifier: identifier, password: password, name: name || "", email: email || ""
+      identifier: identifier, password: password, name: name || "", email: email || "",
+      governorate: governorate || "", address: address || ""
     }));
   }catch(e){}
 }
@@ -3117,6 +3124,12 @@ function updateAccountLabel(){
 
 function accountFieldMeta(){
   return { label:"رقم الموبايل", type:"tel", placeholder:"01xxxxxxxxx", inputmode:"numeric" };
+}
+var EGYPT_GOVERNORATES = ["القاهرة","الجيزة","الإسكندرية","الدقهلية","البحر الأحمر","البحيرة","الفيوم","الغربية","الإسماعيلية","المنوفية","المنيا","القليوبية","الوادي الجديد","السويس","أسوان","أسيوط","بني سويف","بورسعيد","دمياط","الشرقية","جنوب سيناء","كفر الشيخ","مطروح","الأقصر","قنا","شمال سيناء","سوهاج"];
+function governorateOptionsHtml(selected){
+  return '<option value="" disabled'+(selected?"":" selected")+'>اختر المحافظة</option>' + EGYPT_GOVERNORATES.map(function(g){
+    return '<option value="'+g+'"'+(g===selected?" selected":"")+'>'+g+'</option>';
+  }).join("");
 }
 /* الدخول (على عكس التسجيل) بيقبل رقم الموبايل أو الإيميل المسجلين - حقل نصي
    عادي عشان ياخد أي الاتنين. */
@@ -3332,6 +3345,8 @@ function renderAccountModal(){
       + '<div class="field"><label for="acctRegName">الاسم بالكامل</label><input id="acctRegName" required placeholder="اسمك بالكامل"></div>'
       + '<div class="field"><label for="acctRegEmail">الإيميل</label><input id="acctRegEmail" required type="email" placeholder="example@email.com" autocomplete="off"></div>'
       + '<div class="field"><label for="acctRegIdentifier">'+fm.label+'</label><input id="acctRegIdentifier" required type="'+fm.type+'" inputmode="'+fm.inputmode+'" placeholder="'+fm.placeholder+'" autocomplete="off"></div>'
+      + '<div class="field"><label for="acctRegGovernorate">المحافظة</label><select id="acctRegGovernorate" required>'+governorateOptionsHtml()+'</select></div>'
+      + '<div class="field"><label for="acctRegAddress">العنوان بالتفصيل</label><input id="acctRegAddress" required placeholder="الشارع، رقم العمارة/المنزل، الدور..." autocomplete="off"></div>'
       + '<div class="field"><label for="acctRegPassword">الرقم السري</label><input id="acctRegPassword" required type="password" minlength="6" placeholder="6 حروف/أرقام على الأقل" autocomplete="new-password"></div>'
       + '<div class="field"><label for="acctRegPasswordConfirm">تأكيد الرقم السري</label><input id="acctRegPasswordConfirm" required type="password" minlength="6" placeholder="اكتب نفس الرقم السري تاني" autocomplete="new-password"></div>'
       + '<p id="acctRegError" style="color:var(--pink-deep); font-size:13px; display:none;"></p>'
@@ -3364,11 +3379,13 @@ function renderAccountModal(){
       var name = document.getElementById("acctRegName").value.trim();
       var identifier = document.getElementById("acctRegIdentifier").value.trim();
       var email = document.getElementById("acctRegEmail").value.trim();
+      var governorate = document.getElementById("acctRegGovernorate").value;
+      var address = document.getElementById("acctRegAddress").value.trim();
       var password = document.getElementById("acctRegPassword").value;
       var passwordConfirm = document.getElementById("acctRegPasswordConfirm").value;
       var errEl = document.getElementById("acctRegError");
       errEl.style.display = "none";
-      if(!identifier || !name || !email || !password || !passwordConfirm) return;
+      if(!identifier || !name || !email || !governorate || !address || !password || !passwordConfirm) return;
       if(password.length < 6){ errEl.textContent = "الرقم السري لازم يكون 6 حروف/أرقام على الأقل."; errEl.style.display = "block"; return; }
       if(password !== passwordConfirm){ errEl.textContent = "الرقم السري وتأكيده مش متطابقين."; errEl.style.display = "block"; return; }
       var btn = e.target.querySelector('[type="submit"]');
@@ -3376,12 +3393,12 @@ function renderAccountModal(){
       fetch("/api/customers/register", {
         method: "POST",
         headers: { "content-type":"application/json" },
-        body: JSON.stringify({ phone:identifier, name:name, email:email, password:password })
+        body: JSON.stringify({ phone:identifier, name:name, email:email, governorate:governorate, address:address, password:password })
       }).then(function(r){ return r.json().then(function(j){ return {status:r.status, body:j}; }); })
         .then(function(res){
           btn.disabled = false;
           if(res.body && res.body.ok){
-            setCustomerSession(res.body.phone, password, res.body.name, res.body.email);
+            setCustomerSession(res.body.phone, password, res.body.name, res.body.email, res.body.governorate, res.body.address);
             setAdminAuthed(false);
             broadcastAdminKill();
             acctState.registerResult = { identifier:res.body.phone };
@@ -3429,7 +3446,7 @@ function renderAccountModal(){
              الجلسة، مش أي حاجة كتبها العميل في خانة الدخول - لأنه ممكن يكون
              دخل بالإيميل، ولازم كل طلب بعد كده (X-Customer-Id) يبعت المعرّف
              الصحيح عشان requireCustomer في السيرفر يلاقي الحساب. */
-          setCustomerSession(res.phone, password, res.name, res.email);
+          setCustomerSession(res.phone, password, res.name, res.email, res.governorate, res.address);
           /* تسجيل دخول العميل بيقفل أي جلسة أدمن نشطة تلقائيًا - في نفس
              التاب فورًا، وفي أي تاب تاني مفتوح بنفس المتصفح عن طريق إشارة
              broadcastAdminKill (شوف تعريفها فوق). */
@@ -3479,6 +3496,7 @@ function renderAcctDrawerBody(){
   var html = '<div style="padding-bottom:4px; border-bottom:1px solid var(--border); margin-bottom:4px;">'
     + '<div style="font-size:16px; font-weight:800;">👋 '+(customer.name || "أهلاً بيك")+'</div>'
     + '<div style="color:var(--ink-soft); font-size:12.5px; margin-top:2px;">مسجّل برقم الموبايل: '+customer.identifier+'</div>'
+    + (customer.address ? '<div style="color:var(--ink-soft); font-size:12.5px; margin-top:2px;">📍 '+(customer.governorate?customer.governorate+' - ':'')+customer.address+'</div>' : '')
     + '<button type="button" class="btn btn-outline btn-block" id="acctDrawerLogout" style="margin-top:12px;">تسجيل خروج</button>'
   + '</div>'
   + '<div style="font-weight:800; font-size:13.5px; margin-top:4px;">طلباتي</div>'

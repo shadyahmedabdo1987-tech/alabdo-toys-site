@@ -62,13 +62,19 @@ export async function onRequestPost({ request, env }){
     paymentProof: body.paymentProof || null,
     createdAt: Date.now()
   };
+
+  /* بنسجّل نتيجة إرسال إيميل الإشعار (نجح/فشل + كود الاستجابة) على الطلب
+     نفسه (emailDebug) - مش بس بنحاول ونسكت لو فشل زي الأول. ده عشان لو
+     الإيميل معاش يوصل نقدر نشوف السبب بالظبط من صفحة تفاصيل الطلب في
+     لوحة التحكم من غير ما نحتاج نوصل لسيرفر Web3Forms مباشرة. */
+  if(!customer){
+    try{ order.emailDebug = await sendGuestOrderEmail(order); }
+    catch(e){ order.emailDebug = { ok:false, error: String((e && e.message) || e) }; }
+  }
+
   var list = await getList(env, "orders");
   list.push(order);
   await saveList(env, "orders", list);
-
-  if(!customer){
-    try{ await sendGuestOrderEmail(order); }catch(e){ /* فشل الإيميل مش سبب لفشل تسجيل الطلب نفسه */ }
-  }
 
   /* خصم الكمية المتاحة تلقائيًا لكل صنف فيه تتبع كمية مفعّل (منتج أو لون
      له رقم كمية محدد - مش null). بيحصل لكل الطلبات اللي بتوصل هنا سواء
@@ -152,8 +158,10 @@ export async function onRequestDelete({ request, env }){
    وسيلة تانية صاحب المتجر يتابعه بيها غير الإيميل، لأن مفيش حساب
    مرتبط بيه يقدر يتابعه منه زي طلبات العملاء المسجّلين. المفتاح ده
    (Web3Forms) مربوط بإيميل صاحب المتجر من إعداد حسابه على Web3Forms،
-   مش بيتحدد هنا. الدالة بترجع بهدوء لو الإرسال فشل (شوف onRequestPost -
-   فشل الإيميل مش سبب لفشل تسجيل الطلب نفسه). */
+   مش بيتحدد هنا. الدالة بترجع تفاصيل نتيجة الإرسال (نجح ولا فشل، وكود
+   وجسم استجابة Web3Forms) عشان تتسجل على الطلب نفسه (emailDebug) - مفيش
+   استثناء بيتفلت منها، أي خطأ بيترجم لكائن {ok:false, error} بدل ما
+   يوقف تسجيل الطلب (شوف onRequestPost). */
 async function sendGuestOrderEmail(order){
   var lines = order.items.map(function(it, i){
     return (i + 1) + ") " + it.name + " ×" + it.qty + " - " + (it.price * it.qty) + " ج.م";
@@ -167,7 +175,7 @@ async function sendGuestOrderEmail(order){
   lines.push("وسيلة الدفع: " + (order.paymentMethod || "-"));
   if(order.notes) lines.push("ملاحظات: " + order.notes);
 
-  await fetch("https://api.web3forms.com/submit", {
+  var res = await fetch("https://api.web3forms.com/submit", {
     method: "POST",
     headers: { "content-type": "application/json", "accept": "application/json" },
     body: JSON.stringify({
@@ -179,4 +187,7 @@ async function sendGuestOrderEmail(order){
       message: lines.join("\n")
     })
   });
+  var bodyText = "";
+  try{ bodyText = await res.text(); }catch(e){ /* مفيش جسم استجابة نقدر نقراه */ }
+  return { ok: res.ok, status: res.status, body: bodyText.slice(0, 400) };
 }

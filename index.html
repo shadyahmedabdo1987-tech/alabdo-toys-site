@@ -156,11 +156,13 @@ ul{margin:0; padding:0; list-style:none;}
 .header-actions{display:flex; align-items:center; gap:10px; flex:none;}
 /* ---------- زرار أيقونة ثلاثي الأبعاد: وش فاتح + حرف سفلي غامق بيدي إحساس
    إنه زرار "حقيقي" مرفوع عن السطح، وبيتضغط لتحت فعليًا لما تدوس عليه. ---------- */
-.icon-btn{position:relative; display:flex; flex-direction:column; align-items:center; gap:2px; background:var(--surface); border:0; color:var(--ink); padding:8px 12px; border-radius:14px; font-size:12px; font-weight:700; box-shadow:0 1px 0 rgba(255,255,255,.55) inset, 0 3px 0 color-mix(in srgb, var(--border) 55%, black), 0 8px 14px hsl(var(--shadow)/.14); transition:transform .15s ease, box-shadow .15s ease, color .15s ease;}
-.icon-btn:hover{color:var(--pink-deep); transform:translateY(-2px); box-shadow:0 1px 0 rgba(255,255,255,.55) inset, 0 5px 0 var(--pink-line), 0 12px 18px hsl(var(--shadow)/.18);}
-.icon-btn:active{transform:translateY(2px); box-shadow:0 1px 0 rgba(255,255,255,.4) inset, 0 1px 0 color-mix(in srgb, var(--border) 55%, black), 0 4px 8px hsl(var(--shadow)/.12);}
+/* ---------- أيقونات الهيدر (السلة/حسابي/المظهر) بنفس لون تاب "الرئيسية"
+   النشط - وردي متدرج بحرف سفلي غامق، بدل الخلفية البيضا. ---------- */
+.icon-btn{position:relative; display:flex; flex-direction:column; align-items:center; gap:2px; background:linear-gradient(180deg, var(--pink), var(--pink-deep)); border:0; color:#fff; padding:8px 12px; border-radius:14px; font-size:12px; font-weight:700; box-shadow:0 1px 0 rgba(255,255,255,.3) inset, 0 3px 0 color-mix(in srgb, var(--pink-deep) 72%, black), 0 8px 14px hsl(var(--shadow)/.22); transition:transform .15s ease, box-shadow .15s ease;}
+.icon-btn:hover{transform:translateY(-2px); box-shadow:0 1px 0 rgba(255,255,255,.3) inset, 0 5px 0 color-mix(in srgb, var(--pink-deep) 72%, black), 0 12px 18px hsl(var(--shadow)/.26);}
+.icon-btn:active{transform:translateY(2px); box-shadow:0 1px 0 rgba(255,255,255,.25) inset, 0 1px 0 color-mix(in srgb, var(--pink-deep) 72%, black), 0 4px 8px hsl(var(--shadow)/.18);}
 .icon-btn svg{width:23px; height:23px;}
-.cart-count{position:absolute; top:-2px; inset-inline-end:2px; background:linear-gradient(180deg, var(--pink), var(--pink-deep)); color:#fff; font-size:11px; font-weight:800; min-width:18px; height:18px; border-radius:999px; display:flex; align-items:center; justify-content:center; padding:0 4px; box-shadow:0 1px 0 rgba(255,255,255,.4) inset, 0 2px 5px hsl(var(--shadow)/.35);}
+.cart-count{position:absolute; top:-2px; inset-inline-end:2px; background:#fff; color:var(--pink-deep); font-size:11px; font-weight:800; min-width:18px; height:18px; border-radius:999px; display:flex; align-items:center; justify-content:center; padding:0 4px; box-shadow:0 1px 0 rgba(255,255,255,.6) inset, 0 2px 5px hsl(var(--shadow)/.4);}
 .menu-toggle{display:none; background:none; border:0; color:var(--ink); padding:8px;}
 .menu-toggle svg{width:26px; height:26px;}
 

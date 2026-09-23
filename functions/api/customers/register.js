@@ -1,4 +1,4 @@
-import { json, getCustomers, saveCustomers, sha256Hex } from "../../_lib.js";
+import { json, getCustomers, saveCustomers, sha256Hex, linkGuestOrdersToCustomer } from "../../_lib.js";
 
 /* POST /api/customers/register - public. Body: {phone, name, email, governorate, address, password}.
    Creates a customer account on the server (same trust model as the admin
@@ -39,5 +39,10 @@ export async function onRequestPost({ request, env }){
   };
   list.push(acct);
   await saveCustomers(env, list);
+
+  /* لو العميل ده كان طلب قبل كده كضيف بنفس رقم الموبايل، نربط طلباته
+     القديمة بحسابه الجديد على طول عشان تبان له في "طلباتي". */
+  try{ await linkGuestOrdersToCustomer(env, acct); }catch(e){ /* الربط مش سبب لفشل التسجيل نفسه */ }
+
   return json({ ok:true, name: acct.name, phone: acct.identifier, email: acct.email, governorate: acct.governorate, address: acct.address });
 }

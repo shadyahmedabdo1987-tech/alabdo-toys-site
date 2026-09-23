@@ -3879,12 +3879,29 @@ function renderAdminOrdersPage(){
 /* بيفتح فاتورة الطلب كاملة فوق صفحة الطلبات - نفس دالة orderInvoiceHtml
    المستخدمة في فاتورة العميل، عشان الشكل يبقى موحّد واحترافي في المكانين -
    وتحتها للأدمن بس زراري "تعديل" و"حذف" للطلب. */
+/* لو الطلب ده طلب ضيف واتحاول بعت إشعار بيه بالإيميل (emailDebug جاية
+   من functions/api/orders.js)، بنعرض للأدمن بس حالة الإرسال (نجح/فشل +
+   كود الاستجابة) في تفاصيل الفاتورة - عشان تشخيص مشاكل التوصيل يبقى من
+   جوه لوحة التحكم على طول من غير ما نحتاج نوصل لداشبورد Web3Forms. */
+function orderEmailDebugHtml(order){
+  var d = order.emailDebug;
+  if(!d) return "";
+  var statusLine = d.ok
+    ? ("✅ اتبعت بنجاح (HTTP " + d.status + ")")
+    : ("❌ فشل الإرسال" + (d.status ? (" — HTTP " + d.status) : "") + (d.error ? (" — " + d.error) : ""));
+  var bodyLine = d.body ? ('<div style="margin-top:4px; opacity:.75; word-break:break-word;">' + String(d.body).replace(/</g,"&lt;") + '</div>') : "";
+  return '<div style="background:var(--surface-3); border-radius:10px; padding:8px 10px; font-size:11.5px; color:var(--ink-soft);">'
+    + '<strong style="color:var(--ink);">📧 إشعار الإيميل (ضيف): </strong>' + statusLine
+    + bodyLine
+  + '</div>';
+}
 function showAdminOrderInvoiceModal(order){
   if(!order) return;
   var html = '<button class="modal-close" id="modalCloseBtn" aria-label="إغلاق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
     + '<div class="modal-info" style="padding:30px 24px;">'
       + '<h3 style="margin-bottom:4px;">تفاصيل الطلب</h3>'
       + orderInvoiceHtml(order)
+      + orderEmailDebugHtml(order)
       + '<div style="display:flex; gap:10px; margin-top:14px;">'
         + '<button type="button" class="btn btn-outline" id="aoEditBtn" style="flex:1;">✏️ تعديل الطلب</button>'
         + '<button type="button" class="btn btn-outline" id="aoDeleteBtn" style="flex:1; color:var(--pink-deep); border-color:var(--pink-deep);">🗑️ حذف الطلب</button>'

@@ -66,9 +66,9 @@ export async function onRequestPost({ request, env }){
   /* بنسجّل نتيجة إرسال إيميل الإشعار (نجح/فشل + كود الاستجابة) على الطلب
      نفسه (emailDebug) - مش بس بنحاول ونسكت لو فشل زي الأول. ده عشان لو
      الإيميل معاش يوصل نقدر نشوف السبب بالظبط من صفحة تفاصيل الطلب في
-     لوحة التحكم من غير ما نحتاج نوصل لسيرفر Web3Forms مباشرة. */
+     لوحة التحكم من غير ما نحتاج نوصل لداشبورد Resend مباشرة. */
   if(!customer){
-    try{ order.emailDebug = await sendGuestOrderEmail(order); }
+    try{ order.emailDebug = await sendGuestOrderEmail(order, env); }
     catch(e){ order.emailDebug = { ok:false, error: String((e && e.message) || e) }; }
   }
 
@@ -156,13 +156,20 @@ export async function onRequestDelete({ request, env }){
 /* بيبعت إشعار إيميل فوري لصاحب المتجر (shady.ahmed.abdo.1987@gmail.com)
    لما عميل يعمل طلب من غير ما يسجّل حساب - ده الطلب الوحيد اللي مفيش
    وسيلة تانية صاحب المتجر يتابعه بيها غير الإيميل، لأن مفيش حساب
-   مرتبط بيه يقدر يتابعه منه زي طلبات العملاء المسجّلين. المفتاح ده
-   (Web3Forms) مربوط بإيميل صاحب المتجر من إعداد حسابه على Web3Forms،
-   مش بيتحدد هنا. الدالة بترجع تفاصيل نتيجة الإرسال (نجح ولا فشل، وكود
-   وجسم استجابة Web3Forms) عشان تتسجل على الطلب نفسه (emailDebug) - مفيش
-   استثناء بيتفلت منها، أي خطأ بيترجم لكائن {ok:false, error} بدل ما
-   يوقف تسجيل الطلب (شوف onRequestPost). */
-async function sendGuestOrderEmail(order){
+   مرتبط بيه يقدر يتابعه منه زي طلبات العملاء المسجّلين.
+   بيستخدم Resend (استبدلنا بيه Web3Forms بعد ما تأكدنا إنه بيرد "نجاح"
+   ومع ذلك الإيميل مش بيوصل فعليًا - مشكلة مش قادرين نشخصها أو نصلحها من
+   عندنا). مفتاح الـ API بييجي من متغيّر بيئة على Cloudflare Pages
+   (env.RESEND_API_KEY) مش مكتوب هنا في الكود، عشان الريبو ده عام على
+   GitHub ومفتاح Resend أحساس من مفتاح Web3Forms القديم. لازم يتضاف يدويًا
+   من Cloudflare Dashboard → Settings → Environment variables.
+   من غير توثيق دومين خاص، Resend بيسمح بالإرسال بس لنفس الإيميل اللي
+   اتسجل بيه الحساب - وده بالظبط إيميل صاحب المتجر فمفيش مشكلة.
+   الدالة بترجع تفاصيل نتيجة الإرسال (نجح ولا فشل، وكود وجسم استجابة
+   Resend) عشان تتسجل على الطلب نفسه (emailDebug) - مفيش استثناء بيتفلت
+   منها، أي خطأ بيترجم لكائن {ok:false, error} بدل ما يوقف تسجيل الطلب
+   (شوف onRequestPost). */
+async function sendGuestOrderEmail(order, env){
   var lines = order.items.map(function(it, i){
     return (i + 1) + ") " + it.name + " ×" + it.qty + " - " + (it.price * it.qty) + " ج.م";
   });
@@ -175,16 +182,22 @@ async function sendGuestOrderEmail(order){
   lines.push("وسيلة الدفع: " + (order.paymentMethod || "-"));
   if(order.notes) lines.push("ملاحظات: " + order.notes);
 
-  var res = await fetch("https://api.web3forms.com/submit", {
+  var apiKey = env && env.RESEND_API_KEY;
+  if(!apiKey){
+    return { ok:false, error:"RESEND_API_KEY مش مضبوط في متغيرات البيئة على Cloudflare Pages" };
+  }
+
+  var res = await fetch("https://api.resend.com/emails", {
     method: "POST",
-    headers: { "content-type": "application/json", "accept": "application/json" },
+    headers: {
+      "content-type": "application/json",
+      "authorization": "Bearer " + apiKey
+    },
     body: JSON.stringify({
-      access_key: "66930ca3-fb03-4591-a91b-5798fd64a0c4",
+      from: "متجر آل عبده <onboarding@resend.dev>",
+      to: ["shady.ahmed.abdo.1987@gmail.com"],
       subject: "طلب جديد بدون تسجيل - متجر آل عبده",
-      from_name: order.name || "عميل زائر",
-      phone: order.phone,
-      address: order.address,
-      message: lines.join("\n")
+      text: lines.join("\n")
     })
   });
   var bodyText = "";

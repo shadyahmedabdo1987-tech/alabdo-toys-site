@@ -94,6 +94,28 @@ export async function saveCatalog(env, catalog){
    (same pattern as requireAdmin above) and checks them against the stored,
    hashed customer account. X-Customer-Id is the customer's phone number
    (their login identifier). */
+/* Visitor analytics: one object under KV key "analytics" - {totalViews,
+   visitors:[ids], days:{ "YYYY-MM-DD": {views, visitors:[ids], pages:{},
+   devices:{mobile,desktop}, events:{addToCart,orderPlaced}} }}. Days older
+   than the retention window get pruned (see analytics.js) so the object
+   stays a reasonable size even after months of traffic - totalViews and
+   visitors keep accumulating forever for the all-time counters. */
+export async function getAnalytics(env){
+  var raw = await env.STORE_KV.get("analytics");
+  if(!raw) return { totalViews:0, visitors:[], days:{} };
+  try{
+    var v = JSON.parse(raw);
+    return {
+      totalViews: v.totalViews || 0,
+      visitors: Array.isArray(v.visitors) ? v.visitors : [],
+      days: (v.days && typeof v.days === "object") ? v.days : {}
+    };
+  }catch(e){ return { totalViews:0, visitors:[], days:{} }; }
+}
+export async function saveAnalytics(env, data){
+  await env.STORE_KV.put("analytics", JSON.stringify(data));
+}
+
 export async function requireCustomer(request, env){
   var id = request.headers.get("X-Customer-Id") || "";
   var pass = request.headers.get("X-Customer-Pass") || "";

@@ -75,6 +75,32 @@ export async function saveList(env, key, list){
 export async function getCustomers(env){ return getList(env, "customers"); }
 export async function saveCustomers(env, list){ return saveList(env, "customers", list); }
 
+function digitsOnly(v){ return String(v || "").replace(/\D/g, ""); }
+
+/* بتربط أي طلبات قديمة اتعملت كضيف (customerId فاضي) برقم موبايل بيطابق
+   رقم الحساب، بحساب الحساب ده - عشان لو عميل طلب من غير ما يسجّل وبعدين
+   عمل حساب (أو سجّل دخول) بنفس رقم الموبايل، طلباته القديمة تبان له في
+   "طلباتي" تلقائي من غير ما يحتاج يعمل أي حاجة زيادة. المطابقة بتقارن
+   آخر 9 أرقام بس (بتتجاهل أي فروق زي الأصفار الأولى أو كود الدولة).
+   بتتنادى بعد أي تسجيل حساب جديد أو تسجيل دخول ناجح - آمنة تتنادى كذا
+   مرة، الطلبات اللي اترابطت قبل كده بتتسيب زي ما هي. */
+export async function linkGuestOrdersToCustomer(env, customer){
+  var tail = digitsOnly(customer.identifier).slice(-9);
+  if(!tail) return;
+  var orders = await getList(env, "orders");
+  var changed = false;
+  orders.forEach(function(o){
+    if(o.customerId) return;
+    var phoneTail = digitsOnly(o.phone).slice(-9);
+    if(phoneTail && phoneTail === tail){
+      o.customerId = customer.identifier;
+      o.customerName = customer.name;
+      changed = true;
+    }
+  });
+  if(changed) await saveList(env, "orders", orders);
+}
+
 /* The "products" key holds one object ({categories, products}), not a plain
    array, so it needs its own get/save pair instead of getList/saveList.
    Used by orders.js to auto-decrement stock quantities after an order. */

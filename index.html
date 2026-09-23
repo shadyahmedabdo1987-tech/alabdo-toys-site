@@ -314,8 +314,6 @@ ul{margin:0; padding:0; list-style:none;}
 .foot-bottom{border-top:1px solid rgba(255,255,255,.12); margin-top:30px; padding-top:18px; text-align:center; font-size:12.5px; color:#a99cd1;}
 
 /* ============ Floating WhatsApp ============ */
-.fab-wa{position:fixed; bottom:22px; inset-inline-start:22px; width:58px; height:58px; border-radius:50%; background:#25d366; color:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 10px 24px rgba(0,0,0,.25); z-index:70;}
-.fab-wa svg{width:28px; height:28px;}
 
 /* ============ Cart drawer ============ */
 .overlay{position:fixed; inset:0; background:rgba(20,10,30,.5); opacity:0; pointer-events:none; transition:opacity .2s; z-index:80;}
@@ -1317,10 +1315,6 @@ ul{margin:0; padding:0; list-style:none;}
 
 </main>
 
-<a class="fab-wa" id="fabWa" href="#" target="_blank" rel="noopener" aria-label="تواصل عبر واتساب">
-  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Zm0 18a8 8 0 0 1-4.1-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 20Zm4.4-5.9c-.2-.1-1.4-.7-1.6-.8-.2-.1-.4-.1-.5.1-.2.2-.6.8-.8 1-.1.1-.3.2-.5.1-.7-.3-1.4-.7-2-1.3-.5-.5-1-1.1-1.4-1.8-.1-.2 0-.4.1-.5l.4-.5c.1-.1.1-.3.1-.4 0-.1-.5-1.3-.7-1.8-.2-.4-.4-.4-.5-.4h-.5c-.2 0-.4.1-.6.3-.6.6-.9 1.3-.9 2.1.1 1 .4 1.9 1.1 2.8 1.2 1.7 2.6 3 4.5 3.7.5.2 1 .3 1.4.4.6.1 1.1.1 1.5 0 .5-.1 1.4-.6 1.6-1.1.2-.5.2-1 .1-1.1-.1-.1-.2-.2-.4-.3Z"/></svg>
-</a>
-
 <div class="overlay" id="overlay"></div>
 
 <aside class="drawer" id="cartDrawer" role="dialog" aria-label="عربة الشراء" aria-modal="true">
@@ -2060,9 +2054,8 @@ document.getElementById("checkoutPhone").addEventListener("input", function(){
    اختار فودافون كاش/إنستاباي بتتضاف تعليمة إنه يبعت سكرين شوت التحويل
    جوه محادثة الواتساب نفسها (مفيش رفع ملفات هنا، ومفيش داعي للتحقق).
    عميل الموقع (مسجّل دخول): الطلب بيتسجّل على حسابه فورًا عن طريق
-   /api/orders (وده اللي بيخليه يكمل شرائه مباشرة)، وبيتبعت إشعار اختياري
-   لصاحب المتجر بالإيميل عن طريق Web3Forms لو الخدمة مفعّلة. */
-var WEB3FORMS_ACCESS_KEY = "66930ca3-fb03-4591-a91b-5798fd64a0c4";
+   /api/orders (وده اللي بيخليه يكمل شرائه مباشرة)، ويظهر مباشرة في
+   لوحة تحكم الأدمن بس - من غير أي إشعار بالإيميل. */
 function showOrderSuccessModal(phone){
   var html = '<button class="modal-close" id="modalCloseBtn" aria-label="إغلاق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
     + '<div class="modal-info" style="padding:44px 28px; text-align:center; align-items:center;">'
@@ -2142,20 +2135,6 @@ function handlePaymentSubmit(e){
       });
       renderBestSellers(); renderNewArrivals();
       if(document.getElementById("view-products").classList.contains("active")) renderProductsView();
-      if(WEB3FORMS_ACCESS_KEY){
-        fetch("https://api.web3forms.com/submit", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Accept": "application/json" },
-          body: JSON.stringify({
-            access_key: WEB3FORMS_ACCESS_KEY,
-            subject: "طلب جديد من موقع "+STORE.name,
-            from_name: f.name || "عميل من الموقع",
-            phone: f.phone,
-            address: f.address,
-            message: lines.join("\n")
-          })
-        }).catch(function(){});
-      }
       clearCart();
       resetCheckoutFields();
       resetCartCheckout();
@@ -2171,7 +2150,6 @@ function handlePaymentSubmit(e){
   });
 }
 
-document.getElementById("fabWa").href = waLink("مرحباً "+STORE.name+" 👋");
 
 /* ---------- كاروسيل سلايد عام: بيبدّل الصور جوه أي حاوية بحركة انزلاق
    (اتجاه الحركة بيتبادل كل مرة - يمين ثم شمال ثم يمين... عشان مايبقاش

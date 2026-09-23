@@ -508,6 +508,32 @@ ul{margin:0; padding:0; list-style:none;}
 .admin-note{font-size:12.5px; color:var(--ink-soft); background:var(--surface-2); border-radius:12px; padding:12px 14px; line-height:1.9;}
 .admin-note code{background:var(--surface-3); padding:1px 6px; border-radius:6px;}
 .field-row{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+/* ---------- تحليل الزوار (لوحة تحكم الأدمن) ---------- */
+.stat-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:14px; margin-bottom:22px;}
+.stat-card{background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:16px 18px;}
+.stat-card .stat-label{font-size:12px; color:var(--ink-soft); font-weight:700;}
+.stat-card .stat-value{font-size:26px; font-weight:800; margin-top:6px; font-variant-numeric:tabular-nums; color:var(--ink);}
+.stat-card .stat-sub{font-size:11px; color:var(--ink-faint); margin-top:3px;}
+.stat-card.accent{background:linear-gradient(135deg, var(--pink-deep), var(--pink)); border-color:transparent;}
+.stat-card.accent .stat-label, .stat-card.accent .stat-sub{color:rgba(255,255,255,.85);}
+.stat-card.accent .stat-value{color:#fff;}
+.analytics-chart-wrap{overflow-x:auto; padding-bottom:4px;}
+.analytics-chart{display:flex; align-items:flex-end; gap:5px; height:150px; min-width:100%; padding-top:10px;}
+.analytics-bar{flex:1 0 16px; min-width:16px; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; position:relative;}
+.analytics-bar-fill{width:100%; max-width:22px; background:linear-gradient(180deg, var(--pink), var(--pink-deep)); border-radius:5px 5px 2px 2px; min-height:3px; transition:height .5s ease;}
+.analytics-bar:hover .analytics-bar-fill{filter:brightness(1.1);}
+.analytics-bar-label{font-size:9px; color:var(--ink-faint); margin-top:5px; white-space:nowrap;}
+.analytics-bar-tip{position:absolute; bottom:100%; margin-bottom:4px; background:var(--ink); color:var(--bg); font-size:10px; font-weight:700; padding:2px 6px; border-radius:6px; white-space:nowrap; opacity:0; pointer-events:none; transition:opacity .15s;}
+.analytics-bar:hover .analytics-bar-tip{opacity:1;}
+.analytics-split-bar{display:flex; height:28px; border-radius:9px; overflow:hidden; box-shadow:inset 0 0 0 1px hsl(var(--shadow)/.12); margin-top:8px;}
+.analytics-split-seg{display:flex; align-items:center; justify-content:center; font-size:11.5px; font-weight:800; color:#fff; white-space:nowrap; transition:width .5s ease;}
+.analytics-toppages{display:flex; flex-direction:column; gap:11px;}
+.analytics-toppage-row{display:flex; align-items:center; gap:10px;}
+.analytics-toppage-name{width:96px; flex:none; font-size:12.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.analytics-toppage-track{flex:1; height:10px; background:var(--surface-2); border-radius:6px; overflow:hidden;}
+.analytics-toppage-fill{height:100%; background:var(--sky); border-radius:6px; transition:width .5s ease;}
+.analytics-toppage-count{width:34px; flex:none; text-align:end; font-size:12px; color:var(--ink-soft); font-variant-numeric:tabular-nums;}
+@media (max-width:640px){ .stat-card .stat-value{font-size:22px;} .analytics-toppage-name{width:74px;} }
 .order-card{background:var(--surface); border:1.5px solid var(--border); border-radius:16px; padding:16px 18px; text-align:right; cursor:pointer; width:100%; display:flex; flex-direction:column; gap:10px; font-family:inherit; transition:border-color .15s, box-shadow .15s, transform .1s;}
 .order-card:hover{border-color:var(--pink); box-shadow:0 4px 16px rgba(0,0,0,.07); transform:translateY(-1px);}
 .order-card.static{cursor:default;}
@@ -1144,6 +1170,7 @@ ul{margin:0; padding:0; list-style:none;}
         <div class="admin-bar">
           <div><h1 style="font-size:22px;">لوحة تحكم المنتجات</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;">أضف وعدّل وامسح المنتجات والأقسام — أي تعديل بيظهر لكل زوار الموقع فورًا.</p></div>
           <div class="admin-actions">
+            <button class="btn btn-primary btn-sm" id="adminAnalyticsBtn" type="button">📊 تحليل الزوار</button>
             <button class="btn btn-primary btn-sm" id="adminInquiriesBtn" type="button">📨 استفسارات العملاء<span id="adminInquiriesBadge" class="admin-badge" hidden>0</span></button>
             <button class="btn btn-primary btn-sm" id="adminCustomersBtn" type="button">👥 بيانات العملاء</button>
             <button class="btn btn-primary btn-sm" id="adminOrdersBtn" type="button">🧾 طلبات العملاء</button>
@@ -1278,6 +1305,20 @@ ul{margin:0; padding:0; list-style:none;}
           </div>
         </div>
         <div id="adminStockList" style="display:flex; flex-direction:column; gap:12px;">
+          <p style="color:var(--ink-soft); font-size:13px;">جاري التحميل...</p>
+        </div>
+      </div>
+
+      <div id="adminAnalyticsPage" class="admin-wrap">
+        <div class="admin-bar">
+          <div><h1 style="font-size:22px;">📊 تحليل الزوار</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;">إحصائيات فعلية عن زوار الموقع وتفاعلهم — بتتحدث أول ما حد يفتح صفحة من صفحات الموقع.</p></div>
+          <div class="admin-actions">
+            <button class="btn btn-outline btn-sm" id="adminAnalyticsRefreshBtn" type="button">🔄 تحديث</button>
+            <button class="btn btn-outline btn-sm" id="adminAnalyticsBackBtn" type="button">رجوع للوحة التحكم</button>
+          </div>
+        </div>
+
+        <div id="adminAnalyticsBody">
           <p style="color:var(--ink-soft); font-size:13px;">جاري التحميل...</p>
         </div>
       </div>
@@ -1626,6 +1667,48 @@ document.getElementById("themeToggle").addEventListener("click", function(){
   try{ localStorage.setItem("aa_theme", next); }catch(e){}
 });
 
+/* ---------- تحليل الزوار: تتبع خفيف لكل زيارة صفحة وتفاعل (إضافة للسلة/
+   إتمام طلب)، بيتبعت لـ /api/analytics عشان يظهر في تاب "تحليل الزوار"
+   بلوحة تحكم الأدمن. كل جهاز بيتحدد له معرّف عشوائي ثابت (مش بيانات شخصية)
+   محفوظ في localStorage عشان نقدر نحسب عدد الزوار المختلفين مش بس عدد
+   الزيارات. لو localStorage مش متاح أو الطلب فشل، بيتجاهل بهدوء من غير ما
+   يأثر على تجربة العميل. ---------- */
+var ANALYTICS_VISITOR_KEY = "aa_vid";
+function getAnalyticsVisitorId(){
+  try{
+    var id = localStorage.getItem(ANALYTICS_VISITOR_KEY);
+    if(!id){
+      id = "v" + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+      localStorage.setItem(ANALYTICS_VISITOR_KEY, id);
+    }
+    return id;
+  }catch(e){ return null; }
+}
+function analyticsDevice(){
+  return (window.matchMedia && window.matchMedia("(max-width:640px)").matches) ? "mobile" : "desktop";
+}
+var ANALYTICS_LAST_VIEW = null;
+function trackPageView(view){
+  if(view==="admin" || view===ANALYTICS_LAST_VIEW) return;
+  ANALYTICS_LAST_VIEW = view;
+  var visitorId = getAnalyticsVisitorId();
+  if(!visitorId) return;
+  fetch("/api/analytics", {
+    method: "POST",
+    headers: { "content-type":"application/json" },
+    body: JSON.stringify({ visitorId:visitorId, view:view, device:analyticsDevice() })
+  }).catch(function(){});
+}
+function trackAnalyticsEvent(name){
+  var visitorId = getAnalyticsVisitorId();
+  if(!visitorId) return;
+  fetch("/api/analytics", {
+    method: "POST",
+    headers: { "content-type":"application/json" },
+    body: JSON.stringify({ visitorId:visitorId, event:name })
+  }).catch(function(){});
+}
+
 /* ---------- Cart ---------- */
 var cart = {};
 try{ cart = JSON.parse(localStorage.getItem("aa_cart") || "{}"); }catch(e){ cart = {}; }
@@ -1739,6 +1822,7 @@ function addToCart(id, qty, colorName){
   }
   cart[key] = nextQty;
   saveCart(); renderCartBadge(); renderCartDrawer();
+  trackAnalyticsEvent("addToCart");
 }
 /* key هنا هو مفتاح السلة الكامل (رقم المنتج، أو رقم المنتج::اسم اللون)
    مش بس رقم المنتج، عشان كل لون سطر مستقل في السلة. */
@@ -2135,6 +2219,7 @@ function handlePaymentSubmit(e){
       });
       renderBestSellers(); renderNewArrivals();
       if(document.getElementById("view-products").classList.contains("active")) renderProductsView();
+      trackAnalyticsEvent("orderPlaced");
       clearCart();
       resetCheckoutFields();
       resetCartCheckout();
@@ -4008,6 +4093,88 @@ function deleteAdminStockRequest(r){
 document.getElementById("adminStockBtn").addEventListener("click", openAdminStockPage);
 document.getElementById("adminStockBackBtn").addEventListener("click", closeAdminStockPage);
 
+/* ---------- صفحة "تحليل الزوار" - إحصائيات زيارات وتفاعل حقيقية، محسوبة
+   جاهزة من السيرفر (functions/api/analytics.js) ---------- */
+var ANALYTICS_VIEW_LABELS = { home:"الرئيسية", products:"المنتجات", about:"من نحن", contact:"تواصل معنا", terms:"الشروط", privacy:"الخصوصية" };
+function openAdminAnalyticsPage(){
+  document.getElementById("adminDashboard").classList.remove("active");
+  document.getElementById("adminAnalyticsPage").classList.add("active");
+  window.scrollTo({top:0, behavior:"instant" in document.documentElement.style ? "instant" : "auto"});
+  renderAdminAnalyticsPage();
+}
+function closeAdminAnalyticsPage(){
+  document.getElementById("adminAnalyticsPage").classList.remove("active");
+  document.getElementById("adminDashboard").classList.add("active");
+}
+function fmtAnalyticsNum(n){ return (n||0).toLocaleString("ar-EG"); }
+function renderAdminAnalyticsPage(){
+  var box = document.getElementById("adminAnalyticsBody");
+  if(!box) return;
+  box.innerHTML = '<p style="color:var(--ink-soft); font-size:13px;">جاري التحميل...</p>';
+  fetch("/api/analytics", { headers: adminAuthHeaders(), cache:"no-store" }).then(function(r){ return r.json(); })
+    .then(function(res){
+      if(!res || !res.ok){ box.innerHTML = '<p style="color:var(--pink-deep); font-size:13px;">تعذر تحميل الإحصائيات.</p>'; return; }
+
+      var conv = res.last30.visitors ? ((res.events.orderPlaced||0) / res.last30.visitors * 100) : 0;
+      var html = '<div class="stat-grid">'
+        + '<div class="stat-card accent"><div class="stat-label">إجمالي الزيارات</div><div class="stat-value">'+fmtAnalyticsNum(res.totalViews)+'</div><div class="stat-sub">من أول ما التتبع بدأ</div></div>'
+        + '<div class="stat-card accent"><div class="stat-label">إجمالي الزوار</div><div class="stat-value">'+fmtAnalyticsNum(res.totalVisitors)+'</div><div class="stat-sub">زوار مختلفين</div></div>'
+        + '<div class="stat-card"><div class="stat-label">زيارات النهاردة</div><div class="stat-value">'+fmtAnalyticsNum(res.today.views)+'</div><div class="stat-sub">'+fmtAnalyticsNum(res.today.visitors)+' زائر</div></div>'
+        + '<div class="stat-card"><div class="stat-label">آخر 7 أيام</div><div class="stat-value">'+fmtAnalyticsNum(res.last7.views)+'</div><div class="stat-sub">'+fmtAnalyticsNum(res.last7.visitors)+' زائر</div></div>'
+        + '<div class="stat-card"><div class="stat-label">آخر 30 يوم</div><div class="stat-value">'+fmtAnalyticsNum(res.last30.views)+'</div><div class="stat-sub">'+fmtAnalyticsNum(res.last30.visitors)+' زائر</div></div>'
+        + '<div class="stat-card"><div class="stat-label">إضافة للسلة</div><div class="stat-value">'+fmtAnalyticsNum(res.events.addToCart)+'</div><div class="stat-sub">آخر 30 يوم</div></div>'
+        + '<div class="stat-card"><div class="stat-label">طلبات اتعملت</div><div class="stat-value">'+fmtAnalyticsNum(res.events.orderPlaced)+'</div><div class="stat-sub">آخر 30 يوم</div></div>'
+        + '<div class="stat-card"><div class="stat-label">نسبة التحويل</div><div class="stat-value">'+conv.toFixed(1)+'%</div><div class="stat-sub">طلبات ÷ زوار (آخر 30 يوم)</div></div>'
+      + '</div>';
+
+      var maxViews = Math.max.apply(null, res.chart.map(function(d){ return d.views; }).concat([1]));
+      html += '<div class="admin-card" style="margin-bottom:20px;"><h3>الزيارات خلال آخر 30 يوم</h3><div class="analytics-chart-wrap"><div class="analytics-chart">'
+        + res.chart.map(function(d){
+            var h = Math.round((d.views / maxViews) * 100);
+            var dd = new Date(d.date+"T00:00:00");
+            var lbl = dd.toLocaleDateString("ar-EG", {day:"numeric", month:"numeric"});
+            return '<div class="analytics-bar"><div class="analytics-bar-tip">'+d.views+' زيارة، '+d.visitors+' زائر</div><div class="analytics-bar-fill" style="height:'+Math.max(h,3)+'%;"></div><div class="analytics-bar-label">'+lbl+'</div></div>';
+          }).join("")
+        + '</div></div></div>';
+
+      html += '<div class="admin-grid">';
+
+      html += '<div class="admin-card"><h3>أكتر الصفحات زيارة (آخر 30 يوم)</h3><div class="analytics-toppages">';
+      if(res.topPages.length){
+        var maxPage = res.topPages[0].count || 1;
+        html += res.topPages.map(function(p){
+          var w = Math.round((p.count/maxPage)*100);
+          return '<div class="analytics-toppage-row"><div class="analytics-toppage-name">'+(ANALYTICS_VIEW_LABELS[p.view]||p.view)+'</div><div class="analytics-toppage-track"><div class="analytics-toppage-fill" style="width:'+w+'%;"></div></div><div class="analytics-toppage-count">'+fmtAnalyticsNum(p.count)+'</div></div>';
+        }).join("");
+      } else {
+        html += '<p style="color:var(--ink-soft); font-size:13px;">لسه مفيش بيانات كفاية.</p>';
+      }
+      html += '</div></div>';
+
+      var mob = res.devices.mobile||0, desk = res.devices.desktop||0, totDev = mob+desk;
+      var mobPct = totDev ? Math.round(mob/totDev*100) : 0;
+      var deskPct = totDev ? (100-mobPct) : 0;
+      html += '<div class="admin-card"><h3>الأجهزة (آخر 30 يوم)</h3>';
+      if(totDev){
+        html += '<div class="analytics-split-bar">'
+          + (mobPct ? '<div class="analytics-split-seg" style="width:'+mobPct+'%; background:var(--pink-deep);">📱 '+mobPct+'%</div>' : '')
+          + (deskPct ? '<div class="analytics-split-seg" style="width:'+deskPct+'%; background:var(--sky-deep);">💻 '+deskPct+'%</div>' : '')
+        + '</div>'
+        + '<p style="color:var(--ink-soft); font-size:12.5px; margin-top:10px;">'+fmtAnalyticsNum(mob)+' زيارة من الموبايل، '+fmtAnalyticsNum(desk)+' من الكمبيوتر.</p>';
+      } else {
+        html += '<p style="color:var(--ink-soft); font-size:13px;">لسه مفيش بيانات كفاية.</p>';
+      }
+      html += '</div>';
+
+      html += '</div>';
+      box.innerHTML = html;
+    })
+    .catch(function(){ box.innerHTML = '<p style="color:var(--pink-deep); font-size:13px;">تعذر الاتصال بالسيرفر.</p>'; });
+}
+document.getElementById("adminAnalyticsBtn").addEventListener("click", openAdminAnalyticsPage);
+document.getElementById("adminAnalyticsBackBtn").addEventListener("click", closeAdminAnalyticsPage);
+document.getElementById("adminAnalyticsRefreshBtn").addEventListener("click", renderAdminAnalyticsPage);
+
 /* ---------- صفحة "استفسارات العملاء" - رسايل فورم تواصل معنا ---------- */
 var ADMIN_INQUIRIES_CACHE = [];
 function openAdminInquiriesPage(){
@@ -4450,6 +4617,7 @@ function goToView(name){
   window.scrollTo({top:0, behavior:"instant" in document.documentElement.style ? "instant" : "auto"});
   var hashToWrite = (name==="admin") ? ADMIN_SECRET_HASH : name;
   if(location.hash.replace("#","")!==hashToWrite){ history.replaceState(null,"","#"+hashToWrite); }
+  trackPageView(name);
 }
 document.addEventListener("click", function(e){
   var a = e.target.closest("[data-view-link]"); if(!a) return;

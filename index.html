@@ -1417,6 +1417,7 @@ ul{margin:0; padding:0; list-style:none;}
     <div class="cart-foot-step" id="cartFootStepInfoData" style="display:none;">
       <div class="field" style="margin-bottom:2px;"><label for="checkoutName">الاسم بالكامل *</label><input id="checkoutName" required placeholder="اسمك بالكامل" autocomplete="off"></div>
       <div class="field" style="margin-bottom:2px;"><label for="checkoutPhone">رقم الموبايل *</label><input id="checkoutPhone" required type="tel" inputmode="numeric" placeholder="01xxxxxxxxx" autocomplete="off"></div>
+      <div class="field" style="margin-bottom:2px;"><label for="checkoutGovernorate">المحافظة *</label><select id="checkoutGovernorate" required></select></div>
       <div class="field" style="margin-bottom:4px;"><label for="checkoutAddress">العنوان بالتفصيل *</label><input id="checkoutAddress" required placeholder="العنوان بالتفصيل" autocomplete="off"></div>
       <div class="field" style="margin-bottom:4px;"><label for="checkoutNotes">ملاحظات (اختياري)</label><textarea id="checkoutNotes" rows="2" style="min-height:56px;" placeholder="أي معلومة أو تعليق حابب تضيفه على الطلب" autocomplete="off"></textarea></div>
       <p id="checkoutPhoneError" style="color:var(--pink-deep); font-size:12.5px; display:none; margin:-4px 0 4px;"></p>
@@ -1587,6 +1588,7 @@ function orderInvoiceHtml(o){
     + '<div style="font-size:12.5px; color:var(--ink-soft); line-height:1.8;">'
       + '<div>الاسم: '+(o.name||"-")+'</div>'
       + '<div>الموبايل: '+(o.phone||"-")+'</div>'
+      + (o.governorate ? '<div>المحافظة: '+o.governorate+'</div>' : '')
       + '<div>العنوان: '+(o.address||"-")+'</div>'
     + '</div>'
     + '<table style="width:100%; border-collapse:collapse; font-size:12.5px;">'
@@ -1877,12 +1879,13 @@ function clearCart(){
   cart = {};
   saveCart(); renderCartBadge(); renderCartDrawer();
 }
-/* بيمسح بيانات فورم الشحن (الاسم/الموبايل/العنوان/الملاحظات) بعد أي طلب
-   ناجح، عشان السلة تبقى فاضية تمامًا وجاهزة لطلب جديد من غير أي بيانات
-   قديمة باقية. */
+/* بيمسح بيانات فورم الشحن (الاسم/الموبايل/المحافظة/العنوان/الملاحظات) بعد
+   أي طلب ناجح، عشان السلة تبقى فاضية تمامًا وجاهزة لطلب جديد من غير أي
+   بيانات قديمة باقية. */
 function resetCheckoutFields(){
   document.getElementById("checkoutName").value = "";
   document.getElementById("checkoutPhone").value = "";
+  document.getElementById("checkoutGovernorate").value = "";
   document.getElementById("checkoutAddress").value = "";
   document.getElementById("checkoutNotes").value = "";
   document.getElementById("checkoutPhoneError").style.display = "none";
@@ -2057,18 +2060,20 @@ document.getElementById("cartBody").addEventListener("click", function(e){
   if(t.dataset.remove){ setQty(t.dataset.remove,0); }
 });
 
-/* الاسم ورقم الموبايل والعنوان بقوا الثلاثة إلزاميين مهما كان العميل
-   مسجّل دخول أو ضيف - عشان أي طلب (حتى من غير حساب) يكون معاه بيانات
-   كافية للتوصيل. العميل المسجّل بياناته بترجع جاهزة من حسابه فمش
+/* الاسم ورقم الموبايل والمحافظة والعنوان بقوا الأربعة إلزاميين مهما كان
+   العميل مسجّل دخول أو ضيف - عشان أي طلب (حتى من غير حساب) يكون معاه
+   بيانات كافية للتوصيل. العميل المسجّل بياناته بترجع جاهزة من حسابه فمش
    هيحتاج يكتبها تاني، والضيف لازم يكتبها كاملة هنا. */
 function readCheckoutFields(showError){
   var name = document.getElementById("checkoutName").value.trim();
   var phone = document.getElementById("checkoutPhone").value.trim();
+  var governorate = document.getElementById("checkoutGovernorate").value;
   var address = document.getElementById("checkoutAddress").value.trim();
   var errEl = document.getElementById("checkoutPhoneError");
   var missing = null;
   if(!name) missing = { el:document.getElementById("checkoutName"), msg:"من فضلك اكتب اسمك بالكامل." };
   else if(!phone) missing = { el:document.getElementById("checkoutPhone"), msg:"من فضلك اكتب رقم موبايلك عشان نقدر نكلمك بخصوص الطلب." };
+  else if(!governorate) missing = { el:document.getElementById("checkoutGovernorate"), msg:"من فضلك اختار المحافظة اللي هيوصل لها الطلب." };
   else if(!address) missing = { el:document.getElementById("checkoutAddress"), msg:"من فضلك اكتب عنوانك بالتفصيل عشان نقدر نوصّل الطلب." };
   if(missing){
     if(showError){ errEl.textContent = missing.msg; errEl.style.display = "block"; missing.el.focus(); }
@@ -2078,6 +2083,7 @@ function readCheckoutFields(showError){
   return {
     name: name,
     phone: phone,
+    governorate: governorate,
     address: address,
     notes: document.getElementById("checkoutNotes").value.trim()
   };
@@ -2143,6 +2149,9 @@ document.getElementById("infoConfirmBtn").addEventListener("click", function(){
     if(this.value.trim()) document.getElementById("checkoutPhoneError").style.display = "none";
   });
 });
+document.getElementById("checkoutGovernorate").addEventListener("change", function(){
+  if(this.value) document.getElementById("checkoutPhoneError").style.display = "none";
+});
 
 /* ---------- إتمام الطلب (خطوة وسيلة الدفع) ----------
    عميل مسجّل دخول: الطلب بيتسجّل على حسابه فورًا عن طريق /api/orders،
@@ -2197,7 +2206,7 @@ function handlePaymentSubmit(e){
       subtotal: cartTotal(),
       shipping: SHIPPING_COST,
       total: grand,
-      name: f.name, phone: f.phone, address: f.address, notes: f.notes,
+      name: f.name, phone: f.phone, governorate: f.governorate, address: f.address, notes: f.notes,
       paymentMethod: cartCheckout.method,
       paymentProof: cartCheckout.proofData || null
     })
@@ -2288,14 +2297,14 @@ function openDrawer(){
   cartDrawer.classList.add("show"); overlay.classList.add("show"); document.body.style.overflow="hidden";
   var nameInput = document.getElementById("checkoutName");
   var phoneInput = document.getElementById("checkoutPhone");
+  var governorateInput = document.getElementById("checkoutGovernorate");
   var addressInput = document.getElementById("checkoutAddress");
   var c = getCustomerProfile();
   if(c){
     if(nameInput && !nameInput.value && c.name) nameInput.value = c.name;
     if(phoneInput && !phoneInput.value && c.identifier) phoneInput.value = c.identifier;
-    if(addressInput && !addressInput.value && c.address){
-      addressInput.value = c.governorate ? (c.governorate+" - "+c.address) : c.address;
-    }
+    if(governorateInput && !governorateInput.value && c.governorate) governorateInput.value = c.governorate;
+    if(addressInput && !addressInput.value && c.address) addressInput.value = c.address;
   }
 }
 function closeAllPanels(){
@@ -3934,6 +3943,7 @@ function showAdminOrderEditForm(order){
       + '<div style="display:flex; flex-direction:column; gap:12px;">'
         + '<div class="field"><label for="aoeName">الاسم</label><input id="aoeName" value="'+String(order.name||"").replace(/"/g,"&quot;")+'"></div>'
         + '<div class="field"><label for="aoePhone">رقم الموبايل</label><input id="aoePhone" value="'+String(order.phone||"").replace(/"/g,"&quot;")+'"></div>'
+        + '<div class="field"><label for="aoeGovernorate">المحافظة</label><select id="aoeGovernorate">'+governorateOptionsHtml(order.governorate||"")+'</select></div>'
         + '<div class="field"><label for="aoeAddress">العنوان</label><input id="aoeAddress" value="'+String(order.address||"").replace(/"/g,"&quot;")+'"></div>'
         + '<div>'
           + '<label style="font-weight:700; font-size:13px;">الأصناف</label>'
@@ -4006,6 +4016,7 @@ function showAdminOrderEditForm(order){
         id: order.id, items: cleanItems, total: total,
         name: document.getElementById("aoeName").value.trim(),
         phone: document.getElementById("aoePhone").value.trim(),
+        governorate: document.getElementById("aoeGovernorate").value,
         address: document.getElementById("aoeAddress").value.trim()
       })
     }).then(function(r){ return r.json().then(function(j){ return {status:r.status, body:j}; }); })
@@ -4697,6 +4708,7 @@ window.addEventListener("scroll", function(){
 /* ---------- Init ---------- */
 document.getElementById("year").textContent = new Date().getFullYear();
 updateAccountLabel();
+document.getElementById("checkoutGovernorate").innerHTML = governorateOptionsHtml();
 
 /* PWA: يخلي التطبيق قابل للتنصيب (Play Store / أضف للشاشة الرئيسية) — لو الملف
    مفتوح كـ file:// أو من غير service-worker.js جنبه، بيتجاهل بهدوء. */

@@ -1,4 +1,4 @@
-import { json, getCustomers, sha256Hex } from "../../_lib.js";
+import { json, getCustomers, sha256Hex, linkGuestOrdersToCustomer } from "../../_lib.js";
 
 /* POST /api/customers/login - public. Body: {identifier, password}.
    identifier can be either the registered phone number or the registered
@@ -18,5 +18,10 @@ export async function onRequestPost({ request, env }){
   if(!acct) return json({ ok:false });
   var hash = await sha256Hex(password);
   if(hash !== acct.passwordHash) return json({ ok:false });
+
+  /* لو حصل طلب كضيف بنفس رقم موبايل الحساب ده من بعد آخر مرة سجّل
+     فيها دخول، بنربطه بحسابه هنا كمان - مش بس وقت التسجيل الأول. */
+  try{ await linkGuestOrdersToCustomer(env, acct); }catch(e){ /* الربط مش سبب لفشل الدخول نفسه */ }
+
   return json({ ok:true, name: acct.name, phone: acct.identifier, email: acct.email, governorate: acct.governorate || "", address: acct.address || "" });
 }

@@ -19,19 +19,20 @@ export async function onRequestGet({ request, env }){
   return json({ ok:false, error:"unauthorized" }, 401);
 }
 
-/* POST /api/orders - customer only. A checkout only becomes a real,
-   trackable order (and only then counts toward review eligibility) when
-   the customer is logged in at checkout time; guest WhatsApp orders are
-   not recorded here. Body: {items:[{id,name,price,qty}], subtotal,
-   shipping, total, name, phone, address, notes, paymentMethod,
-   paymentProof}. paymentMethod is one of "cash"/"vodafone"/"instapay";
-   paymentProof is a compressed base64 data URL screenshot of the
-   transfer, required by the client for vodafone/instapay (not enforced
-   again server-side, since the client already blocks submission without
-   it). notes is an optional free-text field the customer can add. */
+/* POST /api/orders - عميل مسجّل دخول أو عميل ضيف (من غير حساب) على حد
+   سوا. لو معاه هيدرز عميل صحيحة (X-Customer-Id/Pass) الطلب بيترابط
+   بحسابه (customerId) عشان يقدر يشوفه بعدين في "طلباتي" بفاتورته
+   كاملة؛ لو من غير حساب (ضيف) الطلب برضه بيتسجّل عادي (customerId=null)
+   لكن مش هيظهر لحد إلا الأدمن، وبيتبعت فورًا إشعار بالإيميل لصاحب
+   المتجر عشان محدش يتأخر عليه (شوف sendGuestOrderEmail تحت). Body:
+   {items:[{id,name,price,qty}], subtotal, shipping, total, name, phone,
+   address, notes, paymentMethod, paymentProof}. الاسم ورقم الموبايل
+   والعنوان إلزاميين للضيف (العميل المسجّل بياناته ترجع من حسابه أصلاً).
+   paymentMethod هو "cash"/"vodafone"/"instapay"؛ paymentProof صورة
+   سكرين شوت التحويل base64 مضغوطة، إلزامية من الفرونت اند لفودافون
+   كاش/إنستاباي (مش بتتفحص تاني هنا). notes اختياري. */
 export async function onRequestPost({ request, env }){
   var customer = await requireCustomer(request, env);
-  if(!customer) return json({ ok:false, error:"unauthorized" }, 401);
 
   var body;
   try{ body = await request.json(); }catch(e){ return json({ ok:false, error:"bad_json" }, 400); }
@@ -39,17 +40,23 @@ export async function onRequestPost({ request, env }){
     return json({ ok:false, error:"bad_request" }, 400);
   }
 
+  var name = (body.name || "").trim();
+  var phone = (body.phone || "").trim();
+  var address = (body.address || "").trim();
+  if(!phone) return json({ ok:false, error:"missing_phone" }, 400);
+  if(!customer && (!name || !address)) return json({ ok:false, error:"missing_guest_info" }, 400);
+
   var order = {
     id: "ord_" + Date.now().toString(36) + Math.floor(Math.random() * 999),
-    customerId: customer.identifier,
-    customerName: customer.name,
+    customerId: customer ? customer.identifier : null,
+    customerName: customer ? customer.name : (name || "عميل زائر"),
     items: body.items,
     subtotal: +body.subtotal || 0,
     shipping: +body.shipping || 0,
     total: +body.total || 0,
-    name: (body.name || "").trim(),
-    phone: (body.phone || "").trim(),
-    address: (body.address || "").trim(),
+    name: name,
+    phone: phone,
+    address: address,
     notes: (body.notes || "").trim(),
     paymentMethod: (body.paymentMethod || "").trim(),
     paymentProof: body.paymentProof || null,
@@ -59,11 +66,14 @@ export async function onRequestPost({ request, env }){
   list.push(order);
   await saveList(env, "orders", list);
 
+  if(!customer){
+    try{ await sendGuestOrderEmail(order); }catch(e){ /* فشل الإيميل مش سبب لفشل تسجيل الطلب نفسه */ }
+  }
+
   /* خصم الكمية المتاحة تلقائيًا لكل صنف فيه تتبع كمية مفعّل (منتج أو لون
-     له رقم كمية محدد - مش null). ده بيحصل بس هنا، في مسار طلبات الموقع
-     (عميل مسجّل دخول) - طلبات الواتساب للضيوف مش بتوصل للسيرفر خالص
-     فمفيش خصم تلقائي ليها، وده قيد معروف في تصميم الموقع الحالي. أي خطأ
-     هنا (مثلاً الكتالوج مش موجود) ما يمنعش تسجيل الطلب نفسه. */
+     له رقم كمية محدد - مش null). بيحصل لكل الطلبات اللي بتوصل هنا سواء
+     من عميل مسجّل أو ضيف. أي خطأ هنا (مثلاً الكتالوج مش موجود) ما يمنعش
+     تسجيل الطلب نفسه. */
   try{
     var catalog = await getCatalog(env);
     if(catalog){
@@ -135,4 +145,38 @@ export async function onRequestDelete({ request, env }){
   if(next.length === list.length) return json({ ok:false, error:"not_found" }, 404);
   await saveList(env, "orders", next);
   return json({ ok:true });
+}
+
+/* بيبعت إشعار إيميل فوري لصاحب المتجر (shady.ahmed.abdo.1987@gmail.com)
+   لما عميل يعمل طلب من غير ما يسجّل حساب - ده الطلب الوحيد اللي مفيش
+   وسيلة تانية صاحب المتجر يتابعه بيها غير الإيميل، لأن مفيش حساب
+   مرتبط بيه يقدر يتابعه منه زي طلبات العملاء المسجّلين. المفتاح ده
+   (Web3Forms) مربوط بإيميل صاحب المتجر من إعداد حسابه على Web3Forms،
+   مش بيتحدد هنا. الدالة بترجع بهدوء لو الإرسال فشل (شوف onRequestPost -
+   فشل الإيميل مش سبب لفشل تسجيل الطلب نفسه). */
+async function sendGuestOrderEmail(order){
+  var lines = order.items.map(function(it, i){
+    return (i + 1) + ") " + it.name + " ×" + it.qty + " - " + (it.price * it.qty) + " ج.م";
+  });
+  lines.push("الإجمالي الفرعي: " + order.subtotal + " ج.م");
+  lines.push("الشحن: " + order.shipping + " ج.م");
+  lines.push("الإجمالي الكلي: " + order.total + " ج.م");
+  lines.push("الاسم: " + (order.name || "-"));
+  lines.push("رقم الموبايل: " + order.phone);
+  lines.push("العنوان: " + (order.address || "-"));
+  lines.push("وسيلة الدفع: " + (order.paymentMethod || "-"));
+  if(order.notes) lines.push("ملاحظات: " + order.notes);
+
+  await fetch("https://api.web3forms.com/submit", {
+    method: "POST",
+    headers: { "content-type": "application/json", "accept": "application/json" },
+    body: JSON.stringify({
+      access_key: "66930ca3-fb03-4591-a91b-5798fd64a0c4",
+      subject: "طلب جديد بدون تسجيل - متجر آل عبده",
+      from_name: order.name || "عميل زائر",
+      phone: order.phone,
+      address: order.address,
+      message: lines.join("\n")
+    })
+  });
 }

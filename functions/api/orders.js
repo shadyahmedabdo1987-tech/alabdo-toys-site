@@ -26,11 +26,11 @@ export async function onRequestGet({ request, env }){
    لكن مش هيظهر لحد إلا الأدمن، وبيتبعت فورًا إشعار بالإيميل لصاحب
    المتجر عشان محدش يتأخر عليه (شوف sendGuestOrderEmail تحت). Body:
    {items:[{id,name,price,qty}], subtotal, shipping, total, name, phone,
-   address, notes, paymentMethod, paymentProof}. الاسم ورقم الموبايل
-   والعنوان إلزاميين للضيف (العميل المسجّل بياناته ترجع من حسابه أصلاً).
-   paymentMethod هو "cash"/"vodafone"/"instapay"؛ paymentProof صورة
-   سكرين شوت التحويل base64 مضغوطة، إلزامية من الفرونت اند لفودافون
-   كاش/إنستاباي (مش بتتفحص تاني هنا). notes اختياري. */
+   governorate, address, notes, paymentMethod, paymentProof}. الاسم ورقم
+   الموبايل والمحافظة والعنوان إلزاميين للضيف (العميل المسجّل بياناته
+   ترجع من حسابه أصلاً). paymentMethod هو "cash"/"vodafone"/"instapay"؛
+   paymentProof صورة سكرين شوت التحويل base64 مضغوطة، إلزامية من الفرونت
+   اند لفودافون كاش/إنستاباي (مش بتتفحص تاني هنا). notes اختياري. */
 export async function onRequestPost({ request, env }){
   var customer = await requireCustomer(request, env);
 
@@ -42,9 +42,10 @@ export async function onRequestPost({ request, env }){
 
   var name = (body.name || "").trim();
   var phone = (body.phone || "").trim();
+  var governorate = (body.governorate || "").trim();
   var address = (body.address || "").trim();
   if(!phone) return json({ ok:false, error:"missing_phone" }, 400);
-  if(!customer && (!name || !address)) return json({ ok:false, error:"missing_guest_info" }, 400);
+  if(!customer && (!name || !governorate || !address)) return json({ ok:false, error:"missing_guest_info" }, 400);
 
   var order = {
     id: "ord_" + Date.now().toString(36) + Math.floor(Math.random() * 999),
@@ -56,6 +57,7 @@ export async function onRequestPost({ request, env }){
     total: +body.total || 0,
     name: name,
     phone: phone,
+    governorate: governorate,
     address: address,
     notes: (body.notes || "").trim(),
     paymentMethod: (body.paymentMethod || "").trim(),
@@ -104,9 +106,10 @@ export async function onRequestPost({ request, env }){
 }
 
 /* PUT /api/orders - admin only. Body: {id, items, total, name, phone,
-   address}. Lets the store owner fix a mistake in an already-placed order
-   (wrong quantity/price, a typo in the address, ...) without deleting and
-   recreating it. customerId/customerName/createdAt are never changed. */
+   governorate, address}. Lets the store owner fix a mistake in an
+   already-placed order (wrong quantity/price, a typo in the address, ...)
+   without deleting and recreating it. customerId/customerName/createdAt
+   are never changed. */
 export async function onRequestPut({ request, env }){
   var admin = await requireAdmin(request, env);
   if(!admin) return json({ ok:false, error:"unauthorized" }, 401);
@@ -128,6 +131,7 @@ export async function onRequestPut({ request, env }){
   o.total = +body.total || 0;
   o.name = (body.name || "").trim();
   o.phone = (body.phone || "").trim();
+  o.governorate = (body.governorate || "").trim();
   o.address = (body.address || "").trim();
   list[idx] = o;
   await saveList(env, "orders", list);
@@ -178,6 +182,7 @@ async function sendGuestOrderEmail(order, env){
   lines.push("الإجمالي الكلي: " + order.total + " ج.م");
   lines.push("الاسم: " + (order.name || "-"));
   lines.push("رقم الموبايل: " + order.phone);
+  if(order.governorate) lines.push("المحافظة: " + order.governorate);
   lines.push("العنوان: " + (order.address || "-"));
   lines.push("وسيلة الدفع: " + (order.paymentMethod || "-"));
   if(order.notes) lines.push("ملاحظات: " + order.notes);

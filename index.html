@@ -1329,7 +1329,7 @@ ul{margin:0; padding:0; list-style:none;}
 
       <div id="adminOrdersPage" class="admin-wrap">
         <div class="admin-bar">
-          <div><h1 style="font-size:22px;">🧾 طلبات العملاء (<span id="adminOrderCount">0</span>)</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;">الطلبات اللي بتظهر هنا هي بس اللي بتتم من عميل مسجّل دخول وقت إتمام الطلب. دوس على أي طلب عشان تشوف فاتورته كاملة.</p></div>
+          <div><h1 style="font-size:22px;">🧾 طلبات العملاء (<span id="adminOrderCount">0</span>)</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;">كل طلبات الموقع بتظهر هنا، سواء العميل كان مسجّل دخول أو طلب كضيف من غير حساب. دوس على أي طلب عشان تشوف فاتورته كاملة.</p></div>
           <div class="admin-actions">
             <button class="btn btn-outline btn-sm" id="adminOrdersBackBtn" type="button">رجوع للوحة التحكم</button>
           </div>
@@ -1415,11 +1415,11 @@ ul{margin:0; padding:0; list-style:none;}
       <button class="btn btn-outline btn-block" data-view-link="products" id="continueBtn">متابعة التسوق</button>
     </div>
     <div class="cart-foot-step" id="cartFootStepInfoData" style="display:none;">
-      <div class="field" style="margin-bottom:2px;"><label for="checkoutName">الاسم</label><input id="checkoutName" placeholder="اسمك بالكامل" autocomplete="off"></div>
+      <div class="field" style="margin-bottom:2px;"><label for="checkoutName">الاسم بالكامل *</label><input id="checkoutName" required placeholder="اسمك بالكامل" autocomplete="off"></div>
       <div class="field" style="margin-bottom:2px;"><label for="checkoutPhone">رقم الموبايل *</label><input id="checkoutPhone" required type="tel" inputmode="numeric" placeholder="01xxxxxxxxx" autocomplete="off"></div>
-      <div class="field" style="margin-bottom:4px;"><label for="checkoutAddress">العنوان</label><input id="checkoutAddress" placeholder="العنوان بالتفصيل" autocomplete="off"></div>
+      <div class="field" style="margin-bottom:4px;"><label for="checkoutAddress">العنوان بالتفصيل *</label><input id="checkoutAddress" required placeholder="العنوان بالتفصيل" autocomplete="off"></div>
       <div class="field" style="margin-bottom:4px;"><label for="checkoutNotes">ملاحظات (اختياري)</label><textarea id="checkoutNotes" rows="2" style="min-height:56px;" placeholder="أي معلومة أو تعليق حابب تضيفه على الطلب" autocomplete="off"></textarea></div>
-      <p id="checkoutPhoneError" style="color:var(--pink-deep); font-size:12.5px; display:none; margin:-4px 0 4px;">من فضلك اكتب رقم موبايلك عشان نقدر نكلمك بخصوص الطلب.</p>
+      <p id="checkoutPhoneError" style="color:var(--pink-deep); font-size:12.5px; display:none; margin:-4px 0 4px;"></p>
       <div style="display:flex; gap:8px;">
         <button type="button" class="btn btn-outline" style="flex:1;" id="infoBackBtn">رجوع</button>
         <button type="button" class="btn btn-primary" style="flex:1;" id="infoConfirmBtn">تأكيد الأوردر</button>
@@ -2034,7 +2034,7 @@ function validatePaymentStep(){
     errEl.style.display = "block";
     return false;
   }
-  if(paymentMethodNeedsProof(cartCheckout.method) && isCustomerAuthed() && !cartCheckout.proofData){
+  if(paymentMethodNeedsProof(cartCheckout.method) && !cartCheckout.proofData){
     errEl.textContent = "من فضلك ارفق سكرين شوت التحويل عشان نقدر نأكد الطلب.";
     errEl.style.display = "block";
     return false;
@@ -2057,55 +2057,28 @@ document.getElementById("cartBody").addEventListener("click", function(e){
   if(t.dataset.remove){ setQty(t.dataset.remove,0); }
 });
 
-/* Uses the whatsapp:// app protocol (opens WhatsApp Desktop/mobile directly) instead of
-   the https://wa.me web redirect, because some office networks/browsers block the
-   whatsapp.com web domains outright while still allowing the installed app to open. */
-function waLink(text){ return "whatsapp://send?phone="+STORE.phone+"&text="+encodeURIComponent(text); }
-function waWebLink(text){ return "https://wa.me/"+STORE.phone+"?text="+encodeURIComponent(text); }
-
-/* Real anchor + href set synchronously on click (not window.open): reliable even
-   inside restrictive preview frames where script-triggered popups get blocked. */
-/* رقم الموبايل بقى جزء إلزامي من بيانات الطلب نفسه (مش تسجيل حساب) — بيتكتب
-   هنا وقت إتمام الطلب بس، ويتبعت مع باقي التفاصيل في رسالة الواتساب للمتجر. */
-/* بيانات الطلب (الاسم/الموبايل/العنوان) بتتستخدم في المسارين: رسالة واتساب
-   جاهزة، أو إرسال مباشر لصاحب المتجر (اختيار "اطلب من هنا وهنكلمك") لمين
-   مش عارف يستخدم واتساب. الدالة دي بتبني نفس نص الطلب في الحالتين. */
-/* بيانات الطلب (الاسم/الموبايل/العنوان + الشحن + وسيلة الدفع) بتتستخدم
-   في المسارين: رسالة واتساب جاهزة (عميل ضيف)، أو تسجيل الطلب على حساب
-   العميل (عميل مسجّل دخول). الدالة دي بتبني نفس نص الطلب في الحالتين. */
-function buildOrderLines(items, name, phone, address, paymentMethod, grandTotal, notes){
-  var lines = ["مرحباً "+STORE.name+" 👋","عايز أطلب:"];
-  items.forEach(function(it,i){
-    var nm = it.p.name + (it.colorName ? " (اللون: "+it.colorName+")" : "");
-    lines.push((i+1)+") "+nm+" ×"+it.qty+" - "+fmt(it.p.price*it.qty)+" ج.م");
-  });
-  lines.push("الإجمالي الفرعي: "+fmt(cartTotal())+" ج.م");
-  lines.push("الشحن: "+fmt(SHIPPING_COST)+" ج.م");
-  lines.push("الإجمالي الكلي: "+fmt(grandTotal != null ? grandTotal : cartGrandTotal())+" ج.م");
-  lines.push("الاسم: "+(name || "-"));
-  lines.push("رقم الموبايل: "+phone);
-  lines.push("العنوان: "+(address || "-"));
-  if(paymentMethod){
-    lines.push("وسيلة الدفع: "+paymentMethodLabel(paymentMethod));
-    if(paymentMethodNeedsProof(paymentMethod)){
-      lines.push("(تم التحويل على الرقم "+PAYMENT_TRANSFER_NUMBER+" - هيتم إرفاق صورة التحويل في المحادثة)");
-    }
-  }
-  if(notes) lines.push("ملاحظات: "+notes);
-  return lines;
-}
+/* الاسم ورقم الموبايل والعنوان بقوا الثلاثة إلزاميين مهما كان العميل
+   مسجّل دخول أو ضيف - عشان أي طلب (حتى من غير حساب) يكون معاه بيانات
+   كافية للتوصيل. العميل المسجّل بياناته بترجع جاهزة من حسابه فمش
+   هيحتاج يكتبها تاني، والضيف لازم يكتبها كاملة هنا. */
 function readCheckoutFields(showError){
+  var name = document.getElementById("checkoutName").value.trim();
   var phone = document.getElementById("checkoutPhone").value.trim();
+  var address = document.getElementById("checkoutAddress").value.trim();
   var errEl = document.getElementById("checkoutPhoneError");
-  if(!phone){
-    if(showError){ errEl.style.display = "block"; document.getElementById("checkoutPhone").focus(); }
+  var missing = null;
+  if(!name) missing = { el:document.getElementById("checkoutName"), msg:"من فضلك اكتب اسمك بالكامل." };
+  else if(!phone) missing = { el:document.getElementById("checkoutPhone"), msg:"من فضلك اكتب رقم موبايلك عشان نقدر نكلمك بخصوص الطلب." };
+  else if(!address) missing = { el:document.getElementById("checkoutAddress"), msg:"من فضلك اكتب عنوانك بالتفصيل عشان نقدر نوصّل الطلب." };
+  if(missing){
+    if(showError){ errEl.textContent = missing.msg; errEl.style.display = "block"; missing.el.focus(); }
     return null;
   }
   errEl.style.display = "none";
   return {
-    name: document.getElementById("checkoutName").value.trim(),
+    name: name,
     phone: phone,
-    address: document.getElementById("checkoutAddress").value.trim(),
+    address: address,
     notes: document.getElementById("checkoutNotes").value.trim()
   };
 }
@@ -2138,18 +2111,12 @@ function reconcileCartStock(){
 }
 /* زرار "استمرار" في خطوة مراجعة السلة - بيتأكد الأول إن كل حاجة في السلة
    لسه متاحة بنفس الكمية، وبعدين بيودّي لخطوة إدخال بيانات الشحن. */
+/* التسجيل بقى اختياري - العميل يقدر يكمل طلبه كضيف بعد ما يكتب بياناته
+   كاملة (اسم/موبايل/عنوان) في خطوة البيانات، من غير ما يعمل حساب. لو
+   حابب يرجع يشوف طلباته وفواتيره بعدين، وقتها لازم يسجّل حساب. */
 function goToInfoStep(){
   var items = cartItems();
   if(!items.length) return;
-  /* التسجيل بقى إلزامي عشان يكمل أي طلب - مفيش خيار طلب كضيف عن طريق
-     واتساب بقى. لو مش مسجّل دخول، بنقفل عربة الشراء ونفتحله شاشة تسجيل
-     الدخول/حساب جديد على طول، وبعد ما يسجّل هيرجع يضغط "استمرار" تاني. */
-  if(!isCustomerAuthed()){
-    cartDrawer.classList.remove("show");
-    showToast("سجّل دخول أو اعمل حساب جديد الأول عشان تقدر تكمل طلبك");
-    openAccountModal();
-    return;
-  }
   var msgs = reconcileCartStock();
   if(msgs.length){ showToast(msgs[0]); return; }
   cartCheckout.step = "info";
@@ -2171,17 +2138,19 @@ document.getElementById("infoConfirmBtn").addEventListener("click", function(){
   cartCheckout.step = "payment";
   renderCartFoot();
 });
-document.getElementById("checkoutPhone").addEventListener("input", function(){
-  if(this.value.trim()) document.getElementById("checkoutPhoneError").style.display = "none";
+["checkoutName", "checkoutPhone", "checkoutAddress"].forEach(function(id){
+  document.getElementById(id).addEventListener("input", function(){
+    if(this.value.trim()) document.getElementById("checkoutPhoneError").style.display = "none";
+  });
 });
 
 /* ---------- إتمام الطلب (خطوة وسيلة الدفع) ----------
-   عميل الواتساب (ضيف): بيفتح واتساب برسالة جاهزة فيها كل التفاصيل، ولو
-   اختار فودافون كاش/إنستاباي بتتضاف تعليمة إنه يبعت سكرين شوت التحويل
-   جوه محادثة الواتساب نفسها (مفيش رفع ملفات هنا، ومفيش داعي للتحقق).
-   عميل الموقع (مسجّل دخول): الطلب بيتسجّل على حسابه فورًا عن طريق
-   /api/orders (وده اللي بيخليه يكمل شرائه مباشرة)، ويظهر مباشرة في
-   لوحة تحكم الأدمن بس - من غير أي إشعار بالإيميل. */
+   عميل مسجّل دخول: الطلب بيتسجّل على حسابه فورًا عن طريق /api/orders،
+   فيقدر يشوفه بعدين في "طلباتي" بفاتورته كاملة.
+   عميل ضيف (من غير حساب): الطلب بيتسجّل برضه بنفس الـ API لكن من غير ما
+   يترابط بأي حساب (customerId = null)، وبيتبعت فورًا لإيميل صاحب المتجر
+   (functions/api/orders.js) عشان محدش يتأخر عليه - بس مش هيقدر يشوفه
+   تاني من على الموقع إلا لو سجّل حساب بعدين. */
 function showOrderSuccessModal(phone){
   var html = '<button class="modal-close" id="modalCloseBtn" aria-label="إغلاق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
     + '<div class="modal-info" style="padding:44px 28px; text-align:center; align-items:center;">'
@@ -2214,21 +2183,7 @@ function handlePaymentSubmit(e){
   if(!f){ if(e && e.preventDefault) e.preventDefault(); cartCheckout.step = "cart"; renderCartFoot(); return; }
   if(!validatePaymentStep()){ if(e && e.preventDefault) e.preventDefault(); return; }
 
-  /* حماية إضافية: التسجيل بقى إلزامي قبل الوصول للخطوة دي أصلاً (شوف
-     goToInfoStep)، بس لو الجلسة اتقفلت بأي طريقة وهو لسه واقف هنا،
-     بنرجّعه لشاشة الدخول بدل ما نكمّل الطلب كضيف. */
-  if(!isCustomerAuthed()){
-    if(e && e.preventDefault) e.preventDefault();
-    cartCheckout.step = "cart";
-    renderCartFoot();
-    cartDrawer.classList.remove("show");
-    showToast("سجّل دخول أو اعمل حساب جديد الأول عشان تقدر تكمل طلبك");
-    openAccountModal();
-    return;
-  }
-
   var grand = cartGrandTotal();
-  var lines = buildOrderLines(items, f.name, f.phone, f.address, cartCheckout.method, grand, f.notes);
 
   if(e && e.preventDefault) e.preventDefault();
   var btn = this;

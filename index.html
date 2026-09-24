@@ -9,6 +9,23 @@
   gtag('js', new Date());
   gtag('config', 'G-2XED7JY5D6');
 </script>
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '604071008636850');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=604071008636850&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>متجر آل عبده | ألعاب أطفال أصلية في الإسكندرية — توصيل لكل مصر</title>
@@ -1760,6 +1777,12 @@ function trackAnalyticsEvent(name){
     body: JSON.stringify({ visitorId:visitorId, event:name })
   }).catch(function(){});
 }
+/* بيبعت حدث لبكسل ميتا (فيسبوك/إنستجرام) عشان يستخدم في الريتارجتنج
+   وجمهور اللوك-ألايك - لو حد ضغط بلوك على السكريبت أو معاش لسه اتحمّل
+   (fbq undefined)، بنتجاهل بهدوء زي أي تتبع اختياري تاني. */
+function fbTrack(name, params){
+  if(typeof fbq === "function") fbq("track", name, params || {});
+}
 
 /* ---------- Cart ---------- */
 var cart = {};
@@ -1875,6 +1898,7 @@ function addToCart(id, qty, colorName){
   cart[key] = nextQty;
   saveCart(); renderCartBadge(); renderCartDrawer();
   trackAnalyticsEvent("addToCart");
+  fbTrack("AddToCart", { content_name:p.name, content_ids:[String(p.id)], value:p.price, currency:"EGP" });
 }
 /* key هنا هو مفتاح السلة الكامل (رقم المنتج، أو رقم المنتج::اسم اللون)
    مش بس رقم المنتج، عشان كل لون سطر مستقل في السلة. */
@@ -2234,6 +2258,7 @@ function handlePaymentSubmit(e){
       renderBestSellers(); renderNewArrivals();
       if(document.getElementById("view-products").classList.contains("active")) renderProductsView();
       trackAnalyticsEvent("orderPlaced");
+      fbTrack("Purchase", { value:grand, currency:"EGP", content_ids:items.map(function(it){ return String(it.p.id); }), num_items:items.length });
       clearCart();
       resetCheckoutFields();
       resetCartCheckout();

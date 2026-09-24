@@ -1308,8 +1308,9 @@ ul{margin:0; padding:0; list-style:none;}
               </div>
             </form>
 
-            <h3 style="margin-top:26px;">➕ إضافة قسم جديد</h3>
+            <h3 style="margin-top:26px;" id="catFormTitle">➕ إضافة قسم جديد</h3>
             <form id="catForm" style="display:flex; flex-direction:column; gap:12px;">
+              <input type="hidden" id="cfId">
               <div class="field"><label for="cfName">اسم القسم</label><input id="cfName" required placeholder="مثال: ألعاب إلكترونية"></div>
               <div class="field">
                 <label for="cfIcon">أيقونة القسم (إيموجي)</label>
@@ -1319,7 +1320,10 @@ ul{margin:0; padding:0; list-style:none;}
               <div class="field"><label>لون القسم</label>
                 <div class="color-swatches" id="colorSwatches"></div>
               </div>
-              <button type="submit" class="btn btn-outline" style="align-self:flex-start;">إضافة القسم</button>
+              <div class="hero-ctas" style="justify-content:flex-start;">
+                <button type="submit" class="btn btn-outline" id="catFormSubmit" style="align-self:flex-start;">إضافة القسم</button>
+                <button type="button" class="btn btn-outline" id="catFormCancel" hidden>إلغاء التعديل</button>
+              </div>
             </form>
 
             <h3 style="margin-top:26px;">⚙️ إعدادات حساب الدخول</h3>
@@ -3868,7 +3872,7 @@ function renderAdminCatsTable(){
       + '<td><div class="thumb-sm" style="background:'+c.color+'; border-radius:50%;">'+c.icon+'</div></td>'
       + '<td>'+c.name+'</td>'
       + '<td class="tabular">'+count+'</td>'
-      + '<td><div class="admin-row-actions"><button data-del-cat="'+c.id+'" aria-label="حذف"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button></div></td>'
+      + '<td><div class="admin-row-actions"><button data-edit-cat="'+c.id+'" aria-label="تعديل"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button><button data-del-cat="'+c.id+'" aria-label="حذف"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button></div></td>'
     + '</tr>';
   }).join("");
 }
@@ -4575,20 +4579,51 @@ document.getElementById("adminProductsBody").addEventListener("click", function(
 });
 document.getElementById("catForm").addEventListener("submit", function(e){
   e.preventDefault();
+  var id = document.getElementById("cfId").value;
   var name = document.getElementById("cfName").value.trim();
   var icon = document.getElementById("cfIcon").value.trim() || "🎯";
   if(!name) return;
+  var wasEdit = !!id;
   refreshThenRun(function(){
-    CATS.push({id: slugId("cat"), name:name, icon:icon, color:selectedCatColor});
+    if(id){
+      var existing = CATS.find(function(c){ return c.id===id; });
+      if(existing){ existing.name = name; existing.icon = icon; existing.color = selectedCatColor; }
+    } else {
+      CATS.push({id: slugId("cat"), name:name, icon:icon, color:selectedCatColor});
+    }
     rebuildCatMap();
-    document.getElementById("catForm").reset();
-    selectedCatColor = COLOR_PRESETS[0].value;
+    resetCatForm();
     renderAdminAll();
     refreshPublicViews();
-    showToast("✅ اتضاف القسم");
+    showToast(wasEdit ? "✅ اتحدث القسم" : "✅ اتضاف القسم");
   });
 });
+function resetCatForm(){
+  document.getElementById("catForm").reset();
+  document.getElementById("cfId").value = "";
+  document.getElementById("catFormTitle").textContent = "➕ إضافة قسم جديد";
+  document.getElementById("catFormSubmit").textContent = "إضافة القسم";
+  document.getElementById("catFormCancel").hidden = true;
+  selectedCatColor = COLOR_PRESETS[0].value;
+  renderColorSwatches(selectedCatColor);
+}
+document.getElementById("catFormCancel").addEventListener("click", resetCatForm);
 document.getElementById("adminCatsBody").addEventListener("click", function(e){
+  var editBtn = e.target.closest("[data-edit-cat]");
+  if(editBtn){
+    var c = CATS.find(function(x){ return x.id===editBtn.dataset.editCat; });
+    if(!c) return;
+    document.getElementById("cfId").value = c.id;
+    document.getElementById("cfName").value = c.name;
+    document.getElementById("cfIcon").value = c.icon;
+    selectedCatColor = c.color;
+    renderColorSwatches(selectedCatColor);
+    document.getElementById("catFormTitle").textContent = "✏️ تعديل قسم";
+    document.getElementById("catFormSubmit").textContent = "حفظ التعديل";
+    document.getElementById("catFormCancel").hidden = false;
+    document.getElementById("catFormTitle").scrollIntoView({behavior:"smooth", block:"center"});
+    return;
+  }
   var delBtn = e.target.closest("[data-del-cat]"); if(!delBtn) return;
   var cid = delBtn.dataset.delCat;
   refreshThenRun(function(){
@@ -4600,6 +4635,7 @@ document.getElementById("adminCatsBody").addEventListener("click", function(e){
     if(!confirm("متأكد إنك عايز تمسح القسم ده؟")) return;
     CATS = CATS.filter(function(c){ return c.id!==cid; });
     rebuildCatMap();
+    resetCatForm();
     renderAdminAll();
     refreshPublicViews();
   });

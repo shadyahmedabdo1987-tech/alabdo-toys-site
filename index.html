@@ -1260,6 +1260,7 @@ ul{margin:0; padding:0; list-style:none;}
             <form id="productForm" style="display:flex; flex-direction:column; gap:12px;">
               <input type="hidden" id="pfId">
               <div class="field"><label for="pfName">اسم المنتج</label><input id="pfName" required placeholder="مثال: عربية تحكم كهربائية"></div>
+              <div class="field"><label for="pfDesc">وصف المنتج</label><textarea id="pfDesc" rows="3" placeholder="اكتب وصف حقيقي ومختصر للمنتج: مميزاته، الخامة، السن المناسب... (بيظهر للعميل في صفحة تفاصيل المنتج)" style="width:100%; resize:vertical; font-family:inherit; font-size:14px; padding:10px 12px; border-radius:10px; border:1.5px solid var(--border);"></textarea></div>
               <div class="field-row">
                 <div class="field"><label for="pfCat">القسم</label><select id="pfCat"></select></div>
                 <div class="field"><label for="pfBadge">وسم</label>
@@ -1529,27 +1530,27 @@ var DEFAULT_CATS = [
 ];
 
 var DEFAULT_PRODUCTS = [
-  {id:1,name:"سيارة تحكم بأوضاع متعددة",cat:"cars",price:450,old:600,rating:4.6,reviews:124,emoji:"🚙",badge:"sale"},
-  {id:2,name:"مكعبات تركيب إبداعية 120 قطعة",cat:"blocks",price:400,old:500,rating:4.5,reviews:98,emoji:"🧱",badge:"sale"},
-  {id:3,name:"دمية الأميرة مع الإكسسوارات",cat:"girls",price:490,old:700,rating:4.7,reviews:76,emoji:"👸",badge:"sale"},
-  {id:4,name:"تابلت تعليمي تفاعلي للأطفال",cat:"edu",price:520,old:650,rating:4.6,reviews:112,emoji:"📱",badge:"sale"},
-  {id:5,name:"قطار مسار المغامرات الكهربائي",cat:"boys",price:470,old:550,rating:4.8,reviews:89,emoji:"🚂",badge:"sale"},
-  {id:6,name:"دبدوب ناعم بحجم كبير",cat:"gifts",price:400,old:500,rating:4.9,reviews:103,emoji:"🧸",badge:"sale"},
-  {id:7,name:"لوحة رسم ضوئية للأطفال",cat:"creative",price:340,old:null,rating:4.4,reviews:41,emoji:"🎨",badge:"new"},
-  {id:8,name:"مجموعة الحروف والأرقام المغناطيسية",cat:"edu",price:220,old:280,rating:4.5,reviews:64,emoji:"🔤",badge:"sale"},
-  {id:9,name:"روبوت تفاعلي بالريموت",cat:"boys",price:610,old:750,rating:4.7,reviews:58,emoji:"🤖",badge:"sale"},
-  {id:10,name:"مطبخ ألعاب بأصوات وإضاءة",cat:"girls",price:680,old:820,rating:4.6,reviews:47,emoji:"🍳",badge:"sale"},
-  {id:11,name:"عربة تسوق أطفال بإكسسوارات",cat:"girls",price:310,old:null,rating:4.3,reviews:29,emoji:"🛒",badge:"new"},
-  {id:12,name:"مجسمات ديناصورات مجموعة 8 قطع",cat:"boys",price:260,old:320,rating:4.6,reviews:81,emoji:"🦕",badge:"sale"},
-  {id:13,name:"صندوق مكعبات خشبية ملونة",cat:"blocks",price:290,old:null,rating:4.5,reviews:37,emoji:"🟨",badge:null},
-  {id:14,name:"طائرة هليكوبتر تحكم عن بعد",cat:"cars",price:540,old:650,rating:4.4,reviews:52,emoji:"🚁",badge:"sale"},
-  {id:15,name:"دراجة توازن للأطفال",cat:"cars",price:890,old:1050,rating:4.8,reviews:66,emoji:"🚲",badge:"sale"},
-  {id:16,name:"بازل خشبي تعليمي 100 قطعة",cat:"edu",price:180,old:230,rating:4.5,reviews:73,emoji:"🧩",badge:"sale"},
-  {id:17,name:"صندوق هدايا مناسبات مفاجآت",cat:"gifts",price:250,old:null,rating:4.7,reviews:33,emoji:"🎀",badge:"new"},
-  {id:18,name:"مجموعة عجائن ملونة معطرة",cat:"creative",price:150,old:190,rating:4.4,reviews:44,emoji:"🧪",badge:"sale"},
-  {id:19,name:"دمى حيوانات أليفة ناعمة",cat:"gifts",price:320,old:null,rating:4.8,reviews:57,emoji:"🐰",badge:"new"},
-  {id:20,name:"طقم أدوات طبيب صغير",cat:"boys",price:210,old:260,rating:4.5,reviews:39,emoji:"🩺",badge:"sale"},
-  {id:21,name:"استوديو تلوين ورسم للمبدعين",cat:"creative",price:380,old:460,rating:4.6,reviews:48,emoji:"🖌️",badge:"sale"}
+  {id:1,name:"سيارة تحكم بأوضاع متعددة",desc:"سيارة تحكم عن بعد بتصميم رياضي وأكتر من وضع تشغيل، عجلات قوية بتشتغل كويس جوا وبرا البيت. تصلح هدية مميزة لعشاق السيارات، وبطاريتها قابلة للشحن لمتعة لعب طويلة.",cat:"cars",price:450,old:600,rating:4.6,reviews:124,emoji:"🚙",badge:"sale"},
+  {id:2,name:"مكعبات تركيب إبداعية 120 قطعة",desc:"طقم 120 قطعة مكعبات تركيب ملونة، بتنمي مهارات التخيل والتركيز والتنسيق بين اليد والعين عند طفلك. القطع مصنوعة من بلاستيك آمن خالي من الحواف الحادة، ومناسبة من سن 3 سنين فأكتر.",cat:"blocks",price:400,old:500,rating:4.5,reviews:98,emoji:"🧱",badge:"sale"},
+  {id:3,name:"دمية الأميرة مع الإكسسوارات",desc:"دمية أميرة أنيقة بفستان قابل للتغيير ومجموعة إكسسوارات (تاج، حقيبة، وأدوات تجميل مصغّرة) بتفتح مجال واسع للعب التخيلي. خامة ناعمة وآمنة، ومفاصلها بتتحرك بسهولة.",cat:"girls",price:490,old:700,rating:4.7,reviews:76,emoji:"👸",badge:"sale"},
+  {id:4,name:"تابلت تعليمي تفاعلي للأطفال",desc:"تابلت تعليمي بشاشة كبيرة وأزرار ملونة، فيه ألعاب وأنشطة لتعليم الحروف والأرقام والأشكال والألوان بطريقة تفاعلية وممتعة. بيساعد على تنمية المهارات الذهنية من سن 3 سنين، وبيشتغل ببطاريات.",cat:"edu",price:520,old:650,rating:4.6,reviews:112,emoji:"📱",badge:"sale"},
+  {id:5,name:"قطار مسار المغامرات الكهربائي",desc:"طقم قطار كهربائي بمسار قابل للتركيب بأكتر من شكل، بيتحرك تلقائيًا مع إضاءة وصوت واقعي. بيشجع الطفل على التفكير المكاني وحل المشكلات وهو بيركّب المسار بنفسه.",cat:"boys",price:470,old:550,rating:4.8,reviews:89,emoji:"🚂",badge:"sale"},
+  {id:6,name:"دبدوب ناعم بحجم كبير",desc:"دبدوب كبير بفرو فائق النعومة وحشو مريح، مثالي كهدية عناق أو رفيق نوم للأطفال. خامة صديقة للبشرة الحساسة وسهلة التنظيف، وحجمه يخليه هدية مميزة.",cat:"gifts",price:400,old:500,rating:4.9,reviews:103,emoji:"🧸",badge:"sale"},
+  {id:7,name:"لوحة رسم ضوئية للأطفال",desc:"لوحة رسم مضيئة بتخلي طفلك يرسم بالضوء في الضلمة، بتيجي مع أقلام وقوالب أشكال جاهزة لتشجيع الإبداع. تجربة رسم مختلفة وآمنة تمامًا للاستخدام المنزلي.",cat:"creative",price:340,old:null,rating:4.4,reviews:41,emoji:"🎨",badge:"new"},
+  {id:8,name:"مجموعة الحروف والأرقام المغناطيسية",desc:"مجموعة مغناطيسات ملونة بالحروف العربية والأرقام، بتتلزق على أي سطح معدني زي الثلاجة أو السبورة المغناطيسية. وسيلة تعليمية ممتعة تساعد الطفل يتعلم القراءة والعد وهو بيلعب.",cat:"edu",price:220,old:280,rating:4.5,reviews:64,emoji:"🔤",badge:"sale"},
+  {id:9,name:"روبوت تفاعلي بالريموت",desc:"روبوت تفاعلي بيتحكم فيه عن بعد، بيمشي وبيدور وبيصدر أصوات وأضواء بتفاعل مع حركاته. تصميم جذاب بيجمع بين المتعة والتكنولوجيا، ومناسب كهدية لعشاق الروبوتات.",cat:"boys",price:610,old:750,rating:4.7,reviews:58,emoji:"🤖",badge:"sale"},
+  {id:10,name:"مطبخ ألعاب بأصوات وإضاءة",desc:"مطبخ ألعاب متكامل بمواقد وأدوات مطبخ مصغّرة، مع أصوات وإضاءة واقعية بتخلي تجربة اللعب أقرب للحقيقة. بينمّي مهارات التقليد والخيال، ومناسب للعب الجماعي مع الأصحاب أو الإخوة.",cat:"girls",price:680,old:820,rating:4.6,reviews:47,emoji:"🍳",badge:"sale"},
+  {id:11,name:"عربة تسوق أطفال بإكسسوارات",desc:"عربة تسوق مصغّرة بتصميم عملي وسهل الدفع، بتيجي مع إكسسوارات تسوق كمنتجات وسلة صغيرة. بتشجع الطفل على لعب الأدوار وتقليد مواقف الحياة اليومية، وخفيفة وآمنة للاستخدام المنزلي.",cat:"girls",price:310,old:null,rating:4.3,reviews:29,emoji:"🛒",badge:"new"},
+  {id:12,name:"مجسمات ديناصورات مجموعة 8 قطع",desc:"مجموعة 8 مجسمات ديناصورات بتفاصيل واقعية وأحجام وأنواع مختلفة، خامتها بلاستيك متين وآمن. مثالية لمحبي الديناصورات ولتنمية الخيال والمعرفة من خلال اللعب.",cat:"boys",price:260,old:320,rating:4.6,reviews:81,emoji:"🦕",badge:"sale"},
+  {id:13,name:"صندوق مكعبات خشبية ملونة",desc:"صندوق مكعبات خشبية طبيعية بألوان زاهية وأشكال متنوعة، بتنمي مهارات التركيز والتوازن والإبداع من غير أي مواد بلاستيكية. اختيار مثالي للأهل اللي بيفضلوا الألعاب الخشبية الطبيعية.",cat:"blocks",price:290,old:null,rating:4.5,reviews:37,emoji:"🟨",badge:null},
+  {id:14,name:"طائرة هليكوبتر تحكم عن بعد",desc:"هليكوبتر تحكم عن بعد بتصميم مستقر وسهل التحكم حتى للمبتدئين، مناسبة للطيران داخل وخارج المنزل. بتيجي بريموت بسيط وبطارية قابلة للشحن.",cat:"cars",price:540,old:650,rating:4.4,reviews:52,emoji:"🚁",badge:"sale"},
+  {id:15,name:"دراجة توازن للأطفال",desc:"دراجة توازن من غير بدالات، مصممة لمساعدة الطفل يتعلم التوازن والتحكم قبل الانتقال للعجلة العادية. هيكل متين وارتفاع مقعد قابل للتعديل يواكب نمو الطفل.",cat:"cars",price:890,old:1050,rating:4.8,reviews:66,emoji:"🚲",badge:"sale"},
+  {id:16,name:"بازل خشبي تعليمي 100 قطعة",desc:"بازل خشبي من 100 قطعة بتصميم تعليمي وألوان جذابة، بينمّي مهارات التركيز وحل المشكلات والصبر عند الطفل. القطع سميكة ومتينة ومناسبة للاستخدام المتكرر.",cat:"edu",price:180,old:230,rating:4.5,reviews:73,emoji:"🧩",badge:"sale"},
+  {id:17,name:"صندوق هدايا مناسبات مفاجآت",desc:"صندوق هدايا مفاجآت جاهز للمناسبات، بيضم مجموعة متنوعة من الألعاب والمفاجآت الصغيرة المختارة بعناية. اختيار سريع ومريح لهدية مميزة في الأعياد والمناسبات الخاصة.",cat:"gifts",price:250,old:null,rating:4.7,reviews:33,emoji:"🎀",badge:"new"},
+  {id:18,name:"مجموعة عجائن ملونة معطرة",desc:"مجموعة عجائن لعب ملونة ومعطرة بروائح خفيفة، آمنة على بشرة الأطفال وسهلة التشكيل. بتنمي الخيال والمهارات الحركية الدقيقة، ومناسبة للعب الجماعي على الطاولة.",cat:"creative",price:150,old:190,rating:4.4,reviews:44,emoji:"🧪",badge:"sale"},
+  {id:19,name:"دمى حيوانات أليفة ناعمة",desc:"مجموعة دمى حيوانات أليفة بفراء ناعم وأشكال محببة للأطفال، مثالية كرفيق لعب أو هدية بسيطة ومحببة. خامة آمنة وسهلة الغسيل، ومناسبة لكل الأعمار.",cat:"gifts",price:320,old:null,rating:4.8,reviews:57,emoji:"🐰",badge:"new"},
+  {id:20,name:"طقم أدوات طبيب صغير",desc:"طقم أدوات طبيب مصغّر بيضم سماعة وأدوات فحص وحقيبة حمل، بيخلي الطفل يقلّد دور الطبيب في لعب تمثيلي ممتع. بينمّي الثقة بالنفس وفهم بسيط لزيارة الطبيب بطريقة غير مخيفة.",cat:"boys",price:210,old:260,rating:4.5,reviews:39,emoji:"🩺",badge:"sale"},
+  {id:21,name:"استوديو تلوين ورسم للمبدعين",desc:"استوديو رسم متكامل بيضم ألوان وفرش وأدوات تلوين متنوعة في عبوة واحدة عملية، مناسب لتنمية الحس الفني والإبداع عند الطفل. اختيار ممتاز لمحبي الرسم والتلوين، وسهل الحفظ والنقل.",cat:"creative",price:380,old:460,rating:4.6,reviews:48,emoji:"🖌️",badge:"sale"}
 ];
 
 var CATS = DEFAULT_CATS.map(function(c){ return Object.assign({}, c); });
@@ -2553,7 +2554,7 @@ function openProductModal(id){
       + galleryHtml
       + '<div class="card-rating"><span class="stars">'+stars(p.rating)+'</span><span>('+p.reviews+' تقييم)</span></div>'
       + '<div class="card-price"><span class="price-now tabular" style="font-size:24px">'+fmt(p.price)+' ج.م</span>'+(p.old?'<span class="price-old tabular">'+fmt(p.old)+' ج.م</span>':'')+'</div>'
-      + '<p class="modal-desc">لعبة عالية الجودة من '+catName(p.cat)+'، مناسبة كهدية أو للاستخدام اليومي، مصنوعة من خامات آمنة على الأطفال ومضمونة الجودة من متجر آل عبده.</p>'
+      + '<p class="modal-desc">'+(p.desc && p.desc.trim() ? p.desc : ('لعبة عالية الجودة من '+catName(p.cat)+'، مناسبة كهدية أو للاستخدام اليومي، مصنوعة من خامات آمنة على الأطفال ومضمونة الجودة من متجر آل عبده.'))+'</p>'
       + colorPickerHtml
       + '<div class="modal-actions" id="modalActionsBox"></div>'
       + '<div class="modal-reviews" id="modalReviews" style="margin-top:20px; border-top:1.5px solid var(--border); padding-top:16px;">'
@@ -4478,6 +4479,7 @@ document.getElementById("productForm").addEventListener("submit", function(e){
   var id = document.getElementById("pfId").value;
   var data = {
     name: document.getElementById("pfName").value.trim(),
+    desc: document.getElementById("pfDesc").value.trim(),
     cat: document.getElementById("pfCat").value,
     price: +document.getElementById("pfPrice").value || 0,
     old: document.getElementById("pfOld").value ? +document.getElementById("pfOld").value : null,
@@ -4535,6 +4537,7 @@ document.getElementById("adminProductsBody").addEventListener("click", function(
     if(!p) return;
     document.getElementById("pfId").value = p.id;
     document.getElementById("pfName").value = p.name;
+    document.getElementById("pfDesc").value = p.desc || "";
     document.getElementById("pfCat").value = p.cat;
     document.getElementById("pfPrice").value = p.price;
     document.getElementById("pfOld").value = p.old || "";

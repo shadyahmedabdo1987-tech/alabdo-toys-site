@@ -337,8 +337,18 @@ ul{margin:0; padding:0; list-style:none;}
 .card-add svg{width:16px; height:16px;}
 .card-add.out-of-stock{background:var(--surface-2); color:var(--ink-soft); border:1.5px solid var(--border); justify-content:center; box-shadow:none;}
 .card-add.out-of-stock:hover{background:var(--surface-2); transform:none;}
+/* عداد الكمية جمب زرار "أضف للسلة" - بيظهر بس في كروت صفحة المنتجات
+   (داخل المنتجات)، مش في أقسام الرئيسية زي "الأكثر مبيعًا"/"وصل حديثًا". */
+.card-cart-row{display:flex; align-items:stretch; gap:8px;}
+.card-cart-row .card-add{flex:1; min-width:0; justify-content:center;}
+.card-cart-row .qty-stepper{flex:none;}
 .card-media button.open-detail{position:absolute; inset:0; background:none; border:0;}
 .card-media img.card-photo{position:absolute; inset:0; width:100%; height:100%; object-fit:contain;}
+/* المنتجات اللي ليها أكتر من صورة بيتعمل لها كل الصور فوق بعض بنفس المكان،
+   وبنظبط الشفافية عشان صورة واحدة بس تبقى ظاهرة (active) في كل لحظة -
+   والتبديل بينهم بيتم بجافاسكريبت كل ٣ ثواني (شوف rotateCardImages). */
+.card-media img.card-photo{opacity:0; transition:opacity .5s ease;}
+.card-media img.card-photo.active{opacity:1;}
 
 /* ============ Scroll reveal ============ */
 .reveal{opacity:0; transform:translateY(26px); transition:opacity .7s cubic-bezier(.16,.84,.44,1), transform .7s cubic-bezier(.16,.84,.44,1);}
@@ -1328,7 +1338,7 @@ ul{margin:0; padding:0; list-style:none;}
                     <button type="button" class="btn btn-outline btn-sm" id="pfImagePickBtn">إضافة صورة</button>
                   </div>
                 </div>
-                <p style="color:var(--ink-soft); font-size:12px; margin-top:4px;">أول صورة بتضيفها هي اللي بتظهر في كل الموقع، والباقي بيظهر كمعرض جوه تفاصيل المنتج. لو مفيش صور، أيقونة القسم بتفضل ظاهرة بدالها.</p>
+                <p style="color:var(--ink-soft); font-size:12px; margin-top:4px;">لو ضفت أكتر من صورة، هيتبادلوا تلقائيًا كل ٣ ثواني في كارت المنتج في كل الموقع، وكمان بيظهروا كمعرض جوه تفاصيل المنتج. لو مفيش صور، أيقونة القسم بتفضل ظاهرة بدالها.</p>
               </div>
               <div class="field">
                 <label>ألوان المنتج (اختياري، لو المنتج متاح بأكتر من لون)</label>
@@ -2070,6 +2080,11 @@ function addToCart(id, qty, colorName){
   saveCart(); renderCartBadge(); renderCartDrawer();
   trackAnalyticsEvent("addToCart");
   fbTrack("AddToCart", { content_name:p.name, content_ids:[String(p.id)], value:p.price, currency:"EGP" });
+  /* أول ما ينضاف منتج للسلة، نوجّه العميل للسلة على طول (بنقفل أي حاجة
+     تانية مفتوحة زي مودال تفاصيل المنتج الأول، عشان السلة تظهر واضحة من
+     غير ما تتراكب على حاجة تانية). */
+  closeAllPanels();
+  openDrawer();
 }
 /* key هنا هو مفتاح السلة الكامل (رقم المنتج، أو رقم المنتج::اسم اللون)
    مش بس رقم المنتج، عشان كل لون سطر مستقل في السلة. */
@@ -2545,18 +2560,32 @@ menuToggle.addEventListener("click", function(){
 document.getElementById("mobileNavClose").addEventListener("click", closeAllPanels);
 
 /* ---------- Product card / grid rendering ---------- */
-function productCard(p){
+/* showCartActions=true بيظهر زرار "أضف للسلة" (+عداد الكمية جمبه لو
+   المنتج متاح) - بنبعتها true بس من صفحة المنتجات نفسها. أي مكان تاني
+   (أقسام الرئيسية زي "الأكثر مبيعًا"/"وصل حديثًا") بيبعتها false، فالكارت
+   بيوري السعر بس من غير أي زرار، والعميل بيدخل تفاصيل المنتج عشان يشتري. */
+function productCard(p, showCartActions){
   var outOfStock = productOutOfStockOverall(p);
   var badgeHtml = "";
   if(outOfStock){ badgeHtml = '<span class="card-badge out-of-stock">غير متوفر</span>'; }
   else if(p.old){ var pct = Math.round((1-p.price/p.old)*100); badgeHtml = '<span class="card-badge">-'+pct+'%</span>'; }
   else if(p.badge==="new"){ badgeHtml = '<span class="card-badge" style="background:var(--sky)">جديد</span>'; }
-  var cardMainImg = productMainImage(p);
-  var mediaContent = cardMainImg
-    ? '<img class="card-photo" src="'+cardMainImg+'" alt="'+p.name+'" loading="lazy">'
-    : '<span style="font-size:64px;">'+categoryIcon(p.cat)+'</span>';
+  /* لو المنتج معاه أكتر من صورة، بنرسمهم كلهم فوق بعض (الأولى ظاهرة بس -
+     class="active") وبنعلّم الحاوية بـ data-img-count عشان دالة
+     rotateCardImages تلاقيها وتبدّل بينهم كل ٣ ثواني تلقائيًا. */
+  var cardImgs = productImages(p);
+  var mediaContent;
+  if(cardImgs.length > 1){
+    mediaContent = cardImgs.map(function(src, i){
+      return '<img class="card-photo'+(i===0?' active':'')+'" src="'+src+'" alt="'+p.name+'" loading="lazy">';
+    }).join("");
+  } else if(cardImgs.length === 1){
+    mediaContent = '<img class="card-photo active" src="'+cardImgs[0]+'" alt="'+p.name+'" loading="lazy">';
+  } else {
+    mediaContent = '<span style="font-size:64px;">'+categoryIcon(p.cat)+'</span>';
+  }
   return '<article class="card">'
-    + '<div class="card-media" style="background:'+CAT_MAP[p.cat].color+'">'
+    + '<div class="card-media"'+(cardImgs.length>1?' data-img-count="'+cardImgs.length+'" data-cur-idx="0"':'')+' style="background:'+CAT_MAP[p.cat].color+'">'
       + mediaContent
       + badgeHtml
       /* زرار "فتح تفاصيل المنتج" بيغطي كل مساحة الصورة (عشان تقدر تدوس في
@@ -2571,17 +2600,34 @@ function productCard(p){
       + '<h3 class="card-title">'+p.name+'</h3>'
       + '<div class="card-rating"><span class="stars">'+stars(p.rating)+'</span><span>('+p.reviews+')</span></div>'
       + '<div class="card-price"><span class="price-now tabular">'+fmt(p.price)+' ج.م</span>'+(p.old?'<span class="price-old tabular">'+fmt(p.old)+' ج.م</span>':'')+'</div>'
-      + (outOfStock
+      + (!showCartActions ? "" : outOfStock
           ? '<button class="card-add out-of-stock" data-notify="'+p.id+'">🔔 أعلمني عند التوفر</button>'
-          : '<button class="card-add" data-add="'+p.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h2l2.4 12.2a2 2 0 0 0 2 1.8h7.7a2 2 0 0 0 2-1.6L21 8H6"/></svg>أضف للسلة</button>')
+          : '<div class="card-cart-row">'
+              + '<button class="card-add" data-add="'+p.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h2l2.4 12.2a2 2 0 0 0 2 1.8h7.7a2 2 0 0 0 2-1.6L21 8H6"/></svg>أضف للسلة</button>'
+              + '<div class="qty-stepper">'
+                + '<button type="button" data-qty-minus="'+p.id+'" aria-label="تقليل الكمية">−</button>'
+                + '<span id="cardQty-'+p.id+'">1</span>'
+                + '<button type="button" data-qty-plus="'+p.id+'" aria-label="زيادة الكمية">+</button>'
+              + '</div>'
+            + '</div>')
     + '</div>'
   + '</article>';
 }
 
+/* عداد الكمية اللي جمب زرار "أضف للسلة" في كارت المنتج (صفحة المنتجات
+   بس) - بيبدأ من ١ ومش بينزل تحتها، والقيمة بتتقرا من الـ DOM نفسه وقت
+   الضغط على "أضف للسلة" (مفيش داعي نحتفظ بيها في متغير جافاسكريبت). */
+function adjustCardQty(id, delta){
+  var el = document.getElementById("cardQty-"+id);
+  if(!el) return;
+  var val = Math.max(1, (parseInt(el.textContent,10)||1) + delta);
+  el.textContent = val;
+}
 /* زرار "أضف للسلة" السريع في كارت المنتج (من غير فتح تفاصيله): لو
    المنتج معاه أكتر من لون، لازم العميل يفتح صفحة المنتج ويختار اللون
    الأول (مينفعش يتضاف من غير لون محدد)، فبدل ما نضيفه على طول بنفتحله
-   تفاصيل المنتج مباشرة. */
+   تفاصيل المنتج مباشرة. لو الكارت معاه عداد كمية (صفحة المنتجات)، بناخد
+   الكمية اللي مختارة منه، وبعد الإضافة بنرجّعه ١ تاني استعدادًا للمرة الجاية. */
 function requestAddToCart(id){
   var p = PRODUCTS.find(function(x){ return x.id===id; });
   if(!p) return;
@@ -2590,9 +2636,16 @@ function requestAddToCart(id){
     showToast("👆 اختار اللون الأول من تفاصيل المنتج");
     return;
   }
-  addToCart(id, 1);
+  var qtyEl = document.getElementById("cardQty-"+id);
+  var qty = qtyEl ? (parseInt(qtyEl.textContent,10) || 1) : 1;
+  addToCart(id, qty);
+  if(qtyEl) qtyEl.textContent = "1";
 }
 document.addEventListener("click", function(e){
+  var qtyPlusBtn = e.target.closest("[data-qty-plus]");
+  if(qtyPlusBtn){ adjustCardQty(+qtyPlusBtn.dataset.qtyPlus, 1); return; }
+  var qtyMinusBtn = e.target.closest("[data-qty-minus]");
+  if(qtyMinusBtn){ adjustCardQty(+qtyMinusBtn.dataset.qtyMinus, -1); return; }
   var addBtn = e.target.closest("[data-add]");
   if(addBtn){ requestAddToCart(+addBtn.dataset.add); }
   var notifyBtn = e.target.closest("[data-notify]");
@@ -2609,7 +2662,7 @@ document.addEventListener("click", function(e){
 
 function renderBestSellers(){
   var top = PRODUCTS.slice().sort(function(a,b){ return b.reviews-a.reviews; }).slice(0,6);
-  document.getElementById("bestSellersGrid").innerHTML = top.map(productCard).join("");
+  document.getElementById("bestSellersGrid").innerHTML = top.map(function(p){ return productCard(p, false); }).join("");
 }
 
 /* أي منتج بتحط له وسم "جديد" من لوحة التحكم بيظهر هنا في الصفحة الرئيسية
@@ -2620,7 +2673,7 @@ function renderNewArrivals(){
   var section = document.getElementById("newArrivalsSection");
   if(!list.length){ section.style.display = "none"; return; }
   section.style.display = "";
-  document.getElementById("newArrivalsGrid").innerHTML = list.map(productCard).join("");
+  document.getElementById("newArrivalsGrid").innerHTML = list.map(function(p){ return productCard(p, false); }).join("");
 }
 
 function renderCategoryRow(){
@@ -2929,7 +2982,7 @@ function applyProducts(){
 function renderProductsView(){
   renderFilterList();
   var list = applyProducts();
-  document.getElementById("productsGrid").innerHTML = list.map(productCard).join("");
+  document.getElementById("productsGrid").innerHTML = list.map(function(p){ return productCard(p, true); }).join("");
   document.getElementById("emptyState").hidden = list.length>0;
   document.getElementById("emptyState").textContent = (state.badge==="wish")
     ? "🤍 لسه مفيش منتجات في المفضلة — دوس على أيقونة القلب في أي منتج عشان تضيفه هنا."
@@ -4942,6 +4995,25 @@ document.querySelectorAll(".legal-toc a[href^='#']").forEach(function(a){
 window.addEventListener("scroll", function(){
   document.getElementById("mainHeader").classList.toggle("is-scrolled", window.scrollY>4);
 }, {passive:true});
+
+/* ---------- تبديل صور كروت المنتجات تلقائيًا كل ٣ ثواني ----------
+   أي كارت منتج معاه أكتر من صورة (data-img-count) بيتبدّل فيه الصورة
+   الظاهرة كل ٣ ثواني لكل الصور اللي عنده بالدور. بندوّر على كل الكروت
+   الموجودة فعليًا في الصفحة في كل نبضة (بدل ما نمسك مرجع تابت لعناصر)
+   عشان الميزة تفضل شغالة حتى بعد ما الشبكة تتعاد رسمها (فلترة، بحث،
+   تغيير قسم...) من غير ما نحتاج نعمل setup لكل كارت لوحده. */
+function rotateCardImages(){
+  document.querySelectorAll(".card-media[data-img-count]").forEach(function(media){
+    var imgs = media.querySelectorAll(".card-photo");
+    if(imgs.length < 2) return;
+    var curIdx = (+media.dataset.curIdx || 0) % imgs.length;
+    var nextIdx = (curIdx + 1) % imgs.length;
+    if(imgs[curIdx]) imgs[curIdx].classList.remove("active");
+    if(imgs[nextIdx]) imgs[nextIdx].classList.add("active");
+    media.dataset.curIdx = nextIdx;
+  });
+}
+setInterval(rotateCardImages, 3000);
 
 /* ---------- ظهور تدريجي للأقسام أثناء التمرير (.reveal) - بيستخدم
    IntersectionObserver بدل ما يستنى الصفحة كلها تحمل. المراقب بيفضل شغال

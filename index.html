@@ -342,6 +342,11 @@ ul{margin:0; padding:0; list-style:none;}
 .card-cart-row{display:flex; align-items:stretch; gap:8px;}
 .card-cart-row .card-add{flex:1; min-width:0; justify-content:center;}
 .card-cart-row .qty-stepper{flex:none;}
+.modal-cart-row{display:flex; align-items:center; gap:10px;}
+.modal-cart-row .btn{flex:1; min-width:0;}
+.modal-cart-row .qty-stepper{flex:none;}
+.modal-cart-row .qty-stepper button{width:40px; height:44px; font-size:16px;}
+.modal-cart-row .qty-stepper span{width:38px; font-size:15px;}
 .card-media button.open-detail{position:absolute; inset:0; background:none; border:0;}
 .card-media img.card-photo{position:absolute; inset:0; width:100%; height:100%; object-fit:contain;}
 /* المنتجات اللي ليها أكتر من صورة بيتعمل لها كل الصور فوق بعض بنفس المكان،
@@ -2740,10 +2745,12 @@ function openStockNotifyModal(p, colorName){
 }
 
 var modalSelectedColor = null;
+var modalQty = 1;
 function openProductModal(id){
   var p = PRODUCTS.find(function(x){ return x.id===id; });
   if(!p) return;
   modalSelectedColor = null;
+  modalQty = 1;
   var colors = Array.isArray(p.colors) ? p.colors : [];
   var imgs = productImages(p);
   var modalImgContent = imgs.length
@@ -2820,10 +2827,27 @@ function openProductModal(id){
       });
       return;
     }
-    box.innerHTML = '<button class="btn btn-primary" id="modalAddBtn" style="flex:1;">أضف للسلة</button>';
+    box.innerHTML = '<div class="modal-cart-row">'
+      + '<button class="btn btn-primary" id="modalAddBtn">أضف للسلة</button>'
+      + '<div class="qty-stepper">'
+        + '<button type="button" id="modalQtyMinus" aria-label="تقليل الكمية">−</button>'
+        + '<span id="modalQtyVal">'+modalQty+'</span>'
+        + '<button type="button" id="modalQtyPlus" aria-label="زيادة الكمية">+</button>'
+      + '</div>'
+    + '</div>';
+    document.getElementById("modalQtyMinus").addEventListener("click", function(){
+      modalQty = Math.max(1, modalQty-1);
+      document.getElementById("modalQtyVal").textContent = modalQty;
+    });
+    document.getElementById("modalQtyPlus").addEventListener("click", function(){
+      modalQty = modalQty+1;
+      document.getElementById("modalQtyVal").textContent = modalQty;
+    });
     document.getElementById("modalAddBtn").addEventListener("click", function(){
       if(!validateColorChosen()) return;
-      addToCart(p.id, 1, modalSelectedColor ? modalSelectedColor.name : null);
+      addToCart(p.id, modalQty, modalSelectedColor ? modalSelectedColor.name : null);
+      modalQty = 1;
+      var qv = document.getElementById("modalQtyVal"); if(qv) qv.textContent = modalQty;
     });
   }
   if(colors.length){
@@ -2982,7 +3006,13 @@ function applyProducts(){
 function renderProductsView(){
   renderFilterList();
   var list = applyProducts();
-  document.getElementById("productsGrid").innerHTML = list.map(function(p){ return productCard(p, true); }).join("");
+  /* "وصل حديثاً" و"عروض خاصة" دي واجهات ترويجية بتوصلّها من روابط برّه صفحة
+     المنتجات (زي أقسام الصفحة الرئيسية)، فبنعاملها زي "خارج المنتجات" وبنوريها
+     بالسعر بس من غير زرار/عداد - أما التصفح العادي (كل المنتجات / قسم معيّن /
+     نتيجة بحث / المفضلة) فده التصفح الحقيقي جوه المنتجات وبيفضل زرار الإضافة
+     والعداد ظاهرين فيه. */
+  var showCartActionsHere = !(state.badge==="new" || state.badge==="sale");
+  document.getElementById("productsGrid").innerHTML = list.map(function(p){ return productCard(p, showCartActionsHere); }).join("");
   document.getElementById("emptyState").hidden = list.length>0;
   document.getElementById("emptyState").textContent = (state.badge==="wish")
     ? "🤍 لسه مفيش منتجات في المفضلة — دوس على أيقونة القلب في أي منتج عشان تضيفه هنا."

@@ -1608,7 +1608,131 @@ function catName(id){ return CAT_MAP[id] ? CAT_MAP[id].name : ""; }
 /* أيقونة القسم بتاع المنتج - بتظهر مكان صورة المنتج لو المنتج نفسه مفيهوش
    صور حقيقية مرفوعة (المنتجات بقت من غير إيموجي خاص بيها؛ الإيموجي بقى
    بتاع القسم بس). */
-function categoryIcon(catId){ return (CAT_MAP[catId] && CAT_MAP[catId].icon) || "🧸"; }
+/* أيقونات ثلاثية الأبعاد لامعة (SVG) للأقسام الأساسية السبعة، بدل الإيموجي
+   المسطح - بتدي شكل احترافي أقرب لمتاجر عالمية. كل أيقونة بتتبني من أشكال
+   بسيطة (مستطيلات/دوائر/مضلعات) مع تدرج لوني وهاي لايت شفاف بدل استخدام
+   صور حقيقية (اللي محتاجة أداة توليد صور مش متاحة هنا). أي قسم جديد
+   يضيفه صاحب المتجر من لوحة التحكم (مش من السبعة دول) بيفضل ياخد
+   الإيموجي العادي اللي هو بيختاره - مفيش أيقونة ثلاثية أبعاد جاهزة له. */
+var _catIconUid = 0;
+function catIconGrad(u, n, c1, c2){
+  return '<linearGradient id="'+u+n+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+c1+'"/><stop offset="1" stop-color="'+c2+'"/></linearGradient>';
+}
+var CAT_ICON_SVG = {
+  gifts: function(u){
+    return '<svg viewBox="0 0 48 48" width="1em" height="1em" style="display:block" aria-hidden="true"><defs>'
+      + catIconGrad(u,'a','#ff6fa8','#b6135a')
+      + catIconGrad(u,'b','#ff9dc6','#ee1f6c')
+      + catIconGrad(u,'c','#ffe38a','#e09400')
+      + '</defs>'
+      + '<ellipse cx="24" cy="43" rx="15" ry="2.6" fill="#000" opacity=".12"/>'
+      + '<rect x="8" y="20" width="32" height="21" rx="4" fill="url(#'+u+'a)"/>'
+      + '<rect x="6" y="13" width="36" height="9" rx="3.5" fill="url(#'+u+'b)"/>'
+      + '<rect x="21" y="13" width="6" height="28" fill="url(#'+u+'c)"/>'
+      + '<rect x="6" y="15" width="36" height="5" fill="url(#'+u+'c)"/>'
+      + '<ellipse cx="17" cy="11" rx="7" ry="5.5" fill="url(#'+u+'c)" transform="rotate(-24 17 11)"/>'
+      + '<ellipse cx="31" cy="11" rx="7" ry="5.5" fill="url(#'+u+'c)" transform="rotate(24 31 11)"/>'
+      + '<circle cx="24" cy="12" r="4" fill="#e09400"/>'
+      + '<ellipse cx="15" cy="26" rx="5" ry="9" fill="#fff" opacity=".22"/>'
+      + '</svg>';
+  },
+  edu: function(u){
+    return '<svg viewBox="0 0 48 48" width="1em" height="1em" style="display:block" aria-hidden="true"><defs>'
+      + catIconGrad(u,'a','#5cd2ff','#0e7fb0')
+      + '</defs>'
+      + '<ellipse cx="24" cy="43" rx="14" ry="2.6" fill="#000" opacity=".12"/>'
+      + '<rect x="9" y="9" width="27" height="27" rx="6" fill="url(#'+u+'a)"/>'
+      + '<circle cx="39" cy="22.5" r="7" fill="url(#'+u+'a)"/>'
+      + '<circle cx="10" cy="30" r="6" fill="url(#'+u+'a)"/>'
+      + '<ellipse cx="16" cy="16" rx="6" ry="8" fill="#fff" opacity=".22"/>'
+      + '</svg>';
+  },
+  cars: function(u){
+    return '<svg viewBox="0 0 48 48" width="1em" height="1em" style="display:block" aria-hidden="true"><defs>'
+      + catIconGrad(u,'a','#ff7a68','#d62e1f')
+      + catIconGrad(u,'b','#3a5f8a','#1a3a5c')
+      + catIconGrad(u,'w','#5a5a5a','#222')
+      + '</defs>'
+      + '<ellipse cx="24" cy="41" rx="17" ry="2.6" fill="#000" opacity=".14"/>'
+      + '<rect x="5" y="21" width="38" height="11" rx="4.5" fill="url(#'+u+'a)"/>'
+      + '<path d="M14 21 L18 12 Q19 10 21 10 L29 10 Q31 10 32 12 L36 21 Z" fill="url(#'+u+'b)"/>'
+      + '<rect x="19.5" y="13.5" width="11" height="6" rx="1.5" fill="#dff6fd" opacity=".85"/>'
+      + '<circle cx="14" cy="33" r="6.5" fill="url(#'+u+'w)"/>'
+      + '<circle cx="14" cy="33" r="2.4" fill="#e9e9e9"/>'
+      + '<circle cx="34" cy="33" r="6.5" fill="url(#'+u+'w)"/>'
+      + '<circle cx="34" cy="33" r="2.4" fill="#e9e9e9"/>'
+      + '<circle cx="40" cy="25" r="1.8" fill="#ffe27a"/>'
+      + '<ellipse cx="14" cy="25" rx="6" ry="3" fill="#fff" opacity=".2"/>'
+      + '</svg>';
+  },
+  boys: function(u){
+    return '<svg viewBox="0 0 48 48" width="1em" height="1em" style="display:block" aria-hidden="true"><defs>'
+      + catIconGrad(u,'a','#5be3a8','#1a8f5e')
+      + catIconGrad(u,'b','#3fcf90','#147a4e')
+      + '</defs>'
+      + '<ellipse cx="24" cy="42" rx="16" ry="2.6" fill="#000" opacity=".13"/>'
+      + '<polygon points="12,30 3,23 10,35" fill="url(#'+u+'b)"/>'
+      + '<ellipse cx="23" cy="27" rx="13" ry="10" fill="url(#'+u+'a)"/>'
+      + '<circle cx="36" cy="19" r="7.5" fill="url(#'+u+'a)"/>'
+      + '<ellipse cx="42.5" cy="21" rx="4" ry="3" fill="url(#'+u+'a)"/>'
+      + '<polygon points="16,18 19,11 22,18" fill="url(#'+u+'b)"/>'
+      + '<polygon points="22,17 25,10 28,17" fill="url(#'+u+'b)"/>'
+      + '<polygon points="28,18 31,12 34,18" fill="url(#'+u+'b)"/>'
+      + '<rect x="15" y="34" width="5.5" height="9" rx="2.5" fill="url(#'+u+'b)"/>'
+      + '<rect x="26" y="34" width="5.5" height="9" rx="2.5" fill="url(#'+u+'b)"/>'
+      + '<circle cx="38" cy="17" r="1.6" fill="#0c3324"/>'
+      + '<ellipse cx="18" cy="22" rx="5" ry="4" fill="#fff" opacity=".2"/>'
+      + '</svg>';
+  },
+  girls: function(u){
+    return '<svg viewBox="0 0 48 48" width="1em" height="1em" style="display:block" aria-hidden="true"><defs>'
+      + catIconGrad(u,'a','#ff8bb8','#b6135a')
+      + catIconGrad(u,'b','#ffe38a','#e09400')
+      + '</defs>'
+      + '<ellipse cx="24" cy="43" rx="14" ry="2.6" fill="#000" opacity=".12"/>'
+      + '<polygon points="20,8 28,8 33,17 36,40 12,40 15,17" fill="url(#'+u+'a)"/>'
+      + '<ellipse cx="14" cy="16" rx="4.5" ry="5.5" fill="url(#'+u+'a)" transform="rotate(-18 14 16)"/>'
+      + '<ellipse cx="34" cy="16" rx="4.5" ry="5.5" fill="url(#'+u+'a)" transform="rotate(18 34 16)"/>'
+      + '<circle cx="24" cy="10" r="4" fill="url(#'+u+'a)"/>'
+      + '<rect x="16" y="22" width="16" height="3.2" rx="1.6" fill="url(#'+u+'b)"/>'
+      + '<ellipse cx="18" cy="18" rx="4" ry="7" fill="#fff" opacity=".22"/>'
+      + '</svg>';
+  },
+  blocks: function(u){
+    return '<svg viewBox="0 0 48 48" width="1em" height="1em" style="display:block" aria-hidden="true"><defs>'
+      + catIconGrad(u,'r','#ff8a7a','#d62e1f')
+      + catIconGrad(u,'b','#5cd2ff','#0e7fb0')
+      + catIconGrad(u,'y','#ffe38a','#e09400')
+      + '</defs>'
+      + '<ellipse cx="24" cy="43" rx="17" ry="2.6" fill="#000" opacity=".12"/>'
+      + '<rect x="6" y="24" width="15" height="15" rx="3" fill="url(#'+u+'r)"/>'
+      + '<rect x="6" y="24" width="15" height="4" rx="2" fill="#fff" opacity=".25"/>'
+      + '<rect x="27" y="24" width="15" height="15" rx="3" fill="url(#'+u+'b)"/>'
+      + '<rect x="27" y="24" width="15" height="4" rx="2" fill="#fff" opacity=".25"/>'
+      + '<rect x="16.5" y="7" width="15" height="15" rx="3" fill="url(#'+u+'y)"/>'
+      + '<rect x="16.5" y="7" width="15" height="4" rx="2" fill="#fff" opacity=".25"/>'
+      + '</svg>';
+  },
+  creative: function(u){
+    return '<svg viewBox="0 0 48 48" width="1em" height="1em" style="display:block" aria-hidden="true"><defs>'
+      + catIconGrad(u,'a','#f0cfa0','#b9895a')
+      + '</defs>'
+      + '<ellipse cx="24" cy="42" rx="16" ry="2.6" fill="#000" opacity=".12"/>'
+      + '<ellipse cx="23" cy="23" rx="17" ry="13" fill="url(#'+u+'a)"/>'
+      + '<circle cx="13.5" cy="27" r="4.4" fill="#f0e9f7"/>'
+      + '<circle cx="18" cy="14" r="3" fill="#ee1f6c"/>'
+      + '<circle cx="28" cy="12" r="3" fill="#1fa9dd"/>'
+      + '<circle cx="35" cy="18" r="3" fill="#ffb703"/>'
+      + '<circle cx="33" cy="27" r="3" fill="#1fb87f"/>'
+      + '<circle cx="24" cy="30" r="2.6" fill="#8e24aa"/>'
+      + '<ellipse cx="18" cy="18" rx="5" ry="4" fill="#fff" opacity=".18"/>'
+      + '</svg>';
+  }
+};
+function categoryIcon(catId){
+  if(CAT_ICON_SVG[catId]){ _catIconUid++; return CAT_ICON_SVG[catId]("ci"+_catIconUid); }
+  return (CAT_MAP[catId] && CAT_MAP[catId].icon) || "🧸";
+}
 function fmt(n){ return n.toLocaleString("ar-EG"); }
 function stars(r){ var full=Math.round(r); return "★★★★★".slice(0,full)+"☆☆☆☆☆".slice(0,5-full); }
 /* بيبني كارت فاتورة كامل لطلب واحد (الصنف/الكمية/السعر/الإجمالي وبيانات
@@ -2501,7 +2625,7 @@ function renderNewArrivals(){
 
 function renderCategoryRow(){
   document.getElementById("categoryRow").innerHTML = CATS.map(function(c){
-    return '<button class="cat-chip" data-goto-cat="'+c.id+'"><span class="ic" style="background:'+c.color+'">'+c.icon+'</span>'+c.name+'</button>';
+    return '<button class="cat-chip" data-goto-cat="'+c.id+'"><span class="ic" style="background:'+c.color+'">'+categoryIcon(c.id)+'</span>'+c.name+'</button>';
   }).join("");
 }
 
@@ -3911,7 +4035,7 @@ function renderAdminCatsTable(){
   document.getElementById("adminCatsBody").innerHTML = CATS.map(function(c){
     var count = PRODUCTS.filter(function(p){ return p.cat===c.id; }).length;
     return '<tr>'
-      + '<td><div class="thumb-sm" style="background:'+c.color+'; border-radius:50%;">'+c.icon+'</div></td>'
+      + '<td><div class="thumb-sm" style="background:'+c.color+'; border-radius:50%;">'+categoryIcon(c.id)+'</div></td>'
       + '<td>'+c.name+'</td>'
       + '<td class="tabular">'+count+'</td>'
       + '<td><div class="admin-row-actions"><button data-edit-cat="'+c.id+'" aria-label="تعديل"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button><button data-del-cat="'+c.id+'" aria-label="حذف"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button></div></td>'

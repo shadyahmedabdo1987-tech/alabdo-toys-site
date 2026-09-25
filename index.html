@@ -5136,9 +5136,11 @@ window.addEventListener("scroll", function(){
 
 /* ---------- زرار السلة العائم على مستوى الموقع كله ----------
    بيظهر لما العميل يعمل سكرول (فوق أو تحت، مش شرط لتحت بس) بعيد شوية عن
-   أول الصفحة - في أي شاشة (الرئيسية، المنتجات، تفاصيل منتج...) - ويهتز
-   يمين وشمال أول ما يظهر عشان يلفت النظر. بيفضل شغال حتى لو العميل رجع
-   للرئيسية أو غيّر الصفحة، لأنه مربوط بسكرول الصفحة نفسها مش بمكوّن معين. */
+   أول الصفحة - في أي شاشة (الرئيسية، المنتجات، تفاصيل منتج...). بيهتز
+   يمين وشمال أول ما يظهر بس لو في منتجات فعلاً جوه السلة (cartCount()>0) -
+   لو السلة لسه فاضية بيظهر عادي من غير اهتزاز عشان الاهتزاز معناه "في حاجة
+   في السلة تستاهل تتراجع". بيفضل شغال حتى لو العميل رجع للرئيسية أو غيّر
+   الصفحة، لأنه مربوط بسكرول الصفحة نفسها مش بمكوّن معين. */
 var globalCartFabWasShown = false;
 function updateGlobalCartFab(){
   var fab = document.getElementById("globalCartFab");
@@ -5151,7 +5153,7 @@ function updateGlobalCartFab(){
   var y = window.scrollY || document.documentElement.scrollTop || 0;
   if(y > 120){
     fab.classList.add("show");
-    if(!globalCartFabWasShown){
+    if(!globalCartFabWasShown && cartCount() > 0){
       fab.classList.remove("shake");
       void fab.offsetWidth;
       fab.classList.add("shake");

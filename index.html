@@ -64,6 +64,7 @@ src="https://www.facebook.com/tr?id=604071008636850&ev=PageView&noscript=1"
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="آل عبده">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="image" href="hero-banner-3.jpg" fetchpriority="high">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;600;700;800&family=Almarai:wght@300;400;700;800&display=swap">
 
 <!-- بيانات منظمة (Structured Data) بتساعد جوجل يفهم إن الموقع ده متجر
@@ -338,6 +339,22 @@ ul{margin:0; padding:0; list-style:none;}
 .card-add.out-of-stock:hover{background:var(--surface-2); transform:none;}
 .card-media button.open-detail{position:absolute; inset:0; background:none; border:0;}
 .card-media img.card-photo{position:absolute; inset:0; width:100%; height:100%; object-fit:contain;}
+
+/* ============ Scroll reveal ============ */
+.reveal{opacity:0; transform:translateY(26px); transition:opacity .7s cubic-bezier(.16,.84,.44,1), transform .7s cubic-bezier(.16,.84,.44,1);}
+.reveal.in{opacity:1; transform:translateY(0);}
+@media (prefers-reduced-motion: reduce){ .reveal{opacity:1; transform:none; transition:none;} }
+
+/* ============ Reviews (homepage) ============ */
+.reviews-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+.review-card{background:var(--surface-2); border-radius:18px; padding:22px; display:flex; flex-direction:column; gap:10px;}
+.review-card .stars{font-size:14px;}
+.review-card p{font-size:13.5px; color:var(--ink-soft); line-height:1.8; flex:1;}
+.review-card .who{display:flex; align-items:center; gap:10px;}
+.review-card .avatar{width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,var(--pink),var(--sky)); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; flex-shrink:0;}
+.review-card .name{font-weight:800; font-size:13px;}
+@media (max-width:900px){ .reviews-grid{grid-template-columns:1fr 1fr;} }
+@media (max-width:640px){ .reviews-grid{grid-template-columns:1fr;} }
 
 /* ============ Trust strip ============ */
 .trust-row{display:grid; grid-template-columns:repeat(5,1fr); gap:16px; text-align:center;}
@@ -745,8 +762,8 @@ ul{margin:0; padding:0; list-style:none;}
   <div class="hero">
     <div class="wrap hero-inner">
       <div class="hero-banner-wrap" id="heroBannerWrap">
-        <img class="carousel-slide-img active" src="hero-banner-3.jpg" alt="متجر آل عبده — كل اللي طفلك بيحبه في مكان واحد">
-        <img class="carousel-slide-img" src="hero-banner-4.jpg" alt="متجر آل عبده — متعة أكبر.. طفولة أجمل">
+        <img class="carousel-slide-img active" src="hero-banner-3.jpg" alt="متجر آل عبده — كل اللي طفلك بيحبه في مكان واحد" fetchpriority="high" decoding="async">
+        <img class="carousel-slide-img" src="hero-banner-4.jpg" alt="متجر آل عبده — متعة أكبر.. طفولة أجمل" loading="lazy" decoding="async">
       </div>
 
       <div class="payment-marquee" aria-label="طرق الدفع المتاحة">
@@ -782,7 +799,7 @@ ul{margin:0; padding:0; list-style:none;}
     </div>
   </div>
 
-  <section class="section" style="padding-bottom:0">
+  <section class="section reveal" style="padding-bottom:0">
     <div class="wrap">
       <div class="wholesale-promo">
         <div class="wholesale-top">
@@ -800,14 +817,14 @@ ul{margin:0; padding:0; list-style:none;}
     </div>
   </section>
 
-  <section class="section">
+  <section class="section reveal">
     <div class="wrap">
       <div class="section-head"><h2>🧭 تسوق حسب القسم</h2></div>
       <div class="cat-row" id="categoryRow"></div>
     </div>
   </section>
 
-  <section class="section" style="padding-top:0">
+  <section class="section reveal" style="padding-top:0">
     <div class="wrap">
       <div class="promo-row">
         <a class="promo-card promo-1" href="#products" data-view-link="products" data-badge="sale"><div><h3>خصومات وعروض</h3><p>على تشكيلة واسعة من الألعاب</p></div><span class="emoji">🏷️</span></a>
@@ -817,7 +834,7 @@ ul{margin:0; padding:0; list-style:none;}
     </div>
   </section>
 
-  <section class="section" id="newArrivalsSection" style="padding-top:0">
+  <section class="section reveal" id="newArrivalsSection" style="padding-top:0">
     <div class="wrap">
       <div class="section-head">
         <div><h2>🆕 وصل حديثاً</h2><p class="sub">أحدث المنتجات اللي ضفناها للمتجر</p></div>
@@ -827,7 +844,7 @@ ul{margin:0; padding:0; list-style:none;}
     </div>
   </section>
 
-  <section class="section section-alt">
+  <section class="section section-alt reveal">
     <div class="wrap">
       <div class="section-head">
         <div><h2>❤️ الأكثر مبيعاً</h2><p class="sub">اختيارات الأمهات والآباء هذا الأسبوع</p></div>
@@ -837,7 +854,32 @@ ul{margin:0; padding:0; list-style:none;}
     </div>
   </section>
 
-  <section class="section">
+  <section class="section reveal">
+    <div class="wrap">
+      <div class="section-head">
+        <div><h2>🧸 حكايتنا مع أطفالكم</h2><p class="sub">متجر آل عبده — الإسكندرية، مصر</p></div>
+        <a class="link-more" href="#about" data-view-link="about">اقرأ قصتنا كاملة ‹</a>
+      </div>
+      <p style="color:var(--ink-soft); line-height:1.9; max-width:760px;">بنينا اسمنا على الثقة وجودة المنتج وخدمة العملاء، ونحرص إن كل لعبة تدخل بيتكم تكون أصلية، آمنة، ومناسبة لعمر طفلكم. هدفنا مش بس بيع لعبة .. هدفنا نبني لحظة سعادة تفضل في ذاكرة كل طفل.</p>
+      <div class="stat-row">
+        <div class="stat-card"><div class="num tabular">+33K</div><div class="lbl">متابع على فيسبوك</div></div>
+        <div class="stat-card"><div class="num tabular">4.8★</div><div class="lbl">تقييم العملاء</div></div>
+        <div class="stat-card"><div class="num tabular">+120</div><div class="lbl">منتج متنوع</div></div>
+        <div class="stat-card"><div class="num tabular">27</div><div class="lbl">محافظة توصيل</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt reveal" id="homeReviewsSection" style="display:none;">
+    <div class="wrap">
+      <div class="section-head">
+        <div><h2>💬 آراء عملائنا</h2><p class="sub" id="homeReviewsSub"></p></div>
+      </div>
+      <div class="reviews-grid" id="homeReviewsGrid"></div>
+    </div>
+  </section>
+
+  <section class="section reveal">
     <div class="wrap">
       <div class="trust-row">
         <div class="trust-item"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4a4 4 0 0 1 4 4v1a4 4 0 0 1-8 0V8a4 4 0 0 1 4-4Z"/><path d="M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6"/></svg></span>خدمة عملاء متميزة</div>
@@ -849,7 +891,7 @@ ul{margin:0; padding:0; list-style:none;}
     </div>
   </section>
 
-  <section class="section" style="padding-top:0">
+  <section class="section reveal" style="padding-top:0">
     <div class="wrap">
       <div class="cta-ribbon">
         <h2>لأن طفولتهم تستحق الأفضل 💛</h2>
@@ -4777,6 +4819,48 @@ window.addEventListener("scroll", function(){
   document.getElementById("mainHeader").classList.toggle("is-scrolled", window.scrollY>4);
 }, {passive:true});
 
+/* ---------- ظهور تدريجي للأقسام أثناء التمرير (.reveal) - بيستخدم
+   IntersectionObserver بدل ما يستنى الصفحة كلها تحمل. المراقب بيفضل شغال
+   طول الوقت عشان لو المستخدم فتح صفحة تانية (منتجات/من نحن) ورجع للرئيسية،
+   الأقسام تتحرك تاني بدل ما تفضل مختفية. */
+var revealObserver = ("IntersectionObserver" in window) ? new IntersectionObserver(function(entries){
+  entries.forEach(function(en){
+    if(en.isIntersecting){ en.target.classList.add("in"); revealObserver.unobserve(en.target); }
+  });
+}, {threshold:0.12}) : null;
+function initScrollReveal(){
+  if(!revealObserver) { document.querySelectorAll(".reveal").forEach(function(el){ el.classList.add("in"); }); return; }
+  document.querySelectorAll(".reveal").forEach(function(el){ revealObserver.observe(el); });
+}
+
+/* ---------- قسم "آراء عملائنا" في الرئيسية - بيجيب تقييمات حقيقية موثّقة
+   (عميل اشترى فعلاً وقيّم من /api/reviews) على مستوى كل المنتجات، مش أرقام
+   أو كلام مصطنع. لو لسه مفيش تقييمات كفاية القسم بيفضل مخفي بدل ما يظهر
+   فاضي أو بكلام غير حقيقي. */
+function loadHomeReviews(){
+  fetch("/api/reviews", {cache:"no-store"}).then(function(r){ return r.json(); })
+    .then(function(res){
+      if(!res || !res.ok || !res.count) return;
+      var section = document.getElementById("homeReviewsSection");
+      var withComments = res.reviews.filter(function(r){ return (r.comment||"").trim(); });
+      var picked = withComments.slice().sort(function(a,b){ return (b.rating - a.rating) || (b.createdAt - a.createdAt); }).slice(0, 6);
+      if(!picked.length) return;
+      document.getElementById("homeReviewsSub").textContent =
+        "متوسط تقييم "+res.avg.toFixed(1)+" ★ من "+res.count+" تقييم حقيقي على منتجاتنا";
+      document.getElementById("homeReviewsGrid").innerHTML = picked.map(function(r){
+        var nm = (r.customerName||"عميل").trim();
+        return '<div class="review-card">'
+          + '<span class="stars">'+stars(r.rating)+'</span>'
+          + '<p>“'+r.comment+'”</p>'
+          + '<div class="who"><span class="avatar">'+(nm.charAt(0)||"ع")+'</span><span class="name">'+nm+'</span></div>'
+        + '</div>';
+      }).join("");
+      section.style.display = "";
+      if(revealObserver) revealObserver.observe(section);
+    })
+    .catch(function(){ /* لو فشل الطلب، القسم بيفضل مخفي زي ما هو - مفيش داعي نضايق الزائر */ });
+}
+
 /* ---------- Init ---------- */
 document.getElementById("year").textContent = new Date().getFullYear();
 updateAccountLabel();
@@ -4801,6 +4885,8 @@ loadInitialData(function(){
     goToView(initialView);
     if(initialView==="products") renderProductsView();
     if(initialView==="admin") showAdmin();
+    initScrollReveal();
+    loadHomeReviews();
   });
 });
 

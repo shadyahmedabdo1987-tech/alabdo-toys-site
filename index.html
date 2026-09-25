@@ -463,6 +463,8 @@ ul{margin:0; padding:0; list-style:none;}
 .modal-actions{display:flex; flex-direction:column; gap:10px; margin-top:auto;}
 .modal-buy-row{display:flex; gap:10px; align-items:stretch;}
 .modal-buy-row .modal-add-btn{flex:1; min-width:0; white-space:nowrap;}
+.modal-qty-group{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; flex:none;}
+.modal-qty-label{font-size:10.5px; font-weight:800; color:var(--ink-soft); letter-spacing:.2px;}
 .modal-qty-stepper{flex:none; border-radius:12px;}
 .modal-qty-stepper button{width:38px; height:38px; font-size:18px;}
 .modal-qty-stepper span{width:36px; font-size:15px;}
@@ -2800,10 +2802,13 @@ function openProductModal(id){
       + '</div>'
     + '</div>'
     + '<div class="modal-sticky-bar" id="modalStickyBar">'
-      + '<div class="qty-stepper modal-qty-stepper">'
-        + '<button type="button" class="mq-plus" aria-label="زيادة الكمية">+</button>'
-        + '<span class="mq-value">1</span>'
-        + '<button type="button" class="mq-minus" aria-label="تقليل الكمية">−</button>'
+      + '<div class="modal-qty-group">'
+        + '<span class="modal-qty-label">الكمية</span>'
+        + '<div class="qty-stepper modal-qty-stepper">'
+          + '<button type="button" class="mq-plus" aria-label="زيادة الكمية">+</button>'
+          + '<span class="mq-value">1</span>'
+          + '<button type="button" class="mq-minus" aria-label="تقليل الكمية">−</button>'
+        + '</div>'
       + '</div>'
       + '<button type="button" class="btn btn-primary modal-sticky-add-btn" id="modalStickyAddBtn">أضف للسلة</button>'
     + '</div>';
@@ -2923,10 +2928,13 @@ function openProductModal(id){
           + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h2l2.4 12.2a2 2 0 0 0 2 1.8h7.7a2 2 0 0 0 2-1.6L21 8H6"/><circle cx="9" cy="20" r="1.6"/><circle cx="17" cy="20" r="1.6"/></svg>'
           + ' أضف للسلة'
         + '</button>'
-        + '<div class="qty-stepper modal-qty-stepper" id="modalQtyStepper">'
-          + '<button type="button" id="modalQtyPlus" aria-label="زيادة الكمية">+</button>'
-          + '<span id="modalQtyValue">'+modalQty+'</span>'
-          + '<button type="button" id="modalQtyMinus" aria-label="تقليل الكمية">−</button>'
+        + '<div class="modal-qty-group">'
+          + '<span class="modal-qty-label">الكمية</span>'
+          + '<div class="qty-stepper modal-qty-stepper" id="modalQtyStepper">'
+            + '<button type="button" id="modalQtyPlus" aria-label="زيادة الكمية">+</button>'
+            + '<span id="modalQtyValue">'+modalQty+'</span>'
+            + '<button type="button" id="modalQtyMinus" aria-label="تقليل الكمية">−</button>'
+          + '</div>'
         + '</div>'
       + '</div>'
       + '<button type="button" class="btn btn-primary btn-block" id="modalBuyNowBtn">🛒 شراء الآن</button>';

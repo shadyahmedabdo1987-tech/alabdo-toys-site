@@ -2611,7 +2611,7 @@ function productCard(p, showCartActions){
               + '<button class="card-add" data-add="'+p.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h2l2.4 12.2a2 2 0 0 0 2 1.8h7.7a2 2 0 0 0 2-1.6L21 8H6"/></svg>أضف للسلة</button>'
               + '<div class="qty-stepper">'
                 + '<button type="button" data-qty-minus="'+p.id+'" aria-label="تقليل الكمية">−</button>'
-                + '<span id="cardQty-'+p.id+'">1</span>'
+                + '<span id="cardQty-'+p.id+'">0</span>'
                 + '<button type="button" data-qty-plus="'+p.id+'" aria-label="زيادة الكمية">+</button>'
               + '</div>'
             + '</div>')
@@ -2619,20 +2619,22 @@ function productCard(p, showCartActions){
   + '</article>';
 }
 
-/* عداد الكمية اللي جمب زرار "أضف للسلة" في كارت المنتج (صفحة المنتجات
-   بس) - بيبدأ من ١ ومش بينزل تحتها، والقيمة بتتقرا من الـ DOM نفسه وقت
-   الضغط على "أضف للسلة" (مفيش داعي نحتفظ بيها في متغير جافاسكريبت). */
+/* عداد الكمية اللي جمب زرار "أضف للسلة" (لو كارت المنتج ظاهر بيه) - بيبدأ
+   من صفر (يعني لسه محددش كمية) ومش بينزل تحت الصفر، والقيمة بتتقرا من الـ
+   DOM نفسه وقت الضغط على "أضف للسلة" (مفيش داعي نحتفظ بيها في متغير
+   جافاسكريبت). لو العميل ضغط "أضف للسلة" من غير ما يزوّد العداد، بتتحسب
+   قطعة واحدة تلقائي (شوف addToCart). */
 function adjustCardQty(id, delta){
   var el = document.getElementById("cardQty-"+id);
   if(!el) return;
-  var val = Math.max(1, (parseInt(el.textContent,10)||1) + delta);
+  var val = Math.max(0, (parseInt(el.textContent,10)||0) + delta);
   el.textContent = val;
 }
 /* زرار "أضف للسلة" السريع في كارت المنتج (من غير فتح تفاصيله): لو
    المنتج معاه أكتر من لون، لازم العميل يفتح صفحة المنتج ويختار اللون
    الأول (مينفعش يتضاف من غير لون محدد)، فبدل ما نضيفه على طول بنفتحله
-   تفاصيل المنتج مباشرة. لو الكارت معاه عداد كمية (صفحة المنتجات)، بناخد
-   الكمية اللي مختارة منه، وبعد الإضافة بنرجّعه ١ تاني استعدادًا للمرة الجاية. */
+   تفاصيل المنتج مباشرة. لو الكارت معاه عداد كمية، بناخد الكمية اللي
+   مختارة منه، وبعد الإضافة بنرجّعه صفر تاني استعدادًا للمرة الجاية. */
 function requestAddToCart(id){
   var p = PRODUCTS.find(function(x){ return x.id===id; });
   if(!p) return;
@@ -2644,7 +2646,7 @@ function requestAddToCart(id){
   var qtyEl = document.getElementById("cardQty-"+id);
   var qty = qtyEl ? (parseInt(qtyEl.textContent,10) || 1) : 1;
   addToCart(id, qty);
-  if(qtyEl) qtyEl.textContent = "1";
+  if(qtyEl) qtyEl.textContent = "0";
 }
 document.addEventListener("click", function(e){
   var qtyPlusBtn = e.target.closest("[data-qty-plus]");
@@ -2745,12 +2747,12 @@ function openStockNotifyModal(p, colorName){
 }
 
 var modalSelectedColor = null;
-var modalQty = 1;
+var modalQty = 0;
 function openProductModal(id){
   var p = PRODUCTS.find(function(x){ return x.id===id; });
   if(!p) return;
   modalSelectedColor = null;
-  modalQty = 1;
+  modalQty = 0;
   var colors = Array.isArray(p.colors) ? p.colors : [];
   var imgs = productImages(p);
   var modalImgContent = imgs.length
@@ -2836,7 +2838,7 @@ function openProductModal(id){
       + '</div>'
     + '</div>';
     document.getElementById("modalQtyMinus").addEventListener("click", function(){
-      modalQty = Math.max(1, modalQty-1);
+      modalQty = Math.max(0, modalQty-1);
       document.getElementById("modalQtyVal").textContent = modalQty;
     });
     document.getElementById("modalQtyPlus").addEventListener("click", function(){
@@ -2846,7 +2848,7 @@ function openProductModal(id){
     document.getElementById("modalAddBtn").addEventListener("click", function(){
       if(!validateColorChosen()) return;
       addToCart(p.id, modalQty, modalSelectedColor ? modalSelectedColor.name : null);
-      modalQty = 1;
+      modalQty = 0;
       var qv = document.getElementById("modalQtyVal"); if(qv) qv.textContent = modalQty;
     });
   }
@@ -3006,13 +3008,10 @@ function applyProducts(){
 function renderProductsView(){
   renderFilterList();
   var list = applyProducts();
-  /* "وصل حديثاً" و"عروض خاصة" دي واجهات ترويجية بتوصلّها من روابط برّه صفحة
-     المنتجات (زي أقسام الصفحة الرئيسية)، فبنعاملها زي "خارج المنتجات" وبنوريها
-     بالسعر بس من غير زرار/عداد - أما التصفح العادي (كل المنتجات / قسم معيّن /
-     نتيجة بحث / المفضلة) فده التصفح الحقيقي جوه المنتجات وبيفضل زرار الإضافة
-     والعداد ظاهرين فيه. */
-  var showCartActionsHere = !(state.badge==="new" || state.badge==="sale");
-  document.getElementById("productsGrid").innerHTML = list.map(function(p){ return productCard(p, showCartActionsHere); }).join("");
+  /* زرار "أضف للسلة" وعداد الكمية بيظهروا جوه تفاصيل المنتج (المودال) بس -
+     أي قائمة/شبكة كروت (هنا أو في الصفحة الرئيسية) بتوري السعر فقط من غير
+     زرار، والعميل بيضيف المنتج للسلة من جوه صفحة تفاصيله. */
+  document.getElementById("productsGrid").innerHTML = list.map(function(p){ return productCard(p, false); }).join("");
   document.getElementById("emptyState").hidden = list.length>0;
   document.getElementById("emptyState").textContent = (state.badge==="wish")
     ? "🤍 لسه مفيش منتجات في المفضلة — دوس على أيقونة القلب في أي منتج عشان تضيفه هنا."

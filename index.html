@@ -160,7 +160,10 @@ ul{margin:0; padding:0; list-style:none;}
 
 .site-header{position:sticky; top:0; z-index:60; background:var(--surface); box-shadow:0 1px 0 var(--border);}
 .site-header.is-scrolled{box-shadow:0 6px 18px hsl(var(--shadow)/.10);}
-.header-row{display:flex; align-items:center; gap:24px; padding-block:14px;}
+.header-row{display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:16px; padding-block:14px;}
+.header-row .menu-toggle{justify-self:start;}
+.header-row .brand{justify-self:center;}
+.header-row .header-actions{justify-self:end;}
 /* من غير order/margin هنا، اللوجو بياخد ترتيبه الطبيعي في الـ DOM (تاني
    عنصر بعد زرار القائمة)، وبما إن الصفحة rtl بتبدأ من اليمين، فده بيخلي
    اللوجو يظهر على يمين واجهة الموقع فوق. */
@@ -171,7 +174,8 @@ ul{margin:0; padding:0; list-style:none;}
 .brand-text .name{font-family:"Baloo Bhaijaan 2"; font-weight:800; font-size:21px; color:var(--pink-deep);}
 .brand-text .tag{font-size:12px; color:var(--ink-soft); font-weight:700;}
 
-.header-search{flex:1; max-width:520px; position:relative;}
+.header-search{position:absolute; top:calc(100% + 12px); inset-inline-end:0; width:min(320px,88vw); background:var(--surface); border:1.5px solid var(--border); border-radius:18px; padding:8px; box-shadow:0 14px 30px hsl(var(--shadow)/.22); z-index:70; opacity:0; transform:translateY(-8px); pointer-events:none; transition:opacity .18s ease, transform .18s ease;}
+.header-search.open{opacity:1; transform:translateY(0); pointer-events:auto;}
 .header-search input{width:100%; padding:12px 46px 12px 16px; border-radius:999px; border:2px solid var(--border); background:var(--surface-3); color:var(--ink); font-size:14px;}
 .header-search input:focus-visible{outline-offset:0;}
 .header-search button{position:absolute; inset-inline-start:6px; top:50%; transform:translateY(-50%); width:34px; height:34px; border-radius:50%; border:0; background:linear-gradient(180deg, var(--pink), var(--pink-deep)); color:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 0 rgba(255,255,255,.35) inset, 0 3px 0 color-mix(in srgb, var(--pink-deep) 72%, black), 0 6px 12px hsl(var(--shadow)/.22); transition:transform .15s ease;}
@@ -179,7 +183,7 @@ ul{margin:0; padding:0; list-style:none;}
 .header-search button:active{transform:translateY(calc(-50% + 2px)); box-shadow:0 1px 0 rgba(255,255,255,.25) inset, 0 1px 0 color-mix(in srgb, var(--pink-deep) 72%, black);}
 .header-search svg{width:16px; height:16px;}
 
-.header-actions{display:flex; align-items:center; gap:10px; flex:none;}
+.header-actions{display:flex; align-items:center; gap:10px; flex:none; position:relative;}
 /* ---------- زرار أيقونة ثلاثي الأبعاد: وش فاتح + حرف سفلي غامق بيدي إحساس
    إنه زرار "حقيقي" مرفوع عن السطح، وبيتضغط لتحت فعليًا لما تدوس عليه. ---------- */
 /* ---------- أيقونات الهيدر (السلة/حسابي/المظهر) بنفس لون تاب "الرئيسية"
@@ -453,10 +457,49 @@ ul{margin:0; padding:0; list-style:none;}
 .modal-close svg{width:17px; height:17px;}
 .modal-media{display:flex; align-items:center; justify-content:center; font-size:110px; min-height:260px; overflow:hidden;}
 .modal-media img{width:100%; height:100%; object-fit:contain;}
-.modal-info{padding:26px; display:flex; flex-direction:column; gap:12px;}
+.modal-info{padding:26px 26px 92px; display:flex; flex-direction:column; gap:12px;}
 .modal-info h3{font-size:21px;}
 .modal-desc{color:var(--ink-soft); font-size:14px; line-height:1.8;}
-.modal-actions{display:flex; gap:10px; margin-top:auto; flex-wrap:wrap;}
+.modal-actions{display:flex; flex-direction:column; gap:10px; margin-top:auto;}
+.modal-buy-row{display:flex; gap:10px; align-items:stretch;}
+.modal-buy-row .modal-add-btn{flex:1; min-width:0; white-space:nowrap;}
+.modal-qty-group{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; flex:none;}
+.modal-qty-label{font-size:10.5px; font-weight:800; color:var(--ink-soft); letter-spacing:.2px;}
+.modal-qty-stepper{flex:none; border-radius:12px;}
+.modal-qty-stepper button{width:38px; height:38px; font-size:18px;}
+.modal-qty-stepper span{width:36px; font-size:15px;}
+.modal-qty-stepper.qty-error{border-color:var(--pink-deep);}
+.modal-qty-stepper.shake-attn{animation:cartNudgeShake .5s ease;}
+.modal-sticky-bar{position:fixed; display:flex; align-items:center; gap:10px; padding:12px 16px; background:var(--surface); border-top:1.5px solid var(--border); box-shadow:0 -8px 20px hsl(var(--shadow)/.14); border-radius:0 0 24px 24px; transform:translateY(110%); opacity:0; pointer-events:none; transition:transform .25s ease, opacity .25s ease; z-index:5;}
+.modal-sticky-bar.show{transform:translateY(0); opacity:1; pointer-events:auto;}
+.modal-sticky-bar.shake{animation:cartNudgeShake .8s ease;}
+/* اهتزاز واضح يمين وشمال بس (من غير أي حركة رأسية) - بيتكرر لفتين عشان
+   يبان كويس ويلفت الانتباه فعلًا. */
+@keyframes cartNudgeShake{
+  0%,100%{transform:translateY(0) translateX(0);}
+  5%,45%{transform:translateY(0) translateX(-11px);}
+  15%,55%{transform:translateY(0) translateX(9px);}
+  25%,65%{transform:translateY(0) translateX(-7px);}
+  35%,75%{transform:translateY(0) translateX(5px);}
+  85%{transform:translateY(0) translateX(-3px);}
+  95%{transform:translateY(0) translateX(2px);}
+}
+@media (prefers-reduced-motion: reduce){ .modal-sticky-bar.shake, .global-cart-fab.shake{animation:none;} }
+
+/* ============ زرار السلة العائم (على مستوى الموقع كله) ============ */
+/* بيظهر لما العميل يعمل سكرول (فوق أو تحت، مش بس في صفحة منتج معين) في أي
+   شاشة في الموقع - الرئيسية، المنتجات، أي حتة - وبيفضل ظاهر طول ما هو
+   مش في أول الصفحة تمامًا. بيهتز يمين وشمال بس أول ما يظهر عشان ينبّه
+   العميل إن السلة موجودة وسهل يوصلها. */
+.global-cart-fab{position:fixed; bottom:22px; inset-inline-start:22px; width:58px; height:58px; border-radius:50%; background:linear-gradient(180deg, var(--pink), var(--pink-deep)); color:#fff; border:0; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 0 rgba(255,255,255,.35) inset, 0 4px 0 color-mix(in srgb, var(--pink-deep) 72%, black), 0 14px 26px hsl(var(--shadow)/.32); z-index:70; transform:translateY(140%); opacity:0; pointer-events:none; transition:transform .3s ease, opacity .3s ease;}
+.global-cart-fab.show{transform:translateY(0); opacity:1; pointer-events:auto;}
+.global-cart-fab:hover{filter:brightness(1.06);}
+.global-cart-fab:active{transform:translateY(3px);}
+.global-cart-fab.shake{animation:cartNudgeShake .8s ease;}
+.global-cart-fab svg{width:25px; height:25px;}
+.global-cart-fab-count{position:absolute; top:-2px; inset-inline-end:-2px; background:#fff; color:var(--pink-deep); font-size:11px; font-weight:800; min-width:20px; height:20px; border-radius:999px; display:flex; align-items:center; justify-content:center; padding:0 4px; box-shadow:0 1px 0 rgba(255,255,255,.6) inset, 0 2px 5px hsl(var(--shadow)/.4);}
+@media (max-width:640px){ .global-cart-fab{width:52px; height:52px; bottom:16px; inset-inline-start:16px;} .global-cart-fab svg{width:22px; height:22px;} }
+.modal-sticky-add-btn{flex:1; min-width:0; padding:11px 14px; font-size:13.5px; white-space:nowrap;}
 .color-picker-label{font-weight:800; font-size:13.5px; margin:0;}
 .color-swatches{display:flex; gap:12px; flex-wrap:wrap;}
 .color-swatch{width:58px; display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; background:none; border:0; padding:0;}
@@ -646,7 +689,7 @@ ul{margin:0; padding:0; list-style:none;}
   .contact-grid{grid-template-columns:1fr;}
 }
 @media (max-width:640px){
-  .header-search{display:none;}
+  .header-search{inset-inline-end:-10px;}
   .menu-toggle{display:flex;}
   .brand-text .tag{display:none;}
   .header-row{gap:10px;}
@@ -703,14 +746,18 @@ ul{margin:0; padding:0; list-style:none;}
           <span class="tag">متعة أكبر.. طفولة أجمل</span>
         </span>
       </a>
-      <form class="header-search" id="searchForm" role="search">
-        <label for="searchInput" class="visually-hidden">ابحث عن لعبة</label>
-        <input type="search" id="searchInput" placeholder="ابحث عن أي لعبة …">
-        <button type="submit" aria-label="بحث">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-        </button>
-      </form>
       <div class="header-actions">
+        <button class="icon-btn" id="searchToggleBtn" aria-haspopup="true" aria-expanded="false" aria-label="بحث">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <span class="icon-label">بحث</span>
+        </button>
+        <form class="header-search" id="searchForm" role="search">
+          <label for="searchInput" class="visually-hidden">ابحث عن لعبة</label>
+          <input type="search" id="searchInput" placeholder="ابحث عن أي لعبة …">
+          <button type="submit" aria-label="بحث">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          </button>
+        </form>
         <button class="icon-btn" id="themeToggle" aria-label="تبديل الوضع الليلي">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
           <span class="icon-label">المظهر</span>
@@ -1470,6 +1517,11 @@ ul{margin:0; padding:0; list-style:none;}
 
 </main>
 
+<button type="button" class="global-cart-fab" id="globalCartFab" aria-label="عربة الشراء" aria-haspopup="dialog">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h2l2.4 12.2a2 2 0 0 0 2 1.8h7.7a2 2 0 0 0 2-1.6L21 8H6"/><circle cx="9" cy="20" r="1.6"/><circle cx="17" cy="20" r="1.6"/></svg>
+  <span class="global-cart-fab-count" id="globalCartFabCount">0</span>
+</button>
+
 <div class="overlay" id="overlay"></div>
 
 <aside class="drawer" id="cartDrawer" role="dialog" aria-label="عربة الشراء" aria-modal="true">
@@ -2094,7 +2146,17 @@ function resetCheckoutFields(){
   document.getElementById("checkoutPhoneError").style.display = "none";
 }
 
-function renderCartBadge(){ document.getElementById("cartCount").textContent = cartCount(); }
+function renderCartBadge(){
+  var n = cartCount();
+  document.getElementById("cartCount").textContent = n;
+  var fc = document.getElementById("globalCartFabCount");
+  if(fc) fc.textContent = n;
+  /* لو السلة اتغيّرت (اتضاف أو اتشال منها منتج) لازم نحدّث ظهور زرار
+     السلة العائم فورًا - عشان لو العميل نازل مسكرول بالفعل وضاف منتج،
+     الزرار يظهر ويهتز على طول من غير ما يستنى حدث سكرول جديد؛ ولو شال
+     آخر منتج وبقت فاضية، الزرار يختفي فورًا. */
+  if(typeof updateGlobalCartFab === "function") updateGlobalCartFab();
+}
 
 function renderCartDrawer(){
   var body = document.getElementById("cartBody");
@@ -2259,7 +2321,14 @@ document.getElementById("cartBody").addEventListener("click", function(e){
     if(stock!=null && nextQty>stock){ showToast("⚠️ الكمية المتاحة بس "+stock+" قطعة"); return; }
     setQty(key, nextQty);
   }
-  if(t.dataset.dec){ var key2=t.dataset.dec; setQty(key2,(cart[key2]||0)-1); }
+  /* زرار "ناقص" بيوقف عند 1 ومش بيمسح الصنف من السلة لوحده - عشان العميل
+     مايتفاجئش إن المنتج اتشال بالغلط وهو بس بيقلل الكمية؛ لو عايز يمسحه
+     فعلاً لازم يستخدم زرار سلة المهملات المخصص لده. */
+  if(t.dataset.dec){
+    var key2=t.dataset.dec;
+    var curQty2 = cart[key2]||0;
+    if(curQty2 > 1){ setQty(key2, curQty2-1); }
+  }
   if(t.dataset.remove){ setQty(t.dataset.remove,0); }
 });
 
@@ -2519,6 +2588,8 @@ function closeAllPanels(){
   document.getElementById("modalCard").classList.remove("acct-card");
   overlay.classList.remove("show");
   document.body.style.overflow="";
+  if(modalScrollObserver){ modalScrollObserver.disconnect(); modalScrollObserver = null; }
+  if(modalResizeHandler){ window.removeEventListener("resize", modalResizeHandler); modalResizeHandler = null; }
 }
 /* بيقفل مودال تفاصيل الطلب بس (المفتوح فوق قائمة "حسابي") من غير ما يقفل
    القائمة الجانبية نفسها - العميل هو اللي يقفلها بنفسه من زرار الإغلاق
@@ -2687,10 +2758,24 @@ function openStockNotifyModal(p, colorName){
 }
 
 var modalSelectedColor = null;
+/* الكمية بتبدأ من صفر عمدًا - العميل هو اللي لازم يحدد الكمية اللي عايزها
+   بنفسه بالضغط على "+"، عشان الرقم اللي ظاهر يفضل دايمًا معبّر عن اختيار
+   حقيقي منه، مش رقم افتراضي متحط قبل ما يعمل أي حاجة. */
+var modalQty = 0;
+var modalScrollObserver = null;
+var modalResizeHandler = null;
 function openProductModal(id){
   var p = PRODUCTS.find(function(x){ return x.id===id; });
   if(!p) return;
   modalSelectedColor = null;
+  modalQty = 0;
+  /* بتتبع هل صف الشراء الأساسي خرج من الشاشة بالتمرير ولا لسه ظاهر - الشريط
+     اللاصق بيتفعّل بس لو الاتنين اتحققوا مع بعض: خرج من الشاشة + العميل
+     فعلاً اختار كمية (modalQty>0). قبل ما يختار كمية مفيش داعي نلفت نظره
+     لشريط هيقوله بعدين "اختار الكمية" لو دس عليه. */
+  var modalActionOutOfView = false;
+  if(modalScrollObserver){ modalScrollObserver.disconnect(); modalScrollObserver = null; }
+  if(modalResizeHandler){ window.removeEventListener("resize", modalResizeHandler); modalResizeHandler = null; }
   var colors = Array.isArray(p.colors) ? p.colors : [];
   var imgs = productImages(p);
   var modalImgContent = imgs.length
@@ -2730,6 +2815,17 @@ function openProductModal(id){
       + '<div class="modal-reviews" id="modalReviews" style="margin-top:20px; border-top:1.5px solid var(--border); padding-top:16px;">'
         + '<p style="color:var(--ink-soft); font-size:13px;">جاري تحميل التقييمات...</p>'
       + '</div>'
+    + '</div>'
+    + '<div class="modal-sticky-bar" id="modalStickyBar">'
+      + '<div class="modal-qty-group">'
+        + '<span class="modal-qty-label">الكمية</span>'
+        + '<div class="qty-stepper modal-qty-stepper">'
+          + '<button type="button" class="mq-plus" aria-label="زيادة الكمية">+</button>'
+          + '<span class="mq-value">1</span>'
+          + '<button type="button" class="mq-minus" aria-label="تقليل الكمية">−</button>'
+        + '</div>'
+      + '</div>'
+      + '<button type="button" class="btn btn-primary modal-sticky-add-btn" id="modalStickyAddBtn">أضف للسلة</button>'
     + '</div>';
   modalBackdrop.classList.add("show"); overlay.classList.add("show"); document.body.style.overflow="hidden";
   document.getElementById("modalCloseBtn").addEventListener("click", closeAllPanels);
@@ -2751,8 +2847,119 @@ function openProductModal(id){
     }
     return true;
   }
-  /* بترسم زراير "أضف للسلة"/"اطلب واتساب" العادية، أو زرار "أعلمني عند
-     التوفر" بدالها لو اللون المختار (أو المنتج كله لو من غير ألوان) خلص
+  /* الكمية لازم تكون أكبر من صفر عشان نقدر نضيف للسلة - لو العميل لسه ما
+     زودش الكمية (لسه واقفة صفر) بنوريه تنبيه واضح ونهزّ عداد الكمية في
+     الصف الأساسي والشريط العائم مع بعض، من غير ما نضيف حاجة للسلة. */
+  function validateQtyChosen(){
+    if(modalQty <= 0){
+      var err = document.getElementById("modalQtyError");
+      if(err) err.style.display = "block";
+      document.querySelectorAll(".modal-qty-stepper").forEach(function(el){
+        el.classList.add("qty-error");
+        el.classList.remove("shake-attn");
+        void el.offsetWidth;
+        el.classList.add("shake-attn");
+      });
+      return false;
+    }
+    return true;
+  }
+  /* بترسم/تخفي الشريط اللاصق بناءً على شرطين مع بعض: صف الشراء الأساسي
+     يبقى خارج الشاشة (modalActionOutOfView) + العميل يبقى فعلاً اختار
+     كمية أكبر من صفر (modalQty>0). لو أي شرط منهم ناقص، الشريط ميظهرش
+     ولا يهتز خالص - عشان الاهتزاز معناه "في حاجة جاهزة تتضاف"، مش قبل
+     ما العميل يحدد هو عايز قد إيه. */
+  function refreshStickyBarState(allowShake){
+    var bar = document.getElementById("modalStickyBar");
+    if(!bar) return;
+    var shouldShow = modalActionOutOfView && modalQty > 0;
+    if(shouldShow){
+      var wasShown = bar.classList.contains("show");
+      bar.classList.add("show");
+      if(!wasShown && allowShake){
+        bar.classList.remove("shake");
+        void bar.offsetWidth;
+        bar.classList.add("shake");
+      }
+    } else {
+      bar.classList.remove("show");
+    }
+  }
+  /* بتحدّث رقم الكمية المختارة في كل من صف الشراء الأساسي والشريط العائم
+     مع بعض، عشان الاتنين يفضلوا متزامنين أيًا كان مصدر الضغطة. الكمية
+     ممكن تنزل لحد صفر (لو العميل ضغط "-" وهي واحد) - يبقى لازم يزوّدها
+     تاني بنفسه قبل ما يقدر يضيف للسلة. تغيير الكمية ممكن يخلي الشريط
+     اللاصق يظهر (لو كان خارج الشاشة بالفعل ولسه واقف مستني كمية). */
+  function modalSetQty(q){
+    modalQty = Math.max(0, isNaN(q) ? 0 : q);
+    var v1 = document.getElementById("modalQtyValue"); if(v1) v1.textContent = modalQty;
+    var v2 = document.querySelector("#modalStickyBar .mq-value"); if(v2) v2.textContent = modalQty;
+    if(modalQty > 0){
+      var err = document.getElementById("modalQtyError");
+      if(err) err.style.display = "none";
+      document.querySelectorAll(".modal-qty-stepper").forEach(function(el){ el.classList.remove("qty-error"); });
+    }
+    refreshStickyBarState(true);
+  }
+  /* بترسم شريط عائم لاصق بأسفل المودال (زي زرار "أضف للسلة" + الكمية +
+     اختصار السلة) بيظهر باهتزاز بسيط أول ما صف الشراء الأساسي يخرج من
+     الشاشة بسبب التمرير لتحت - ده بينبّه العميل انه يقدر يضيف المنتج أو
+     يروح للسلة من غير ما يرجع لفوق تاني. */
+  function setupModalStickyBar(){
+    var bar = document.getElementById("modalStickyBar");
+    var root = document.getElementById("modalCard");
+    if(!bar || !root) return;
+    bar.classList.remove("show","shake");
+    /* الشريط position:fixed عشان يفضل ملزّق بصريًا في نفس مكانه أسفل
+       المودال بالظبط، مش متأثر بتمرير محتوى المودال نفسه (لو سبناه
+       position:absolute جوه عنصر بيتمرر، هيتحرك هو كمان مع التمرير). بنظبط
+       مكانه (يسار/عرض/تحت) على حسب حدود كارت المودال الفعلية، وبنعيد
+       الحساب لو حجم الشاشة اتغيّر. */
+    function positionStickyBar(){
+      var r = root.getBoundingClientRect();
+      bar.style.left = r.left + "px";
+      bar.style.width = r.width + "px";
+      bar.style.bottom = (window.innerHeight - r.bottom) + "px";
+    }
+    positionStickyBar();
+    if(modalResizeHandler) window.removeEventListener("resize", modalResizeHandler);
+    modalResizeHandler = positionStickyBar;
+    window.addEventListener("resize", modalResizeHandler);
+    var valEl = bar.querySelector(".mq-value");
+    if(valEl) valEl.textContent = modalQty;
+    var plusBtn = bar.querySelector(".mq-plus");
+    var minusBtn = bar.querySelector(".mq-minus");
+    if(plusBtn) plusBtn.onclick = function(){ modalSetQty(modalQty+1); };
+    if(minusBtn) minusBtn.onclick = function(){ modalSetQty(modalQty-1); };
+    var addBtn = document.getElementById("modalStickyAddBtn");
+    if(addBtn) addBtn.onclick = function(){
+      if(!validateQtyChosen()) return;
+      if(!validateColorChosen()) return;
+      addToCart(p.id, modalQty, modalSelectedColor ? modalSelectedColor.name : null);
+    };
+    if(modalScrollObserver){ modalScrollObserver.disconnect(); modalScrollObserver = null; }
+    var anchor = document.getElementById("modalActionsBox");
+    var root = document.getElementById("modalCard");
+    if(anchor && root && "IntersectionObserver" in window){
+      /* أول استدعاء للـ callback بيحصل تلقائي أول ما نعمل observe() وبيعكس
+         حالة اللحظة دي بالظبط - ممكن تجي "مش ظاهر" بالغلط لو لسه في صور
+         بتحمّل وبتغيّر ارتفاع المودال، مش لأن العميل نزل فعلاً بالتمرير.
+         عشان كده أول استدعاء بنستخدمه بس نظبط الحالة (نظهر/نخفي الشريط) من
+         غير ما نشغّل الاهتزاز - الاهتزاز بيتشغل بس لما فعلاً يبقى في تمرير
+         حقيقي بعد كده. */
+      var isFirstIoCallback = true;
+      modalScrollObserver = new IntersectionObserver(function(entries){
+        var entry = entries[0];
+        if(!entry) return;
+        modalActionOutOfView = !entry.isIntersecting;
+        refreshStickyBarState(!isFirstIoCallback);
+        isFirstIoCallback = false;
+      }, { root: root, threshold: 0 });
+      modalScrollObserver.observe(anchor);
+    }
+  }
+  /* بترسم زراير "أضف للسلة"/الكمية/"شراء الآن"، أو زرار "أعلمني عند
+     التوفر" بدالهم لو اللون المختار (أو المنتج كله لو من غير ألوان) خلص
      من المخزون - وبتترسم من جديد كل ما العميل يغيّر اللون المختار. */
   function renderModalActions(){
     var box = document.getElementById("modalActionsBox");
@@ -2765,13 +2972,42 @@ function openProductModal(id){
       document.getElementById("modalNotifyBtn").addEventListener("click", function(){
         openStockNotifyModal(p, modalSelectedColor ? modalSelectedColor.name : null);
       });
+      var stickyOut = document.getElementById("modalStickyBar");
+      if(stickyOut) stickyOut.classList.remove("show","shake");
+      if(modalScrollObserver){ modalScrollObserver.disconnect(); modalScrollObserver = null; }
       return;
     }
-    box.innerHTML = '<button class="btn btn-primary" id="modalAddBtn" style="flex:1;">أضف للسلة</button>';
+    box.innerHTML = '<div class="modal-buy-row">'
+        + '<button type="button" class="btn btn-outline modal-add-btn" id="modalAddBtn">'
+          + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h2l2.4 12.2a2 2 0 0 0 2 1.8h7.7a2 2 0 0 0 2-1.6L21 8H6"/><circle cx="9" cy="20" r="1.6"/><circle cx="17" cy="20" r="1.6"/></svg>'
+          + ' أضف للسلة'
+        + '</button>'
+        + '<div class="modal-qty-group">'
+          + '<span class="modal-qty-label">الكمية</span>'
+          + '<div class="qty-stepper modal-qty-stepper" id="modalQtyStepper">'
+            + '<button type="button" id="modalQtyPlus" aria-label="زيادة الكمية">+</button>'
+            + '<span id="modalQtyValue">'+modalQty+'</span>'
+            + '<button type="button" id="modalQtyMinus" aria-label="تقليل الكمية">−</button>'
+          + '</div>'
+        + '</div>'
+      + '</div>'
+      + '<p class="color-required-note" id="modalQtyError">من فضلك اختار الكمية.</p>'
+      + '<button type="button" class="btn btn-primary btn-block" id="modalBuyNowBtn">🛒 شراء الآن</button>';
+    document.getElementById("modalQtyPlus").addEventListener("click", function(){ modalSetQty(modalQty+1); });
+    document.getElementById("modalQtyMinus").addEventListener("click", function(){ modalSetQty(modalQty-1); });
     document.getElementById("modalAddBtn").addEventListener("click", function(){
+      if(!validateQtyChosen()) return;
       if(!validateColorChosen()) return;
-      addToCart(p.id, 1, modalSelectedColor ? modalSelectedColor.name : null);
+      addToCart(p.id, modalQty, modalSelectedColor ? modalSelectedColor.name : null);
     });
+    document.getElementById("modalBuyNowBtn").addEventListener("click", function(){
+      if(!validateQtyChosen()) return;
+      if(!validateColorChosen()) return;
+      addToCart(p.id, modalQty, modalSelectedColor ? modalSelectedColor.name : null);
+      closeAllPanels();
+      renderCartDrawer(); openDrawer(); goToInfoStep();
+    });
+    setupModalStickyBar();
   }
   if(colors.length){
     document.getElementById("modalColorSwatches").addEventListener("click", function(e){
@@ -2955,7 +3191,27 @@ document.getElementById("categoryRow").addEventListener("click", function(e){
 });
 
 function doSearch(q){ state.q=q; state.cat="all"; state.badge=null; goToView("products"); renderProductsView(); }
-document.getElementById("searchForm").addEventListener("submit", function(e){ e.preventDefault(); doSearch(document.getElementById("searchInput").value); });
+var searchToggleBtn = document.getElementById("searchToggleBtn");
+var searchFormEl = document.getElementById("searchForm");
+function closeHeaderSearch(){
+  if(!searchFormEl) return;
+  searchFormEl.classList.remove("open");
+  if(searchToggleBtn) searchToggleBtn.setAttribute("aria-expanded","false");
+}
+if(searchToggleBtn && searchFormEl){
+  searchToggleBtn.addEventListener("click", function(e){
+    e.stopPropagation();
+    var open = searchFormEl.classList.toggle("open");
+    searchToggleBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    if(open){
+      var inp = document.getElementById("searchInput");
+      if(inp) setTimeout(function(){ inp.focus(); }, 50);
+    }
+  });
+  searchFormEl.addEventListener("click", function(e){ e.stopPropagation(); });
+  document.addEventListener("click", function(){ closeHeaderSearch(); });
+}
+document.getElementById("searchForm").addEventListener("submit", function(e){ e.preventDefault(); closeHeaderSearch(); doSearch(document.getElementById("searchInput").value); });
 document.getElementById("mobileSearchForm").addEventListener("submit", function(e){ e.preventDefault(); closeAllPanels(); doSearch(document.getElementById("mobileSearchInput").value); });
 
 /* ---------- Contact form -> /api/inquiries ----------
@@ -4942,6 +5198,51 @@ document.querySelectorAll(".legal-toc a[href^='#']").forEach(function(a){
 window.addEventListener("scroll", function(){
   document.getElementById("mainHeader").classList.toggle("is-scrolled", window.scrollY>4);
 }, {passive:true});
+
+/* ---------- زرار السلة العائم على مستوى الموقع كله ----------
+   بيظهر بس لو في منتج أو أكتر فعلاً جوه السلة (cartCount()>0) ولما العميل
+   يعمل سكرول (فوق أو تحت، مش شرط لتحت بس) بعيد شوية عن أول الصفحة - في أي
+   شاشة (الرئيسية، المنتجات، تفاصيل منتج...). لو السلة فاضية مبيظهرش خالص
+   ولا بيهتز، عشان مفيش داعي يلفت نظر العميل لسلة مفيهاش حاجة. بيتزامن مع
+   أي تغيير في السلة نفسها (إضافة/حذف منتج) عن طريق renderCartBadge()، مش
+   بس مع السكرول - فلو ضاف منتج وهو نازل بالفعل، الزرار يظهر ويهتز فورًا؛
+   ولو شال آخر منتج، يختفي فورًا. بيفضل شغال حتى لو العميل رجع للرئيسية أو
+   غيّر الصفحة، لأنه مربوط بسكرول الصفحة نفسها مش بمكوّن معين. */
+var globalCartFabWasShown = false;
+function updateGlobalCartFab(){
+  var fab = document.getElementById("globalCartFab");
+  if(!fab) return;
+  if(modalBackdrop.classList.contains("show")){
+    fab.classList.remove("show");
+    globalCartFabWasShown = false;
+    return;
+  }
+  var y = window.scrollY || document.documentElement.scrollTop || 0;
+  if(y > 120 && cartCount() > 0){
+    fab.classList.add("show");
+    if(!globalCartFabWasShown){
+      fab.classList.remove("shake");
+      void fab.offsetWidth;
+      fab.classList.add("shake");
+    }
+    globalCartFabWasShown = true;
+  } else {
+    fab.classList.remove("show");
+    globalCartFabWasShown = false;
+  }
+}
+window.addEventListener("scroll", updateGlobalCartFab, {passive:true});
+document.getElementById("globalCartFab").addEventListener("click", function(){
+  renderCartDrawer(); openDrawer();
+});
+/* أي مودال (تفاصيل منتج، تسجيل دخول، إلخ) بيفتح أو يقفل بيغيّر كلاس
+   modalBackdrop - بنراقب التغيير ده عشان نخفي الزرار العائم فورًا لحظة ما
+   أي مودال يفتح (من غير ما نستنى حدث سكرول)، ونرجّعه يظهر تاني لو لسه
+   العميل نازل في الصفحة بعد ما يقفله. */
+if("MutationObserver" in window){
+  new MutationObserver(function(){ updateGlobalCartFab(); }).observe(modalBackdrop, { attributes:true, attributeFilter:["class"] });
+}
+updateGlobalCartFab();
 
 /* ---------- ظهور تدريجي للأقسام أثناء التمرير (.reveal) - بيستخدم
    IntersectionObserver بدل ما يستنى الصفحة كلها تحمل. المراقب بيفضل شغال

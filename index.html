@@ -35,7 +35,7 @@ src="https://www.facebook.com/tr?id=604071008636850&ev=PageView&noscript=1"
 /></noscript>
 <!-- End Meta Pixel Code -->
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>متجر آل عبده | ألعاب أطفال أصلية في الإسكندرية — توصيل لكل مصر</title>
 <meta name="description" content="متجر آل عبده لبيع ألعاب الأطفال الأصلية في الإسكندرية، مصر. تشكيلة واسعة من الألعاب التعليمية والسيارات والدمى وألعاب البنات والأولاد، بأسعار مناسبة وتوصيل لكل المحافظات، مع الدفع نقدًا عند الاستلام أو فودافون كاش أو إنستاباي.">
 <meta name="robots" content="index, follow">
@@ -70,7 +70,9 @@ src="https://www.facebook.com/tr?id=604071008636850&ev=PageView&noscript=1"
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="آل عبده">
+<meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" as="image" href="hero-banner-3.jpg" fetchpriority="high">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;600;700;800&family=Almarai:wght@300;400;700;800&display=swap">
@@ -141,15 +143,26 @@ src="https://www.facebook.com/tr?id=604071008636850&ev=PageView&noscript=1"
 /* direction بتتحدد من خاصية dir في وسم html (تتغيّر ديناميكياً حسب اللغة)
    عشان كده مش بنثبّتها هنا في الـ CSS. */
 *{box-sizing:border-box;}
+/* لما الموقع شغال متثبت كتطبيق (standalone)، بنشيل "الشعور بالمتصفح" -
+   منع الارتداد المطاطي عند سحب الصفحة (زي أي برنامج حقيقي، مش صفحة ويب)،
+   ومنع الفلاش الرمادي/التظليل اللي بيظهر لما تدوس على أي زرار أو رابط. */
+html{ overscroll-behavior-y:none; -webkit-tap-highlight-color:transparent; }
 body{
   margin:0; background:var(--bg); color:var(--ink);
   font-family:"Almarai","Segoe UI",Tahoma,sans-serif; font-size:16px; line-height:1.6;
   -webkit-font-smoothing:antialiased;
+  overscroll-behavior-y:none; -webkit-tap-highlight-color:transparent;
 }
 h1,h2,h3,h4,.display{font-family:"Baloo Bhaijaan 2","Almarai",sans-serif; font-weight:700; text-wrap:balance; margin:0;}
 p{margin:0;}
-a{color:inherit; text-decoration:none;}
-button{font-family:inherit; cursor:pointer;}
+a{color:inherit; text-decoration:none; -webkit-tap-highlight-color:transparent;}
+button{font-family:inherit; cursor:pointer; touch-action:manipulation; -webkit-tap-highlight-color:transparent;}
+a, .btn, .icon-btn, [data-view-link]{ touch-action:manipulation; }
+/* أزرار وعناصر التنقل (مش نصوص المنتجات) بلاش يبقى ليها تظليل نص أو
+   قائمة "نسخ/مشاركة" لما تدوس عليها كتير - ده بيبقى محسوس زي تطبيق حقيقي. */
+header, nav, .btn, .icon-btn, .mobile-nav, .drawer-head, .cat-chip, .promo-card{
+  -webkit-touch-callout:none; -webkit-user-select:none; user-select:none;
+}
 img{max-width:100%; display:block;}
 ul{margin:0; padding:0; list-style:none;}
 :focus-visible{outline:3px solid var(--sky); outline-offset:2px; border-radius:6px;}
@@ -162,7 +175,11 @@ ul{margin:0; padding:0; list-style:none;}
 .skip-link:focus{top:0;}
 
 /* ============ Topbar & Header ============ */
-.topbar{background:linear-gradient(90deg,var(--pink-deep),var(--pink)); color:#fff; font-size:13px;}
+/* padding-top بمقاس env(safe-area-inset-top) بيبان بس لما الموقع شغال
+   متثبت كتطبيق (standalone) على جهاز فيه "notch"/Dynamic Island - بيمنع
+   محتوى الصفحة إنه يختفي تحت شريط الحالة، زي أي تطبيق حقيقي محترف. في
+   وضع المتصفح العادي القيمة دي بتبقى صفر فمفيش أي فرق. */
+.topbar{background:linear-gradient(90deg,var(--pink-deep),var(--pink)); color:#fff; font-size:13px; padding-top:env(safe-area-inset-top);}
 .topbar .wrap{display:flex; justify-content:center; gap:32px; padding-block:8px; flex-wrap:wrap;}
 .topbar li{display:flex; align-items:center; gap:6px; font-weight:700;}
 .topbar svg{width:15px; height:15px; flex:none;}
@@ -445,7 +462,7 @@ html[dir="ltr"] .drawer.show{transform:translateX(0);}
 .cart-line .remove svg{width:16px; height:16px;}
 .cart-empty{text-align:center; color:var(--ink-soft); padding:50px 10px; display:flex; flex-direction:column; align-items:center; gap:10px;}
 .cart-empty .emoji{font-size:52px;}
-.drawer-foot{border-top:1px solid var(--border); padding:16px 20px; display:flex; flex-direction:column; gap:0;}
+.drawer-foot{border-top:1px solid var(--border); padding:16px 20px calc(16px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:0;}
 .cart-foot-step{display:flex; flex-direction:column; gap:12px;}
 .cart-total-row{display:flex; justify-content:space-between; font-weight:800; font-size:16px;}
 .cart-total-row.sub{font-weight:700; font-size:13.5px; color:var(--ink-soft);}
@@ -506,7 +523,7 @@ html[dir="ltr"] .drawer.show{transform:translateX(0);}
 .acct-owner-link{background:none; border:0; color:var(--ink-soft); font-size:12px; text-decoration:underline; cursor:pointer; padding:4px; align-self:center;}
 
 /* ============ Toast ============ */
-.toast{position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--ink); color:#fff; padding:12px 22px; border-radius:999px; font-weight:700; font-size:13.5px; display:flex; align-items:center; gap:8px; opacity:0; pointer-events:none; transition:all .25s; z-index:120;}
+.toast{position:fixed; bottom:calc(24px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%) translateY(20px); background:var(--ink); color:#fff; padding:12px 22px; border-radius:999px; font-weight:700; font-size:13.5px; display:flex; align-items:center; gap:8px; opacity:0; pointer-events:none; transition:all .25s; z-index:120;}
 .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 
 /* ============ Views ============ */
@@ -657,7 +674,7 @@ html[dir="ltr"] .drawer.show{transform:translateX(0);}
 @media (max-width:780px){ .admin-grid{grid-template-columns:1fr;} .field-row{grid-template-columns:1fr;} }
 
 /* mobile nav drawer */
-.mobile-nav{position:fixed; top:0; inset-inline-start:0; bottom:0; width:min(300px,84vw); background:var(--surface); z-index:100; transform:translateX(105%); transition:transform .25s; padding:20px; overflow-y:auto;}
+.mobile-nav{position:fixed; top:0; inset-inline-start:0; bottom:0; width:min(300px,84vw); background:var(--surface); z-index:100; transform:translateX(105%); transition:transform .25s; padding:calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)); overflow-y:auto;}
 .mobile-nav.show{transform:translateX(0);}
 /* نفس فكرة الدرج: بما إن inset-inline-start بيتحول لجهة مختلفة مع تغيّر
    الاتجاه، اتجاه إخفاء القائمة الجانبية لازم يتقلب معاها في وضع LTR. */

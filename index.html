@@ -693,6 +693,9 @@ html[dir="ltr"] .mobile-nav.show{transform:translateX(0);}
   .icon-btn{padding:8px 9px; border-radius:12px; min-width:38px;}
   .icon-btn svg{width:20px; height:20px;}
   .icon-btn .icon-label{display:none;}
+  /* زرار تبديل اللغة معندوش أيقونة زي باقي الأزرار، فلازم اسمه (English/العربية)
+     يفضل ظاهر حتى على الموبايل، وإلا الزرار هيبان فاضي. */
+  #langToggle .icon-label{display:inline; font-size:11px;}
   .cat-row{grid-template-columns:repeat(3,1fr);}
   .trust-row{grid-template-columns:repeat(2,1fr);}
   .footer-grid{grid-template-columns:1fr;}
@@ -748,7 +751,6 @@ html[dir="ltr"] .mobile-nav.show{transform:translateX(0);}
           <span class="icon-label" data-i18n>المظهر</span>
         </button>
         <button class="icon-btn" id="langToggle" aria-label="تبديل اللغة / Switch language">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M12 3c2.4 2.6 3.8 5.9 3.8 9s-1.4 6.4-3.8 9c-2.4-2.6-3.8-5.9-3.8-9s1.4-6.4 3.8-9Z"/></svg>
           <span class="icon-label" id="langToggleLabel">English</span>
         </button>
         <button class="icon-btn" id="accountBtn" aria-haspopup="dialog" aria-label="حسابي" data-i18n-aria>
@@ -1339,6 +1341,11 @@ html[dir="ltr"] .mobile-nav.show{transform:translateX(0);}
               <input type="hidden" id="pfId">
               <div class="field"><label for="pfName">اسم المنتج</label><input id="pfName" required placeholder="مثال: عربية تحكم كهربائية"></div>
               <div class="field"><label for="pfDesc">وصف المنتج</label><textarea id="pfDesc" rows="3" placeholder="اكتب وصف حقيقي ومختصر للمنتج: مميزاته، الخامة، السن المناسب... (بيظهر للعميل في صفحة تفاصيل المنتج)" style="width:100%; resize:vertical; font-family:inherit; font-size:14px; padding:10px 12px; border-radius:10px; border:1.5px solid var(--border);"></textarea></div>
+              <div style="border-top:1.5px dashed var(--border); padding-top:12px; display:flex; flex-direction:column; gap:12px;">
+                <p style="color:var(--ink-soft); font-size:12.5px; margin:0;">🌐 دي حقول اختيارية بس — لو الموقع عند العميل شغّال بالإنجليزي، النصوص دي هي اللي هتظهر له بدل العربي. سيبها فاضية لو لسه مش عايز تترجم المنتج ده.</p>
+                <div class="field"><label for="pfNameEn">اسم المنتج بالإنجليزي (اختياري)</label><input id="pfNameEn" placeholder="e.g.: Electric RC Car" dir="ltr" style="text-align:left;"></div>
+                <div class="field"><label for="pfDescEn">وصف المنتج بالإنجليزي (اختياري)</label><textarea id="pfDescEn" rows="3" placeholder="Write a short, real description of the product in English..." dir="ltr" style="width:100%; resize:vertical; font-family:inherit; font-size:14px; padding:10px 12px; border-radius:10px; border:1.5px solid var(--border); text-align:left;"></textarea></div>
+              </div>
               <div class="field-row">
                 <div class="field"><label for="pfCat">القسم</label><select id="pfCat"></select></div>
                 <div class="field"><label for="pfBadge">وسم</label>
@@ -1390,6 +1397,7 @@ html[dir="ltr"] .mobile-nav.show{transform:translateX(0);}
             <form id="catForm" style="display:flex; flex-direction:column; gap:12px;">
               <input type="hidden" id="cfId">
               <div class="field"><label for="cfName">اسم القسم</label><input id="cfName" required placeholder="مثال: ألعاب إلكترونية"></div>
+              <div class="field"><label for="cfNameEn">اسم القسم بالإنجليزي (اختياري)</label><input id="cfNameEn" placeholder="e.g.: Electronic Toys" dir="ltr" style="text-align:left;"></div>
               <div class="field">
                 <label for="cfIcon">أيقونة القسم (إيموجي)</label>
                 <input id="cfIcon" required placeholder="مثال: 🎮" maxlength="4">
@@ -1640,7 +1648,22 @@ var PRODUCTS = DEFAULT_PRODUCTS.map(function(p){ return Object.assign({}, p); })
 var CAT_MAP = {};
 function rebuildCatMap(){ CAT_MAP = {}; CATS.forEach(function(c){ CAT_MAP[c.id]=c; }); }
 rebuildCatMap();
-function catName(id){ return CAT_MAP[id] ? t(CAT_MAP[id].name) : ""; }
+/* اسم القسم: الأقسام السبعة الافتراضية (اللي جاية مع الموقع أصلًا) ليها
+   ترجمة جاهزة في قاموس I18N_EN، لكن أي قسم يضيفه صاحب المتجر بنفسه من لوحة
+   التحكم مش هيكون موجود في القاموس - عشان كده بنفضّل حقل name_en الاختياري
+   (لو اتكتب) قبل ما نلجأ لقاموس الترجمة، وبعدين للاسم العربي زي ما هو. */
+function catName(id){
+  if(!CAT_MAP[id]) return "";
+  var c = CAT_MAP[id];
+  if(LANG==="en" && c.name_en && c.name_en.trim()) return c.name_en.trim();
+  return t(c.name);
+}
+/* اسم/وصف المنتج بالإنجليزي بيتكتبوا يدويًا من لوحة التحكم (حقلين اختياريين
+   name_en/desc_en لكل منتج). لو المستخدم مختار الإنجليزي وفيه ترجمة متسجلة
+   للمنتج ده بتتعرض هي، ولو لسه متسجلتش بيرجع النص العربي الأصلي زي ما هو
+   عشان الصفحة متتعملش فاضية. */
+function pName(p){ return (LANG==="en" && p.name_en && p.name_en.trim()) ? p.name_en.trim() : p.name; }
+function pDesc(p){ return (LANG==="en" && p.desc_en && p.desc_en.trim()) ? p.desc_en.trim() : p.desc; }
 /* أيقونة القسم بتاع المنتج - بتظهر مكان صورة المنتج لو المنتج نفسه مفيهوش
    صور حقيقية مرفوعة (المنتجات بقت من غير إيموجي خاص بيها؛ الإيموجي بقى
    بتاع القسم بس). */
@@ -1769,7 +1792,7 @@ function categoryIcon(catId){
   if(CAT_ICON_SVG[catId]){ _catIconUid++; return CAT_ICON_SVG[catId]("ci"+_catIconUid); }
   return (CAT_MAP[catId] && CAT_MAP[catId].icon) || "🧸";
 }
-function fmt(n){ return n.toLocaleString("ar-EG"); }
+function fmt(n){ return n.toLocaleString(LANG==="en" ? "en-US" : "ar-EG"); }
 function stars(r){ var full=Math.round(r); return "★★★★★".slice(0,full)+"☆☆☆☆☆".slice(0,5-full); }
 /* بيبني كارت فاتورة كامل لطلب واحد (الصنف/الكمية/السعر/الإجمالي وبيانات
    التوصيل) - مستخدم في شاشة تفاصيل الطلب اللي بتتفتح من قائمة "حسابي". */
@@ -2360,7 +2383,7 @@ function addToCart(id, qty, colorName){
   var stock = variantStock(p, colorName);
   if(stock!=null && stock<=0){
     showToast(LANG==="en"
-      ? "⚠️ Sorry, \""+p.name+(colorName?" ("+colorName+")":"")+"\" is out of stock right now"
+      ? "⚠️ Sorry, \""+pName(p)+(colorName?" ("+colorName+")":"")+"\" is out of stock right now"
       : "⚠️ للأسف «"+p.name+(colorName?" ("+colorName+")":"")+"» خلص من المخزون دلوقتي");
     return;
   }
@@ -2368,11 +2391,11 @@ function addToCart(id, qty, colorName){
   if(stock!=null && nextQty>stock){
     nextQty = stock;
     showToast(LANG==="en"
-      ? "⚠️ Only "+stock+" left of \""+p.name+(colorName?" ("+colorName+")":"")+"\""
+      ? "⚠️ Only "+stock+" left of \""+pName(p)+(colorName?" ("+colorName+")":"")+"\""
       : "⚠️ الكمية المتاحة من «"+p.name+(colorName?" ("+colorName+")":"")+"» بقت "+stock+" بس");
   } else {
     showToast(LANG==="en"
-      ? "✅ \""+p.name+(colorName?" ("+colorName+")":"")+"\" added to cart"
+      ? "✅ \""+pName(p)+(colorName?" ("+colorName+")":"")+"\" added to cart"
       : "✅ تمت إضافة «"+p.name+(colorName?" ("+colorName+")":"")+"» إلى السلة");
   }
   cart[key] = nextQty;
@@ -2423,7 +2446,7 @@ function renderCartDrawer(){
       var colorLine = it.colorName ? '<div style="font-size:12px; color:var(--ink-soft);">'+t("اللون")+': '+it.colorName+'</div>' : "";
       return '<div class="cart-line">'
         + '<div class="thumb" style="background:'+CAT_MAP[it.p.cat].color+'">'+thumbContent+'</div>'
-        + '<div class="info"><div class="t">'+it.p.name+'</div>'+colorLine+'<div class="p tabular">'+fmt(it.p.price)+' '+t('ج.م')+' × '+it.qty+'</div>'
+        + '<div class="info"><div class="t">'+pName(it.p)+'</div>'+colorLine+'<div class="p tabular">'+fmt(it.p.price)+' '+t('ج.م')+' × '+it.qty+'</div>'
         + '<div class="qty-stepper" style="margin-top:6px">'
           + '<button data-dec="'+keyAttr+'" aria-label="'+t("تقليل الكمية")+'">−</button>'
           + '<span class="tabular">'+it.qty+'</span>'
@@ -2620,7 +2643,7 @@ function reconcileCartStock(){
     if(!p) return;
     var stock = variantStock(p, colorName);
     if(stock==null) return;
-    var label = p.name+(colorName?" ("+colorName+")":"");
+    var label = pName(p)+(colorName?" ("+colorName+")":"");
     if(stock<=0){
       delete cart[key]; changed = true;
       messages.push(LANG==="en" ? "\""+label+"\" is out of stock and was removed from the cart" : "«"+label+"» خلص من المخزون واتشال من السلة");
@@ -2876,10 +2899,10 @@ function productCard(p, showCartActions){
   var mediaContent;
   if(cardImgs.length > 1){
     mediaContent = cardImgs.map(function(src, i){
-      return '<img class="card-photo'+(i===0?' active':'')+'" src="'+src+'" alt="'+p.name+'" loading="lazy">';
+      return '<img class="card-photo'+(i===0?' active':'')+'" src="'+src+'" alt="'+pName(p)+'" loading="lazy">';
     }).join("");
   } else if(cardImgs.length === 1){
-    mediaContent = '<img class="card-photo active" src="'+cardImgs[0]+'" alt="'+p.name+'" loading="lazy">';
+    mediaContent = '<img class="card-photo active" src="'+cardImgs[0]+'" alt="'+pName(p)+'" loading="lazy">';
   } else {
     mediaContent = '<span style="font-size:64px;">'+categoryIcon(p.cat)+'</span>';
   }
@@ -2891,12 +2914,12 @@ function productCard(p, showCartActions){
          أي حتة فيها)، فلازم يتكتب هنا الأول، وزرار "المفضلة" بعده في الـ
          DOM عشان يرسم فوقه ويستقبل الكليكات هو بدل ما زرار التفاصيل الشفاف
          يسرقها منه (ده كان سبب إن زرار المفضلة مكنش بيستجيب خالص). */
-      + '<button class="open-detail" data-open="'+p.id+'" aria-label="'+t("عرض تفاصيل")+' '+p.name+'"></button>'
+      + '<button class="open-detail" data-open="'+p.id+'" aria-label="'+t("عرض تفاصيل")+' '+pName(p)+'"></button>'
       + '<button class="card-wish'+(FAVORITES[p.id]?' active':'')+'" data-wish="'+p.id+'" aria-label="'+(FAVORITES[p.id]?t('إزالة من المفضلة'):t('أضف للمفضلة'))+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.6-9.5-9C.7 8.4 2.3 5 5.6 5 7.6 5 9 6 12 8.5 15 6 16.4 5 18.4 5c3.3 0 4.9 3.4 3.1 7-2.5 4.4-9.5 9-9.5 9Z"/></svg></button>'
     + '</div>'
     + '<div class="card-body">'
       + '<span class="card-cat">'+catName(p.cat)+'</span>'
-      + '<h3 class="card-title">'+p.name+'</h3>'
+      + '<h3 class="card-title">'+pName(p)+'</h3>'
       + '<div class="card-rating"><span class="stars">'+stars(p.rating)+'</span><span>('+p.reviews+')</span></div>'
       + '<div class="card-price"><span class="price-now tabular">'+fmt(p.price)+' '+t('ج.م')+'</span>'+(p.old?'<span class="price-old tabular">'+fmt(p.old)+' '+t('ج.م')+'</span>':'')+'</div>'
       + (!showCartActions ? "" : outOfStock
@@ -2979,7 +3002,7 @@ function renderNewArrivals(){
 
 function renderCategoryRow(){
   document.getElementById("categoryRow").innerHTML = CATS.map(function(c){
-    return '<button class="cat-chip" data-goto-cat="'+c.id+'"><span class="ic" style="background:'+c.color+'">'+categoryIcon(c.id)+'</span>'+c.name+'</button>';
+    return '<button class="cat-chip" data-goto-cat="'+c.id+'"><span class="ic" style="background:'+c.color+'">'+categoryIcon(c.id)+'</span>'+catName(c.id)+'</button>';
   }).join("");
 }
 
@@ -2998,7 +3021,7 @@ function openStockNotifyModal(p, colorName){
   var html = '<button class="modal-close" id="modalCloseBtn" aria-label="إغلاق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
     + '<div class="modal-info" style="padding:34px 26px;">'
       + '<h3 style="margin-bottom:4px;">🔔 أعلمني عند التوفر</h3>'
-      + '<p style="color:var(--ink-soft); font-size:13.5px; margin-bottom:16px;">«'+p.name+(colorName?' ('+colorName+')':'')+'» مش متوفر دلوقتي. اكتب رقم موبايلك وهنكلمك أول ما يتوفر تاني.</p>'
+      + '<p style="color:var(--ink-soft); font-size:13.5px; margin-bottom:16px;">«'+pName(p)+(colorName?' ('+colorName+')':'')+'» مش متوفر دلوقتي. اكتب رقم موبايلك وهنكلمك أول ما يتوفر تاني.</p>'
       + '<div style="display:flex; flex-direction:column; gap:10px;">'
         + '<div class="field"><label for="snName">الاسم (اختياري)</label><input id="snName"></div>'
         + '<div class="field"><label for="snPhone">رقم الموبايل *</label><input id="snPhone" type="tel" inputmode="numeric" required placeholder="01xxxxxxxxx"></div>'
@@ -3050,7 +3073,7 @@ function openProductModal(id){
   var colors = Array.isArray(p.colors) ? p.colors : [];
   var imgs = productImages(p);
   var modalImgContent = imgs.length
-    ? '<img id="modalMainImg" src="'+imgs[0]+'" alt="'+p.name+'">'
+    ? '<img id="modalMainImg" src="'+imgs[0]+'" alt="'+pName(p)+'">'
     : ('<span id="modalMainImg">'+categoryIcon(p.cat)+'</span>');
   var galleryHtml = "";
   if(imgs.length > 1){
@@ -3076,11 +3099,11 @@ function openProductModal(id){
     + '<div class="modal-media" style="background:'+CAT_MAP[p.cat].color+'">'+modalImgContent+'</div>'
     + '<div class="modal-info">'
       + '<span class="card-cat">'+catName(p.cat)+'</span>'
-      + '<h3>'+p.name+'</h3>'
+      + '<h3>'+pName(p)+'</h3>'
       + galleryHtml
       + '<div class="card-rating"><span class="stars">'+stars(p.rating)+'</span><span>('+p.reviews+' '+t("تقييم")+')</span></div>'
       + '<div class="card-price"><span class="price-now tabular" style="font-size:24px">'+fmt(p.price)+' '+t('ج.م')+'</span>'+(p.old?'<span class="price-old tabular">'+fmt(p.old)+' '+t('ج.م')+'</span>':'')+'</div>'
-      + '<p class="modal-desc">'+(p.desc && p.desc.trim() ? p.desc : (LANG==="en" ? ("A high-quality "+catName(p.cat)+" toy, great as a gift or for everyday play, made of child-safe materials and quality-guaranteed by Al-Abdo Toys Store.") : ('لعبة عالية الجودة من '+catName(p.cat)+'، مناسبة كهدية أو للاستخدام اليومي، مصنوعة من خامات آمنة على الأطفال ومضمونة الجودة من متجر آل عبده.')))+'</p>'
+      + '<p class="modal-desc">'+(p.desc && p.desc.trim() ? pDesc(p) : (LANG==="en" ? ("A high-quality "+catName(p.cat)+" toy, great as a gift or for everyday play, made of child-safe materials and quality-guaranteed by Al-Abdo Toys Store.") : ('لعبة عالية الجودة من '+catName(p.cat)+'، مناسبة كهدية أو للاستخدام اليومي، مصنوعة من خامات آمنة على الأطفال ومضمونة الجودة من متجر آل عبده.')))+'</p>'
       + colorPickerHtml
       + '<div class="modal-actions" id="modalActionsBox"></div>'
       + '<div class="modal-reviews" id="modalReviews" style="margin-top:20px; border-top:1.5px solid var(--border); padding-top:16px;">'
@@ -3281,7 +3304,7 @@ function renderFilterList(){
   var all = [{id:"all", name:"كل المنتجات"}].concat(CATS);
   document.getElementById("filterList").innerHTML = all.map(function(c){
     var count = c.id==="all" ? PRODUCTS.length : PRODUCTS.filter(function(p){ return p.cat===c.id; }).length;
-    return '<li><button class="'+(state.cat===c.id?'active':'')+'" data-filter-cat="'+c.id+'">'+t(c.name)+'<span class="tabular">'+count+'</span></button></li>';
+    return '<li><button class="'+(state.cat===c.id?'active':'')+'" data-filter-cat="'+c.id+'">'+(c.id==="all" ? t(c.name) : catName(c.id))+'<span class="tabular">'+count+'</span></button></li>';
   }).join("");
 }
 
@@ -3291,7 +3314,7 @@ function applyProducts(){
   if(state.badge==="sale"){ list = list.filter(function(p){ return p.old; }); }
   if(state.badge==="new"){ list = list.filter(function(p){ return p.badge==="new"; }); }
   if(state.badge==="wish"){ list = list.filter(function(p){ return !!FAVORITES[p.id]; }); }
-  if(state.q){ var q=state.q.trim().toLowerCase(); list = list.filter(function(p){ return p.name.toLowerCase().indexOf(q)>-1; }); }
+  if(state.q){ var q=state.q.trim().toLowerCase(); list = list.filter(function(p){ return p.name.toLowerCase().indexOf(q)>-1 || (p.name_en && p.name_en.toLowerCase().indexOf(q)>-1); }); }
   if(state.sort==="price-asc") list.sort(function(a,b){ return a.price-b.price; });
   else if(state.sort==="price-desc") list.sort(function(a,b){ return b.price-a.price; });
   else if(state.sort==="discount") list.sort(function(a,b){ var da=a.old?1-a.price/a.old:0, db=b.old?1-b.price/b.old:0; return db-da; });
@@ -5028,6 +5051,8 @@ document.getElementById("productForm").addEventListener("submit", function(e){
   var data = {
     name: document.getElementById("pfName").value.trim(),
     desc: document.getElementById("pfDesc").value.trim(),
+    name_en: document.getElementById("pfNameEn").value.trim(),
+    desc_en: document.getElementById("pfDescEn").value.trim(),
     cat: document.getElementById("pfCat").value,
     price: +document.getElementById("pfPrice").value || 0,
     old: document.getElementById("pfOld").value ? +document.getElementById("pfOld").value : null,
@@ -5086,6 +5111,8 @@ document.getElementById("adminProductsBody").addEventListener("click", function(
     document.getElementById("pfId").value = p.id;
     document.getElementById("pfName").value = p.name;
     document.getElementById("pfDesc").value = p.desc || "";
+    document.getElementById("pfNameEn").value = p.name_en || "";
+    document.getElementById("pfDescEn").value = p.desc_en || "";
     document.getElementById("pfCat").value = p.cat;
     document.getElementById("pfPrice").value = p.price;
     document.getElementById("pfOld").value = p.old || "";
@@ -5125,15 +5152,16 @@ document.getElementById("catForm").addEventListener("submit", function(e){
   e.preventDefault();
   var id = document.getElementById("cfId").value;
   var name = document.getElementById("cfName").value.trim();
+  var nameEn = document.getElementById("cfNameEn").value.trim();
   var icon = document.getElementById("cfIcon").value.trim() || "🎯";
   if(!name) return;
   var wasEdit = !!id;
   refreshThenRun(function(){
     if(id){
       var existing = CATS.find(function(c){ return c.id===id; });
-      if(existing){ existing.name = name; existing.icon = icon; existing.color = selectedCatColor; }
+      if(existing){ existing.name = name; existing.name_en = nameEn; existing.icon = icon; existing.color = selectedCatColor; }
     } else {
-      CATS.push({id: slugId("cat"), name:name, icon:icon, color:selectedCatColor});
+      CATS.push({id: slugId("cat"), name:name, name_en:nameEn, icon:icon, color:selectedCatColor});
     }
     rebuildCatMap();
     resetCatForm();
@@ -5159,6 +5187,7 @@ document.getElementById("adminCatsBody").addEventListener("click", function(e){
     if(!c) return;
     document.getElementById("cfId").value = c.id;
     document.getElementById("cfName").value = c.name;
+    document.getElementById("cfNameEn").value = c.name_en || "";
     document.getElementById("cfIcon").value = c.icon;
     selectedCatColor = c.color;
     renderColorSwatches(selectedCatColor);

@@ -2126,6 +2126,7 @@ var I18N_EN = {
   "اختر اللون": "Choose a color",
   "خلص": "sold out",
   "من فضلك اختار اللون الأول.": "Please pick a color first.",
+  "من فضلك حدد الكمية قبل الإضافة للسلة": "Please set a quantity before adding to cart",
   "تقييم": "review",
   "جاري تحميل التقييمات...": "Loading reviews...",
 
@@ -3490,6 +3491,10 @@ function openProductModal(id){
     });
     document.getElementById("modalAddBtn").addEventListener("click", function(){
       if(!validateColorChosen()) return;
+      if(modalQty <= 0){
+        showToast(t("من فضلك حدد الكمية قبل الإضافة للسلة"));
+        return;
+      }
       addToCart(p.id, modalQty, modalSelectedColor ? modalSelectedColor.name : null);
       modalQty = 0;
       var qv = document.getElementById("modalQtyVal"); if(qv) qv.textContent = modalQty;

@@ -1,7 +1,7 @@
 /* متجر آل عبده — service worker بسيط:
    بيخزن نسخة من صفحة الموقع والأيقونات عشان لو النت ضعيف أو قطع لحظي،
    التطبيق يفتح برضه بدل ما يبيّض. */
-var CACHE_NAME = "aalabda-store-v2";
+var CACHE_NAME = "aalabda-store-v3";
 var CORE_ASSETS = [
   "./index.html",
   "./manifest.json",

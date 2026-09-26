@@ -188,12 +188,15 @@ ul{margin:0; padding:0; list-style:none;}
 .header-search button:active{transform:translateY(calc(-50% + 2px)); box-shadow:0 1px 0 rgba(255,255,255,.25) inset, 0 1px 0 color-mix(in srgb, var(--pink-deep) 72%, black);}
 .header-search svg{width:16px; height:16px;}
 
-.header-actions{display:flex; align-items:center; gap:10px; flex:none;}
+/* align-items:stretch (بدل center) عشان كل أزرار الهيدر (المظهر/اللغة/حسابي/
+   السلة) تاخد نفس الارتفاع بالظبط حتى لو محتواها مختلف (زرار اللغة نص بس من
+   غير أيقونة)، فيبانوا متناسقين ومتساوين في الشكل. */
+.header-actions{display:flex; align-items:stretch; gap:10px; flex:none;}
 /* ---------- زرار أيقونة ثلاثي الأبعاد: وش فاتح + حرف سفلي غامق بيدي إحساس
    إنه زرار "حقيقي" مرفوع عن السطح، وبيتضغط لتحت فعليًا لما تدوس عليه. ---------- */
 /* ---------- أيقونات الهيدر (السلة/حسابي/المظهر) بنفس لون تاب "الرئيسية"
    النشط - وردي متدرج بحرف سفلي غامق، بدل الخلفية البيضا. ---------- */
-.icon-btn{position:relative; display:flex; flex-direction:column; align-items:center; gap:2px; background:linear-gradient(180deg, var(--pink), var(--pink-deep)); border:0; color:#fff; padding:8px 12px; border-radius:14px; font-size:12px; font-weight:700; box-shadow:0 1px 0 rgba(255,255,255,.3) inset, 0 3px 0 color-mix(in srgb, var(--pink-deep) 72%, black), 0 8px 14px hsl(var(--shadow)/.22); transition:transform .15s ease, box-shadow .15s ease;}
+.icon-btn{position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; min-width:64px; background:linear-gradient(180deg, var(--pink), var(--pink-deep)); border:0; color:#fff; padding:8px 12px; border-radius:14px; font-size:12px; font-weight:700; box-shadow:0 1px 0 rgba(255,255,255,.3) inset, 0 3px 0 color-mix(in srgb, var(--pink-deep) 72%, black), 0 8px 14px hsl(var(--shadow)/.22); transition:transform .15s ease, box-shadow .15s ease;}
 .icon-btn:hover{transform:translateY(-2px); box-shadow:0 1px 0 rgba(255,255,255,.3) inset, 0 5px 0 color-mix(in srgb, var(--pink-deep) 72%, black), 0 12px 18px hsl(var(--shadow)/.26);}
 .icon-btn:active{transform:translateY(2px); box-shadow:0 1px 0 rgba(255,255,255,.25) inset, 0 1px 0 color-mix(in srgb, var(--pink-deep) 72%, black), 0 4px 8px hsl(var(--shadow)/.18);}
 .icon-btn svg{width:23px; height:23px;}
@@ -2186,7 +2189,63 @@ var I18N_EN = {
   "الأقصر": "Luxor",
   "قنا": "Qena",
   "شمال سيناء": "North Sinai",
-  "سوهاج": "Sohag"
+  "سوهاج": "Sohag",
+
+  /* حساب العميل: دخول/تسجيل جديد/استرجاع الرقم السري/قائمة "حسابي" الجانبية */
+  "تسجيل الدخول": "Log In",
+  "تسجيل جديد": "Register",
+  "الاسم بالكامل": "Full Name",
+  "الإيميل": "Email",
+  "المحافظة": "Governorate",
+  "الشارع، رقم العمارة/المنزل، الدور...": "Street, building/house no., floor...",
+  "الرقم السري": "Password",
+  "6 حروف/أرقام على الأقل": "At least 6 letters/numbers",
+  "تأكيد الرقم السري": "Confirm Password",
+  "اكتب نفس الرقم السري تاني": "Type the same password again",
+  "تسجيل": "Register",
+  "رقم الموبايل أو الإيميل": "Phone Number or Email",
+  "الرقم السري اللي اخترته": "The password you chose",
+  "البيانات مش صحيحة، أو الحساب ده اتسجل من جهاز/متصفح تاني": "Incorrect details, or this account is logged in from another device/browser",
+  "دخول": "Log In",
+  "نسيت الرقم السري؟": "Forgot your password?",
+  "أهلاً صاحب المتجر": "Welcome, store owner",
+  "إنت مسجّل دخول كصاحب المتجر. تقدر تفتح لوحة التحكم أو تخرج من الحساب.": "You're logged in as the store owner. You can open the dashboard or log out.",
+  "خروج": "Log Out",
+  "استرجاع الرقم السري": "Recover Password",
+  "الإيميل المسجل": "Registered Email",
+  "رجوع لتسجيل الدخول": "Back to log in",
+  "رقم الموبايل أو الإيميل مش مطابقين لحساب مسجّل.": "This phone number or email doesn't match a registered account.",
+  "تعذر الاتصال بالسيرفر، تأكد من الإنترنت وجرّب تاني.": "Couldn't connect to the server, check your internet and try again.",
+  "كود التحقق بتاعك": "Your verification code",
+  "خد نسخة من الكود ده لو حابب تحتفظ بيه، وبعدين اقفل الشاشة عشان تختار رقمك السري الجديد:": "Save a copy of this code if you'd like to keep it, then close this screen to choose your new password:",
+  "تم، إغلاق": "Done, Close",
+  "اختار رقمك السري الجديد": "Choose your new password",
+  "كود التحقق": "Verification Code",
+  "الكود اللي ظهرلك في الشاشة اللي فاتت": "The code shown on the previous screen",
+  "الرقم السري الجديد": "New Password",
+  "تأكيد الرقم السري الجديد": "Confirm New Password",
+  "تغيير الرقم السري": "Change Password",
+  "لازم تكتب كود التحقق اللي ظهرلك.": "You need to enter the verification code shown to you.",
+  "الرقم السري لازم يكون 6 حروف/أرقام على الأقل.": "The password must be at least 6 letters/numbers.",
+  "الرقم السري وتأكيده مش متطابقين.": "The password and its confirmation don't match.",
+  "الكود ده منتهي أو مش صحيح، جرّب تطلب استرجاع تاني من الأول.": "This code is expired or incorrect, please request a new recovery from the start.",
+  "تم تغيير الرقم السري بنجاح": "Password changed successfully",
+  "دلوقتي سجّل دخولك برقم الموبايل أو الإيميل ورقمك السري الجديد:": "Now log in with your phone number or email and your new password:",
+  "تسجيل الدخول الآن": "Log In Now",
+  "تم التسجيل": "Registration complete",
+  "اتعمل حسابك بنجاح. دلوقتي سجّل دخولك برقم الموبايل أو الإيميل والباسورد اللي اخترته:": "Your account has been created successfully. Now log in with your phone number or email and the password you chose:",
+  "الحساب ده مسجّل قبل كده، جرّب تسجّل الدخول": "This account is already registered, try logging in",
+  "تعذر إنشاء الحساب، تأكد من الإنترنت وجرّب تاني.": "Couldn't create the account, check your internet and try again.",
+  "البيانات مش صحيحة، أو الحساب ده لسه مش متسجل": "Incorrect details, or this account isn't registered yet",
+  "أهلاً بيك": "Welcome",
+  "مسجّل برقم الموبايل": "Registered with phone number",
+  "تسجيل خروج": "Log Out",
+  "طلباتي": "My Orders",
+  "جاري التحميل...": "Loading...",
+  "لسه مفيش طلبات مسجّلة على حسابك (بتتسجل بس لو طلبت وانت مسجّل دخول).": "No orders on your account yet (orders are only recorded when you're logged in while ordering).",
+  "فاتورة #": "Invoice #",
+  "تعذر تحميل الطلبات، جرّب تاني.": "Couldn't load your orders, please try again.",
+  "تفاصيل الطلب": "Order Details"
 };
 
 /* ---------- اللغة (عربي/English) ----------
@@ -3821,7 +3880,7 @@ function updateAccountLabel(){
 }
 
 function accountFieldMeta(){
-  return { label:"رقم الموبايل", type:"tel", placeholder:"01xxxxxxxxx", inputmode:"numeric" };
+  return { label:t("رقم الموبايل"), type:"tel", placeholder:"01xxxxxxxxx", inputmode:"numeric" };
 }
 var EGYPT_GOVERNORATES = ["القاهرة","الجيزة","الإسكندرية","الدقهلية","البحر الأحمر","البحيرة","الفيوم","الغربية","الإسماعيلية","المنوفية","المنيا","القليوبية","الوادي الجديد","السويس","أسوان","أسيوط","بني سويف","بورسعيد","دمياط","الشرقية","جنوب سيناء","كفر الشيخ","مطروح","الأقصر","قنا","شمال سيناء","سوهاج"];
 function governorateOptionsHtml(selected){
@@ -3832,7 +3891,7 @@ function governorateOptionsHtml(selected){
 /* الدخول (على عكس التسجيل) بيقبل رقم الموبايل أو الإيميل المسجلين - حقل نصي
    عادي عشان ياخد أي الاتنين. */
 function loginFieldMeta(){
-  return { label:"رقم الموبايل أو الإيميل", type:"text", placeholder:"01xxxxxxxxx أو example@email.com", inputmode:"email" };
+  return { label:t("رقم الموبايل أو الإيميل"), type:"text", placeholder:LANG==="en" ? "01xxxxxxxxx or example@email.com" : "01xxxxxxxxx أو example@email.com", inputmode:"email" };
 }
 
 /* حسابات العملاء بترقم الموبايل + الاسم بالكامل. الإيميل مطلوب بس لاسترجاع
@@ -3845,11 +3904,11 @@ function renderAccountModal(){
   if(isAdminAuthed()){
     html += '<div class="modal-info" style="padding:30px 24px;">'
       + '<span style="font-size:34px;">🔐</span>'
-      + '<h3>أهلاً صاحب المتجر</h3>'
-      + '<p style="color:var(--ink-soft); font-size:13.5px;">إنت مسجّل دخول كصاحب المتجر. تقدر تفتح لوحة التحكم أو تخرج من الحساب.</p>'
+      + '<h3>'+t("أهلاً صاحب المتجر")+'</h3>'
+      + '<p style="color:var(--ink-soft); font-size:13.5px;">'+t("إنت مسجّل دخول كصاحب المتجر. تقدر تفتح لوحة التحكم أو تخرج من الحساب.")+'</p>'
       + '<div class="hero-ctas" style="margin-top:16px; justify-content:flex-start;">'
-        + '<button class="btn btn-primary" id="acctGoAdmin" type="button">لوحة التحكم</button>'
-        + '<button class="btn btn-outline" id="acctAdminLogout" type="button">خروج</button>'
+        + '<button class="btn btn-primary" id="acctGoAdmin" type="button">'+t("لوحة التحكم")+'</button>'
+        + '<button class="btn btn-outline" id="acctAdminLogout" type="button">'+t("خروج")+'</button>'
       + '</div>'
     + '</div>';
     document.getElementById("modalCard").innerHTML = html;
@@ -3868,14 +3927,14 @@ function renderAccountModal(){
     var fmR = accountFieldMeta();
     html += '<div class="modal-info" style="padding:30px 24px;">'
       + '<span style="font-size:34px;">🔑</span>'
-      + '<h3>استرجاع الرقم السري</h3>'
+      + '<h3>'+t("استرجاع الرقم السري")+'</h3>'
       + '<form id="acctForgotForm" style="display:flex; flex-direction:column; gap:12px; margin-top:6px;">'
         + '<div class="field"><label for="acctForgotIdentifier">'+fmR.label+'</label><input id="acctForgotIdentifier" required type="'+fmR.type+'" inputmode="'+fmR.inputmode+'" placeholder="'+fmR.placeholder+'" autocomplete="off"></div>'
-        + '<div class="field"><label for="acctForgotRecoveryEmail">الإيميل المسجل</label><input id="acctForgotRecoveryEmail" required type="email" placeholder="example@email.com" autocomplete="off"></div>'
+        + '<div class="field"><label for="acctForgotRecoveryEmail">'+t("الإيميل المسجل")+'</label><input id="acctForgotRecoveryEmail" required type="email" placeholder="example@email.com" autocomplete="off"></div>'
         + '<p id="acctForgotMsg" style="color:var(--pink-deep); font-size:13px; display:none;"></p>'
-        + '<button type="submit" class="btn btn-primary btn-block">إرسال</button>'
+        + '<button type="submit" class="btn btn-primary btn-block">'+t("إرسال")+'</button>'
       + '</form>'
-      + '<button type="button" id="acctForgotBack" class="acct-owner-link">رجوع لتسجيل الدخول</button>'
+      + '<button type="button" id="acctForgotBack" class="acct-owner-link">'+t("رجوع لتسجيل الدخول")+'</button>'
     + '</div>';
     document.getElementById("modalCard").innerHTML = html;
     document.getElementById("modalCloseBtn").addEventListener("click", closeAllPanels);
@@ -3903,13 +3962,13 @@ function renderAccountModal(){
             acctState.resetFlow = { step:"code", phone:identifier, code:res.code };
             renderAccountModal();
           } else {
-            msg.textContent = "رقم الموبايل أو الإيميل مش مطابقين لحساب مسجّل.";
+            msg.textContent = t("رقم الموبايل أو الإيميل مش مطابقين لحساب مسجّل.");
             msg.style.display = "block";
           }
         })
         .catch(function(){
           btn.disabled = false;
-          msg.textContent = "تعذر الاتصال بالسيرفر، تأكد من الإنترنت وجرّب تاني.";
+          msg.textContent = t("تعذر الاتصال بالسيرفر، تأكد من الإنترنت وجرّب تاني.");
           msg.style.display = "block";
         });
     });
@@ -3919,11 +3978,11 @@ function renderAccountModal(){
     var rf = acctState.resetFlow;
     html += '<div class="modal-info" style="padding:30px 24px; align-items:center; text-align:center;">'
       + '<span style="font-size:34px;">🔑</span>'
-      + '<h3>كود التحقق بتاعك</h3>'
-      + '<p style="color:var(--ink-soft); font-size:13.5px;">خد نسخة من الكود ده لو حابب تحتفظ بيه، وبعدين اقفل الشاشة عشان تختار رقمك السري الجديد:</p>'
+      + '<h3>'+t("كود التحقق بتاعك")+'</h3>'
+      + '<p style="color:var(--ink-soft); font-size:13.5px;">'+t("خد نسخة من الكود ده لو حابب تحتفظ بيه، وبعدين اقفل الشاشة عشان تختار رقمك السري الجديد:")+'</p>'
       + '<div class="pass-reveal"><span class="code">'+rf.code+'</span></div>'
       + '<div class="hero-ctas" style="margin-top:16px; justify-content:center;">'
-        + '<button class="btn btn-primary" id="acctResetCodeClose" type="button">تم، إغلاق</button>'
+        + '<button class="btn btn-primary" id="acctResetCodeClose" type="button">'+t("تم، إغلاق")+'</button>'
       + '</div></div>';
     document.getElementById("modalCard").innerHTML = html;
     document.getElementById("modalCloseBtn").addEventListener("click", closeAllPanels);
@@ -3937,13 +3996,13 @@ function renderAccountModal(){
     var rf2 = acctState.resetFlow;
     html += '<div class="modal-info" style="padding:30px 24px;">'
       + '<span style="font-size:34px;">🔒</span>'
-      + '<h3>اختار رقمك السري الجديد</h3>'
+      + '<h3>'+t("اختار رقمك السري الجديد")+'</h3>'
       + '<form id="acctResetNewPassForm" style="display:flex; flex-direction:column; gap:12px; margin-top:6px;">'
-        + '<div class="field"><label for="acctResetCode">كود التحقق</label><input id="acctResetCode" required inputmode="numeric" placeholder="الكود اللي ظهرلك في الشاشة اللي فاتت" autocomplete="off"></div>'
-        + '<div class="field"><label for="acctResetPassword">الرقم السري الجديد</label><input id="acctResetPassword" required type="password" minlength="6" placeholder="6 حروف/أرقام على الأقل" autocomplete="new-password"></div>'
-        + '<div class="field"><label for="acctResetPasswordConfirm">تأكيد الرقم السري الجديد</label><input id="acctResetPasswordConfirm" required type="password" minlength="6" placeholder="اكتب نفس الرقم السري تاني" autocomplete="new-password"></div>'
+        + '<div class="field"><label for="acctResetCode">'+t("كود التحقق")+'</label><input id="acctResetCode" required inputmode="numeric" placeholder="'+t("الكود اللي ظهرلك في الشاشة اللي فاتت")+'" autocomplete="off"></div>'
+        + '<div class="field"><label for="acctResetPassword">'+t("الرقم السري الجديد")+'</label><input id="acctResetPassword" required type="password" minlength="6" placeholder="'+t("6 حروف/أرقام على الأقل")+'" autocomplete="new-password"></div>'
+        + '<div class="field"><label for="acctResetPasswordConfirm">'+t("تأكيد الرقم السري الجديد")+'</label><input id="acctResetPasswordConfirm" required type="password" minlength="6" placeholder="'+t("اكتب نفس الرقم السري تاني")+'" autocomplete="new-password"></div>'
         + '<p id="acctResetError" style="color:var(--pink-deep); font-size:13px; display:none;"></p>'
-        + '<button type="submit" class="btn btn-primary btn-block">تغيير الرقم السري</button>'
+        + '<button type="submit" class="btn btn-primary btn-block">'+t("تغيير الرقم السري")+'</button>'
       + '</form></div>';
     document.getElementById("modalCard").innerHTML = html;
     document.getElementById("modalCloseBtn").addEventListener("click", closeAllPanels);
@@ -3954,9 +4013,9 @@ function renderAccountModal(){
       var passConfirm = document.getElementById("acctResetPasswordConfirm").value;
       var errEl = document.getElementById("acctResetError");
       errEl.style.display = "none";
-      if(!code){ errEl.textContent = "لازم تكتب كود التحقق اللي ظهرلك."; errEl.style.display = "block"; return; }
-      if(pass.length < 6){ errEl.textContent = "الرقم السري لازم يكون 6 حروف/أرقام على الأقل."; errEl.style.display = "block"; return; }
-      if(pass !== passConfirm){ errEl.textContent = "الرقم السري وتأكيده مش متطابقين."; errEl.style.display = "block"; return; }
+      if(!code){ errEl.textContent = t("لازم تكتب كود التحقق اللي ظهرلك."); errEl.style.display = "block"; return; }
+      if(pass.length < 6){ errEl.textContent = t("الرقم السري لازم يكون 6 حروف/أرقام على الأقل."); errEl.style.display = "block"; return; }
+      if(pass !== passConfirm){ errEl.textContent = t("الرقم السري وتأكيده مش متطابقين."); errEl.style.display = "block"; return; }
       var btn = e.target.querySelector('[type="submit"]');
       btn.disabled = true;
       fetch("/api/customers/reset-confirm", {
@@ -3970,13 +4029,13 @@ function renderAccountModal(){
             acctState = { tab:"login", registerResult:{ kind:"reset", identifier:res.phone }, resetFlow:null };
             renderAccountModal();
           } else {
-            errEl.textContent = "الكود ده منتهي أو مش صحيح، جرّب تطلب استرجاع تاني من الأول.";
+            errEl.textContent = t("الكود ده منتهي أو مش صحيح، جرّب تطلب استرجاع تاني من الأول.");
             errEl.style.display = "block";
           }
         })
         .catch(function(){
           btn.disabled = false;
-          errEl.textContent = "تعذر الاتصال بالسيرفر، تأكد من الإنترنت وجرّب تاني.";
+          errEl.textContent = t("تعذر الاتصال بالسيرفر، تأكد من الإنترنت وجرّب تاني.");
           errEl.style.display = "block";
         });
     });
@@ -3992,18 +4051,18 @@ function renderAccountModal(){
     if(r.kind==="reset"){
       html += '<div class="modal-info" style="padding:30px 24px;">'
         + '<span style="font-size:34px;">✅</span>'
-        + '<h3>تم تغيير الرقم السري بنجاح</h3>'
-        + '<p style="color:var(--ink-soft); font-size:13.5px;">دلوقتي سجّل دخولك برقم الموبايل أو الإيميل ورقمك السري الجديد:</p>'
+        + '<h3>'+t("تم تغيير الرقم السري بنجاح")+'</h3>'
+        + '<p style="color:var(--ink-soft); font-size:13.5px;">'+t("دلوقتي سجّل دخولك برقم الموبايل أو الإيميل ورقمك السري الجديد:")+'</p>'
         + '<div class="hero-ctas" style="margin-top:16px; justify-content:flex-start;">'
-          + '<button class="btn btn-primary" id="acctContinue" type="button">تسجيل الدخول الآن</button>'
+          + '<button class="btn btn-primary" id="acctContinue" type="button">'+t("تسجيل الدخول الآن")+'</button>'
         + '</div></div>';
     } else {
       html += '<div class="modal-info" style="padding:30px 24px;">'
         + '<span style="font-size:34px;">🎉</span>'
-        + '<h3>تم التسجيل</h3>'
-        + '<p style="color:var(--ink-soft); font-size:13.5px;">اتعمل حسابك بنجاح. دلوقتي سجّل دخولك برقم الموبايل أو الإيميل والباسورد اللي اخترته:</p>'
+        + '<h3>'+t("تم التسجيل")+'</h3>'
+        + '<p style="color:var(--ink-soft); font-size:13.5px;">'+t("اتعمل حسابك بنجاح. دلوقتي سجّل دخولك برقم الموبايل أو الإيميل والباسورد اللي اخترته:")+'</p>'
         + '<div class="hero-ctas" style="margin-top:16px; justify-content:flex-start;">'
-          + '<button class="btn btn-primary" id="acctContinue" type="button">تسجيل الدخول الآن</button>'
+          + '<button class="btn btn-primary" id="acctContinue" type="button">'+t("تسجيل الدخول الآن")+'</button>'
         + '</div></div>';
     }
     document.getElementById("modalCard").innerHTML = html;
@@ -4032,32 +4091,32 @@ function renderAccountModal(){
   var lfm = loginFieldMeta();
   html += '<div class="modal-info" style="padding:30px 24px;">'
     + '<span style="font-size:34px;">🙋</span>'
-    + '<h3>حسابي</h3>'
+    + '<h3>'+t("حسابي")+'</h3>'
     + '<div class="seg-tabs" style="margin-top:6px;">'
-      + '<button type="button" data-acct-tab="login" class="'+(acctState.tab==="login"?"active":"")+'">تسجيل الدخول</button>'
-      + '<button type="button" data-acct-tab="register" class="'+(acctState.tab==="register"?"active":"")+'">تسجيل جديد</button>'
+      + '<button type="button" data-acct-tab="login" class="'+(acctState.tab==="login"?"active":"")+'">'+t("تسجيل الدخول")+'</button>'
+      + '<button type="button" data-acct-tab="register" class="'+(acctState.tab==="register"?"active":"")+'">'+t("تسجيل جديد")+'</button>'
     + '</div>';
 
   if(acctState.tab==="register"){
     html += '<form id="acctRegisterForm" style="display:flex; flex-direction:column; gap:12px; margin-top:6px;">'
-      + '<div class="field"><label for="acctRegName">الاسم بالكامل</label><input id="acctRegName" required placeholder="اسمك بالكامل"></div>'
-      + '<div class="field"><label for="acctRegEmail">الإيميل</label><input id="acctRegEmail" required type="email" placeholder="example@email.com" autocomplete="off"></div>'
+      + '<div class="field"><label for="acctRegName">'+t("الاسم بالكامل")+'</label><input id="acctRegName" required placeholder="'+t("اسمك بالكامل")+'"></div>'
+      + '<div class="field"><label for="acctRegEmail">'+t("الإيميل")+'</label><input id="acctRegEmail" required type="email" placeholder="example@email.com" autocomplete="off"></div>'
       + '<div class="field"><label for="acctRegIdentifier">'+fm.label+'</label><input id="acctRegIdentifier" required type="'+fm.type+'" inputmode="'+fm.inputmode+'" placeholder="'+fm.placeholder+'" autocomplete="off"></div>'
-      + '<div class="field"><label for="acctRegGovernorate">المحافظة</label><select id="acctRegGovernorate" required>'+governorateOptionsHtml()+'</select></div>'
-      + '<div class="field"><label for="acctRegAddress">العنوان بالتفصيل</label><input id="acctRegAddress" required placeholder="الشارع، رقم العمارة/المنزل، الدور..." autocomplete="off"></div>'
-      + '<div class="field"><label for="acctRegPassword">الرقم السري</label><input id="acctRegPassword" required type="password" minlength="6" placeholder="6 حروف/أرقام على الأقل" autocomplete="new-password"></div>'
-      + '<div class="field"><label for="acctRegPasswordConfirm">تأكيد الرقم السري</label><input id="acctRegPasswordConfirm" required type="password" minlength="6" placeholder="اكتب نفس الرقم السري تاني" autocomplete="new-password"></div>'
+      + '<div class="field"><label for="acctRegGovernorate">'+t("المحافظة")+'</label><select id="acctRegGovernorate" required>'+governorateOptionsHtml()+'</select></div>'
+      + '<div class="field"><label for="acctRegAddress">'+t("العنوان بالتفصيل")+'</label><input id="acctRegAddress" required placeholder="'+t("الشارع، رقم العمارة/المنزل، الدور...")+'" autocomplete="off"></div>'
+      + '<div class="field"><label for="acctRegPassword">'+t("الرقم السري")+'</label><input id="acctRegPassword" required type="password" minlength="6" placeholder="'+t("6 حروف/أرقام على الأقل")+'" autocomplete="new-password"></div>'
+      + '<div class="field"><label for="acctRegPasswordConfirm">'+t("تأكيد الرقم السري")+'</label><input id="acctRegPasswordConfirm" required type="password" minlength="6" placeholder="'+t("اكتب نفس الرقم السري تاني")+'" autocomplete="new-password"></div>'
       + '<p id="acctRegError" style="color:var(--pink-deep); font-size:13px; display:none;"></p>'
-      + '<button type="submit" class="btn btn-primary btn-block">تسجيل</button>'
+      + '<button type="submit" class="btn btn-primary btn-block">'+t("تسجيل")+'</button>'
     + '</form>';
   } else {
     html += '<form id="acctLoginForm" style="display:flex; flex-direction:column; gap:12px; margin-top:6px;">'
       + '<div class="field"><label for="acctLoginIdentifier">'+lfm.label+'</label><input id="acctLoginIdentifier" required type="'+lfm.type+'" inputmode="'+lfm.inputmode+'" placeholder="'+lfm.placeholder+'" autocomplete="off"></div>'
-      + '<div class="field"><label for="acctLoginPassword">الرقم السري</label><input id="acctLoginPassword" required type="password" placeholder="الرقم السري اللي اخترته" autocomplete="off"></div>'
-      + '<p id="acctLoginError" style="color:var(--pink-deep); font-size:13px; display:none;">البيانات مش صحيحة، أو الحساب ده اتسجل من جهاز/متصفح تاني</p>'
-      + '<button type="submit" class="btn btn-primary btn-block">دخول</button>'
+      + '<div class="field"><label for="acctLoginPassword">'+t("الرقم السري")+'</label><input id="acctLoginPassword" required type="password" placeholder="'+t("الرقم السري اللي اخترته")+'" autocomplete="off"></div>'
+      + '<p id="acctLoginError" style="color:var(--pink-deep); font-size:13px; display:none;">'+t("البيانات مش صحيحة، أو الحساب ده اتسجل من جهاز/متصفح تاني")+'</p>'
+      + '<button type="submit" class="btn btn-primary btn-block">'+t("دخول")+'</button>'
     + '</form>'
-    + '<button type="button" id="acctForgotLink" class="acct-owner-link">نسيت الرقم السري؟</button>';
+    + '<button type="button" id="acctForgotLink" class="acct-owner-link">'+t("نسيت الرقم السري؟")+'</button>';
     /* لا يوجد أي رابط أو زر "أنا صاحب المتجر" هنا عمداً — دخول صاحب المتجر بقى
        مش ظاهر للعملاء خالص، ومتاح بس من رابط سري يفتحه صاحب المتجر مباشرة
        (راجع ADMIN_SECRET_HASH في قسم "View router" تحت). */
@@ -4084,8 +4143,8 @@ function renderAccountModal(){
       var errEl = document.getElementById("acctRegError");
       errEl.style.display = "none";
       if(!identifier || !name || !email || !governorate || !address || !password || !passwordConfirm) return;
-      if(password.length < 6){ errEl.textContent = "الرقم السري لازم يكون 6 حروف/أرقام على الأقل."; errEl.style.display = "block"; return; }
-      if(password !== passwordConfirm){ errEl.textContent = "الرقم السري وتأكيده مش متطابقين."; errEl.style.display = "block"; return; }
+      if(password.length < 6){ errEl.textContent = t("الرقم السري لازم يكون 6 حروف/أرقام على الأقل."); errEl.style.display = "block"; return; }
+      if(password !== passwordConfirm){ errEl.textContent = t("الرقم السري وتأكيده مش متطابقين."); errEl.style.display = "block"; return; }
       var btn = e.target.querySelector('[type="submit"]');
       btn.disabled = true;
       fetch("/api/customers/register", {
@@ -4102,19 +4161,19 @@ function renderAccountModal(){
             acctState.registerResult = { identifier:res.body.phone };
             renderAccountModal();
           } else if(res.status===409){
-            errEl.textContent = "الحساب ده مسجّل قبل كده، جرّب تسجّل الدخول";
+            errEl.textContent = t("الحساب ده مسجّل قبل كده، جرّب تسجّل الدخول");
             errEl.style.display = "block";
           } else if(res.body && res.body.error==="weak_password"){
-            errEl.textContent = "الرقم السري لازم يكون 6 حروف/أرقام على الأقل.";
+            errEl.textContent = t("الرقم السري لازم يكون 6 حروف/أرقام على الأقل.");
             errEl.style.display = "block";
           } else {
-            errEl.textContent = "تعذر إنشاء الحساب، تأكد من الإنترنت وجرّب تاني.";
+            errEl.textContent = t("تعذر إنشاء الحساب، تأكد من الإنترنت وجرّب تاني.");
             errEl.style.display = "block";
           }
         })
         .catch(function(){
           btn.disabled = false;
-          errEl.textContent = "تعذر الاتصال بالسيرفر، تأكد من الإنترنت وجرّب تاني.";
+          errEl.textContent = t("تعذر الاتصال بالسيرفر، تأكد من الإنترنت وجرّب تاني.");
           errEl.style.display = "block";
         });
     });
@@ -4136,7 +4195,7 @@ function renderAccountModal(){
         .then(function(res){
           btn.disabled = false;
           if(!res || !res.ok){
-            errEl.textContent = "البيانات مش صحيحة، أو الحساب ده لسه مش متسجل";
+            errEl.textContent = t("البيانات مش صحيحة، أو الحساب ده لسه مش متسجل");
             errEl.style.display = "block";
             return;
           }
@@ -4153,11 +4212,11 @@ function renderAccountModal(){
           refreshFavoritesFromServer(refreshFavoriteViews);
           updateAccountLabel();
           closeAllPanels();
-          showToast("أهلاً "+(res.name || "بيك")+" 👋");
+          showToast(LANG==="en" ? "Welcome "+(res.name || "back")+" 👋" : "أهلاً "+(res.name || "بيك")+" 👋");
         })
         .catch(function(){
           btn.disabled = false;
-          errEl.textContent = "تعذر الاتصال بالسيرفر، تأكد من الإنترنت وجرّب تاني.";
+          errEl.textContent = t("تعذر الاتصال بالسيرفر، تأكد من الإنترنت وجرّب تاني.");
           errEl.style.display = "block";
         });
     });
@@ -4192,13 +4251,13 @@ function renderAcctDrawerBody(){
   var customer = getCustomerProfile();
   if(!customer){ return; }
   var html = '<div style="padding-bottom:4px; border-bottom:1px solid var(--border); margin-bottom:4px;">'
-    + '<div style="font-size:16px; font-weight:800;">👋 '+(customer.name || "أهلاً بيك")+'</div>'
-    + '<div style="color:var(--ink-soft); font-size:12.5px; margin-top:2px;">مسجّل برقم الموبايل: '+customer.identifier+'</div>'
-    + (customer.address ? '<div style="color:var(--ink-soft); font-size:12.5px; margin-top:2px;">📍 '+(customer.governorate?customer.governorate+' - ':'')+customer.address+'</div>' : '')
-    + '<button type="button" class="btn btn-outline btn-block" id="acctDrawerLogout" style="margin-top:12px;">تسجيل خروج</button>'
+    + '<div style="font-size:16px; font-weight:800;">👋 '+(customer.name || t("أهلاً بيك"))+'</div>'
+    + '<div style="color:var(--ink-soft); font-size:12.5px; margin-top:2px;">'+t("مسجّل برقم الموبايل")+': '+customer.identifier+'</div>'
+    + (customer.address ? '<div style="color:var(--ink-soft); font-size:12.5px; margin-top:2px;">📍 '+(customer.governorate?t(customer.governorate)+' - ':'')+customer.address+'</div>' : '')
+    + '<button type="button" class="btn btn-outline btn-block" id="acctDrawerLogout" style="margin-top:12px;">'+t("تسجيل خروج")+'</button>'
   + '</div>'
-  + '<div style="font-weight:800; font-size:13.5px; margin-top:4px;">طلباتي</div>'
-  + '<div id="acctDrawerOrders" style="display:flex; flex-direction:column; gap:10px;"><p style="color:var(--ink-soft); font-size:13px;">جاري التحميل...</p></div>';
+  + '<div style="font-weight:800; font-size:13.5px; margin-top:4px;">'+t("طلباتي")+'</div>'
+  + '<div id="acctDrawerOrders" style="display:flex; flex-direction:column; gap:10px;"><p style="color:var(--ink-soft); font-size:13px;">'+t("جاري التحميل...")+'</p></div>';
   body.innerHTML = html;
   document.getElementById("acctDrawerLogout").addEventListener("click", function(){
     clearCustomerProfile(); FAVORITES = {}; refreshFavoriteViews(); updateAccountLabel(); closeAllPanels(); goToView("home");
@@ -4207,15 +4266,15 @@ function renderAcctDrawerBody(){
     .then(function(res){
       var box = document.getElementById("acctDrawerOrders");
       if(!box) return;
-      if(!res || !res.ok || !res.orders.length){ box.innerHTML = '<p style="color:var(--ink-soft); font-size:13px;">لسه مفيش طلبات مسجّلة على حسابك (بتتسجل بس لو طلبت وانت مسجّل دخول).</p>'; return; }
+      if(!res || !res.ok || !res.orders.length){ box.innerHTML = '<p style="color:var(--ink-soft); font-size:13px;">'+t("لسه مفيش طلبات مسجّلة على حسابك (بتتسجل بس لو طلبت وانت مسجّل دخول).")+'</p>'; return; }
       var orders = res.orders.slice().reverse();
       box.innerHTML = orders.map(function(o, i){
-        var itemsTxt = (o.items||[]).map(function(it){ return it.name+' ×'+it.qty; }).join("، ");
+        var itemsTxt = (o.items||[]).map(function(it){ return it.name+' ×'+it.qty; }).join(LANG==="en" ? ", " : "، ");
         var d = new Date(o.createdAt);
-        return '<button type="button" data-order-row="'+i+'" style="text-align:right; width:100%; border:1.5px solid var(--border); border-radius:12px; padding:10px 12px; background:var(--surface); cursor:pointer;">'
-          + '<div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px;"><strong style="font-size:12.5px;">فاتورة #'+String(o.id||"").slice(-6)+'</strong><span class="tabular" style="font-size:11.5px; color:var(--ink-soft);">'+d.toLocaleDateString("ar-EG")+'</span></div>'
+        return '<button type="button" data-order-row="'+i+'" style="text-align:'+(LANG==="en"?"left":"right")+'; width:100%; border:1.5px solid var(--border); border-radius:12px; padding:10px 12px; background:var(--surface); cursor:pointer;">'
+          + '<div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px;"><strong style="font-size:12.5px;">'+t("فاتورة #")+String(o.id||"").slice(-6)+'</strong><span class="tabular" style="font-size:11.5px; color:var(--ink-soft);">'+d.toLocaleDateString(LANG==="en"?"en-US":"ar-EG")+'</span></div>'
           + '<div style="font-size:12px; color:var(--ink-soft); margin-top:4px;">'+itemsTxt+'</div>'
-          + '<div class="tabular" style="font-size:12.5px; font-weight:800; margin-top:4px;">'+fmt(o.total)+' ج.م</div>'
+          + '<div class="tabular" style="font-size:12.5px; font-weight:800; margin-top:4px;">'+fmt(o.total)+' '+t('ج.م')+'</div>'
         + '</button>';
       }).join("");
       box.querySelectorAll("[data-order-row]").forEach(function(btn){
@@ -4224,7 +4283,7 @@ function renderAcctDrawerBody(){
     })
     .catch(function(){
       var box = document.getElementById("acctDrawerOrders");
-      if(box) box.innerHTML = '<p style="color:var(--pink-deep); font-size:13px;">تعذر تحميل الطلبات، جرّب تاني.</p>';
+      if(box) box.innerHTML = '<p style="color:var(--pink-deep); font-size:13px;">'+t("تعذر تحميل الطلبات، جرّب تاني.")+'</p>';
     });
 }
 document.getElementById("acctDrawerClose").addEventListener("click", closeAllPanels);
@@ -4233,7 +4292,7 @@ document.getElementById("acctDrawerClose").addEventListener("click", closeAllPan
 function showOrderDetailModal(order){
   var html = '<button class="modal-close" id="modalCloseBtn" aria-label="إغلاق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
     + '<div class="modal-info" style="padding:30px 24px;">'
-      + '<h3 style="margin-bottom:4px;">تفاصيل الطلب</h3>'
+      + '<h3 style="margin-bottom:4px;">'+t("تفاصيل الطلب")+'</h3>'
       + orderInvoiceHtml(order)
     + '</div>';
   document.getElementById("modalCard").classList.add("acct-card");
@@ -4513,7 +4572,7 @@ function showAdminOrderInvoiceModal(order){
   if(!order) return;
   var html = '<button class="modal-close" id="modalCloseBtn" aria-label="إغلاق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
     + '<div class="modal-info" style="padding:30px 24px;">'
-      + '<h3 style="margin-bottom:4px;">تفاصيل الطلب</h3>'
+      + '<h3 style="margin-bottom:4px;">'+t("تفاصيل الطلب")+'</h3>'
       + orderInvoiceHtml(order)
       + orderEmailDebugHtml(order)
       + '<div style="display:flex; gap:10px; margin-top:14px;">'

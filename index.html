@@ -666,6 +666,23 @@ html[dir="ltr"] .mobile-nav.show{transform:translateX(0);}
 .mobile-nav a{display:block; padding:13px 16px; font-weight:800; border-radius:13px; margin-block:5px; background:var(--surface-2); box-shadow:0 1px 0 rgba(255,255,255,.5) inset, 0 3px 0 color-mix(in srgb, var(--border) 55%, black); transition:transform .12s ease, box-shadow .12s ease;}
 .mobile-nav a:active{transform:translateY(2px); box-shadow:0 1px 0 rgba(255,255,255,.4) inset, 0 1px 0 color-mix(in srgb, var(--border) 55%, black);}
 
+/* ============ بانر تثبيت التطبيق (PWA) ============
+   شريط بسيط بيظهر فوق أي صفحة (لو الموقع مش متثبت أصلًا وقفله المستخدم
+   قبل كده) بيشجع العميل يثبّت الموقع كتطبيق على شاشته الرئيسية. */
+.install-banner{display:flex; align-items:center; gap:12px; background:linear-gradient(90deg,var(--pink-pale),var(--sunshine-pale)); border-bottom:1px solid var(--border); padding:10px 20px;}
+.install-banner-icon{font-size:26px; flex:none;}
+.install-banner-text{flex:1; min-width:0; display:flex; flex-direction:column; gap:1px;}
+.install-banner-text strong{font-size:13.5px;}
+.install-banner-text span{font-size:12px; color:var(--ink-soft);}
+.install-banner-close{flex:none; background:none; border:0; color:var(--ink-soft); font-size:20px; line-height:1; padding:4px 6px; cursor:pointer;}
+@media (max-width:560px){
+  .install-banner{padding:8px 12px; gap:8px;}
+  .install-banner-icon{font-size:21px;}
+  .install-banner-text strong{font-size:12.5px;}
+  .install-banner-text span{display:none;}
+  .install-banner #installBannerBtn{padding:8px 12px; font-size:12.5px;}
+}
+
 /* ============ Responsive ============ */
 @media (max-width:980px){
   .hero-inner{padding-block:28px;}
@@ -797,6 +814,19 @@ html[dir="ltr"] .mobile-nav.show{transform:translateX(0);}
 </div>
 
 <main id="main">
+
+<!-- بانر "ثبّت التطبيق" - يظهر ديناميكيًا من الجافاسكريبت بس (شوف قسم
+     PWA install banner تحت) لو الشرط اتحقق (المتصفح بيدعم التثبيت، أو
+     آيفون، والموقع لسه مش متثبت والمستخدم لسه ما قفلش البانر قبل كده). -->
+<div class="install-banner" id="installBanner" style="display:none;">
+  <span class="install-banner-icon">📲</span>
+  <div class="install-banner-text">
+    <strong data-i18n>ثبّت تطبيق آل عبده على شاشتك الرئيسية</strong>
+    <span data-i18n>افتحه على طول زي أي تطبيق تاني، من غير ما تفتح المتصفح</span>
+  </div>
+  <button type="button" class="btn btn-primary btn-sm" id="installBannerBtn" data-i18n>تثبيت الآن</button>
+  <button type="button" class="install-banner-close" id="installBannerClose" aria-label="إغلاق" data-i18n-aria>&times;</button>
+</div>
 
 <!-- ===================== HOME ===================== -->
 <section class="view active" id="view-home" data-view="home">
@@ -2245,7 +2275,18 @@ var I18N_EN = {
   "لسه مفيش طلبات مسجّلة على حسابك (بتتسجل بس لو طلبت وانت مسجّل دخول).": "No orders on your account yet (orders are only recorded when you're logged in while ordering).",
   "فاتورة #": "Invoice #",
   "تعذر تحميل الطلبات، جرّب تاني.": "Couldn't load your orders, please try again.",
-  "تفاصيل الطلب": "Order Details"
+  "تفاصيل الطلب": "Order Details",
+
+  /* بانر وشاشة "ثبّت التطبيق" (PWA) */
+  "ثبّت تطبيق آل عبده على شاشتك الرئيسية": "Install the Al-Abdo Toys app on your home screen",
+  "افتحه على طول زي أي تطبيق تاني، من غير ما تفتح المتصفح": "Open it instantly like any other app, no browser needed",
+  "تثبيت الآن": "Install Now",
+  "تثبيت التطبيق": "Install App",
+  "دوس على زرار المشاركة ⬆️ تحت في سفاري": "Tap the Share button ⬆️ at the bottom of Safari",
+  "اختار \"إضافة إلى الشاشة الرئيسية\"": "Choose \"Add to Home Screen\"",
+  "دوس \"إضافة\" فوق يمين الشاشة": "Tap \"Add\" at the top right of the screen",
+  "دوس على أيقونة القائمة ⋮ فوق يمين المتصفح": "Tap the menu icon ⋮ at the top right of the browser",
+  "اختار \"تثبيت التطبيق\" أو \"إضافة إلى الشاشة الرئيسية\"": "Choose \"Install app\" or \"Add to Home screen\""
 };
 
 /* ---------- اللغة (عربي/English) ----------
@@ -5481,6 +5522,78 @@ if("serviceWorker" in navigator && (location.protocol==="https:" || location.hos
   window.addEventListener("load", function(){
     navigator.serviceWorker.register("service-worker.js").catch(function(){});
   });
+}
+
+/* بانر "ثبّت التطبيق": بيستخدم حدث beforeinstallprompt (كروم/أندرويد) لو
+   اتاح، وبيوضّح خطوات يدوية لمستخدمي آيفون (سفاري مفيهوش الحدث ده خالص
+   ومحتاج المستخدم يعمل الخطوات بنفسه من زرار المشاركة). بيتقفل نهائيًا
+   (localStorage) لو المستخدم ضغط × أو ثبّت التطبيق فعلاً، وميظهرش أصلاً
+   لو الموقع شغال بالفعل كتطبيق متثبت (standalone). */
+var deferredInstallPrompt = null;
+var INSTALL_DISMISS_KEY = "aa_install_dismissed";
+function isStandaloneApp(){
+  return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true;
+}
+function isIOSDevice(){
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
+}
+function showInstallBanner(){
+  if(isStandaloneApp()) return;
+  try{ if(localStorage.getItem(INSTALL_DISMISS_KEY)==="1") return; }catch(e){}
+  var banner = document.getElementById("installBanner");
+  if(banner) banner.style.display = "flex";
+}
+function hideInstallBanner(remember){
+  var banner = document.getElementById("installBanner");
+  if(banner) banner.style.display = "none";
+  if(remember){ try{ localStorage.setItem(INSTALL_DISMISS_KEY, "1"); }catch(e){} }
+}
+function openInstallInstructionsModal(){
+  var ios = isIOSDevice();
+  var html = '<button class="modal-close" id="modalCloseBtn" aria-label="'+t("إغلاق")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
+    + '<div class="modal-info" style="padding:30px 24px;">'
+      + '<span style="font-size:34px;">📲</span>'
+      + '<h3>'+t("تثبيت التطبيق")+'</h3>'
+      + (ios
+        ? '<ol style="padding-inline-start:20px; display:flex; flex-direction:column; gap:10px; color:var(--ink-soft); font-size:13.5px;">'
+            + '<li>'+t("دوس على زرار المشاركة ⬆️ تحت في سفاري")+'</li>'
+            + '<li>'+t('اختار "إضافة إلى الشاشة الرئيسية"')+'</li>'
+            + '<li>'+t('دوس "إضافة" فوق يمين الشاشة')+'</li>'
+          + '</ol>'
+        : '<ol style="padding-inline-start:20px; display:flex; flex-direction:column; gap:10px; color:var(--ink-soft); font-size:13.5px;">'
+            + '<li>'+t("دوس على أيقونة القائمة ⋮ فوق يمين المتصفح")+'</li>'
+            + '<li>'+t('اختار "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية"')+'</li>'
+          + '</ol>')
+    + '</div>';
+  document.getElementById("modalCard").innerHTML = html;
+  document.getElementById("modalCloseBtn").addEventListener("click", closeAllPanels);
+  modalBackdrop.classList.add("show"); overlay.classList.add("show"); document.body.style.overflow="hidden";
+}
+window.addEventListener("beforeinstallprompt", function(e){
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  showInstallBanner();
+});
+window.addEventListener("appinstalled", function(){
+  hideInstallBanner(true);
+});
+document.getElementById("installBannerClose").addEventListener("click", function(){ hideInstallBanner(true); });
+document.getElementById("installBannerBtn").addEventListener("click", function(){
+  if(deferredInstallPrompt){
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.then(function(choice){
+      deferredInstallPrompt = null;
+      if(choice && choice.outcome==="accepted") hideInstallBanner(true);
+    });
+    return;
+  }
+  openInstallInstructionsModal();
+});
+/* آيفون (سفاري) مفيهوش حدث beforeinstallprompt خالص، فبنظهر البانر بعد
+   شوية تأخير بسيط (عشان الصفحة تخلص تحميل الأول) ونشرح الخطوات يدويًا
+   لو دوس "تثبيت الآن". */
+if(isIOSDevice() && !isStandaloneApp()){
+  setTimeout(showInstallBanner, 1200);
 }
 
 loadInitialData(function(){

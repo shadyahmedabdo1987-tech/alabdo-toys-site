@@ -1288,187 +1288,185 @@ html[dir="ltr"] .mobile-nav.show{transform:translateX(0);}
 
       <div id="adminSetup" class="admin-login">
         <span style="font-size:34px;">🆕</span>
-        <h2 style="font-size:19px;">أول مرة؟ اعمل حساب دخول لنفسك</h2>
-        <p style="color:var(--ink-soft); font-size:13.5px;">مفيش يوزر أو باسورد جاهزين في الموقع — اختار يوزر وباسورد إنت بس عارفهم، وسجّلهم في مكان أمين (زي مدير كلمات المرور بتاعك).</p>
-        <input type="text" id="suUserInput" placeholder="اختار اسم مستخدم" autocomplete="username" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
-        <input type="password" id="suPassInput" placeholder="اختار كلمة مرور قوية" autocomplete="new-password" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
-        <input type="password" id="suPassConfirm" placeholder="أكّد كلمة المرور" autocomplete="new-password" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
-        <input type="email" id="suRecoveryEmail" placeholder="إيميل احتياطي (لاسترجاع كلمة المرور)" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
-        <input type="tel" id="suRecoveryPhone" placeholder="رقم موبايل احتياطي" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
+        <h2 style="font-size:19px;" data-i18n>أول مرة؟ اعمل حساب دخول لنفسك</h2>
+        <p style="color:var(--ink-soft); font-size:13.5px;" data-i18n>مفيش يوزر أو باسورد جاهزين في الموقع — اختار يوزر وباسورد إنت بس عارفهم، وسجّلهم في مكان أمين (زي مدير كلمات المرور بتاعك).</p>
+        <input type="text" id="suUserInput" placeholder="اختار اسم مستخدم" data-i18n-placeholder autocomplete="username" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
+        <input type="password" id="suPassInput" placeholder="اختار كلمة مرور قوية" data-i18n-placeholder autocomplete="new-password" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
+        <input type="password" id="suPassConfirm" placeholder="أكّد كلمة المرور" data-i18n-placeholder autocomplete="new-password" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
+        <input type="email" id="suRecoveryEmail" placeholder="إيميل احتياطي (لاسترجاع كلمة المرور)" data-i18n-placeholder style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
+        <input type="tel" id="suRecoveryPhone" placeholder="رقم موبايل احتياطي" data-i18n-placeholder style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
         <label style="display:flex; align-items:center; gap:6px; justify-content:center; font-size:12.5px; color:var(--ink-soft); cursor:pointer;">
-          <input type="checkbox" id="suPassShow" style="margin:0;"> إظهار كلمة المرور وأنا بكتبها
+          <input type="checkbox" id="suPassShow" style="margin:0;"> <span data-i18n>إظهار كلمة المرور وأنا بكتبها</span>
         </label>
-        <button class="btn btn-primary btn-block" id="adminSetupBtn" type="button">إنشاء الحساب والدخول</button>
+        <button class="btn btn-primary btn-block" id="adminSetupBtn" type="button" data-i18n>إنشاء الحساب والدخول</button>
         <p id="adminSetupError" style="color:var(--pink-deep); font-size:13px; display:none;"></p>
       </div>
 
       <div id="adminLogin" class="admin-login">
         <span style="font-size:34px;">🔐</span>
-        <h2 style="font-size:19px;">دخول لوحة تحكم المتجر</h2>
-        <p style="color:var(--ink-soft); font-size:13.5px;">الصفحة دي خاصة بصاحب المتجر فقط، لإدارة المنتجات والأسعار والأقسام.</p>
-        <input type="text" id="adminUserInput" placeholder="اسم المستخدم" autocomplete="off" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
-        <input type="password" id="adminPassInput" placeholder="كلمة المرور" autocomplete="off" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
+        <h2 style="font-size:19px;" data-i18n>دخول لوحة تحكم المتجر</h2>
+        <p style="color:var(--ink-soft); font-size:13.5px;" data-i18n>الصفحة دي خاصة بصاحب المتجر فقط، لإدارة المنتجات والأسعار والأقسام.</p>
+        <input type="text" id="adminUserInput" placeholder="اسم المستخدم" data-i18n-placeholder autocomplete="off" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
+        <input type="password" id="adminPassInput" placeholder="كلمة المرور" data-i18n-placeholder autocomplete="off" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
         <label style="display:flex; align-items:center; gap:6px; justify-content:center; font-size:12.5px; color:var(--ink-soft); cursor:pointer;">
-          <input type="checkbox" id="adminPassShow" style="margin:0;"> إظهار كلمة المرور وأنا بكتبها
+          <input type="checkbox" id="adminPassShow" style="margin:0;"> <span data-i18n>إظهار كلمة المرور وأنا بكتبها</span>
         </label>
-        <button class="btn btn-primary btn-block" id="adminLoginBtn" type="button">دخول</button>
-        <p id="adminLoginError" style="color:var(--pink-deep); font-size:13px; display:none;">بيانات الدخول غير صحيحة</p>
+        <button class="btn btn-primary btn-block" id="adminLoginBtn" type="button" data-i18n>دخول</button>
+        <p id="adminLoginError" style="color:var(--pink-deep); font-size:13px; display:none;" data-i18n>بيانات الدخول غير صحيحة</p>
         <p id="adminLockoutMsg" style="color:var(--pink-deep); font-size:13px; display:none;"></p>
-        <button type="button" id="adminForgotLink" class="acct-owner-link">نسيت كلمة المرور؟</button>
+        <button type="button" id="adminForgotLink" class="acct-owner-link" data-i18n>نسيت كلمة المرور؟</button>
       </div>
 
       <div id="adminForgotIdentify" class="admin-login" style="display:none;">
         <span style="font-size:34px;">🔑</span>
-        <h2 style="font-size:19px;">استرجاع كلمة المرور</h2>
-        <p style="color:var(--ink-soft); font-size:13.5px;">ادخل الإيميل ورقم الموبايل الاحتياطيين اللي سجلتهم قبل كده:</p>
-        <input type="email" id="adminForgotEmail" placeholder="الإيميل الاحتياطي" autocomplete="off" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
-        <input type="tel" id="adminForgotPhone" placeholder="رقم الموبايل الاحتياطي" autocomplete="off" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
-        <button type="button" class="btn btn-primary btn-block" id="adminForgotBtn">إرسال</button>
+        <h2 style="font-size:19px;" data-i18n>استرجاع كلمة المرور</h2>
+        <p style="color:var(--ink-soft); font-size:13.5px;" data-i18n>ادخل الإيميل ورقم الموبايل الاحتياطيين اللي سجلتهم قبل كده:</p>
+        <input type="email" id="adminForgotEmail" placeholder="الإيميل الاحتياطي" data-i18n-placeholder autocomplete="off" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
+        <input type="tel" id="adminForgotPhone" placeholder="رقم الموبايل الاحتياطي" data-i18n-placeholder autocomplete="off" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
+        <button type="button" class="btn btn-primary btn-block" id="adminForgotBtn" data-i18n>إرسال</button>
         <p id="adminForgotMsg" style="font-size:13px; display:none;"></p>
-        <button type="button" id="adminForgotBack" class="acct-owner-link">رجوع لتسجيل الدخول</button>
+        <button type="button" id="adminForgotBack" class="acct-owner-link" data-i18n>رجوع لتسجيل الدخول</button>
       </div>
 
       <div id="adminResetCode" class="admin-login" style="display:none;">
         <span style="font-size:34px;">🔑</span>
-        <h2 style="font-size:19px;">كود التحقق بتاعك</h2>
-        <p style="color:var(--ink-soft); font-size:13.5px;">خد نسخة من الكود ده لو حابب تحتفظ بيه، وبعدين اقفل الشاشة عشان تختار كلمة مرورك الجديدة:</p>
+        <h2 style="font-size:19px;" data-i18n>كود التحقق بتاعك</h2>
+        <p style="color:var(--ink-soft); font-size:13.5px;" data-i18n>خد نسخة من الكود ده لو حابب تحتفظ بيه، وبعدين اقفل الشاشة عشان تختار كلمة مرورك الجديدة:</p>
         <div class="pass-reveal"><span class="code" id="adminResetCodeValue"></span></div>
-        <button class="btn btn-primary btn-block" id="adminResetCodeCloseBtn" type="button">تم، إغلاق</button>
+        <button class="btn btn-primary btn-block" id="adminResetCodeCloseBtn" type="button" data-i18n>تم، إغلاق</button>
       </div>
 
       <div id="adminResetNewPass" class="admin-login" style="display:none;">
         <span style="font-size:34px;">🔒</span>
-        <h2 style="font-size:19px;">اختار كلمة مرورك الجديدة</h2>
-        <input type="text" id="adminResetCodeInput" placeholder="كود التحقق" autocomplete="off" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
-        <input type="password" id="adminResetNewPassInput" placeholder="كلمة المرور الجديدة (6 حروف/أرقام على الأقل)" autocomplete="new-password" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
-        <input type="password" id="adminResetNewPassConfirm" placeholder="تأكيد كلمة المرور الجديدة" autocomplete="new-password" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
-        <button class="btn btn-primary btn-block" id="adminResetNewPassBtn" type="button">تغيير كلمة المرور</button>
+        <h2 style="font-size:19px;" data-i18n>اختار كلمة مرورك الجديدة</h2>
+        <input type="text" id="adminResetCodeInput" placeholder="كود التحقق" data-i18n-placeholder autocomplete="off" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
+        <input type="password" id="adminResetNewPassInput" placeholder="كلمة المرور الجديدة (6 حروف/أرقام على الأقل)" data-i18n-placeholder autocomplete="new-password" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
+        <input type="password" id="adminResetNewPassConfirm" placeholder="تأكيد كلمة المرور الجديدة" data-i18n-placeholder autocomplete="new-password" style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);text-align:center;">
+        <button class="btn btn-primary btn-block" id="adminResetNewPassBtn" type="button" data-i18n>تغيير كلمة المرور</button>
         <p id="adminResetNewPassError" style="color:var(--pink-deep); font-size:13px; display:none;"></p>
       </div>
 
       <div id="adminDashboard" class="admin-wrap">
         <div class="admin-bar">
-          <div><h1 style="font-size:22px;">لوحة تحكم المنتجات</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;">أضف وعدّل وامسح المنتجات والأقسام — أي تعديل بيظهر لكل زوار الموقع فورًا.</p></div>
+          <div><h1 style="font-size:22px;" data-i18n>لوحة تحكم المنتجات</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;" data-i18n>أضف وعدّل وامسح المنتجات والأقسام — أي تعديل بيظهر لكل زوار الموقع فورًا.</p></div>
           <div class="admin-actions">
-            <button class="btn btn-primary btn-sm" id="adminAnalyticsBtn" type="button">📊 تحليل الزوار</button>
-            <button class="btn btn-primary btn-sm" id="adminInquiriesBtn" type="button">📨 استفسارات العملاء<span id="adminInquiriesBadge" class="admin-badge" hidden>0</span></button>
-            <button class="btn btn-primary btn-sm" id="adminCustomersBtn" type="button">👥 بيانات العملاء</button>
-            <button class="btn btn-primary btn-sm" id="adminOrdersBtn" type="button">🧾 طلبات العملاء</button>
-            <button class="btn btn-primary btn-sm" id="adminStockBtn" type="button">🔔 طلبات التوفر</button>
-            <button class="btn btn-outline btn-sm" id="adminImportBtn" type="button">استيراد ملف بيانات</button>
+            <button class="btn btn-primary btn-sm" id="adminAnalyticsBtn" type="button" data-i18n>📊 تحليل الزوار</button>
+            <button class="btn btn-primary btn-sm" id="adminInquiriesBtn" type="button"><span data-i18n>📨 استفسارات العملاء</span><span id="adminInquiriesBadge" class="admin-badge" hidden>0</span></button>
+            <button class="btn btn-primary btn-sm" id="adminCustomersBtn" type="button" data-i18n>👥 بيانات العملاء</button>
+            <button class="btn btn-primary btn-sm" id="adminOrdersBtn" type="button" data-i18n>🧾 طلبات العملاء</button>
+            <button class="btn btn-primary btn-sm" id="adminStockBtn" type="button" data-i18n>🔔 طلبات التوفر</button>
+            <button class="btn btn-outline btn-sm" id="adminImportBtn" type="button" data-i18n>استيراد ملف بيانات</button>
             <input type="file" id="adminImportFile" accept="application/json" hidden>
-            <button class="btn btn-sky btn-sm" id="adminExportBtn" type="button">⬇️ نسخة احتياطية</button>
-            <button class="btn btn-outline btn-sm" id="adminResetBtn" type="button">استعادة الافتراضي</button>
-            <button class="btn btn-outline btn-sm" id="adminLogoutBtn" type="button">خروج</button>
+            <button class="btn btn-sky btn-sm" id="adminExportBtn" type="button" data-i18n>⬇️ نسخة احتياطية</button>
+            <button class="btn btn-outline btn-sm" id="adminResetBtn" type="button" data-i18n>استعادة الافتراضي</button>
+            <button class="btn btn-outline btn-sm" id="adminLogoutBtn" type="button" data-i18n>خروج</button>
           </div>
         </div>
 
-        <div class="admin-note">
-          أي تعديل بتعمله هنا (إضافة/تعديل/حذف منتج أو قسم) بيتحفظ ويظهر لكل زوار الموقع أوتوماتيك خلال ثواني — من غير ما تحتاج ترفع أي ملف بنفسك. زرار <strong>"نسخة احتياطية"</strong> بس لو حابب تحتفظ بملف <code>products.json</code> عندك كنسخة أمان.
-        </div>
+        <div class="admin-note"><span data-i18n>أي تعديل بتعمله هنا (إضافة/تعديل/حذف منتج أو قسم) بيتحفظ ويظهر لكل زوار الموقع أوتوماتيك خلال ثواني — من غير ما تحتاج ترفع أي ملف بنفسك. زرار "نسخة احتياطية" بس لو حابب تحتفظ بملف <code>products.json</code> عندك كنسخة أمان.</span></div>
 
         <div class="admin-grid" style="margin-top:20px;">
           <div class="admin-card">
-            <h3 id="productFormTitle">➕ إضافة منتج جديد</h3>
+            <h3 id="productFormTitle" data-i18n>➕ إضافة منتج جديد</h3>
             <form id="productForm" style="display:flex; flex-direction:column; gap:12px;">
               <input type="hidden" id="pfId">
-              <div class="field"><label for="pfName">اسم المنتج</label><input id="pfName" required placeholder="مثال: عربية تحكم كهربائية"></div>
-              <div class="field"><label for="pfDesc">وصف المنتج</label><textarea id="pfDesc" rows="3" placeholder="اكتب وصف حقيقي ومختصر للمنتج: مميزاته، الخامة، السن المناسب... (بيظهر للعميل في صفحة تفاصيل المنتج)" style="width:100%; resize:vertical; font-family:inherit; font-size:14px; padding:10px 12px; border-radius:10px; border:1.5px solid var(--border);"></textarea></div>
+              <div class="field"><label for="pfName" data-i18n>اسم المنتج</label><input id="pfName" required placeholder="مثال: عربية تحكم كهربائية" data-i18n-placeholder></div>
+              <div class="field"><label for="pfDesc" data-i18n>وصف المنتج</label><textarea id="pfDesc" rows="3" placeholder="اكتب وصف حقيقي ومختصر للمنتج: مميزاته، الخامة، السن المناسب... (بيظهر للعميل في صفحة تفاصيل المنتج)" data-i18n-placeholder style="width:100%; resize:vertical; font-family:inherit; font-size:14px; padding:10px 12px; border-radius:10px; border:1.5px solid var(--border);"></textarea></div>
               <div style="border-top:1.5px dashed var(--border); padding-top:12px; display:flex; flex-direction:column; gap:12px;">
-                <p style="color:var(--ink-soft); font-size:12.5px; margin:0;">🌐 دي حقول اختيارية بس — لو الموقع عند العميل شغّال بالإنجليزي، النصوص دي هي اللي هتظهر له بدل العربي. سيبها فاضية لو لسه مش عايز تترجم المنتج ده.</p>
-                <div class="field"><label for="pfNameEn">اسم المنتج بالإنجليزي (اختياري)</label><input id="pfNameEn" placeholder="e.g.: Electric RC Car" dir="ltr" style="text-align:left;"></div>
-                <div class="field"><label for="pfDescEn">وصف المنتج بالإنجليزي (اختياري)</label><textarea id="pfDescEn" rows="3" placeholder="Write a short, real description of the product in English..." dir="ltr" style="width:100%; resize:vertical; font-family:inherit; font-size:14px; padding:10px 12px; border-radius:10px; border:1.5px solid var(--border); text-align:left;"></textarea></div>
+                <p style="color:var(--ink-soft); font-size:12.5px; margin:0;" data-i18n>🌐 دي حقول اختيارية بس — لو الموقع عند العميل شغّال بالإنجليزي، النصوص دي هي اللي هتظهر له بدل العربي. سيبها فاضية لو لسه مش عايز تترجم المنتج ده.</p>
+                <div class="field"><label for="pfNameEn" data-i18n>اسم المنتج بالإنجليزي (اختياري)</label><input id="pfNameEn" placeholder="e.g.: Electric RC Car" dir="ltr" style="text-align:left;"></div>
+                <div class="field"><label for="pfDescEn" data-i18n>وصف المنتج بالإنجليزي (اختياري)</label><textarea id="pfDescEn" rows="3" placeholder="Write a short, real description of the product in English..." dir="ltr" style="width:100%; resize:vertical; font-family:inherit; font-size:14px; padding:10px 12px; border-radius:10px; border:1.5px solid var(--border); text-align:left;"></textarea></div>
               </div>
               <div class="field-row">
-                <div class="field"><label for="pfCat">القسم</label><select id="pfCat"></select></div>
-                <div class="field"><label for="pfBadge">وسم</label>
-                  <select id="pfBadge"><option value="">بدون</option><option value="new">جديد</option></select>
+                <div class="field"><label for="pfCat" data-i18n>القسم</label><select id="pfCat"></select></div>
+                <div class="field"><label for="pfBadge" data-i18n>وسم</label>
+                  <select id="pfBadge"><option value="" data-i18n>بدون</option><option value="new" data-i18n>جديد</option></select>
                 </div>
               </div>
               <div class="field-row">
-                <div class="field"><label for="pfPrice">السعر الحالي (ج.م)</label><input id="pfPrice" type="number" min="0" required></div>
-                <div class="field"><label for="pfOld">السعر قبل الخصم (اختياري)</label><input id="pfOld" type="number" min="0" placeholder="اتركه فاضي لو مفيش خصم"></div>
+                <div class="field"><label for="pfPrice" data-i18n>السعر الحالي (ج.م)</label><input id="pfPrice" type="number" min="0" required></div>
+                <div class="field"><label for="pfOld" data-i18n>السعر قبل الخصم (اختياري)</label><input id="pfOld" type="number" min="0" placeholder="اتركه فاضي لو مفيش خصم" data-i18n-placeholder></div>
               </div>
-              <div class="field" id="pfStockRow"><label for="pfStock">الكمية المتاحة (اتركها فاضية لو مش عايز تتبعها)</label><input id="pfStock" type="number" min="0" step="1" placeholder="مثلاً: 10"></div>
-              <p id="pfStockColorsNote" style="color:var(--ink-soft); font-size:12px; margin-top:-6px; display:none;">المنتج ده بألوان، فالكمية بتتحدد لكل لون على حدة تحت.</p>
+              <div class="field" id="pfStockRow"><label for="pfStock" data-i18n>الكمية المتاحة (اتركها فاضية لو مش عايز تتبعها)</label><input id="pfStock" type="number" min="0" step="1" placeholder="مثلاً: 10" data-i18n-placeholder></div>
+              <p id="pfStockColorsNote" style="color:var(--ink-soft); font-size:12px; margin-top:-6px; display:none;" data-i18n>المنتج ده بألوان، فالكمية بتتحدد لكل لون على حدة تحت.</p>
               <div class="field-row">
-                <div class="field"><label for="pfRating">التقييم (من 5)</label><input id="pfRating" type="number" min="1" max="5" step="0.1" value="4.5"></div>
-                <div class="field"><label for="pfReviews">عدد التقييمات</label><input id="pfReviews" type="number" min="0" value="0"></div>
+                <div class="field"><label for="pfRating" data-i18n>التقييم (من 5)</label><input id="pfRating" type="number" min="1" max="5" step="0.1" value="4.5"></div>
+                <div class="field"><label for="pfReviews" data-i18n>عدد التقييمات</label><input id="pfReviews" type="number" min="0" value="0"></div>
               </div>
               <div class="field">
-                <label>صور حقيقية للمنتج (ممكن تضيف أكتر من صورة)</label>
+                <label data-i18n>صور حقيقية للمنتج (ممكن تضيف أكتر من صورة)</label>
                 <div class="image-upload-row" style="flex-wrap:wrap;">
                   <div id="pfImagesPreview" style="display:flex; gap:8px; flex-wrap:wrap; width:100%;"></div>
                   <div class="image-upload-actions">
                     <input type="file" id="pfImageInput" accept="image/*" multiple hidden>
-                    <button type="button" class="btn btn-outline btn-sm" id="pfImagePickBtn">إضافة صورة</button>
+                    <button type="button" class="btn btn-outline btn-sm" id="pfImagePickBtn" data-i18n>إضافة صورة</button>
                   </div>
                 </div>
-                <p style="color:var(--ink-soft); font-size:12px; margin-top:4px;">لو ضفت أكتر من صورة، هيتبادلوا تلقائيًا كل ٣ ثواني في كارت المنتج في كل الموقع، وكمان بيظهروا كمعرض جوه تفاصيل المنتج. لو مفيش صور، أيقونة القسم بتفضل ظاهرة بدالها.</p>
+                <p style="color:var(--ink-soft); font-size:12px; margin-top:4px;" data-i18n>لو ضفت أكتر من صورة، هيتبادلوا تلقائيًا كل ٣ ثواني في كارت المنتج في كل الموقع، وكمان بيظهروا كمعرض جوه تفاصيل المنتج. لو مفيش صور، أيقونة القسم بتفضل ظاهرة بدالها.</p>
               </div>
               <div class="field">
-                <label>ألوان المنتج (اختياري، لو المنتج متاح بأكتر من لون)</label>
+                <label data-i18n>ألوان المنتج (اختياري، لو المنتج متاح بأكتر من لون)</label>
                 <div id="pfColorsList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:10px;"></div>
-                <label style="font-size:12.5px; font-weight:700; color:var(--ink-soft);">1) اختار اللون من اللوحة</label>
+                <label style="font-size:12.5px; font-weight:700; color:var(--ink-soft);" data-i18n>1) اختار اللون من اللوحة</label>
                 <div class="admin-color-picker" id="pfColorNamePicker"></div>
-                <label style="font-size:12.5px; font-weight:700; color:var(--ink-soft); margin-top:10px; display:block;">2) اختار صورة اللون ده</label>
+                <label style="font-size:12.5px; font-weight:700; color:var(--ink-soft); margin-top:10px; display:block;" data-i18n>2) اختار صورة اللون ده</label>
                 <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
                   <input type="file" id="pfColorImageInput" accept="image/*" hidden>
-                  <button type="button" class="btn btn-outline btn-sm" id="pfColorImagePickBtn">اختيار صورة اللون</button>
+                  <button type="button" class="btn btn-outline btn-sm" id="pfColorImagePickBtn" data-i18n>اختيار صورة اللون</button>
                 </div>
                 <p id="pfColorImageChosen" style="color:var(--mint); font-size:12px; margin-top:4px; display:none;"></p>
-                <button type="button" class="btn btn-outline btn-sm" id="pfColorAddBtn" style="margin-top:10px;">➕ إضافة اللون</button>
-                <p style="color:var(--ink-soft); font-size:12px; margin-top:6px;">لو ضفت أكتر من لون، العميل هيضطر يختار اللون اللي عايزه من صفحة المنتج قبل ما يقدر يضيفه للسلة أو يطلبه.</p>
+                <button type="button" class="btn btn-outline btn-sm" id="pfColorAddBtn" style="margin-top:10px;" data-i18n>➕ إضافة اللون</button>
+                <p style="color:var(--ink-soft); font-size:12px; margin-top:6px;" data-i18n>لو ضفت أكتر من لون، العميل هيضطر يختار اللون اللي عايزه من صفحة المنتج قبل ما يقدر يضيفه للسلة أو يطلبه.</p>
               </div>
               <div class="hero-ctas" style="justify-content:flex-start;">
-                <button type="submit" class="btn btn-primary" id="productFormSubmit">إضافة المنتج</button>
-                <button type="button" class="btn btn-outline" id="productFormCancel" hidden>إلغاء التعديل</button>
+                <button type="submit" class="btn btn-primary" id="productFormSubmit" data-i18n>إضافة المنتج</button>
+                <button type="button" class="btn btn-outline" id="productFormCancel" hidden data-i18n>إلغاء التعديل</button>
               </div>
             </form>
 
-            <h3 style="margin-top:26px;" id="catFormTitle">➕ إضافة قسم جديد</h3>
+            <h3 style="margin-top:26px;" id="catFormTitle" data-i18n>➕ إضافة قسم جديد</h3>
             <form id="catForm" style="display:flex; flex-direction:column; gap:12px;">
               <input type="hidden" id="cfId">
-              <div class="field"><label for="cfName">اسم القسم</label><input id="cfName" required placeholder="مثال: ألعاب إلكترونية"></div>
-              <div class="field"><label for="cfNameEn">اسم القسم بالإنجليزي (اختياري)</label><input id="cfNameEn" placeholder="e.g.: Electronic Toys" dir="ltr" style="text-align:left;"></div>
+              <div class="field"><label for="cfName" data-i18n>اسم القسم</label><input id="cfName" required placeholder="مثال: ألعاب إلكترونية" data-i18n-placeholder></div>
+              <div class="field"><label for="cfNameEn" data-i18n>اسم القسم بالإنجليزي (اختياري)</label><input id="cfNameEn" placeholder="e.g.: Electronic Toys" dir="ltr" style="text-align:left;"></div>
               <div class="field">
-                <label for="cfIcon">أيقونة القسم (إيموجي)</label>
-                <input id="cfIcon" required placeholder="مثال: 🎮" maxlength="4">
+                <label for="cfIcon" data-i18n>أيقونة القسم (إيموجي)</label>
+                <input id="cfIcon" required placeholder="مثال: 🎮" data-i18n-placeholder maxlength="4">
                 <div class="emoji-picker" id="cfIconPicker"></div>
               </div>
-              <div class="field"><label>لون القسم</label>
+              <div class="field"><label data-i18n>لون القسم</label>
                 <div class="color-swatches" id="colorSwatches"></div>
               </div>
               <div class="hero-ctas" style="justify-content:flex-start;">
-                <button type="submit" class="btn btn-outline" id="catFormSubmit" style="align-self:flex-start;">إضافة القسم</button>
-                <button type="button" class="btn btn-outline" id="catFormCancel" hidden>إلغاء التعديل</button>
+                <button type="submit" class="btn btn-outline" id="catFormSubmit" style="align-self:flex-start;" data-i18n>إضافة القسم</button>
+                <button type="button" class="btn btn-outline" id="catFormCancel" hidden data-i18n>إلغاء التعديل</button>
               </div>
             </form>
 
-            <h3 style="margin-top:26px;">⚙️ إعدادات حساب الدخول</h3>
+            <h3 style="margin-top:26px;" data-i18n>⚙️ إعدادات حساب الدخول</h3>
             <form id="adminSettingsForm" style="display:flex; flex-direction:column; gap:12px;">
-              <div class="field"><label for="asUsername">اسم المستخدم</label><input id="asUsername" required></div>
-              <div class="field"><label for="asPassword">كلمة مرور جديدة (اتركها فاضية لو مش عايز تغيّرها)</label><input id="asPassword" type="password" placeholder="••••••" autocomplete="new-password"></div>
-              <div class="field"><label for="asRecoveryEmail">الإيميل الاحتياطي (لاسترجاع الباسورد)</label><input id="asRecoveryEmail" type="email" required></div>
-              <div class="field"><label for="asRecoveryPhone">رقم الموبايل الاحتياطي (لاسترجاع الباسورد)</label><input id="asRecoveryPhone" type="tel" required placeholder="01xxxxxxxxx"></div>
-              <p style="color:var(--ink-soft); font-size:12px;">لو نسيت كلمة المرور، دوس "نسيت كلمة المرور؟" في صفحة الدخول وادخل الإيميل ورقم الموبايل الاحتياطيين دول — هتظهرلك كلمة مرور جديدة على الشاشة فورًا.</p>
-              <button type="submit" class="btn btn-outline" style="align-self:flex-start;">حفظ الإعدادات</button>
+              <div class="field"><label for="asUsername" data-i18n>اسم المستخدم</label><input id="asUsername" required></div>
+              <div class="field"><label for="asPassword" data-i18n>كلمة مرور جديدة (اتركها فاضية لو مش عايز تغيّرها)</label><input id="asPassword" type="password" placeholder="••••••" autocomplete="new-password"></div>
+              <div class="field"><label for="asRecoveryEmail" data-i18n>الإيميل الاحتياطي (لاسترجاع الباسورد)</label><input id="asRecoveryEmail" type="email" required></div>
+              <div class="field"><label for="asRecoveryPhone" data-i18n>رقم الموبايل الاحتياطي (لاسترجاع الباسورد)</label><input id="asRecoveryPhone" type="tel" required placeholder="01xxxxxxxxx"></div>
+              <p style="color:var(--ink-soft); font-size:12px;" data-i18n>لو نسيت كلمة المرور، دوس "نسيت كلمة المرور؟" في صفحة الدخول وادخل الإيميل ورقم الموبايل الاحتياطيين دول — هتظهرلك كلمة مرور جديدة على الشاشة فورًا.</p>
+              <button type="submit" class="btn btn-outline" style="align-self:flex-start;" data-i18n>حفظ الإعدادات</button>
             </form>
           </div>
 
           <div class="admin-card">
-            <h3>📦 المنتجات الحالية (<span id="adminProductCount">0</span>)</h3>
+            <h3><span data-i18n>📦 المنتجات الحالية</span> (<span id="adminProductCount">0</span>)</h3>
             <div style="overflow-x:auto;">
               <table class="admin-table">
-                <thead><tr><th></th><th>الاسم</th><th>القسم</th><th>السعر</th><th>الكمية</th><th></th></tr></thead>
+                <thead><tr><th></th><th data-i18n>الاسم</th><th data-i18n>القسم</th><th data-i18n>السعر</th><th data-i18n>الكمية</th><th></th></tr></thead>
                 <tbody id="adminProductsBody"></tbody>
               </table>
             </div>
 
-            <h3 style="margin-top:26px;">🧭 الأقسام (<span id="adminCatCount">0</span>)</h3>
+            <h3 style="margin-top:26px;"><span data-i18n>🧭 الأقسام</span> (<span id="adminCatCount">0</span>)</h3>
             <div style="overflow-x:auto;">
               <table class="admin-table">
-                <thead><tr><th></th><th>الاسم</th><th>عدد المنتجات</th><th></th></tr></thead>
+                <thead><tr><th></th><th data-i18n>الاسم</th><th data-i18n>عدد المنتجات</th><th></th></tr></thead>
                 <tbody id="adminCatsBody"></tbody>
               </table>
             </div>
@@ -1478,65 +1476,65 @@ html[dir="ltr"] .mobile-nav.show{transform:translateX(0);}
 
       <div id="adminOrdersPage" class="admin-wrap">
         <div class="admin-bar">
-          <div><h1 style="font-size:22px;">🧾 طلبات العملاء (<span id="adminOrderCount">0</span>)</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;">كل طلبات الموقع بتظهر هنا، سواء العميل كان مسجّل دخول أو طلب كضيف من غير حساب. دوس على أي طلب عشان تشوف فاتورته كاملة.</p></div>
+          <div><h1 style="font-size:22px;"><span data-i18n>🧾 طلبات العملاء</span> (<span id="adminOrderCount">0</span>)</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;" data-i18n>كل طلبات الموقع بتظهر هنا، سواء العميل كان مسجّل دخول أو طلب كضيف من غير حساب. دوس على أي طلب عشان تشوف فاتورته كاملة.</p></div>
           <div class="admin-actions">
-            <button class="btn btn-outline btn-sm" id="adminOrdersBackBtn" type="button">رجوع للوحة التحكم</button>
+            <button class="btn btn-outline btn-sm" id="adminOrdersBackBtn" type="button" data-i18n>رجوع للوحة التحكم</button>
           </div>
         </div>
         <div id="adminOrdersList" style="display:flex; flex-direction:column; gap:12px;">
-          <p style="color:var(--ink-soft); font-size:13px;">جاري التحميل...</p>
+          <p style="color:var(--ink-soft); font-size:13px;" data-i18n>جاري التحميل...</p>
         </div>
       </div>
 
       <div id="adminStockPage" class="admin-wrap">
         <div class="admin-bar">
-          <div><h1 style="font-size:22px;">🔔 طلبات التوفر (<span id="adminStockCount">0</span>)</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;">طلبات "أعلمني عند التوفر" اللي بعتها العملاء عن منتجات خلصت أو مش متوفرة حاليًا. دوس "تم التعامل معه" لما توفّر المنتج وتكلّم العميل.</p></div>
+          <div><h1 style="font-size:22px;"><span data-i18n>🔔 طلبات التوفر</span> (<span id="adminStockCount">0</span>)</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;" data-i18n>طلبات "أعلمني عند التوفر" اللي بعتها العملاء عن منتجات خلصت أو مش متوفرة حاليًا. دوس "تم التعامل معه" لما توفّر المنتج وتكلّم العميل.</p></div>
           <div class="admin-actions">
-            <button class="btn btn-outline btn-sm" id="adminStockBackBtn" type="button">رجوع للوحة التحكم</button>
+            <button class="btn btn-outline btn-sm" id="adminStockBackBtn" type="button" data-i18n>رجوع للوحة التحكم</button>
           </div>
         </div>
         <div id="adminStockList" style="display:flex; flex-direction:column; gap:12px;">
-          <p style="color:var(--ink-soft); font-size:13px;">جاري التحميل...</p>
+          <p style="color:var(--ink-soft); font-size:13px;" data-i18n>جاري التحميل...</p>
         </div>
       </div>
 
       <div id="adminAnalyticsPage" class="admin-wrap">
         <div class="admin-bar">
-          <div><h1 style="font-size:22px;">📊 تحليل الزوار</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;">إحصائيات فعلية عن زوار الموقع وتفاعلهم — بتتحدث أول ما حد يفتح صفحة من صفحات الموقع.</p></div>
+          <div><h1 style="font-size:22px;" data-i18n>📊 تحليل الزوار</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;" data-i18n>إحصائيات فعلية عن زوار الموقع وتفاعلهم — بتتحدث أول ما حد يفتح صفحة من صفحات الموقع.</p></div>
           <div class="admin-actions">
-            <button class="btn btn-outline btn-sm" id="adminAnalyticsRefreshBtn" type="button">🔄 تحديث</button>
-            <button class="btn btn-outline btn-sm" id="adminAnalyticsBackBtn" type="button">رجوع للوحة التحكم</button>
+            <button class="btn btn-outline btn-sm" id="adminAnalyticsRefreshBtn" type="button" data-i18n>🔄 تحديث</button>
+            <button class="btn btn-outline btn-sm" id="adminAnalyticsBackBtn" type="button" data-i18n>رجوع للوحة التحكم</button>
           </div>
         </div>
 
         <div id="adminAnalyticsBody">
-          <p style="color:var(--ink-soft); font-size:13px;">جاري التحميل...</p>
+          <p style="color:var(--ink-soft); font-size:13px;" data-i18n>جاري التحميل...</p>
         </div>
       </div>
 
       <div id="adminInquiriesPage" class="admin-wrap">
         <div class="admin-bar">
-          <div><h1 style="font-size:22px;">📨 استفسارات العملاء (<span id="adminInquiriesCount">0</span>)</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;">رسايل صفحة "تواصل معنا" اللي بعتها العملاء. دوس "تم الرد" بعد ما تكلّم العميل وترد على استفساره.</p></div>
+          <div><h1 style="font-size:22px;"><span data-i18n>📨 استفسارات العملاء</span> (<span id="adminInquiriesCount">0</span>)</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;" data-i18n>رسايل صفحة "تواصل معنا" اللي بعتها العملاء. دوس "تم الرد" بعد ما تكلّم العميل وترد على استفساره.</p></div>
           <div class="admin-actions">
-            <button class="btn btn-outline btn-sm" id="adminInquiriesBackBtn" type="button">رجوع للوحة التحكم</button>
+            <button class="btn btn-outline btn-sm" id="adminInquiriesBackBtn" type="button" data-i18n>رجوع للوحة التحكم</button>
           </div>
         </div>
         <div id="adminInquiriesList" style="display:flex; flex-direction:column; gap:12px;">
-          <p style="color:var(--ink-soft); font-size:13px;">جاري التحميل...</p>
+          <p style="color:var(--ink-soft); font-size:13px;" data-i18n>جاري التحميل...</p>
         </div>
       </div>
 
       <div id="adminCustomersPage" class="admin-wrap">
         <div class="admin-bar">
-          <div><h1 style="font-size:22px;">👥 بيانات العملاء (<span id="adminCustomersCount">0</span>)</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;">كل العملاء اللي سجّلوا حساب على الموقع ببياناتهم، ومعاك صلاحية كاملة تعدّل أو تمسح أي حساب.</p></div>
+          <div><h1 style="font-size:22px;"><span data-i18n>👥 بيانات العملاء</span> (<span id="adminCustomersCount">0</span>)</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;" data-i18n>كل العملاء اللي سجّلوا حساب على الموقع ببياناتهم، ومعاك صلاحية كاملة تعدّل أو تمسح أي حساب.</p></div>
           <div class="admin-actions">
-            <button class="btn btn-outline btn-sm" id="adminCustomersBackBtn" type="button">رجوع للوحة التحكم</button>
+            <button class="btn btn-outline btn-sm" id="adminCustomersBackBtn" type="button" data-i18n>رجوع للوحة التحكم</button>
           </div>
         </div>
         <div class="admin-card" style="overflow-x:auto;">
           <table class="admin-table">
-            <thead><tr><th>الاسم</th><th>الموبايل</th><th>الإيميل</th><th>المحافظة</th><th>العنوان</th><th></th></tr></thead>
-            <tbody id="adminCustomersBody"><tr><td colspan="6" style="color:var(--ink-soft);">جاري التحميل...</td></tr></tbody>
+            <thead><tr><th data-i18n>الاسم</th><th data-i18n>الموبايل</th><th data-i18n>الإيميل</th><th data-i18n>المحافظة</th><th data-i18n>العنوان</th><th></th></tr></thead>
+            <tbody id="adminCustomersBody"><tr><td colspan="6" style="color:var(--ink-soft);" data-i18n>جاري التحميل...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -1842,49 +1840,50 @@ function orderInvoiceHtml(o){
   }).join("");
   var hasShipping = o.shipping != null && +o.shipping > 0;
   var subtotal = o.subtotal != null ? o.subtotal : (o.total - (+o.shipping||0));
+  var cur = t("ج.م");
   var totalsBlock = hasShipping
     ? '<div style="display:flex; flex-direction:column; gap:3px; font-size:12.5px; border-top:1.5px solid var(--border); padding-top:8px;">'
-        + '<div style="display:flex; justify-content:space-between; color:var(--ink-soft);"><span>الإجمالي الفرعي</span><span class="tabular">'+fmt(subtotal)+' ج.م</span></div>'
-        + '<div style="display:flex; justify-content:space-between; color:var(--ink-soft);"><span>الشحن</span><span class="tabular">'+fmt(o.shipping)+' ج.م</span></div>'
-        + '<div style="display:flex; justify-content:space-between; font-weight:800; font-size:13.5px; padding-top:4px;"><span>الإجمالي الكلي</span><span class="tabular">'+fmt(o.total)+' ج.م</span></div>'
+        + '<div style="display:flex; justify-content:space-between; color:var(--ink-soft);"><span>'+t("الإجمالي الفرعي")+'</span><span class="tabular">'+fmt(subtotal)+' '+cur+'</span></div>'
+        + '<div style="display:flex; justify-content:space-between; color:var(--ink-soft);"><span>'+t("الشحن")+'</span><span class="tabular">'+fmt(o.shipping)+' '+cur+'</span></div>'
+        + '<div style="display:flex; justify-content:space-between; font-weight:800; font-size:13.5px; padding-top:4px;"><span>'+t("الإجمالي الكلي")+'</span><span class="tabular">'+fmt(o.total)+' '+cur+'</span></div>'
       + '</div>'
     : '<div style="display:flex; justify-content:space-between; font-weight:800; font-size:13.5px; border-top:1.5px solid var(--border); padding-top:8px;">'
-        + '<span>الإجمالي الكلي</span><span class="tabular">'+fmt(o.total)+' ج.م</span>'
+        + '<span>'+t("الإجمالي الكلي")+'</span><span class="tabular">'+fmt(o.total)+' '+cur+'</span>'
       + '</div>';
   var notesBlock = o.notes
-    ? '<div style="background:var(--surface-3); border-radius:10px; padding:8px 10px; font-size:12.5px; color:var(--ink-soft);"><strong style="color:var(--ink);">ملاحظات العميل: </strong>'+o.notes+'</div>'
+    ? '<div style="background:var(--surface-3); border-radius:10px; padding:8px 10px; font-size:12.5px; color:var(--ink-soft);"><strong style="color:var(--ink);">'+t("ملاحظات العميل")+': </strong>'+o.notes+'</div>'
     : "";
   var paymentBlock = "";
   if(o.paymentMethod){
     paymentBlock += '<div style="font-size:12.5px; color:var(--ink-soft); display:flex; justify-content:space-between;">'
-      + '<span>وسيلة الدفع</span><strong style="color:var(--ink);">'+paymentMethodLabel(o.paymentMethod)+'</strong>'
+      + '<span>'+t("وسيلة الدفع")+'</span><strong style="color:var(--ink);">'+paymentMethodLabel(o.paymentMethod)+'</strong>'
     + '</div>';
     if(o.paymentProof){
       paymentBlock += '<div style="display:flex; flex-direction:column; gap:6px;">'
-        + '<span style="font-size:12px; color:var(--ink-soft); font-weight:700;">سكرين شوت التحويل</span>'
-        + '<img src="'+o.paymentProof+'" alt="سكرين شوت التحويل" style="max-width:100%; max-height:220px; object-fit:contain; border-radius:10px; border:1.5px solid var(--border);">'
+        + '<span style="font-size:12px; color:var(--ink-soft); font-weight:700;">'+t("سكرين شوت التحويل")+'</span>'
+        + '<img src="'+o.paymentProof+'" alt="'+t("سكرين شوت التحويل")+'" style="max-width:100%; max-height:220px; object-fit:contain; border-radius:10px; border:1.5px solid var(--border);">'
       + '</div>';
     } else if(paymentMethodNeedsProof(o.paymentMethod)){
-      paymentBlock += '<div style="font-size:12px; color:var(--ink-soft);">العميل بيبعت سكرين شوت التحويل في محادثة الواتساب.</div>';
+      paymentBlock += '<div style="font-size:12px; color:var(--ink-soft);">'+t("العميل بيبعت سكرين شوت التحويل في محادثة الواتساب.")+'</div>';
     }
   }
-  return '<div style="border:1.5px solid var(--border); border-radius:14px; padding:14px 16px; text-align:right; display:flex; flex-direction:column; gap:10px;">'
+  return '<div style="border:1.5px solid var(--border); border-radius:14px; padding:14px 16px; text-align:'+(LANG==="en"?"left":"right")+'; display:flex; flex-direction:column; gap:10px;">'
     + '<div style="display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:6px;">'
-      + '<strong style="font-size:13px;">فاتورة #'+String(o.id||"").slice(-6)+'</strong>'
-      + '<span class="tabular" style="font-size:12px; color:var(--ink-soft);">'+d.toLocaleDateString("ar-EG")+'</span>'
+      + '<strong style="font-size:13px;">'+t("فاتورة #")+String(o.id||"").slice(-6)+'</strong>'
+      + '<span class="tabular" style="font-size:12px; color:var(--ink-soft);">'+d.toLocaleDateString(LANG==="en"?"en-US":"ar-EG")+'</span>'
     + '</div>'
     + '<div style="font-size:12.5px; color:var(--ink-soft); line-height:1.8;">'
-      + '<div>الاسم: '+(o.name||"-")+'</div>'
-      + '<div>الموبايل: '+(o.phone||"-")+'</div>'
-      + (o.governorate ? '<div>المحافظة: '+o.governorate+'</div>' : '')
-      + '<div>العنوان: '+(o.address||"-")+'</div>'
+      + '<div>'+t("الاسم")+': '+(o.name||"-")+'</div>'
+      + '<div>'+t("الموبايل")+': '+(o.phone||"-")+'</div>'
+      + (o.governorate ? '<div>'+t("المحافظة")+': '+t(o.governorate)+'</div>' : '')
+      + '<div>'+t("العنوان")+': '+(o.address||"-")+'</div>'
     + '</div>'
     + '<table style="width:100%; border-collapse:collapse; font-size:12.5px;">'
       + '<thead><tr style="border-bottom:1px solid var(--border); color:var(--ink-soft);">'
-        + '<th style="text-align:right; font-weight:700; padding:4px 0;">الصنف</th>'
-        + '<th style="text-align:center; font-weight:700; padding:4px 0;">الكمية</th>'
-        + '<th style="text-align:center; font-weight:700; padding:4px 0;">السعر</th>'
-        + '<th style="text-align:left; font-weight:700; padding:4px 0;">الإجمالي</th>'
+        + '<th style="text-align:'+(LANG==="en"?"left":"right")+'; font-weight:700; padding:4px 0;">'+t("الصنف")+'</th>'
+        + '<th style="text-align:center; font-weight:700; padding:4px 0;">'+t("الكمية")+'</th>'
+        + '<th style="text-align:center; font-weight:700; padding:4px 0;">'+t("السعر")+'</th>'
+        + '<th style="text-align:'+(LANG==="en"?"right":"left")+'; font-weight:700; padding:4px 0;">'+t("الإجمالي")+'</th>'
       + '</tr></thead>'
       + '<tbody>'+rows+'</tbody>'
     + '</table>'
@@ -2286,7 +2285,217 @@ var I18N_EN = {
   "اختار \"إضافة إلى الشاشة الرئيسية\"": "Choose \"Add to Home Screen\"",
   "دوس \"إضافة\" فوق يمين الشاشة": "Tap \"Add\" at the top right of the screen",
   "دوس على أيقونة القائمة ⋮ فوق يمين المتصفح": "Tap the menu icon ⋮ at the top right of the browser",
-  "اختار \"تثبيت التطبيق\" أو \"إضافة إلى الشاشة الرئيسية\"": "Choose \"Install app\" or \"Add to Home screen\""
+  "اختار \"تثبيت التطبيق\" أو \"إضافة إلى الشاشة الرئيسية\"": "Choose \"Install app\" or \"Add to Home screen\"",
+  /* ---------- Admin dashboard i18n (added when the dashboard itself became translatable) ---------- */
+  "\" نهائيًا؟": "\" permanently?",
+  "1) اختار اللون من اللوحة": "1) Pick the color from the palette",
+  "2) اختار صورة اللون ده": "2) Choose an image for this color",
+  "آخر 30 يوم": "Last 30 days",
+  "آخر 7 أيام": "Last 7 days",
+  "أضف وعدّل وامسح المنتجات والأقسام — أي تعديل بيظهر لكل زوار الموقع فورًا.": "Add, edit and delete products and categories — any change shows up for every site visitor instantly.",
+  "أكتر الصفحات زيارة (آخر 30 يوم)": "Most-visited pages (last 30 days)",
+  "أكّد كلمة المرور": "Confirm password",
+  "ألوان المنتج (اختياري، لو المنتج متاح بأكتر من لون)": "Product colors (optional, if the product comes in more than one color)",
+  "أول مرة؟ اعمل حساب دخول لنفسك": "First time here? Create your own login account",
+  "أي تعديل بتعمله هنا (إضافة/تعديل/حذف منتج أو قسم) بيتحفظ ويظهر لكل زوار الموقع أوتوماتيك خلال ثواني — من غير ما تحتاج ترفع أي ملف بنفسك. زرار \"نسخة احتياطية\" بس لو حابب تحتفظ بملف products.json عندك كنسخة أمان.": "Any change you make here (adding/editing/deleting a product or category) is saved and shown to every site visitor automatically within seconds — you don't need to upload any file yourself. The \"Backup\" button is only if you'd like to keep a products.json file as a safety copy.",
+  "أيقونة القسم (إيموجي)": "Category icon (emoji)",
+  "إجمالي الزوار": "Total visitors",
+  "إجمالي الزيارات": "Total views",
+  "إحصائيات فعلية عن زوار الموقع وتفاعلهم — بتتحدث أول ما حد يفتح صفحة من صفحات الموقع.": "Real statistics about site visitors and their activity — updated as soon as someone opens any page on the site.",
+  "إزالة الصورة": "Remove image",
+  "إزالة اللون": "Remove color",
+  "إضافة القسم": "Add Category",
+  "إضافة المنتج": "Add Product",
+  "إضافة صورة": "Add image",
+  "إضافة للسلة": "Added to cart",
+  "إظهار كلمة المرور وأنا بكتبها": "Show password as I type it",
+  "إلغاء": "Cancel",
+  "إلغاء التعديل": "Cancel editing",
+  "إنشاء الحساب والدخول": "Create account and log in",
+  "إيميل احتياطي (لاسترجاع كلمة المرور)": "Backup email (for password recovery)",
+  "اتركه فاضي لو مش عايز تغيّره": "Leave empty if you don't want to change it",
+  "اتركه فاضي لو مفيش خصم": "Leave empty if there's no discount",
+  "اختار اسم مستخدم": "Choose a username",
+  "اختار كلمة مرور قوية": "Choose a strong password",
+  "اختار كلمة مرورك الجديدة": "Choose your new password",
+  "اختيار صورة اللون": "Choose color image",
+  "ادخل الإيميل ورقم الموبايل الاحتياطيين اللي سجلتهم قبل كده:": "Enter the backup email and phone number you registered before:",
+  "استرجاع كلمة المرور": "Recover password",
+  "استعادة الافتراضي": "Restore Defaults",
+  "استيراد ملف بيانات": "Import Data File",
+  "اسم القسم": "Category name",
+  "اسم القسم بالإنجليزي (اختياري)": "Category name in English (optional)",
+  "اسم المستخدم": "Username",
+  "اسم المنتج": "Product name",
+  "اسم المنتج بالإنجليزي (اختياري)": "Product name in English (optional)",
+  "اكتب وصف حقيقي ومختصر للمنتج: مميزاته، الخامة، السن المناسب... (بيظهر للعميل في صفحة تفاصيل المنتج)": "Write a real, short description of the product: its features, material, suitable age... (shown to the customer on the product details page)",
+  "الأجهزة (آخر 30 يوم)": "Devices (last 30 days)",
+  "الأصناف": "Items",
+  "الإجمالي": "Total",
+  "الإجمالي الكلي (شامل الشحن)": "Grand total (including shipping)",
+  "الإيميل أو رقم الموبايل مش مطابقين للبيانات المسجلة.": "The email or phone number doesn't match the registered data.",
+  "الإيميل الاحتياطي": "Backup email",
+  "الإيميل الاحتياطي (لاسترجاع الباسورد)": "Backup email (for password recovery)",
+  "الاسم ورقم الموبايل والإيميل لازم يتملوا.": "Name, phone number and email are all required.",
+  "التقييم (من 5)": "Rating (out of 5)",
+  "الرقم السري الجديد لازم يكون 6 حروف/أرقام على الأقل.": "The new password must be at least 6 characters/digits.",
+  "الزيارات خلال آخر 30 يوم": "Views over the last 30 days",
+  "السعر": "Price",
+  "السعر الحالي (ج.م)": "Current price (EGP)",
+  "السعر قبل الخصم (اختياري)": "Price before discount (optional)",
+  "الصفحة دي خاصة بصاحب المتجر فقط، لإدارة المنتجات والأسعار والأقسام.": "This page is for the store owner only, to manage products, prices and categories.",
+  "الصنف": "Item",
+  "العميل بيبعت سكرين شوت التحويل في محادثة الواتساب.": "The customer sends a screenshot of the transfer in the WhatsApp chat.",
+  "العنوان": "Address",
+  "القسم": "Category",
+  "الكمية": "Quantity",
+  "الكمية المتاحة (اتركها فاضية لو مش عايز تتبعها)": "Available quantity (leave empty if you don't want to track it)",
+  "الكمية المتاحة من اللون ده (اتركها فاضية لو مش عايز تتبعها)": "Available quantity of this color (leave empty if you don't want to track it)",
+  "الملف مش JSON صحيح": "The file isn't valid JSON",
+  "المنتج ده بألوان، فالكمية بتتحدد لكل لون على حدة تحت.": "This product has colors, so the quantity is set separately for each color below.",
+  "الموبايل": "Phone",
+  "بدون": "None",
+  "بدون ألوان (المنتج بلون واحد)": "No colors (single-color product)",
+  "بدون صور": "No images",
+  "بيانات الدخول غير صحيحة": "Incorrect login details",
+  "تأكيد كلمة المرور الجديدة": "Confirm the new password",
+  "تعديل": "Edit",
+  "تعذر الاتصال بالسيرفر.": "Couldn't connect to the server.",
+  "تعذر تحميل الإحصائيات.": "Couldn't load the statistics.",
+  "تعذر تحميل الاستفسارات.": "Couldn't load the inquiries.",
+  "تعذر تحميل الطلبات.": "Couldn't load the orders.",
+  "تعذر تحميل بيانات العملاء.": "Couldn't load customer data.",
+  "تعذر تحميل طلبات التوفر.": "Couldn't load restock requests.",
+  "تعذر حفظ التعديلات، جرّب تاني.": "Couldn't save the changes, try again.",
+  "تغيير كلمة المرور": "Change Password",
+  "حذف": "Delete",
+  "حذف الصنف": "Delete item",
+  "حصل خطأ، جرّب تاني.": "Something went wrong, try again.",
+  "حفظ الإعدادات": "Save Settings",
+  "حفظ التعديل": "Save Changes",
+  "خد نسخة من الكود ده لو حابب تحتفظ بيه، وبعدين اقفل الشاشة عشان تختار كلمة مرورك الجديدة:": "Keep a copy of this code if you'd like to save it, then close this screen to choose your new password:",
+  "دخول لوحة تحكم المتجر": "Store Dashboard Login",
+  "رجوع للوحة التحكم": "Back to Dashboard",
+  "رسايل صفحة \"تواصل معنا\" اللي بعتها العملاء. دوس \"تم الرد\" بعد ما تكلّم العميل وترد على استفساره.": "Messages sent by customers from the \"Contact Us\" page. Press \"Replied\" after you contact the customer and answer their inquiry.",
+  "رقم الموبايل أو الإيميل ده مستخدم في حساب تاني.": "This phone number or email is used by another account.",
+  "رقم الموبايل الاحتياطي": "Backup phone number",
+  "رقم الموبايل الاحتياطي (لاسترجاع الباسورد)": "Backup phone number (for password recovery)",
+  "رقم سري جديد (اختياري)": "New password (optional)",
+  "رقم موبايل احتياطي": "Backup phone number",
+  "زائر": "visitor",
+  "زوار مختلفين": "unique visitors",
+  "زيارات النهاردة": "Today's views",
+  "زيارة": "view",
+  "زيارة من الموبايل، ": "views from mobile, ",
+  "سكرين شوت التحويل": "Transfer screenshot",
+  "صور حقيقية للمنتج (ممكن تضيف أكتر من صورة)": "Real photos of the product (you can add more than one image)",
+  "طلبات \"أعلمني عند التوفر\" اللي بعتها العملاء عن منتجات خلصت أو مش متوفرة حاليًا. دوس \"تم التعامل معه\" لما توفّر المنتج وتكلّم العميل.": "\"Notify me when available\" requests sent by customers about products that are out of stock or currently unavailable. Press \"Handled\" once the product is back in stock and you've contacted the customer.",
+  "طلبات ÷ زوار (آخر 30 يوم)": "Orders ÷ visitors (last 30 days)",
+  "طلبات اتعملت": "Orders placed",
+  "عدد التقييمات": "Number of ratings",
+  "عدد المنتجات": "Number of products",
+  "عرض الفاتورة كاملة ⟵": "View full invoice ⟵",
+  "عميل": "Customer",
+  "غير متتبعة": "Not tracked",
+  "في حساب اتعمل بالفعل — سجّل دخول بدل ما تعمل حساب جديد.": "An account already exists — log in instead of creating a new one.",
+  "كل العملاء اللي سجّلوا حساب على الموقع ببياناتهم، ومعاك صلاحية كاملة تعدّل أو تمسح أي حساب.": "Every customer who registered an account on the site, with their data, and you have full permission to edit or delete any account.",
+  "كل طلبات الموقع بتظهر هنا، سواء العميل كان مسجّل دخول أو طلب كضيف من غير حساب. دوس على أي طلب عشان تشوف فاتورته كاملة.": "All site orders show up here, whether the customer was logged in or ordered as a guest without an account. Tap any order to see its full invoice.",
+  "كلمة المرور": "Password",
+  "كلمة المرور الجديدة (6 حروف/أرقام على الأقل)": "New password (at least 6 characters/digits)",
+  "كلمة المرور لازم تكون 6 حروف/أرقام على الأقل.": "The password must be at least 6 characters/digits.",
+  "كلمة المرور والتأكيد مش متطابقين.": "The password and its confirmation don't match.",
+  "كلمة المرور وتأكيدها مش متطابقين.": "The password and its confirmation don't match.",
+  "كلمة مرور جديدة (اتركها فاضية لو مش عايز تغيّرها)": "New password (leave empty if you don't want to change it)",
+  "لازم تكتب اسم مستخدم وكلمة مرور.": "You must enter a username and password.",
+  "لازم يكون فيه صنف واحد على الأقل بالاسم.": "There must be at least one item with a name.",
+  "لسه محددتش الإيميل ورقم الموبايل الاحتياطيين — لازم تسجل دخول عادي الأول وتحددهم من ⚙️ إعدادات حساب الدخول.": "You haven't set a backup email and phone number yet — log in normally first and set them from ⚙️ Account Settings.",
+  "لسه مفيش استفسارات من العملاء.": "No customer inquiries yet.",
+  "لسه مفيش بيانات كفاية.": "Not enough data yet.",
+  "لسه مفيش طلبات توفر.": "No restock requests yet.",
+  "لسه مفيش طلبات مسجّلة.": "No orders recorded yet.",
+  "لسه مفيش عملاء مسجّلين.": "No registered customers yet.",
+  "لو ضفت أكتر من صورة، هيتبادلوا تلقائيًا كل ٣ ثواني في كارت المنتج في كل الموقع، وكمان بيظهروا كمعرض جوه تفاصيل المنتج. لو مفيش صور، أيقونة القسم بتفضل ظاهرة بدالها.": "If you add more than one image, they'll rotate automatically every 3 seconds on the product card across the site, and also appear as a gallery inside the product details. If there are no images, the category icon stays shown instead.",
+  "لو ضفت أكتر من لون، العميل هيضطر يختار اللون اللي عايزه من صفحة المنتج قبل ما يقدر يضيفه للسلة أو يطلبه.": "If you add more than one color, the customer will have to pick the color they want from the product page before they can add it to the cart or order it.",
+  "لو نسيت كلمة المرور، دوس \"نسيت كلمة المرور؟\" في صفحة الدخول وادخل الإيميل ورقم الموبايل الاحتياطيين دول — هتظهرلك كلمة مرور جديدة على الشاشة فورًا.": "If you forget your password, press \"Forgot password?\" on the login page and enter this backup email and phone number — a new password will appear on screen instantly.",
+  "لوحة تحكم المنتجات": "Products Dashboard",
+  "لون": "color",
+  "لون القسم": "Category color",
+  "لون خلص": "color out of stock",
+  "متأكد إنك عايز تحذف الطلب ده نهائيًا؟ الخطوة دي مش هترجع.": "Are you sure you want to permanently delete this order? This can't be undone.",
+  "متأكد إنك عايز تمسح القسم ده؟": "Are you sure you want to delete this category?",
+  "متأكد إنك عايز تمسح المنتج ده؟": "Are you sure you want to delete this product?",
+  "متأكد إنك عايز تمسح حساب \"": "Are you sure you want to delete the account \"",
+  "متاح بـ": "Available in ",
+  "مثال: ألعاب إلكترونية": "e.g.: Electronic Toys",
+  "مثال: عربية تحكم كهربائية": "e.g.: Electric RC Car",
+  "مثال: 🎮": "e.g.: 🎮",
+  "مثلاً: 10": "e.g.: 10",
+  "مفيش يوزر أو باسورد جاهزين في الموقع — اختار يوزر وباسورد إنت بس عارفهم، وسجّلهم في مكان أمين (زي مدير كلمات المرور بتاعك).": "There's no ready-made username or password on the site — choose a username and password only you know, and save them somewhere safe (like your password manager).",
+  "ملاحظات العميل": "Customer notes",
+  "من أول ما التتبع بدأ": "Since tracking began",
+  "من الكمبيوتر.": "from desktop.",
+  "منتج": "Product",
+  "مينفعش تمسح القسم ده، لسه فيه منتجات جواه. غيّر قسم المنتجات دي الأول.": "This category can't be deleted, it still has products in it. Change those products' category first.",
+  "نسبة التحويل": "Conversion rate",
+  "نسيت كلمة المرور؟": "Forgot password?",
+  "هيرجع كل حاجة للبيانات الافتراضية على الموقع لكل الزوار (هيمسح تعديلاتك الحالية). متأكد؟": "This will restore everything to the default data for all site visitors (your current changes will be erased). Are you sure?",
+  "وسم": "Badge",
+  "وسيلة الدفع": "Payment method",
+  "وصف المنتج": "Product description",
+  "وصف المنتج بالإنجليزي (اختياري)": "Product description in English (optional)",
+  "⚙️ إعدادات حساب الدخول": "⚙️ Login Account Settings",
+  "⚠️ اختار اللون من اللوحة الأول": "⚠️ Pick the color from the palette first",
+  "⚠️ اختار صورة للون الأول": "⚠️ Choose an image for the color first",
+  "⚠️ تعذر الاتصال بالسيرفر.": "⚠️ Couldn't connect to the server.",
+  "⚠️ تعذر الاتصال بالسيرفر، جرّب تاني.": "⚠️ Couldn't connect to the server, try again.",
+  "⚠️ تعذر تحديث الاستفسار، جرّب تاني.": "⚠️ Couldn't update the inquiry, try again.",
+  "⚠️ تعذر تحديث الطلب، جرّب تاني.": "⚠️ Couldn't update the request, try again.",
+  "⚠️ تعذر حذف الحساب، جرّب تاني.": "⚠️ Couldn't delete the account, try again.",
+  "⚠️ تعذر حذف الطلب، جرّب تاني.": "⚠️ Couldn't delete the order, try again.",
+  "⚠️ كلمة المرور الجديدة لازم تكون 6 حروف/أرقام على الأقل.": "⚠️ The new password must be at least 6 characters/digits.",
+  "⚠️ معرفناش نحفظ الإعدادات — سجّل دخول تاني وحاول.": "⚠️ Couldn't save the settings — log in again and try.",
+  "✅ اتبعت بنجاح": "✅ Sent successfully",
+  "✅ اتحدث القسم": "✅ Category updated",
+  "✅ اتحدث المنتج": "✅ Product updated",
+  "✅ اتحطت صورة اللون، دلوقتي دوس إضافة اللون": "✅ Color image added, now press Add Color",
+  "✅ اتحفظت إعدادات الحساب": "✅ Account settings saved",
+  "✅ اتحفظت بيانات العميل": "✅ Customer data saved",
+  "✅ اتحفظت تعديلات الطلب": "✅ Order changes saved",
+  "✅ اتحمّلت البيانات من الملف": "✅ Data loaded from the file",
+  "✅ اتشال الاستفسار من القائمة": "✅ Inquiry removed from the list",
+  "✅ اتشال الطلب من القائمة": "✅ Request removed from the list",
+  "✅ اتضاف القسم": "✅ Category added",
+  "✅ اتضاف المنتج": "✅ Product added",
+  "✅ اتعمل الحساب بنجاح — متنساش تحفظ اليوزر والباسورد في مكان أمين": "✅ Account created successfully — don't forget to save the username and password somewhere safe",
+  "✅ اتغيّرت كلمة المرور بنجاح، سجّل دخولك بيها": "✅ Password changed successfully, log in with it",
+  "✅ اتمسح الحساب": "✅ Account deleted",
+  "✅ تم التعامل معه": "✅ Handled",
+  "✅ تم الرد": "✅ Replied",
+  "✏️ تعديل": "✏️ Edit",
+  "✏️ تعديل الطلب": "✏️ Edit Order",
+  "✏️ تعديل الطلب #": "✏️ Edit Order #",
+  "✏️ تعديل بيانات العميل": "✏️ Edit Customer Data",
+  "✏️ تعديل قسم": "✏️ Edit Category",
+  "✏️ تعديل منتج": "✏️ Edit Product",
+  "❌ فشل الإرسال": "❌ Sending failed",
+  "➕ إضافة اللون": "➕ Add Color",
+  "➕ إضافة صنف": "➕ Add Item",
+  "➕ إضافة قسم جديد": "➕ Add New Category",
+  "➕ إضافة منتج جديد": "➕ Add New Product",
+  "⬇️ نسخة احتياطية": "⬇️ Backup",
+  "🌐 دي حقول اختيارية بس — لو الموقع عند العميل شغّال بالإنجليزي، النصوص دي هي اللي هتظهر له بدل العربي. سيبها فاضية لو لسه مش عايز تترجم المنتج ده.": "🌐 These fields are optional — if the customer's site is set to English, this text is what shows instead of the Arabic. Leave it empty if you don't want to translate this product yet.",
+  "👥 بيانات العملاء": "👥 Customer Data",
+  "💾 حفظ التعديلات": "💾 Save Changes",
+  "📊 تحليل الزوار": "📊 Visitor Analytics",
+  "📦 المنتجات الحالية": "📦 Current Products",
+  "📧 إشعار الإيميل (ضيف)": "📧 Email notice (guest)",
+  "📨 استفسارات العملاء": "📨 Customer Inquiries",
+  "🔄 تحديث": "🔄 Refresh",
+  "🔔 طلبات التوفر": "🔔 Restock Requests",
+  "🗑️ تم حذف الطلب": "🗑️ Order deleted",
+  "🗑️ حذف الطلب": "🗑️ Delete Order",
+  "🧭 الأقسام": "🧭 Categories",
+  "🧾 طلبات العملاء": "🧾 Customer Orders",
 };
 
 /* ---------- اللغة (عربي/English) ----------
@@ -3698,7 +3907,9 @@ function updateLockoutUI(){
   var btn = document.getElementById("adminLoginBtn");
   if(mins > 0){
     msgEl.style.display = "block";
-    msgEl.textContent = "🔒 تم قفل الدخول مؤقتًا بعد محاولات غلط كتير. جرّب تاني بعد "+mins+" "+(mins===1?"دقيقة":"دقايق")+".";
+    msgEl.textContent = LANG==="en"
+      ? "🔒 Login is temporarily locked after too many failed attempts. Try again in "+mins+" "+(mins===1?"minute":"minutes")+"."
+      : "🔒 تم قفل الدخول مؤقتًا بعد محاولات غلط كتير. جرّب تاني بعد "+mins+" "+(mins===1?"دقيقة":"دقايق")+".";
     btn.disabled = true;
   } else {
     msgEl.style.display = "none";
@@ -3733,7 +3944,7 @@ document.getElementById("adminLoginBtn").addEventListener("click", function(){
         showAdmin();
         updateAccountLabel();
       } else {
-        errEl.textContent = "بيانات الدخول غير صحيحة";
+        errEl.textContent = t("بيانات الدخول غير صحيحة");
         errEl.style.display="block";
         registerFailedLogin();
         updateLockoutUI();
@@ -3741,7 +3952,7 @@ document.getElementById("adminLoginBtn").addEventListener("click", function(){
     })
     .catch(function(){
       btn.disabled = false;
-      errEl.textContent = "تعذر الاتصال بالسيرفر، تأكد من الإنترنت وجرّب تاني.";
+      errEl.textContent = t("تعذر الاتصال بالسيرفر، تأكد من الإنترنت وجرّب تاني.");
       errEl.style.display="block";
     });
 });
@@ -3761,9 +3972,9 @@ document.getElementById("adminSetupBtn").addEventListener("click", function(){
   var phone = document.getElementById("suRecoveryPhone").value.trim();
   var errEl = document.getElementById("adminSetupError");
   function showErr(msg){ errEl.textContent = msg; errEl.style.display = "block"; }
-  if(!user || !pass){ showErr("لازم تكتب اسم مستخدم وكلمة مرور."); return; }
-  if(pass.length < 6){ showErr("كلمة المرور لازم تكون 6 حروف/أرقام على الأقل."); return; }
-  if(pass !== confirm){ showErr("كلمة المرور والتأكيد مش متطابقين."); return; }
+  if(!user || !pass){ showErr(t("لازم تكتب اسم مستخدم وكلمة مرور.")); return; }
+  if(pass.length < 6){ showErr(t("كلمة المرور لازم تكون 6 حروف/أرقام على الأقل.")); return; }
+  if(pass !== confirm){ showErr(t("كلمة المرور والتأكيد مش متطابقين.")); return; }
   errEl.style.display = "none";
   var btn = this;
   btn.disabled = true;
@@ -3786,15 +3997,15 @@ document.getElementById("adminSetupBtn").addEventListener("click", function(){
         document.getElementById("suRecoveryPhone").value="";
         showAdmin();
         updateAccountLabel();
-        showToast("✅ اتعمل الحساب بنجاح — متنساش تحفظ اليوزر والباسورد في مكان أمين");
+        showToast(t("✅ اتعمل الحساب بنجاح — متنساش تحفظ اليوزر والباسورد في مكان أمين"));
       } else if(res.status===409){
-        showErr("في حساب اتعمل بالفعل — سجّل دخول بدل ما تعمل حساب جديد.");
+        showErr(t("في حساب اتعمل بالفعل — سجّل دخول بدل ما تعمل حساب جديد."));
         showAdmin();
       } else {
-        showErr("حصل خطأ، جرّب تاني.");
+        showErr(t("حصل خطأ، جرّب تاني."));
       }
     })
-    .catch(function(){ btn.disabled = false; showErr("تعذر الاتصال بالسيرفر، تأكد من الإنترنت وجرّب تاني."); });
+    .catch(function(){ btn.disabled = false; showErr(t("تعذر الاتصال بالسيرفر، تأكد من الإنترنت وجرّب تاني.")); });
 });
 document.getElementById("suPassShow").addEventListener("change", function(){
   var type = this.checked ? "text" : "password";
@@ -3835,13 +4046,13 @@ document.getElementById("adminForgotBtn").addEventListener("click", function(){
     msg.style.display = "block";
     if(res.reason==="not_configured"){
       msg.style.color = "var(--pink-deep)";
-      msg.textContent = "لسه محددتش الإيميل ورقم الموبايل الاحتياطيين — لازم تسجل دخول عادي الأول وتحددهم من ⚙️ إعدادات حساب الدخول.";
+      msg.textContent = t("لسه محددتش الإيميل ورقم الموبايل الاحتياطيين — لازم تسجل دخول عادي الأول وتحددهم من ⚙️ إعدادات حساب الدخول.");
     } else if(res.reason==="network"){
       msg.style.color = "var(--pink-deep)";
-      msg.textContent = "تعذر الاتصال بالسيرفر، تأكد من الإنترنت وجرّب تاني.";
+      msg.textContent = t("تعذر الاتصال بالسيرفر، تأكد من الإنترنت وجرّب تاني.");
     } else {
       msg.style.color = "var(--pink-deep)";
-      msg.textContent = "الإيميل أو رقم الموبايل مش مطابقين للبيانات المسجلة.";
+      msg.textContent = t("الإيميل أو رقم الموبايل مش مطابقين للبيانات المسجلة.");
     }
   });
 });
@@ -3859,9 +4070,9 @@ document.getElementById("adminResetNewPassBtn").addEventListener("click", functi
   var passConfirm = document.getElementById("adminResetNewPassConfirm").value;
   var errEl = document.getElementById("adminResetNewPassError");
   errEl.style.display = "none";
-  if(!code){ errEl.textContent = "لازم تكتب كود التحقق اللي ظهرلك."; errEl.style.display = "block"; return; }
-  if(pass.length < 6){ errEl.textContent = "كلمة المرور لازم تكون 6 حروف/أرقام على الأقل."; errEl.style.display = "block"; return; }
-  if(pass !== passConfirm){ errEl.textContent = "كلمة المرور وتأكيدها مش متطابقين."; errEl.style.display = "block"; return; }
+  if(!code){ errEl.textContent = t("لازم تكتب كود التحقق اللي ظهرلك."); errEl.style.display = "block"; return; }
+  if(pass.length < 6){ errEl.textContent = t("كلمة المرور لازم تكون 6 حروف/أرقام على الأقل."); errEl.style.display = "block"; return; }
+  if(pass !== passConfirm){ errEl.textContent = t("كلمة المرور وتأكيدها مش متطابقين."); errEl.style.display = "block"; return; }
   var btn = this;
   btn.disabled = true;
   confirmAdminReset(code, pass, function(res){
@@ -3874,12 +4085,12 @@ document.getElementById("adminResetNewPassBtn").addEventListener("click", functi
       document.getElementById("adminUserInput").value = "";
       document.getElementById("adminPassInput").value = "";
       document.getElementById("adminLogin").style.display = "flex";
-      showToast("✅ اتغيّرت كلمة المرور بنجاح، سجّل دخولك بيها");
+      showToast(t("✅ اتغيّرت كلمة المرور بنجاح، سجّل دخولك بيها"));
     } else if(res.reason==="expired" || res.reason==="bad_code"){
-      errEl.textContent = "الكود ده منتهي أو مش صحيح، جرّب تطلب استرجاع تاني من الأول.";
+      errEl.textContent = t("الكود ده منتهي أو مش صحيح، جرّب تطلب استرجاع تاني من الأول.");
       errEl.style.display = "block";
     } else {
-      errEl.textContent = "تعذر الاتصال بالسيرفر، تأكد من الإنترنت وجرّب تاني.";
+      errEl.textContent = t("تعذر الاتصال بالسيرفر، تأكد من الإنترنت وجرّب تاني.");
       errEl.style.display = "block";
     }
   });
@@ -4374,7 +4585,7 @@ document.getElementById("cfIconPicker").addEventListener("click", function(e){
 });
 function renderColorSwatches(selected){
   document.getElementById("colorSwatches").innerHTML = COLOR_PRESETS.map(function(c){
-    return '<button type="button" data-color="'+c.value+'" title="'+c.label+'" style="background:'+c.value+'" class="'+(c.value===selected?'active':'')+'"></button>';
+    return '<button type="button" data-color="'+c.value+'" title="'+t(c.label)+'" style="background:'+c.value+'" class="'+(c.value===selected?'active':'')+'"></button>';
   }).join("");
 }
 document.getElementById("colorSwatches").addEventListener("click", function(e){
@@ -4387,11 +4598,11 @@ document.getElementById("colorSwatches").addEventListener("click", function(e){
 function renderPfImagesPreview(){
   var box = document.getElementById("pfImagesPreview");
   if(!box) return;
-  if(!pfImagesData.length){ box.innerHTML = '<span style="color:var(--ink-soft); font-size:13px;">بدون صور</span>'; return; }
+  if(!pfImagesData.length){ box.innerHTML = '<span style="color:var(--ink-soft); font-size:13px;">'+t("بدون صور")+'</span>'; return; }
   box.innerHTML = pfImagesData.map(function(src, i){
     return '<div style="position:relative; width:64px; height:64px;">'
       + '<img src="'+src+'" alt="" style="width:100%; height:100%; object-fit:cover; border-radius:10px; border:1.5px solid var(--border); display:block;">'
-      + '<button type="button" data-remove-pf-img="'+i+'" aria-label="إزالة الصورة" style="position:absolute; top:-6px; left:-6px; width:20px; height:20px; border-radius:50%; background:var(--pink-deep); color:#fff; border:none; font-size:12px; line-height:1; cursor:pointer;">×</button>'
+      + '<button type="button" data-remove-pf-img="'+i+'" aria-label="'+t("إزالة الصورة")+'" style="position:absolute; top:-6px; left:-6px; width:20px; height:20px; border-radius:50%; background:var(--pink-deep); color:#fff; border:none; font-size:12px; line-height:1; cursor:pointer;">×</button>'
     + '</div>';
   }).join("");
 }
@@ -4425,8 +4636,8 @@ function renderPfColorNamePicker(){
   var box = document.getElementById("pfColorNamePicker");
   if(!box) return;
   box.innerHTML = COLOR_NAME_PALETTE.map(function(c){
-    return '<button type="button" class="admin-color-swatch'+(pfColorPendingName===c.name?' active':'')+'" data-color-name="'+c.name+'" title="'+c.name+'">'
-      + '<span class="dot" style="background:'+c.hex+'"></span><span>'+c.name+'</span>'
+    return '<button type="button" class="admin-color-swatch'+(pfColorPendingName===c.name?' active':'')+'" data-color-name="'+c.name+'" title="'+t(c.name)+'">'
+      + '<span class="dot" style="background:'+c.hex+'"></span><span>'+t(c.name)+'</span>'
     + '</button>';
   }).join("");
 }
@@ -4449,13 +4660,13 @@ function updatePfStockVisibility(){
 function renderPfColorsList(){
   var box = document.getElementById("pfColorsList");
   if(!box) return;
-  if(!pfColorsData.length){ box.innerHTML = '<span style="color:var(--ink-soft); font-size:13px;">بدون ألوان (المنتج بلون واحد)</span>'; updatePfStockVisibility(); return; }
+  if(!pfColorsData.length){ box.innerHTML = '<span style="color:var(--ink-soft); font-size:13px;">'+t("بدون ألوان (المنتج بلون واحد)")+'</span>'; updatePfStockVisibility(); return; }
   box.innerHTML = pfColorsData.map(function(c, i){
     return '<div style="display:flex; align-items:center; gap:10px; border:1.5px solid var(--border); border-radius:12px; padding:6px 10px;">'
       + '<img src="'+c.image+'" alt="" style="width:40px; height:40px; border-radius:8px; object-fit:cover; flex:none;">'
-      + '<span style="flex:1; font-weight:700; font-size:13.5px;">'+String(c.name||"").replace(/</g,"&lt;")+'</span>'
-      + '<input type="number" min="0" step="1" data-pf-color-stock="'+i+'" value="'+(c.stock==null?"":c.stock)+'" placeholder="الكمية" title="الكمية المتاحة من اللون ده (اتركها فاضية لو مش عايز تتبعها)" style="width:82px; padding:6px 8px; border-radius:8px; border:1.5px solid var(--border); background:var(--surface-3); color:var(--ink); font-size:12.5px; flex:none;">'
-      + '<button type="button" data-remove-pf-color="'+i+'" aria-label="إزالة اللون" style="border:0; background:var(--surface-2); width:26px; height:26px; border-radius:50%; color:var(--pink-deep); font-size:14px; line-height:1; cursor:pointer; flex:none;">×</button>'
+      + '<span style="flex:1; font-weight:700; font-size:13.5px;">'+t(String(c.name||"")).replace(/</g,"&lt;")+'</span>'
+      + '<input type="number" min="0" step="1" data-pf-color-stock="'+i+'" value="'+(c.stock==null?"":c.stock)+'" placeholder="'+t("الكمية")+'" title="'+t("الكمية المتاحة من اللون ده (اتركها فاضية لو مش عايز تتبعها)")+'" style="width:82px; padding:6px 8px; border-radius:8px; border:1.5px solid var(--border); background:var(--surface-3); color:var(--ink); font-size:12.5px; flex:none;">'
+      + '<button type="button" data-remove-pf-color="'+i+'" aria-label="'+t("إزالة اللون")+'" style="border:0; background:var(--surface-2); width:26px; height:26px; border-radius:50%; color:var(--pink-deep); font-size:14px; line-height:1; cursor:pointer; flex:none;">×</button>'
     + '</div>';
   }).join("");
   updatePfStockVisibility();
@@ -4468,12 +4679,12 @@ document.getElementById("pfColorImageInput").addEventListener("change", function
     pfColorPendingImage = dataUrl;
     var chosenEl = document.getElementById("pfColorImageChosen");
     chosenEl.style.display = "block";
-    chosenEl.textContent = "✅ اتحطت صورة اللون، دلوقتي دوس إضافة اللون";
+    chosenEl.textContent = t("✅ اتحطت صورة اللون، دلوقتي دوس إضافة اللون");
   });
 });
 document.getElementById("pfColorAddBtn").addEventListener("click", function(){
-  if(!pfColorPendingName){ showToast("⚠️ اختار اللون من اللوحة الأول"); return; }
-  if(!pfColorPendingImage){ showToast("⚠️ اختار صورة للون الأول"); return; }
+  if(!pfColorPendingName){ showToast(t("⚠️ اختار اللون من اللوحة الأول")); return; }
+  if(!pfColorPendingImage){ showToast(t("⚠️ اختار صورة للون الأول")); return; }
   pfColorsData.push({ name:pfColorPendingName, image:pfColorPendingImage, stock:null });
   pfColorPendingName = null;
   pfColorPendingImage = null;
@@ -4502,13 +4713,13 @@ renderPfColorsList();
 function stockDisplayForProduct(p){
   if(Array.isArray(p.colors) && p.colors.length){
     var tracked = p.colors.filter(function(c){ return c.stock!=null; });
-    if(!tracked.length) return '<span style="color:var(--ink-soft); font-size:12px;">غير متتبعة</span>';
+    if(!tracked.length) return '<span style="color:var(--ink-soft); font-size:12px;">'+t("غير متتبعة")+'</span>';
     var total = tracked.reduce(function(s,c){ return s+(+c.stock||0); },0);
     var zero = tracked.filter(function(c){ return +c.stock<=0; }).length;
     var color = total<=0 ? "var(--pink-deep)" : (zero>0 ? "var(--sunshine-deep)" : "inherit");
-    return '<span class="tabular" style="color:'+color+'; font-weight:700;">'+total+'</span>'+(zero>0?' <span style="font-size:11px; color:var(--pink-deep);">('+zero+' لون خلص)</span>':'');
+    return '<span class="tabular" style="color:'+color+'; font-weight:700;">'+total+'</span>'+(zero>0?' <span style="font-size:11px; color:var(--pink-deep);">('+zero+' '+t("لون خلص")+')</span>':'');
   }
-  if(p.stock==null) return '<span style="color:var(--ink-soft); font-size:12px;">غير متتبعة</span>';
+  if(p.stock==null) return '<span style="color:var(--ink-soft); font-size:12px;">'+t("غير متتبعة")+'</span>';
   var color2 = p.stock<=0 ? "var(--pink-deep)" : (p.stock<=5 ? "var(--sunshine-deep)" : "inherit");
   return '<span class="tabular" style="color:'+color2+'; font-weight:700;">'+p.stock+'</span>';
 }
@@ -4517,16 +4728,16 @@ function renderAdminProductsTable(){
   document.getElementById("adminProductsBody").innerHTML = PRODUCTS.map(function(p){
     var pRowMainImg = productMainImage(p);
     var thumbContent = pRowMainImg ? '<img src="'+pRowMainImg+'" alt="">' : categoryIcon(p.cat);
-    var colorsBadge = (Array.isArray(p.colors) && p.colors.length) ? ' <span title="متاح بـ'+p.colors.length+' لون" style="font-size:12px;">🎨</span>' : "";
+    var colorsBadge = (Array.isArray(p.colors) && p.colors.length) ? ' <span title="'+t("متاح بـ")+p.colors.length+' '+t("لون")+'" style="font-size:12px;">🎨</span>' : "";
     return '<tr>'
       + '<td><div class="thumb-sm" style="background:'+(CAT_MAP[p.cat]?CAT_MAP[p.cat].color:'var(--surface-2)')+'">'+thumbContent+'</div></td>'
-      + '<td>'+p.name+colorsBadge+'</td>'
+      + '<td>'+pName(p)+colorsBadge+'</td>'
       + '<td>'+catName(p.cat)+'</td>'
-      + '<td class="tabular">'+fmt(p.price)+' ج.م'+(p.old?' <span style="color:var(--ink-faint);text-decoration:line-through;font-size:11px;">'+fmt(p.old)+'</span>':'')+'</td>'
+      + '<td class="tabular">'+fmt(p.price)+' '+t("ج.م")+(p.old?' <span style="color:var(--ink-faint);text-decoration:line-through;font-size:11px;">'+fmt(p.old)+'</span>':'')+'</td>'
       + '<td>'+stockDisplayForProduct(p)+'</td>'
       + '<td><div class="admin-row-actions">'
-        + '<button data-edit-product="'+p.id+'" aria-label="تعديل"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>'
-        + '<button data-del-product="'+p.id+'" aria-label="حذف"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button>'
+        + '<button data-edit-product="'+p.id+'" aria-label="'+t("تعديل")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>'
+        + '<button data-del-product="'+p.id+'" aria-label="'+t("حذف")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button>'
       + '</div></td>'
     + '</tr>';
   }).join("");
@@ -4537,9 +4748,9 @@ function renderAdminCatsTable(){
     var count = PRODUCTS.filter(function(p){ return p.cat===c.id; }).length;
     return '<tr>'
       + '<td><div class="thumb-sm" style="background:'+c.color+'; border-radius:50%;">'+categoryIcon(c.id)+'</div></td>'
-      + '<td>'+c.name+'</td>'
+      + '<td>'+catName(c.id)+'</td>'
       + '<td class="tabular">'+count+'</td>'
-      + '<td><div class="admin-row-actions"><button data-edit-cat="'+c.id+'" aria-label="تعديل"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button><button data-del-cat="'+c.id+'" aria-label="حذف"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button></div></td>'
+      + '<td><div class="admin-row-actions"><button data-edit-cat="'+c.id+'" aria-label="'+t("تعديل")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button><button data-del-cat="'+c.id+'" aria-label="'+t("حذف")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button></div></td>'
     + '</tr>';
   }).join("");
 }
@@ -4560,27 +4771,27 @@ function closeAdminOrdersPage(){
 function renderAdminOrdersPage(){
   var box = document.getElementById("adminOrdersList");
   if(!box) return;
-  box.innerHTML = '<p style="color:var(--ink-soft); font-size:13px;">جاري التحميل...</p>';
+  box.innerHTML = '<p style="color:var(--ink-soft); font-size:13px;">'+t("جاري التحميل...")+'</p>';
   fetch("/api/orders", { headers: adminAuthHeaders(), cache:"no-store" }).then(function(r){ return r.json(); })
     .then(function(res){
       var list = (res && res.ok) ? res.orders : [];
       ADMIN_ORDERS_CACHE = list.slice().reverse();
       var countEl = document.getElementById("adminOrderCount");
       if(countEl) countEl.textContent = list.length;
-      if(!ADMIN_ORDERS_CACHE.length){ box.innerHTML = '<p style="color:var(--ink-soft); font-size:13px;">لسه مفيش طلبات مسجّلة.</p>'; return; }
+      if(!ADMIN_ORDERS_CACHE.length){ box.innerHTML = '<p style="color:var(--ink-soft); font-size:13px;">'+t("لسه مفيش طلبات مسجّلة.")+'</p>'; return; }
       box.innerHTML = ADMIN_ORDERS_CACHE.map(function(o, i){
-        var itemsTxt = (o.items||[]).map(function(it){ return it.name+' ×'+it.qty; }).join("، ");
+        var itemsTxt = (o.items||[]).map(function(it){ return it.name+' ×'+it.qty; }).join(LANG==="en" ? ", " : "، ");
         var d = new Date(o.createdAt);
         return '<button type="button" class="order-card" data-admin-order-row="'+i+'">'
           + '<div class="order-card-top">'
-            + '<div><div class="order-card-id">فاتورة #'+String(o.id||"").slice(-6)+'</div>'
+            + '<div><div class="order-card-id">'+t("فاتورة #")+String(o.id||"").slice(-6)+'</div>'
               + '<div class="order-card-customer">'+(o.customerName||o.name||"-")+' — '+(o.phone||o.customerId||"-")+'</div></div>'
-            + '<div class="order-card-date tabular">'+d.toLocaleDateString("ar-EG")+'</div>'
+            + '<div class="order-card-date tabular">'+d.toLocaleDateString(LANG==="en"?"en-US":"ar-EG")+'</div>'
           + '</div>'
           + '<div class="order-card-items">'+itemsTxt+'</div>'
           + '<div class="order-card-bottom">'
-            + '<span class="order-card-open">عرض الفاتورة كاملة ⟵</span>'
-            + '<span class="order-card-total tabular">'+fmt(o.total)+' ج.م</span>'
+            + '<span class="order-card-open">'+t("عرض الفاتورة كاملة ⟵")+'</span>'
+            + '<span class="order-card-total tabular">'+fmt(o.total)+' '+t("ج.م")+'</span>'
           + '</div>'
         + '</button>';
       }).join("");
@@ -4588,7 +4799,7 @@ function renderAdminOrdersPage(){
         btn.addEventListener("click", function(){ showAdminOrderInvoiceModal(ADMIN_ORDERS_CACHE[+btn.dataset.adminOrderRow]); });
       });
     })
-    .catch(function(){ box.innerHTML = '<p style="color:var(--pink-deep); font-size:13px;">تعذر تحميل الطلبات.</p>'; });
+    .catch(function(){ box.innerHTML = '<p style="color:var(--pink-deep); font-size:13px;">'+t("تعذر تحميل الطلبات.")+'</p>'; });
 }
 /* بيفتح فاتورة الطلب كاملة فوق صفحة الطلبات - نفس دالة orderInvoiceHtml
    المستخدمة في فاتورة العميل، عشان الشكل يبقى موحّد واحترافي في المكانين -
@@ -4601,24 +4812,24 @@ function orderEmailDebugHtml(order){
   var d = order.emailDebug;
   if(!d) return "";
   var statusLine = d.ok
-    ? ("✅ اتبعت بنجاح (HTTP " + d.status + ")")
-    : ("❌ فشل الإرسال" + (d.status ? (" — HTTP " + d.status) : "") + (d.error ? (" — " + d.error) : ""));
+    ? (t("✅ اتبعت بنجاح") + " (HTTP " + d.status + ")")
+    : (t("❌ فشل الإرسال") + (d.status ? (" — HTTP " + d.status) : "") + (d.error ? (" — " + d.error) : ""));
   var bodyLine = d.body ? ('<div style="margin-top:4px; opacity:.75; word-break:break-word;">' + String(d.body).replace(/</g,"&lt;") + '</div>') : "";
   return '<div style="background:var(--surface-3); border-radius:10px; padding:8px 10px; font-size:11.5px; color:var(--ink-soft);">'
-    + '<strong style="color:var(--ink);">📧 إشعار الإيميل (ضيف): </strong>' + statusLine
+    + '<strong style="color:var(--ink);">'+t("📧 إشعار الإيميل (ضيف)")+': </strong>' + statusLine
     + bodyLine
   + '</div>';
 }
 function showAdminOrderInvoiceModal(order){
   if(!order) return;
-  var html = '<button class="modal-close" id="modalCloseBtn" aria-label="إغلاق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
+  var html = '<button class="modal-close" id="modalCloseBtn" aria-label="'+t("إغلاق")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
     + '<div class="modal-info" style="padding:30px 24px;">'
       + '<h3 style="margin-bottom:4px;">'+t("تفاصيل الطلب")+'</h3>'
       + orderInvoiceHtml(order)
       + orderEmailDebugHtml(order)
       + '<div style="display:flex; gap:10px; margin-top:14px;">'
-        + '<button type="button" class="btn btn-outline" id="aoEditBtn" style="flex:1;">✏️ تعديل الطلب</button>'
-        + '<button type="button" class="btn btn-outline" id="aoDeleteBtn" style="flex:1; color:var(--pink-deep); border-color:var(--pink-deep);">🗑️ حذف الطلب</button>'
+        + '<button type="button" class="btn btn-outline" id="aoEditBtn" style="flex:1;">'+t("✏️ تعديل الطلب")+'</button>'
+        + '<button type="button" class="btn btn-outline" id="aoDeleteBtn" style="flex:1; color:var(--pink-deep); border-color:var(--pink-deep);">'+t("🗑️ حذف الطلب")+'</button>'
       + '</div>'
     + '</div>';
   document.getElementById("modalCard").classList.add("acct-card");
@@ -4632,39 +4843,40 @@ function showAdminOrderInvoiceModal(order){
    زرار حذف الصنف نفسه من الطلب). */
 function adminOrderItemRowHtml(it, idx){
   return '<div class="field-row" data-item-row="'+idx+'" style="grid-template-columns:2fr 1fr 1fr auto; align-items:end; gap:8px;">'
-    + '<div class="field"><label>الصنف</label><input data-item-name value="'+String(it.name||"").replace(/"/g,"&quot;")+'"></div>'
-    + '<div class="field"><label>الكمية</label><input data-item-qty type="number" min="1" step="1" value="'+(+it.qty||1)+'"></div>'
-    + '<div class="field"><label>السعر</label><input data-item-price type="number" min="0" step="0.01" value="'+(+it.price||0)+'"></div>'
-    + '<button type="button" data-item-remove aria-label="حذف الصنف" style="border:0;background:var(--surface-2);width:38px;height:38px;border-radius:10px;color:var(--pink-deep); flex:none;">🗑️</button>'
+    + '<div class="field"><label>'+t("الصنف")+'</label><input data-item-name value="'+String(it.name||"").replace(/"/g,"&quot;")+'"></div>'
+    + '<div class="field"><label>'+t("الكمية")+'</label><input data-item-qty type="number" min="1" step="1" value="'+(+it.qty||1)+'"></div>'
+    + '<div class="field"><label>'+t("السعر")+'</label><input data-item-price type="number" min="0" step="0.01" value="'+(+it.price||0)+'"></div>'
+    + '<button type="button" data-item-remove aria-label="'+t("حذف الصنف")+'" style="border:0;background:var(--surface-2);width:38px;height:38px;border-radius:10px;color:var(--pink-deep); flex:none;">🗑️</button>'
   + '</div>';
 }
 /* نموذج تعديل الطلب (اسم/موبايل/عنوان + الأصناف بكمياتها وأسعارها، والإجمالي
    بيتحسب لوحده أول بأول) - بيبدّل مكان الفاتورة في نفس المودال، وبيرجع
    لعرض الفاتورة تاني لو ضغط "إلغاء". */
 function showAdminOrderEditForm(order){
-  var html = '<button class="modal-close" id="modalCloseBtn" aria-label="إغلاق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
+  var cur = t("ج.م");
+  var html = '<button class="modal-close" id="modalCloseBtn" aria-label="'+t("إغلاق")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
     + '<div class="modal-info" style="padding:30px 24px;">'
-      + '<h3 style="margin-bottom:14px;">✏️ تعديل الطلب #'+String(order.id||"").slice(-6)+'</h3>'
+      + '<h3 style="margin-bottom:14px;">'+t("✏️ تعديل الطلب #")+String(order.id||"").slice(-6)+'</h3>'
       + '<div style="display:flex; flex-direction:column; gap:12px;">'
-        + '<div class="field"><label for="aoeName">الاسم</label><input id="aoeName" value="'+String(order.name||"").replace(/"/g,"&quot;")+'"></div>'
-        + '<div class="field"><label for="aoePhone">رقم الموبايل</label><input id="aoePhone" value="'+String(order.phone||"").replace(/"/g,"&quot;")+'"></div>'
-        + '<div class="field"><label for="aoeGovernorate">المحافظة</label><select id="aoeGovernorate">'+governorateOptionsHtml(order.governorate||"")+'</select></div>'
-        + '<div class="field"><label for="aoeAddress">العنوان</label><input id="aoeAddress" value="'+String(order.address||"").replace(/"/g,"&quot;")+'"></div>'
+        + '<div class="field"><label for="aoeName">'+t("الاسم")+'</label><input id="aoeName" value="'+String(order.name||"").replace(/"/g,"&quot;")+'"></div>'
+        + '<div class="field"><label for="aoePhone">'+t("رقم الموبايل")+'</label><input id="aoePhone" value="'+String(order.phone||"").replace(/"/g,"&quot;")+'"></div>'
+        + '<div class="field"><label for="aoeGovernorate">'+t("المحافظة")+'</label><select id="aoeGovernorate">'+governorateOptionsHtml(order.governorate||"")+'</select></div>'
+        + '<div class="field"><label for="aoeAddress">'+t("العنوان")+'</label><input id="aoeAddress" value="'+String(order.address||"").replace(/"/g,"&quot;")+'"></div>'
         + '<div>'
-          + '<label style="font-weight:700; font-size:13px;">الأصناف</label>'
+          + '<label style="font-weight:700; font-size:13px;">'+t("الأصناف")+'</label>'
           + '<div id="aoeItems" style="display:flex; flex-direction:column; gap:8px; margin-top:8px;"></div>'
-          + '<button type="button" class="btn btn-outline btn-sm" id="aoeAddItem" style="margin-top:10px;">➕ إضافة صنف</button>'
+          + '<button type="button" class="btn btn-outline btn-sm" id="aoeAddItem" style="margin-top:10px;">'+t("➕ إضافة صنف")+'</button>'
         + '</div>'
         + '<div style="display:flex; justify-content:space-between; font-size:13px; color:var(--ink-soft);">'
-          + '<span>الشحن</span><span class="tabular">'+fmt(+order.shipping||0)+' ج.م</span>'
+          + '<span>'+t("الشحن")+'</span><span class="tabular">'+fmt(+order.shipping||0)+' '+cur+'</span>'
         + '</div>'
         + '<div style="display:flex; justify-content:space-between; font-weight:800; font-size:14.5px; border-top:1.5px solid var(--border); padding-top:10px;">'
-          + '<span>الإجمالي الكلي (شامل الشحن)</span><span class="tabular" id="aoeTotal">0 ج.م</span>'
+          + '<span>'+t("الإجمالي الكلي (شامل الشحن)")+'</span><span class="tabular" id="aoeTotal">0 '+cur+'</span>'
         + '</div>'
         + '<p id="aoeError" style="color:var(--pink-deep); font-size:13px; display:none;"></p>'
         + '<div style="display:flex; gap:10px;">'
-          + '<button type="button" class="btn btn-primary" id="aoeSaveBtn" style="flex:1;">💾 حفظ التعديلات</button>'
-          + '<button type="button" class="btn btn-outline" id="aoeCancelBtn" style="flex:1;">إلغاء</button>'
+          + '<button type="button" class="btn btn-primary" id="aoeSaveBtn" style="flex:1;">'+t("💾 حفظ التعديلات")+'</button>'
+          + '<button type="button" class="btn btn-outline" id="aoeCancelBtn" style="flex:1;">'+t("إلغاء")+'</button>'
         + '</div>'
       + '</div>'
     + '</div>';
@@ -4678,7 +4890,7 @@ function showAdminOrderEditForm(order){
 
   function updateTotal(){
     var total = items.reduce(function(sum, it){ return sum + (+it.qty||0)*(+it.price||0); }, 0) + (+order.shipping||0);
-    document.getElementById("aoeTotal").textContent = fmt(total)+" ج.م";
+    document.getElementById("aoeTotal").textContent = fmt(total)+" "+t("ج.م");
   }
   function renderItemRows(){
     itemsBox.innerHTML = items.map(function(it, idx){ return adminOrderItemRowHtml(it, idx); }).join("");
@@ -4710,7 +4922,7 @@ function showAdminOrderEditForm(order){
     var cleanItems = items.filter(function(it){ return String(it.name||"").trim(); }).map(function(it){
       return { name:String(it.name||"").trim(), qty:Math.max(1, Math.round(+it.qty||1)), price:Math.max(0, +it.price||0) };
     });
-    if(!cleanItems.length){ errEl.textContent = "لازم يكون فيه صنف واحد على الأقل بالاسم."; errEl.style.display = "block"; return; }
+    if(!cleanItems.length){ errEl.textContent = t("لازم يكون فيه صنف واحد على الأقل بالاسم."); errEl.style.display = "block"; return; }
     var total = cleanItems.reduce(function(sum, it){ return sum + it.qty*it.price; }, 0) + (+order.shipping||0);
     var btn = this;
     btn.disabled = true;
@@ -4728,21 +4940,21 @@ function showAdminOrderEditForm(order){
       .then(function(res){
         btn.disabled = false;
         if(res.status===200 && res.body && res.body.ok){
-          showToast("✅ اتحفظت تعديلات الطلب");
+          showToast(t("✅ اتحفظت تعديلات الطلب"));
           closeAllPanels();
           renderAdminOrdersPage();
         } else {
-          errEl.textContent = "تعذر حفظ التعديلات، جرّب تاني.";
+          errEl.textContent = t("تعذر حفظ التعديلات، جرّب تاني.");
           errEl.style.display = "block";
         }
       })
-      .catch(function(){ btn.disabled=false; errEl.textContent = "تعذر الاتصال بالسيرفر."; errEl.style.display = "block"; });
+      .catch(function(){ btn.disabled=false; errEl.textContent = t("تعذر الاتصال بالسيرفر."); errEl.style.display = "block"; });
   });
 }
 /* حذف طلب نهائيًا (بعد تأكيد من الأدمن) وتحديث صفحة الطلبات فورًا. */
 function deleteAdminOrder(order){
   if(!order) return;
-  if(!confirm("متأكد إنك عايز تحذف الطلب ده نهائيًا؟ الخطوة دي مش هترجع.")) return;
+  if(!confirm(t("متأكد إنك عايز تحذف الطلب ده نهائيًا؟ الخطوة دي مش هترجع."))) return;
   fetch("/api/orders", {
     method: "DELETE",
     headers: Object.assign({ "content-type":"application/json" }, adminAuthHeaders()),
@@ -4750,14 +4962,14 @@ function deleteAdminOrder(order){
   }).then(function(r){ return r.json().then(function(j){ return {status:r.status, body:j}; }); })
     .then(function(res){
       if(res.status===200 && res.body && res.body.ok){
-        showToast("🗑️ تم حذف الطلب");
+        showToast(t("🗑️ تم حذف الطلب"));
         closeAllPanels();
         renderAdminOrdersPage();
       } else {
-        showToast("⚠️ تعذر حذف الطلب، جرّب تاني.");
+        showToast(t("⚠️ تعذر حذف الطلب، جرّب تاني."));
       }
     })
-    .catch(function(){ showToast("⚠️ تعذر الاتصال بالسيرفر."); });
+    .catch(function(){ showToast(t("⚠️ تعذر الاتصال بالسيرفر.")); });
 }
 document.getElementById("adminOrdersBtn").addEventListener("click", openAdminOrdersPage);
 document.getElementById("adminOrdersBackBtn").addEventListener("click", closeAdminOrdersPage);
@@ -4780,24 +4992,24 @@ function closeAdminStockPage(){
 function renderAdminStockPage(){
   var box = document.getElementById("adminStockList");
   if(!box) return;
-  box.innerHTML = '<p style="color:var(--ink-soft); font-size:13px;">جاري التحميل...</p>';
+  box.innerHTML = '<p style="color:var(--ink-soft); font-size:13px;">'+t("جاري التحميل...")+'</p>';
   fetch("/api/stock-requests", { headers: adminAuthHeaders(), cache:"no-store" }).then(function(r){ return r.json(); })
     .then(function(res){
       var list = (res && res.ok) ? res.requests : [];
       ADMIN_STOCK_CACHE = list.slice().reverse();
       var countEl = document.getElementById("adminStockCount");
       if(countEl) countEl.textContent = list.length;
-      if(!ADMIN_STOCK_CACHE.length){ box.innerHTML = '<p style="color:var(--ink-soft); font-size:13px;">لسه مفيش طلبات توفر.</p>'; return; }
+      if(!ADMIN_STOCK_CACHE.length){ box.innerHTML = '<p style="color:var(--ink-soft); font-size:13px;">'+t("لسه مفيش طلبات توفر.")+'</p>'; return; }
       box.innerHTML = ADMIN_STOCK_CACHE.map(function(r, i){
         var d = new Date(r.createdAt);
         return '<div class="order-card static">'
           + '<div class="order-card-top">'
-            + '<div><div class="order-card-id">'+String(r.productName||"منتج")+(r.colorName?' — اللون: '+r.colorName:'')+'</div>'
-              + '<div class="order-card-customer">'+(r.name||"عميل")+' — '+(r.phone||"-")+'</div></div>'
-            + '<div class="order-card-date tabular">'+d.toLocaleDateString("ar-EG")+'</div>'
+            + '<div><div class="order-card-id">'+String(r.productName||t("منتج"))+(r.colorName?' — '+t("اللون")+': '+t(r.colorName):'')+'</div>'
+              + '<div class="order-card-customer">'+(r.name||t("عميل"))+' — '+(r.phone||"-")+'</div></div>'
+            + '<div class="order-card-date tabular">'+d.toLocaleDateString(LANG==="en"?"en-US":"ar-EG")+'</div>'
           + '</div>'
           + '<div class="order-card-bottom">'
-            + '<button type="button" class="btn btn-outline btn-sm" data-stock-done="'+i+'">✅ تم التعامل معه</button>'
+            + '<button type="button" class="btn btn-outline btn-sm" data-stock-done="'+i+'">'+t("✅ تم التعامل معه")+'</button>'
           + '</div>'
         + '</div>';
       }).join("");
@@ -4805,7 +5017,7 @@ function renderAdminStockPage(){
         btn.addEventListener("click", function(){ deleteAdminStockRequest(ADMIN_STOCK_CACHE[+btn.dataset.stockDone]); });
       });
     })
-    .catch(function(){ box.innerHTML = '<p style="color:var(--pink-deep); font-size:13px;">تعذر تحميل طلبات التوفر.</p>'; });
+    .catch(function(){ box.innerHTML = '<p style="color:var(--pink-deep); font-size:13px;">'+t("تعذر تحميل طلبات التوفر.")+'</p>'; });
 }
 function deleteAdminStockRequest(r){
   if(!r) return;
@@ -4815,10 +5027,10 @@ function deleteAdminStockRequest(r){
     body: JSON.stringify({ id: r.id })
   }).then(function(res){ return res.json().then(function(j){ return {status:res.status, body:j}; }); })
     .then(function(res){
-      if(res.status===200 && res.body && res.body.ok){ showToast("✅ اتشال الطلب من القائمة"); renderAdminStockPage(); }
-      else { showToast("⚠️ تعذر تحديث الطلب، جرّب تاني."); }
+      if(res.status===200 && res.body && res.body.ok){ showToast(t("✅ اتشال الطلب من القائمة")); renderAdminStockPage(); }
+      else { showToast(t("⚠️ تعذر تحديث الطلب، جرّب تاني.")); }
     })
-    .catch(function(){ showToast("⚠️ تعذر الاتصال بالسيرفر."); });
+    .catch(function(){ showToast(t("⚠️ تعذر الاتصال بالسيرفر.")); });
 }
 document.getElementById("adminStockBtn").addEventListener("click", openAdminStockPage);
 document.getElementById("adminStockBackBtn").addEventListener("click", closeAdminStockPage);
@@ -4836,70 +5048,71 @@ function closeAdminAnalyticsPage(){
   document.getElementById("adminAnalyticsPage").classList.remove("active");
   document.getElementById("adminDashboard").classList.add("active");
 }
-function fmtAnalyticsNum(n){ return (n||0).toLocaleString("ar-EG"); }
+function fmtAnalyticsNum(n){ return (n||0).toLocaleString(LANG==="en"?"en-US":"ar-EG"); }
 function renderAdminAnalyticsPage(){
   var box = document.getElementById("adminAnalyticsBody");
   if(!box) return;
-  box.innerHTML = '<p style="color:var(--ink-soft); font-size:13px;">جاري التحميل...</p>';
+  box.innerHTML = '<p style="color:var(--ink-soft); font-size:13px;">'+t("جاري التحميل...")+'</p>';
   fetch("/api/analytics", { headers: adminAuthHeaders(), cache:"no-store" }).then(function(r){ return r.json(); })
     .then(function(res){
-      if(!res || !res.ok){ box.innerHTML = '<p style="color:var(--pink-deep); font-size:13px;">تعذر تحميل الإحصائيات.</p>'; return; }
+      if(!res || !res.ok){ box.innerHTML = '<p style="color:var(--pink-deep); font-size:13px;">'+t("تعذر تحميل الإحصائيات.")+'</p>'; return; }
 
       var conv = res.last30.visitors ? ((res.events.orderPlaced||0) / res.last30.visitors * 100) : 0;
+      var zair = t("زائر");
       var html = '<div class="stat-grid">'
-        + '<div class="stat-card accent"><div class="stat-label">إجمالي الزيارات</div><div class="stat-value">'+fmtAnalyticsNum(res.totalViews)+'</div><div class="stat-sub">من أول ما التتبع بدأ</div></div>'
-        + '<div class="stat-card accent"><div class="stat-label">إجمالي الزوار</div><div class="stat-value">'+fmtAnalyticsNum(res.totalVisitors)+'</div><div class="stat-sub">زوار مختلفين</div></div>'
-        + '<div class="stat-card"><div class="stat-label">زيارات النهاردة</div><div class="stat-value">'+fmtAnalyticsNum(res.today.views)+'</div><div class="stat-sub">'+fmtAnalyticsNum(res.today.visitors)+' زائر</div></div>'
-        + '<div class="stat-card"><div class="stat-label">آخر 7 أيام</div><div class="stat-value">'+fmtAnalyticsNum(res.last7.views)+'</div><div class="stat-sub">'+fmtAnalyticsNum(res.last7.visitors)+' زائر</div></div>'
-        + '<div class="stat-card"><div class="stat-label">آخر 30 يوم</div><div class="stat-value">'+fmtAnalyticsNum(res.last30.views)+'</div><div class="stat-sub">'+fmtAnalyticsNum(res.last30.visitors)+' زائر</div></div>'
-        + '<div class="stat-card"><div class="stat-label">إضافة للسلة</div><div class="stat-value">'+fmtAnalyticsNum(res.events.addToCart)+'</div><div class="stat-sub">آخر 30 يوم</div></div>'
-        + '<div class="stat-card"><div class="stat-label">طلبات اتعملت</div><div class="stat-value">'+fmtAnalyticsNum(res.events.orderPlaced)+'</div><div class="stat-sub">آخر 30 يوم</div></div>'
-        + '<div class="stat-card"><div class="stat-label">نسبة التحويل</div><div class="stat-value">'+conv.toFixed(1)+'%</div><div class="stat-sub">طلبات ÷ زوار (آخر 30 يوم)</div></div>'
+        + '<div class="stat-card accent"><div class="stat-label">'+t("إجمالي الزيارات")+'</div><div class="stat-value">'+fmtAnalyticsNum(res.totalViews)+'</div><div class="stat-sub">'+t("من أول ما التتبع بدأ")+'</div></div>'
+        + '<div class="stat-card accent"><div class="stat-label">'+t("إجمالي الزوار")+'</div><div class="stat-value">'+fmtAnalyticsNum(res.totalVisitors)+'</div><div class="stat-sub">'+t("زوار مختلفين")+'</div></div>'
+        + '<div class="stat-card"><div class="stat-label">'+t("زيارات النهاردة")+'</div><div class="stat-value">'+fmtAnalyticsNum(res.today.views)+'</div><div class="stat-sub">'+fmtAnalyticsNum(res.today.visitors)+' '+zair+'</div></div>'
+        + '<div class="stat-card"><div class="stat-label">'+t("آخر 7 أيام")+'</div><div class="stat-value">'+fmtAnalyticsNum(res.last7.views)+'</div><div class="stat-sub">'+fmtAnalyticsNum(res.last7.visitors)+' '+zair+'</div></div>'
+        + '<div class="stat-card"><div class="stat-label">'+t("آخر 30 يوم")+'</div><div class="stat-value">'+fmtAnalyticsNum(res.last30.views)+'</div><div class="stat-sub">'+fmtAnalyticsNum(res.last30.visitors)+' '+zair+'</div></div>'
+        + '<div class="stat-card"><div class="stat-label">'+t("إضافة للسلة")+'</div><div class="stat-value">'+fmtAnalyticsNum(res.events.addToCart)+'</div><div class="stat-sub">'+t("آخر 30 يوم")+'</div></div>'
+        + '<div class="stat-card"><div class="stat-label">'+t("طلبات اتعملت")+'</div><div class="stat-value">'+fmtAnalyticsNum(res.events.orderPlaced)+'</div><div class="stat-sub">'+t("آخر 30 يوم")+'</div></div>'
+        + '<div class="stat-card"><div class="stat-label">'+t("نسبة التحويل")+'</div><div class="stat-value">'+conv.toFixed(1)+'%</div><div class="stat-sub">'+t("طلبات ÷ زوار (آخر 30 يوم)")+'</div></div>'
       + '</div>';
 
       var maxViews = Math.max.apply(null, res.chart.map(function(d){ return d.views; }).concat([1]));
-      html += '<div class="admin-card" style="margin-bottom:20px;"><h3>الزيارات خلال آخر 30 يوم</h3><div class="analytics-chart-wrap"><div class="analytics-chart">'
+      html += '<div class="admin-card" style="margin-bottom:20px;"><h3>'+t("الزيارات خلال آخر 30 يوم")+'</h3><div class="analytics-chart-wrap"><div class="analytics-chart">'
         + res.chart.map(function(d){
             var h = Math.round((d.views / maxViews) * 100);
             var dd = new Date(d.date+"T00:00:00");
-            var lbl = dd.toLocaleDateString("ar-EG", {day:"numeric", month:"numeric"});
-            return '<div class="analytics-bar"><div class="analytics-bar-tip">'+d.views+' زيارة، '+d.visitors+' زائر</div><div class="analytics-bar-fill" style="height:'+Math.max(h,3)+'%;"></div><div class="analytics-bar-label">'+lbl+'</div></div>';
+            var lbl = dd.toLocaleDateString(LANG==="en"?"en-US":"ar-EG", {day:"numeric", month:"numeric"});
+            return '<div class="analytics-bar"><div class="analytics-bar-tip">'+d.views+' '+t("زيارة")+'، '+d.visitors+' '+zair+'</div><div class="analytics-bar-fill" style="height:'+Math.max(h,3)+'%;"></div><div class="analytics-bar-label">'+lbl+'</div></div>';
           }).join("")
         + '</div></div></div>';
 
       html += '<div class="admin-grid">';
 
-      html += '<div class="admin-card"><h3>أكتر الصفحات زيارة (آخر 30 يوم)</h3><div class="analytics-toppages">';
+      html += '<div class="admin-card"><h3>'+t("أكتر الصفحات زيارة (آخر 30 يوم)")+'</h3><div class="analytics-toppages">';
       if(res.topPages.length){
         var maxPage = res.topPages[0].count || 1;
         html += res.topPages.map(function(p){
           var w = Math.round((p.count/maxPage)*100);
-          return '<div class="analytics-toppage-row"><div class="analytics-toppage-name">'+(ANALYTICS_VIEW_LABELS[p.view]||p.view)+'</div><div class="analytics-toppage-track"><div class="analytics-toppage-fill" style="width:'+w+'%;"></div></div><div class="analytics-toppage-count">'+fmtAnalyticsNum(p.count)+'</div></div>';
+          return '<div class="analytics-toppage-row"><div class="analytics-toppage-name">'+t(ANALYTICS_VIEW_LABELS[p.view]||p.view)+'</div><div class="analytics-toppage-track"><div class="analytics-toppage-fill" style="width:'+w+'%;"></div></div><div class="analytics-toppage-count">'+fmtAnalyticsNum(p.count)+'</div></div>';
         }).join("");
       } else {
-        html += '<p style="color:var(--ink-soft); font-size:13px;">لسه مفيش بيانات كفاية.</p>';
+        html += '<p style="color:var(--ink-soft); font-size:13px;">'+t("لسه مفيش بيانات كفاية.")+'</p>';
       }
       html += '</div></div>';
 
       var mob = res.devices.mobile||0, desk = res.devices.desktop||0, totDev = mob+desk;
       var mobPct = totDev ? Math.round(mob/totDev*100) : 0;
       var deskPct = totDev ? (100-mobPct) : 0;
-      html += '<div class="admin-card"><h3>الأجهزة (آخر 30 يوم)</h3>';
+      html += '<div class="admin-card"><h3>'+t("الأجهزة (آخر 30 يوم)")+'</h3>';
       if(totDev){
         html += '<div class="analytics-split-bar">'
           + (mobPct ? '<div class="analytics-split-seg" style="width:'+mobPct+'%; background:var(--pink-deep);">📱 '+mobPct+'%</div>' : '')
           + (deskPct ? '<div class="analytics-split-seg" style="width:'+deskPct+'%; background:var(--sky-deep);">💻 '+deskPct+'%</div>' : '')
         + '</div>'
-        + '<p style="color:var(--ink-soft); font-size:12.5px; margin-top:10px;">'+fmtAnalyticsNum(mob)+' زيارة من الموبايل، '+fmtAnalyticsNum(desk)+' من الكمبيوتر.</p>';
+        + '<p style="color:var(--ink-soft); font-size:12.5px; margin-top:10px;">'+fmtAnalyticsNum(mob)+' '+t("زيارة من الموبايل، ")+fmtAnalyticsNum(desk)+' '+t("من الكمبيوتر.")+'</p>';
       } else {
-        html += '<p style="color:var(--ink-soft); font-size:13px;">لسه مفيش بيانات كفاية.</p>';
+        html += '<p style="color:var(--ink-soft); font-size:13px;">'+t("لسه مفيش بيانات كفاية.")+'</p>';
       }
       html += '</div>';
 
       html += '</div>';
       box.innerHTML = html;
     })
-    .catch(function(){ box.innerHTML = '<p style="color:var(--pink-deep); font-size:13px;">تعذر الاتصال بالسيرفر.</p>'; });
+    .catch(function(){ box.innerHTML = '<p style="color:var(--pink-deep); font-size:13px;">'+t("تعذر الاتصال بالسيرفر.")+'</p>'; });
 }
 document.getElementById("adminAnalyticsBtn").addEventListener("click", openAdminAnalyticsPage);
 document.getElementById("adminAnalyticsBackBtn").addEventListener("click", closeAdminAnalyticsPage);
@@ -4925,7 +5138,7 @@ function updateAdminInquiriesBadge(count){
 function renderAdminInquiriesPage(){
   var box = document.getElementById("adminInquiriesList");
   if(!box) return;
-  box.innerHTML = '<p style="color:var(--ink-soft); font-size:13px;">جاري التحميل...</p>';
+  box.innerHTML = '<p style="color:var(--ink-soft); font-size:13px;">'+t("جاري التحميل...")+'</p>';
   fetch("/api/inquiries", { headers: adminAuthHeaders(), cache:"no-store" }).then(function(r){ return r.json(); })
     .then(function(res){
       var list = (res && res.ok) ? res.inquiries : [];
@@ -4933,17 +5146,17 @@ function renderAdminInquiriesPage(){
       var countEl = document.getElementById("adminInquiriesCount");
       if(countEl) countEl.textContent = list.length;
       updateAdminInquiriesBadge(list.length);
-      if(!ADMIN_INQUIRIES_CACHE.length){ box.innerHTML = '<p style="color:var(--ink-soft); font-size:13px;">لسه مفيش استفسارات من العملاء.</p>'; return; }
+      if(!ADMIN_INQUIRIES_CACHE.length){ box.innerHTML = '<p style="color:var(--ink-soft); font-size:13px;">'+t("لسه مفيش استفسارات من العملاء.")+'</p>'; return; }
       box.innerHTML = ADMIN_INQUIRIES_CACHE.map(function(r, i){
         var d = new Date(r.createdAt);
         return '<div class="order-card static">'
           + '<div class="order-card-top">'
-            + '<div><div class="order-card-id">'+(r.name||"عميل")+' — '+(r.phone||"-")+'</div>'
+            + '<div><div class="order-card-id">'+(r.name||t("عميل"))+' — '+(r.phone||"-")+'</div>'
               + '<div class="order-card-customer" style="white-space:pre-wrap;">'+String(r.message||"").replace(/</g,"&lt;")+'</div></div>'
-            + '<div class="order-card-date tabular">'+d.toLocaleDateString("ar-EG")+'</div>'
+            + '<div class="order-card-date tabular">'+d.toLocaleDateString(LANG==="en"?"en-US":"ar-EG")+'</div>'
           + '</div>'
           + '<div class="order-card-bottom">'
-            + '<button type="button" class="btn btn-outline btn-sm" data-inquiry-done="'+i+'">✅ تم الرد</button>'
+            + '<button type="button" class="btn btn-outline btn-sm" data-inquiry-done="'+i+'">'+t("✅ تم الرد")+'</button>'
           + '</div>'
         + '</div>';
       }).join("");
@@ -4951,7 +5164,7 @@ function renderAdminInquiriesPage(){
         btn.addEventListener("click", function(){ deleteAdminInquiry(ADMIN_INQUIRIES_CACHE[+btn.dataset.inquiryDone]); });
       });
     })
-    .catch(function(){ box.innerHTML = '<p style="color:var(--pink-deep); font-size:13px;">تعذر تحميل الاستفسارات.</p>'; });
+    .catch(function(){ box.innerHTML = '<p style="color:var(--pink-deep); font-size:13px;">'+t("تعذر تحميل الاستفسارات.")+'</p>'; });
 }
 function deleteAdminInquiry(r){
   if(!r) return;
@@ -4961,10 +5174,10 @@ function deleteAdminInquiry(r){
     body: JSON.stringify({ id: r.id })
   }).then(function(res){ return res.json().then(function(j){ return {status:res.status, body:j}; }); })
     .then(function(res){
-      if(res.status===200 && res.body && res.body.ok){ showToast("✅ اتشال الاستفسار من القائمة"); renderAdminInquiriesPage(); }
-      else { showToast("⚠️ تعذر تحديث الاستفسار، جرّب تاني."); }
+      if(res.status===200 && res.body && res.body.ok){ showToast(t("✅ اتشال الاستفسار من القائمة")); renderAdminInquiriesPage(); }
+      else { showToast(t("⚠️ تعذر تحديث الاستفسار، جرّب تاني.")); }
     })
-    .catch(function(){ showToast("⚠️ تعذر الاتصال بالسيرفر."); });
+    .catch(function(){ showToast(t("⚠️ تعذر الاتصال بالسيرفر.")); });
 }
 document.getElementById("adminInquiriesBtn").addEventListener("click", openAdminInquiriesPage);
 document.getElementById("adminInquiriesBackBtn").addEventListener("click", closeAdminInquiriesPage);
@@ -4985,22 +5198,22 @@ function closeAdminCustomersPage(){
 function renderAdminCustomersPage(){
   var body = document.getElementById("adminCustomersBody");
   if(!body) return;
-  body.innerHTML = '<tr><td colspan="6" style="color:var(--ink-soft);">جاري التحميل...</td></tr>';
+  body.innerHTML = '<tr><td colspan="6" style="color:var(--ink-soft);">'+t("جاري التحميل...")+'</td></tr>';
   fetch("/api/admin/customers", { headers: adminAuthHeaders(), cache:"no-store" }).then(function(r){ return r.json(); })
     .then(function(res){
       var list = (res && res.ok) ? res.customers : [];
       ADMIN_CUSTOMERS_CACHE = list;
       var countEl = document.getElementById("adminCustomersCount");
       if(countEl) countEl.textContent = list.length;
-      if(!list.length){ body.innerHTML = '<tr><td colspan="6" style="color:var(--ink-soft);">لسه مفيش عملاء مسجّلين.</td></tr>'; return; }
+      if(!list.length){ body.innerHTML = '<tr><td colspan="6" style="color:var(--ink-soft);">'+t("لسه مفيش عملاء مسجّلين.")+'</td></tr>'; return; }
       body.innerHTML = list.map(function(c, i){
         return '<tr>'
           + '<td>'+String(c.name||"-")+'</td>'
           + '<td class="tabular" dir="ltr" style="text-align:end;">'+String(c.identifier||"-")+'</td>'
           + '<td>'+String(c.email||"-")+'</td>'
-          + '<td>'+String(c.governorate||"-")+'</td>'
+          + '<td>'+(c.governorate?t(c.governorate):"-")+'</td>'
           + '<td>'+String(c.address||"-")+'</td>'
-          + '<td style="white-space:nowrap;"><button type="button" class="btn btn-outline btn-sm" data-cust-edit="'+i+'">✏️ تعديل</button> <button type="button" class="btn btn-outline btn-sm" data-cust-del="'+i+'" style="color:var(--pink-deep);">🗑️</button></td>'
+          + '<td style="white-space:nowrap;"><button type="button" class="btn btn-outline btn-sm" data-cust-edit="'+i+'">'+t("✏️ تعديل")+'</button> <button type="button" class="btn btn-outline btn-sm" data-cust-del="'+i+'" style="color:var(--pink-deep);">🗑️</button></td>'
         + '</tr>';
       }).join("");
       body.querySelectorAll("[data-cust-edit]").forEach(function(btn){
@@ -5010,12 +5223,12 @@ function renderAdminCustomersPage(){
         btn.addEventListener("click", function(){
           var c = ADMIN_CUSTOMERS_CACHE[+btn.dataset.custDel];
           if(!c) return;
-          if(!confirm('متأكد إنك عايز تمسح حساب "'+(c.name||c.identifier)+'" نهائيًا؟')) return;
+          if(!confirm(t('متأكد إنك عايز تمسح حساب "')+(c.name||c.identifier)+t('" نهائيًا؟'))) return;
           deleteAdminCustomer(c);
         });
       });
     })
-    .catch(function(){ body.innerHTML = '<tr><td colspan="6" style="color:var(--pink-deep);">تعذر تحميل بيانات العملاء.</td></tr>'; });
+    .catch(function(){ body.innerHTML = '<tr><td colspan="6" style="color:var(--pink-deep);">'+t("تعذر تحميل بيانات العملاء.")+'</td></tr>'; });
 }
 function deleteAdminCustomer(c){
   if(!c) return;
@@ -5025,27 +5238,27 @@ function deleteAdminCustomer(c){
     body: JSON.stringify({ id: c.id })
   }).then(function(res){ return res.json().then(function(j){ return {status:res.status, body:j}; }); })
     .then(function(res){
-      if(res.status===200 && res.body && res.body.ok){ showToast("✅ اتمسح الحساب"); renderAdminCustomersPage(); }
-      else { showToast("⚠️ تعذر حذف الحساب، جرّب تاني."); }
+      if(res.status===200 && res.body && res.body.ok){ showToast(t("✅ اتمسح الحساب")); renderAdminCustomersPage(); }
+      else { showToast(t("⚠️ تعذر حذف الحساب، جرّب تاني.")); }
     })
-    .catch(function(){ showToast("⚠️ تعذر الاتصال بالسيرفر."); });
+    .catch(function(){ showToast(t("⚠️ تعذر الاتصال بالسيرفر.")); });
 }
 function showAdminCustomerEditForm(c){
   if(!c) return;
-  var html = '<button class="modal-close" id="modalCloseBtn" aria-label="إغلاق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
+  var html = '<button class="modal-close" id="modalCloseBtn" aria-label="'+t("إغلاق")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
     + '<div class="modal-info" style="padding:30px 24px;">'
-      + '<h3 style="margin-bottom:14px;">✏️ تعديل بيانات العميل</h3>'
+      + '<h3 style="margin-bottom:14px;">'+t("✏️ تعديل بيانات العميل")+'</h3>'
       + '<div style="display:flex; flex-direction:column; gap:12px;">'
-        + '<div class="field"><label for="aceName">الاسم بالكامل</label><input id="aceName" value="'+String(c.name||"").replace(/"/g,"&quot;")+'"></div>'
-        + '<div class="field"><label for="aceIdentifier">رقم الموبايل</label><input id="aceIdentifier" dir="ltr" style="text-align:end;" value="'+String(c.identifier||"").replace(/"/g,"&quot;")+'"></div>'
-        + '<div class="field"><label for="aceEmail">الإيميل</label><input id="aceEmail" type="email" value="'+String(c.email||"").replace(/"/g,"&quot;")+'"></div>'
-        + '<div class="field"><label for="aceGovernorate">المحافظة</label><select id="aceGovernorate">'+governorateOptionsHtml(c.governorate||"")+'</select></div>'
-        + '<div class="field"><label for="aceAddress">العنوان بالتفصيل</label><input id="aceAddress" value="'+String(c.address||"").replace(/"/g,"&quot;")+'"></div>'
-        + '<div class="field"><label for="acePassword">رقم سري جديد (اختياري)</label><input id="acePassword" type="password" placeholder="اتركه فاضي لو مش عايز تغيّره" autocomplete="new-password"></div>'
+        + '<div class="field"><label for="aceName">'+t("الاسم بالكامل")+'</label><input id="aceName" value="'+String(c.name||"").replace(/"/g,"&quot;")+'"></div>'
+        + '<div class="field"><label for="aceIdentifier">'+t("رقم الموبايل")+'</label><input id="aceIdentifier" dir="ltr" style="text-align:end;" value="'+String(c.identifier||"").replace(/"/g,"&quot;")+'"></div>'
+        + '<div class="field"><label for="aceEmail">'+t("الإيميل")+'</label><input id="aceEmail" type="email" value="'+String(c.email||"").replace(/"/g,"&quot;")+'"></div>'
+        + '<div class="field"><label for="aceGovernorate">'+t("المحافظة")+'</label><select id="aceGovernorate">'+governorateOptionsHtml(c.governorate||"")+'</select></div>'
+        + '<div class="field"><label for="aceAddress">'+t("العنوان بالتفصيل")+'</label><input id="aceAddress" value="'+String(c.address||"").replace(/"/g,"&quot;")+'"></div>'
+        + '<div class="field"><label for="acePassword">'+t("رقم سري جديد (اختياري)")+'</label><input id="acePassword" type="password" placeholder="'+t("اتركه فاضي لو مش عايز تغيّره")+'" autocomplete="new-password"></div>'
         + '<p id="aceError" style="color:var(--pink-deep); font-size:13px; display:none;"></p>'
         + '<div style="display:flex; gap:10px;">'
-          + '<button type="button" class="btn btn-primary" id="aceSaveBtn" style="flex:1;">💾 حفظ التعديلات</button>'
-          + '<button type="button" class="btn btn-outline" id="aceCancelBtn" style="flex:1;">إلغاء</button>'
+          + '<button type="button" class="btn btn-primary" id="aceSaveBtn" style="flex:1;">'+t("💾 حفظ التعديلات")+'</button>'
+          + '<button type="button" class="btn btn-outline" id="aceCancelBtn" style="flex:1;">'+t("إلغاء")+'</button>'
         + '</div>'
       + '</div>'
     + '</div>';
@@ -5063,8 +5276,8 @@ function showAdminCustomerEditForm(c){
     var governorate = document.getElementById("aceGovernorate").value;
     var address = document.getElementById("aceAddress").value.trim();
     var password = document.getElementById("acePassword").value;
-    if(!name || !identifier || !email){ errEl.textContent = "الاسم ورقم الموبايل والإيميل لازم يتملوا."; errEl.style.display = "block"; return; }
-    if(password && password.length < 6){ errEl.textContent = "الرقم السري الجديد لازم يكون 6 حروف/أرقام على الأقل."; errEl.style.display = "block"; return; }
+    if(!name || !identifier || !email){ errEl.textContent = t("الاسم ورقم الموبايل والإيميل لازم يتملوا."); errEl.style.display = "block"; return; }
+    if(password && password.length < 6){ errEl.textContent = t("الرقم السري الجديد لازم يكون 6 حروف/أرقام على الأقل."); errEl.style.display = "block"; return; }
     var btn = this;
     btn.disabled = true;
     fetch("/api/admin/customers", {
@@ -5075,18 +5288,18 @@ function showAdminCustomerEditForm(c){
       .then(function(res){
         btn.disabled = false;
         if(res.status===200 && res.body && res.body.ok){
-          showToast("✅ اتحفظت بيانات العميل");
+          showToast(t("✅ اتحفظت بيانات العميل"));
           closeAllPanels();
           renderAdminCustomersPage();
         } else if(res.body && (res.body.error==="identifier_taken" || res.body.error==="email_taken")){
-          errEl.textContent = "رقم الموبايل أو الإيميل ده مستخدم في حساب تاني.";
+          errEl.textContent = t("رقم الموبايل أو الإيميل ده مستخدم في حساب تاني.");
           errEl.style.display = "block";
         } else {
-          errEl.textContent = "تعذر حفظ التعديلات، جرّب تاني.";
+          errEl.textContent = t("تعذر حفظ التعديلات، جرّب تاني.");
           errEl.style.display = "block";
         }
       })
-      .catch(function(){ btn.disabled=false; errEl.textContent = "تعذر الاتصال بالسيرفر."; errEl.style.display = "block"; });
+      .catch(function(){ btn.disabled=false; errEl.textContent = t("تعذر الاتصال بالسيرفر."); errEl.style.display = "block"; });
   });
 }
 document.getElementById("adminCustomersBtn").addEventListener("click", openAdminCustomersPage);
@@ -5107,7 +5320,7 @@ document.getElementById("adminSettingsForm").addEventListener("submit", function
   var newRecoveryEmail = document.getElementById("asRecoveryEmail").value.trim();
   var newRecoveryPhone = document.getElementById("asRecoveryPhone").value.trim();
   if(!newUser) return;
-  if(newPass && newPass.length < 6){ showToast("⚠️ كلمة المرور الجديدة لازم تكون 6 حروف/أرقام على الأقل."); return; }
+  if(newPass && newPass.length < 6){ showToast(t("⚠️ كلمة المرور الجديدة لازم تكون 6 حروف/أرقام على الأقل.")); return; }
   var submitBtn = e.target.querySelector('[type="submit"]');
   if(submitBtn) submitBtn.disabled = true;
   fetch("/api/admin/settings", {
@@ -5121,12 +5334,12 @@ document.getElementById("adminSettingsForm").addEventListener("submit", function
         setAdminSession(res.username, newPass || (getAdminSession()||{}).password, res.recoveryEmail, res.recoveryPhone);
         document.getElementById("asPassword").value = "";
         updateAccountLabel();
-        showToast("✅ اتحفظت إعدادات الحساب");
+        showToast(t("✅ اتحفظت إعدادات الحساب"));
       } else {
-        showToast("⚠️ معرفناش نحفظ الإعدادات — سجّل دخول تاني وحاول.");
+        showToast(t("⚠️ معرفناش نحفظ الإعدادات — سجّل دخول تاني وحاول."));
       }
     })
-    .catch(function(){ if(submitBtn) submitBtn.disabled = false; showToast("⚠️ تعذر الاتصال بالسيرفر، جرّب تاني."); });
+    .catch(function(){ if(submitBtn) submitBtn.disabled = false; showToast(t("⚠️ تعذر الاتصال بالسيرفر، جرّب تاني.")); });
 });
 function renderAdminAll(){
   fillCatSelect();
@@ -5178,7 +5391,7 @@ document.getElementById("productForm").addEventListener("submit", function(e){
     resetProductForm();
     renderAdminProductsTable();
     refreshPublicViews();
-    showToast(wasEdit ? "✅ اتحدث المنتج" : "✅ اتضاف المنتج");
+    showToast(wasEdit ? t("✅ اتحدث المنتج") : t("✅ اتضاف المنتج"));
   });
 });
 function resetProductForm(){
@@ -5187,8 +5400,8 @@ function resetProductForm(){
   document.getElementById("pfRating").value = "4.5";
   document.getElementById("pfReviews").value = "0";
   document.getElementById("pfStock").value = "";
-  document.getElementById("productFormTitle").textContent = "➕ إضافة منتج جديد";
-  document.getElementById("productFormSubmit").textContent = "إضافة المنتج";
+  document.getElementById("productFormTitle").textContent = t("➕ إضافة منتج جديد");
+  document.getElementById("productFormSubmit").textContent = t("إضافة المنتج");
   document.getElementById("productFormCancel").hidden = true;
   pfImagesData = [];
   document.getElementById("pfImageInput").value = "";
@@ -5233,14 +5446,14 @@ document.getElementById("adminProductsBody").addEventListener("click", function(
     document.getElementById("pfColorImageChosen").style.display = "none";
     renderPfColorNamePicker();
     renderPfColorsList();
-    document.getElementById("productFormTitle").textContent = "✏️ تعديل منتج";
-    document.getElementById("productFormSubmit").textContent = "حفظ التعديل";
+    document.getElementById("productFormTitle").textContent = t("✏️ تعديل منتج");
+    document.getElementById("productFormSubmit").textContent = t("حفظ التعديل");
     document.getElementById("productFormCancel").hidden = false;
     document.getElementById("productForm").scrollIntoView({behavior:"smooth", block:"start"});
   }
   if(delBtn){
     var pid = delBtn.dataset.delProduct;
-    if(!confirm("متأكد إنك عايز تمسح المنتج ده؟")) return;
+    if(!confirm(t("متأكد إنك عايز تمسح المنتج ده؟"))) return;
     refreshThenRun(function(){
       PRODUCTS = PRODUCTS.filter(function(x){ return String(x.id)!==pid; });
       renderAdminProductsTable();
@@ -5267,14 +5480,14 @@ document.getElementById("catForm").addEventListener("submit", function(e){
     resetCatForm();
     renderAdminAll();
     refreshPublicViews();
-    showToast(wasEdit ? "✅ اتحدث القسم" : "✅ اتضاف القسم");
+    showToast(wasEdit ? t("✅ اتحدث القسم") : t("✅ اتضاف القسم"));
   });
 });
 function resetCatForm(){
   document.getElementById("catForm").reset();
   document.getElementById("cfId").value = "";
-  document.getElementById("catFormTitle").textContent = "➕ إضافة قسم جديد";
-  document.getElementById("catFormSubmit").textContent = "إضافة القسم";
+  document.getElementById("catFormTitle").textContent = t("➕ إضافة قسم جديد");
+  document.getElementById("catFormSubmit").textContent = t("إضافة القسم");
   document.getElementById("catFormCancel").hidden = true;
   selectedCatColor = COLOR_PRESETS[0].value;
   renderColorSwatches(selectedCatColor);
@@ -5291,8 +5504,8 @@ document.getElementById("adminCatsBody").addEventListener("click", function(e){
     document.getElementById("cfIcon").value = c.icon;
     selectedCatColor = c.color;
     renderColorSwatches(selectedCatColor);
-    document.getElementById("catFormTitle").textContent = "✏️ تعديل قسم";
-    document.getElementById("catFormSubmit").textContent = "حفظ التعديل";
+    document.getElementById("catFormTitle").textContent = t("✏️ تعديل قسم");
+    document.getElementById("catFormSubmit").textContent = t("حفظ التعديل");
     document.getElementById("catFormCancel").hidden = false;
     document.getElementById("catFormTitle").scrollIntoView({behavior:"smooth", block:"center"});
     return;
@@ -5302,10 +5515,10 @@ document.getElementById("adminCatsBody").addEventListener("click", function(e){
   refreshThenRun(function(){
     if(PRODUCTS.some(function(p){ return p.cat===cid; })){
       renderAdminAll();
-      alert("مينفعش تمسح القسم ده، لسه فيه منتجات جواه. غيّر قسم المنتجات دي الأول.");
+      alert(t("مينفعش تمسح القسم ده، لسه فيه منتجات جواه. غيّر قسم المنتجات دي الأول."));
       return;
     }
-    if(!confirm("متأكد إنك عايز تمسح القسم ده؟")) return;
+    if(!confirm(t("متأكد إنك عايز تمسح القسم ده؟"))) return;
     CATS = CATS.filter(function(c){ return c.id!==cid; });
     rebuildCatMap();
     resetCatForm();
@@ -5330,14 +5543,14 @@ document.getElementById("adminImportFile").addEventListener("change", function(e
       applyData(JSON.parse(reader.result));
       renderAdminAll();
       refreshPublicViews();
-      showToast("✅ اتحمّلت البيانات من الملف");
-    }catch(err){ alert("الملف مش JSON صحيح"); }
+      showToast(t("✅ اتحمّلت البيانات من الملف"));
+    }catch(err){ alert(t("الملف مش JSON صحيح")); }
   };
   reader.readAsText(file);
   e.target.value = "";
 });
 document.getElementById("adminResetBtn").addEventListener("click", function(){
-  if(!confirm("هيرجع كل حاجة للبيانات الافتراضية على الموقع لكل الزوار (هيمسح تعديلاتك الحالية). متأكد؟")) return;
+  if(!confirm(t("هيرجع كل حاجة للبيانات الافتراضية على الموقع لكل الزوار (هيمسح تعديلاتك الحالية). متأكد؟"))) return;
   CATS = DEFAULT_CATS.map(function(c){ return Object.assign({}, c); });
   PRODUCTS = DEFAULT_PRODUCTS.map(function(p){ return Object.assign({}, p); });
   rebuildCatMap();

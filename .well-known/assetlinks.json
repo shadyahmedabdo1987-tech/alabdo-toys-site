@@ -1,10 +1,26 @@
 [
   {
-    "relation": ["delegate_permission/common.handle_all_urls"],
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
     "target": {
       "namespace": "android_app",
       "package_name": "com.alabdotoys.app",
-      "sha256_cert_fingerprints": ["1B:5C:20:B0:FD:63:22:72:FB:99:E8:82:DB:98:41:43:C5:61:79:2C:2E:9E:2A:33:B2:46:80:CF:67:D6:5F:66"]
+      "sha256_cert_fingerprints": [
+        "1B:5C:20:B0:FD:63:22:72:FB:99:E8:82:DB:98:41:43:C5:61:79:2C:2E:9E:2A:33:B2:46:80:CF:67:D6:5F:66"
+      ]
+    }
+  },
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.alabdotoys.admin",
+      "sha256_cert_fingerprints": [
+        "1B:5C:20:B0:FD:63:22:72:FB:99:E8:82:DB:98:41:43:C5:61:79:2C:2E:9E:2A:33:B2:46:80:CF:67:D6:5F:66"
+      ]
     }
   }
 ]

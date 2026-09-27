@@ -767,6 +767,13 @@ html[dir="ltr"] .mobile-nav.show{transform:translateX(0);}
    كل القواعد هنا متربطة بـ html.app-mode، فالموقع العادي مبيتأثرش خالص.
    ===================================================================== */
 .app-tabbar, .app-sheet, .card-quick{display:none;}
+.skeleton-card{pointer-events:none;}
+.skeleton-card .card-media, .skeleton-card .sk-line{background:linear-gradient(90deg,var(--surface-2) 0%,var(--surface-3) 50%,var(--surface-2) 100%); background-size:200% 100%; animation:skShimmer 1.2s linear infinite;}
+.skeleton-card .card-body{gap:8px;}
+html.app-mode .skeleton-card .card-media{background:linear-gradient(90deg,var(--surface-2) 0%,var(--surface-3) 50%,var(--surface-2) 100%) !important; background-size:200% 100% !important;}
+.skeleton-card .sk-line{display:block; height:12px; border-radius:6px;}
+.skeleton-card .sk-line.short{width:55%;}
+@keyframes skShimmer{from{background-position:200% 0;} to{background-position:-200% 0;}}
 .app-dl-btn{display:inline-flex; align-items:center; gap:10px; margin-top:16px; background:#000; color:#fff; border:1px solid rgba(255,255,255,.35); border-radius:12px; padding:8px 16px 8px 14px; text-decoration:none;}
 .app-dl-btn svg{width:26px; height:26px; color:#3ddc84;}
 .app-dl-btn span{display:flex; flex-direction:column; line-height:1.25;}
@@ -2269,8 +2276,10 @@ function refreshThenRun(fn){
     return;
   }
   catalogSaveBusy = true;
-  setTimeout(function(){ catalogSaveBusy = false; }, 8000);
-  fetch("/api/products", {cache:"no-store"}).then(function(r){ if(!r.ok) throw 0; return r.json(); })
+  setTimeout(function(){ catalogSaveBusy = false; }, 30000);
+  /* ?fresh=1 بيخلي الـ service worker يعدّي الطلب للسيرفر على طول (من غير
+     النسخة المحفوظة على الجهاز)، عشان لوحة التحكم دايمًا تعدّل على آخر نسخة. */
+  fetch("/api/products?fresh=1", {cache:"no-store"}).then(function(r){ if(!r.ok) throw 0; return r.json(); })
     .then(function(data){ if(data) applyData(data); fn(); })
     .catch(function(){ fn(); });
 }
@@ -4074,7 +4083,21 @@ function applyProducts(){
   return list;
 }
 
+/* لحد ما قائمة المنتجات الحقيقية توصل من السيرفر، صفحة المنتجات بتعرض
+   كروت "جاري التحميل" بدل منتجات تجريبية. */
+var CATALOG_READY = false;
+function skeletonCards(n){
+  var h=""; for(var i=0;i<n;i++) h+='<div class="card skeleton-card" aria-hidden="true"><div class="card-media"></div><div class="card-body"><span class="sk-line"></span><span class="sk-line short"></span></div></div>';
+  return h;
+}
 function renderProductsView(){
+  if(!CATALOG_READY){
+    document.getElementById("productsGrid").innerHTML = skeletonCards(6);
+    document.getElementById("emptyState").hidden = true;
+    document.getElementById("resultsCount").textContent = t("جاري التحميل...");
+    document.getElementById("filterList").innerHTML = "";
+    return;
+  }
   renderFilterList();
   var list = applyProducts();
   /* زرار "أضف للسلة" وعداد الكمية بيظهروا جوه تفاصيل المنتج (المودال) بس -
@@ -6260,7 +6283,7 @@ function goToView(name){
   if(location.hash.replace("#","")!==hashToWrite){
     /* جوه التطبيق كل صفحة بتبقى خطوة في التاريخ عشان زرار الرجوع في الموبايل
        يرجّع للصفحة اللي قبلها بدل ما يقفل التطبيق. */
-    if(isAppMode() && name!=="admin") history.pushState(null,"","#"+hashToWrite);
+    if(isAppMode() && name!=="admin" && location.hash) history.pushState(null,"","#"+hashToWrite);
     else history.replaceState(null,"","#"+hashToWrite);
   }
   trackPageView(name);
@@ -6489,17 +6512,29 @@ if(isIOSDevice() && !isStandaloneApp()){
   setTimeout(showInstallBanner, 1200);
 }
 
+/* الصفحة بتظهر على طول (مع كروت "جاري التحميل") بدل ما تفضل فاضية لحد
+   ما المنتجات توصل - ولو العميل فتح صفحة تانية في الوقت ده، مش بنرجّعه
+   للرئيسية غصب عنه لما التحميل يخلص. */
+document.getElementById("bestSellersGrid").innerHTML = skeletonCards(4);
+document.getElementById("newArrivalsGrid").innerHTML = skeletonCards(4);
+initScrollReveal();
+renderCartBadge();
+var BOOT_VIEW = hashToView(location.hash.replace("#","") || "home");
+if(BOOT_VIEW!=="home" && BOOT_VIEW!=="admin"){ goToView(BOOT_VIEW); if(BOOT_VIEW==="products") renderProductsView(); }
 loadInitialData(function(){
   refreshFavoritesFromServer(function(){
+    CATALOG_READY = true;
     renderCategoryRow();
     renderBestSellers();
     renderNewArrivals();
     renderCartBadge();
     renderCartDrawer();
-    var initialView = hashToView(location.hash.replace("#","") || "home");
-    goToView(initialView);
-    if(initialView==="products") renderProductsView();
-    if(initialView==="admin") showAdmin();
+    var active = document.querySelector(".view.active");
+    var activeName = active ? active.dataset.view : "home";
+    if(activeName==="home" && BOOT_VIEW!=="home") goToView(BOOT_VIEW);
+    else if(activeName==="home") goToView("home");
+    if(document.getElementById("view-products").classList.contains("active")) renderProductsView();
+    if(BOOT_VIEW==="admin") showAdmin();
     initScrollReveal();
     loadHomeReviews();
   });

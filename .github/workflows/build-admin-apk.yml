@@ -1,0 +1,350 @@
+# متجر آل عبده - تطبيق "آل عبده - الإدارة" (لوحة التحكم بس، لصاحب المتجر).
+# ده تطبيق منفصل تمامًا عن تطبيق العملاء: اسم مختلف (com.alabdotoys.admin)،
+# أيقونة عليها ترس، وبيفتح على شاشة دخول لوحة التحكم على طول.
+# مش هيترفع على جوجل بلاي ولا له لينك على الموقع - بيتنزل على موبايلك إنت بس.
+#
+# الملف ده بيعمل لوحده أول ما يترفع:
+#   1) بيضيف التطبيق الجديد لملف .well-known/assetlinks.json (عشان يفتح من غير شريط عنوان)
+#   2) بيبني ملف APK من غير توقيع ويحطه في فرع admin-apk-build
+#      (التوقيع بيحصل برّه بمفتاح المتجر عشان المفتاح ميترفعش على الإنترنت)
+# وتقدر تشغّله تاني يدوي من Actions ← Build Admin APK ← Run workflow.
+
+name: Build Admin APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/build-admin-apk.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-admin-apk
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      APP_VERSION_CODE: ${{ github.run_number }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Add the admin app to assetlinks.json
+        run: |
+          set -e
+          mkdir -p .well-known
+          python3 - <<'EOF'
+          import json, os
+          p = ".well-known/assetlinks.json"
+          fp = "1B:5C:20:B0:FD:63:22:72:FB:99:E8:82:DB:98:41:43:C5:61:79:2C:2E:9E:2A:33:B2:46:80:CF:67:D6:5F:66"
+          data = json.load(open(p, encoding="utf-8")) if os.path.exists(p) else []
+          def has(pkg):
+              return any(e.get("target", {}).get("package_name") == pkg for e in data)
+          changed = False
+          for pkg in ("com.alabdotoys.app", "com.alabdotoys.admin"):
+              if not has(pkg):
+                  data.append({
+                      "relation": ["delegate_permission/common.handle_all_urls"],
+                      "target": {"namespace": "android_app", "package_name": pkg,
+                                 "sha256_cert_fingerprints": [fp]}
+                  })
+                  changed = True
+          if changed:
+              open(p, "w", encoding="utf-8").write(json.dumps(data, indent=2) + "\n")
+              print("assetlinks.json updated")
+          else:
+              print("assetlinks.json: nothing to do")
+          EOF
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .well-known/assetlinks.json
+          if git diff --cached --quiet; then
+            echo "assetlinks already has the admin app"
+          else
+            git commit -m "Admin app: add com.alabdotoys.admin to assetlinks.json"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.13"
+
+      - name: Set up Python (for icons)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Create Android project
+        run: |
+          set -e
+          P="$RUNNER_TEMP/android-admin"
+          echo "P=$P" >> "$GITHUB_ENV"
+          mkdir -p $P/app/src/main/res/values $P/app/src/main/res/xml $P/app/src/main/res/drawable $P/app/src/main/res/mipmap-anydpi-v26
+
+          cat > $P/settings.gradle <<'EOF'
+          pluginManagement {
+              repositories { google(); mavenCentral(); gradlePluginPortal() }
+          }
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories { google(); mavenCentral() }
+          }
+          rootProject.name = "AlAbdoAdmin"
+          include ":app"
+          EOF
+
+          cat > $P/build.gradle <<'EOF'
+          plugins {
+              id 'com.android.application' version '8.13.0' apply false
+          }
+          EOF
+
+          cat > $P/gradle.properties <<'EOF'
+          org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+          android.useAndroidX=true
+          android.nonTransitiveRClass=true
+          EOF
+
+          cat > $P/app/build.gradle <<'EOF'
+          plugins {
+              id 'com.android.application'
+          }
+
+          android {
+              namespace 'com.alabdotoys.admin'
+              compileSdk 36
+
+              defaultConfig {
+                  applicationId 'com.alabdotoys.admin'
+                  minSdk 21
+                  targetSdk 36
+                  versionCode Integer.parseInt(System.getenv('APP_VERSION_CODE') ?: '1')
+                  versionName '1.0.' + (System.getenv('APP_VERSION_CODE') ?: '1')
+              }
+
+              buildTypes {
+                  release {
+                      minifyEnabled false
+                  }
+              }
+
+              compileOptions {
+                  sourceCompatibility JavaVersion.VERSION_17
+                  targetCompatibility JavaVersion.VERSION_17
+              }
+
+              lint {
+                  checkReleaseBuilds = false
+                  abortOnError = false
+              }
+          }
+
+          dependencies {
+              implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
+          }
+          EOF
+
+          # ملحوظة: مفيش intent-filter لروابط alabdo-toys.com هنا عن قصد - عشان
+          # لينكات الموقع (من واتساب أو فيسبوك) تفضل تفتح في تطبيق العملاء أو
+          # المتصفح، مش في تطبيق الإدارة.
+          cat > $P/app/src/main/AndroidManifest.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+              <uses-permission android:name="android.permission.INTERNET" />
+
+              <queries>
+                  <intent>
+                      <action android:name="android.support.customtabs.action.CustomTabsService" />
+                  </intent>
+              </queries>
+
+              <application
+                  android:allowBackup="false"
+                  android:icon="@mipmap/ic_launcher"
+                  android:roundIcon="@mipmap/ic_launcher"
+                  android:label="@string/app_name"
+                  android:supportsRtl="true"
+                  android:theme="@android:style/Theme.Translucent.NoTitleBar">
+
+                  <meta-data
+                      android:name="asset_statements"
+                      android:resource="@string/asset_statements" />
+
+                  <activity
+                      android:name="com.google.androidbrowserhelper.trusted.LauncherActivity"
+                      android:exported="true"
+                      android:label="@string/app_name">
+                      <meta-data android:name="android.support.customtabs.trusted.DEFAULT_URL" android:value="https://alabdo-toys.com/?source=admin#ld2Hmke8ryGU7G5QRI56vgwE58fe" />
+                      <meta-data android:name="android.support.customtabs.trusted.STATUS_BAR_COLOR" android:resource="@color/colorPrimary" />
+                      <meta-data android:name="android.support.customtabs.trusted.NAVIGATION_BAR_COLOR" android:resource="@color/navigationColor" />
+                      <meta-data android:name="android.support.customtabs.trusted.SPLASH_IMAGE_DRAWABLE" android:resource="@drawable/splash" />
+                      <meta-data android:name="android.support.customtabs.trusted.SPLASH_SCREEN_BACKGROUND_COLOR" android:resource="@color/backgroundColor" />
+                      <meta-data android:name="android.support.customtabs.trusted.SPLASH_SCREEN_FADE_OUT_DURATION" android:value="300" />
+                      <meta-data android:name="android.support.customtabs.trusted.FILE_PROVIDER_AUTHORITY" android:value="com.alabdotoys.admin.fileprovider" />
+                      <meta-data android:name="android.support.customtabs.trusted.FALLBACK_STRATEGY" android:value="webview" />
+
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+
+                  <activity
+                      android:name="com.google.androidbrowserhelper.trusted.WebViewFallbackActivity"
+                      android:configChanges="orientation|screenSize" />
+
+                  <provider
+                      android:name="androidx.core.content.FileProvider"
+                      android:authorities="com.alabdotoys.admin.fileprovider"
+                      android:exported="false"
+                      android:grantUriPermissions="true">
+                      <meta-data
+                          android:name="android.support.FILE_PROVIDER_PATHS"
+                          android:resource="@xml/filepaths" />
+                  </provider>
+
+                  <service
+                      android:name="com.google.androidbrowserhelper.trusted.DelegationService"
+                      android:enabled="true"
+                      android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.support.customtabs.trusted.TRUSTED_WEB_ACTIVITY_SERVICE" />
+                          <category android:name="android.intent.category.DEFAULT" />
+                      </intent-filter>
+                  </service>
+              </application>
+          </manifest>
+          EOF
+
+          cat > $P/app/src/main/res/values/strings.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <string name="app_name">آل عبده - الإدارة</string>
+              <string name="asset_statements" translatable="false">[{\"relation\": [\"delegate_permission/common.handle_all_urls\"], \"target\": {\"namespace\": \"web\", \"site\": \"https://alabdo-toys.com\"}}]</string>
+          </resources>
+          EOF
+
+          cat > $P/app/src/main/res/values/colors.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <color name="colorPrimary">#1F2A44</color>
+              <color name="navigationColor">#FFFFFF</color>
+              <color name="backgroundColor">#1F2A44</color>
+              <color name="iconBackground">#FFF8EF</color>
+          </resources>
+          EOF
+
+          cat > $P/app/src/main/res/xml/filepaths.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <paths>
+              <files-path name="twa_splash" path="twa_splash/" />
+          </paths>
+          EOF
+
+          cat > $P/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+              <background android:drawable="@color/iconBackground" />
+              <foreground android:drawable="@mipmap/ic_launcher_foreground" />
+          </adaptive-icon>
+          EOF
+
+      - name: Generate admin icons (store icon + gear badge)
+        run: |
+          pip install --quiet pillow
+          python3 - <<'EOF'
+          import os, math
+          from PIL import Image, ImageDraw
+          NAVY=(31,42,68,255); GOLD=(255,196,61,255)
+          def gear(size, cx, cy, r, color, hole_color):
+              # returns list of drawing ops on an RGBA layer (supersampled)
+              S=4; L=Image.new("RGBA",(size*S,size*S),(0,0,0,0)); d=ImageDraw.Draw(L)
+              cx,cy,r=cx*S,cy*S,r*S
+              teeth=8; ro=r; ri=r*0.78; pts=[]
+              for i in range(teeth*4):
+                  a=2*math.pi*i/(teeth*4) - math.pi/2
+                  rr = ro if (i%4 in (0,1)) else ri
+                  pts.append((cx+rr*math.cos(a), cy+rr*math.sin(a)))
+              d.polygon(pts, fill=color)
+              d.ellipse([cx-ri*0.98,cy-ri*0.98,cx+ri*0.98,cy+ri*0.98], fill=color)
+              h=r*0.34; d.ellipse([cx-h,cy-h,cx+h,cy+h], fill=hole_color)
+              return L.resize((size,size), Image.LANCZOS)
+          def badge(img, cxf, cyf, rf):
+              n=img.size[0]; S=4
+              L=Image.new("RGBA",(n*S,n*S),(0,0,0,0)); d=ImageDraw.Draw(L)
+              cx,cy,r=cxf*n*S,cyf*n*S,rf*n*S
+              d.ellipse([cx-r-6*S*n/512,cy-r-6*S*n/512,cx+r+6*S*n/512,cy+r+6*S*n/512], fill=(255,255,255,255))
+              d.ellipse([cx-r,cy-r,cx+r,cy+r], fill=NAVY)
+              L=L.resize((n,n), Image.LANCZOS)
+              out=Image.alpha_composite(img, L)
+              g=gear(n, cxf*n, cyf*n, rf*n*0.62, GOLD, NAVY)
+              return Image.alpha_composite(out, g)
+          def make(src_legacy, src_mask):
+              legacy=badge(Image.open(src_legacy).convert("RGBA").resize((512,512)), 0.76, 0.76, 0.2)
+              # maskable: safe zone is the central 66%, keep badge inside it
+              mask=badge(Image.open(src_mask).convert("RGBA").resize((512,512)), 0.66, 0.66, 0.13)
+              return legacy, mask
+          if True:
+              res=os.path.join(os.environ["P"],"app/src/main/res")
+              legacy, mask = make("icon-512.png","icon-maskable-512.png")
+              dens={"mdpi":1,"hdpi":1.5,"xhdpi":2,"xxhdpi":3,"xxxhdpi":4}
+              for name,f in dens.items():
+                  dd=os.path.join(res,"mipmap-"+name); os.makedirs(dd,exist_ok=True)
+                  legacy.resize((round(48*f),)*2, Image.LANCZOS).save(os.path.join(dd,"ic_launcher.png"))
+                  mask.resize((round(108*f),)*2, Image.LANCZOS).save(os.path.join(dd,"ic_launcher_foreground.png"))
+              legacy.resize((288,288), Image.LANCZOS).save(os.path.join(res,"drawable","splash.png"))
+              print("icons ok")
+          EOF
+
+      - name: Build APK (unsigned)
+        run: |
+          set -o pipefail
+          cd "$P"
+          gradle assembleRelease --no-daemon --stacktrace 2>&1 | tee "$RUNNER_TEMP/build.log"
+
+      - name: Align APK and publish to branch admin-apk-build
+        run: |
+          set -e
+          BT=$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)
+          echo "build-tools $BT"
+          OUT="$RUNNER_TEMP/out"
+          mkdir -p "$OUT"
+          "$ANDROID_HOME/build-tools/$BT/zipalign" -p -f 4 "$P/app/build/outputs/apk/release/app-release-unsigned.apk" "$OUT/alabdo-admin-unsigned.apk"
+          "$ANDROID_HOME/build-tools/$BT/zipalign" -c -p 4 "$OUT/alabdo-admin-unsigned.apk"
+          cp "$ANDROID_HOME/build-tools/$BT/lib/apksigner.jar" "$OUT/apksigner.jar"
+          echo "ok run ${{ github.run_number }} build-tools $BT $(date -u)" > "$OUT/info.txt"
+          tail -n 60 "$RUNNER_TEMP/build.log" > "$OUT/build.log"
+          cd "$OUT"
+          git init -q
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add . && git commit -q -m "Admin APK build ${{ github.run_number }}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:refs/heads/admin-apk-build
+
+      - name: Save build log on failure (branch admin-apk-build)
+        if: failure()
+        run: |
+          mkdir -p "$RUNNER_TEMP/logrepo" && cd "$RUNNER_TEMP/logrepo"
+          git init -q
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -f "$RUNNER_TEMP/build.log" ]; then tail -n 400 "$RUNNER_TEMP/build.log" > build.log; else echo "failed before the Gradle build step" > build.log; fi
+          echo "FAILED run ${{ github.run_number }} at $(date -u)" > info.txt
+          git add . && git commit -q -m "admin build log for run ${{ github.run_number }}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:refs/heads/admin-apk-build

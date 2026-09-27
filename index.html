@@ -16,6 +16,12 @@
      في أول تحميل بس، فبنفتكره في sessionStorage لباقي الجلسة. -->
 <script>(function(){try{
   var d=document.documentElement, ref=document.referrer||"", ss=window.sessionStorage;
+  /* تطبيق "آل عبده - الإدارة" (com.alabdotoys.admin) بيفتح بـ ?source=admin:
+     بيفضل بشكل الموقع العادي (من غير شكل تطبيق العملاء)، وبعد تسجيل الخروج
+     بيرجع لشاشة دخول لوحة التحكم بدل الرئيسية. */
+  var fromAdminApp = ref.indexOf("android-app://com.alabdotoys.admin")===0 || /[?&]source=admin\b/.test(location.search);
+  if(fromAdminApp && ss) ss.setItem("aa_admin_app","1");
+  if(fromAdminApp || (ss && ss.getItem("aa_admin_app")==="1")){ d.classList.add("admin-app"); return; }
   var fromApp = ref.indexOf("android-app://com.alabdotoys.app")===0 || /[?&]source=app\b/.test(location.search);
   if(fromApp && ss) ss.setItem("aa_app_mode","1");
   var standalone = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone===true;
@@ -695,7 +701,9 @@ html[dir="ltr"] .drawer.show{transform:translateX(0);}
 .order-card-bottom{display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding-top:10px;}
 .order-card-total{font-weight:800; font-size:15px; color:var(--pink-deep);}
 .order-card-open{font-size:12px; color:var(--ink-soft); display:flex; align-items:center; gap:4px;}
-@media (max-width:780px){ .admin-grid{grid-template-columns:1fr;} .field-row{grid-template-columns:1fr;} }
+@media (max-width:780px){ .admin-grid{grid-template-columns:minmax(0,1fr);} .field-row{grid-template-columns:minmax(0,1fr);} }
+/* عشان لوحة التحكم متعرضش أكتر من الشاشة على الموبايل (العنصر جوه الـ grid ميكبّرش العمود). */
+.admin-grid > *, .field-row > *{min-width:0;}
 
 /* mobile nav drawer */
 .mobile-nav{position:fixed; top:0; inset-inline-start:0; bottom:0; width:min(300px,84vw); background:var(--surface); z-index:100; transform:translateX(105%); transition:transform .25s; padding:calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)); overflow-y:auto;}
@@ -769,6 +777,8 @@ html.app-mode .skeleton-card .card-media{background:linear-gradient(90deg,var(--
 .app-dl-btn small{font-size:11px; opacity:.85;}
 .app-dl-btn strong{font-size:16px;}
 html.app-mode .web-only, html.app-mode .app-hide{display:none !important;}
+/* تطبيق الإدارة: من غير أزرار "حمّل تطبيق أندرويد" */
+html.admin-app .web-only{display:none !important;}
 html.app-mode .topbar, html.app-mode .main-nav, html.app-mode .site-footer,
 html.app-mode .menu-toggle, html.app-mode .header-actions, html.app-mode .skip-link{display:none !important;}
 html.app-mode body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
@@ -4115,6 +4125,9 @@ document.getElementById("mobileSearchForm").addEventListener("submit", function(
    شريط التبويبات تحت + شاشة "حسابي" + زرار الرجوع في الموبايل بيقفل أي
    شاشة مفتوحة (صفحة منتج / سلة / حساب) بدل ما يقفل التطبيق. */
 function isAppMode(){ return document.documentElement.classList.contains("app-mode"); }
+function isAdminApp(){ return document.documentElement.classList.contains("admin-app"); }
+/* بعد تسجيل خروج الأدمن: جوه تطبيق الإدارة نرجع لشاشة الدخول، وعلى الموقع للرئيسية. */
+function goAfterAdminLogout(){ if(isAdminApp()){ goToView("admin"); showAdmin(); } else goToView("home"); }
 function appAnyPanelOpen(){
   return [cartDrawer, acctDrawer, mobileNav, modalBackdrop, appSheet].some(function(el){ return el && el.classList.contains("show"); });
 }
@@ -4519,7 +4532,7 @@ document.getElementById("adminPassShow").addEventListener("change", function(){
   document.getElementById("adminPassInput").type = this.checked ? "text" : "password";
 });
 document.getElementById("adminPassInput").addEventListener("keydown", function(e){ if(e.key==="Enter"){ e.preventDefault(); document.getElementById("adminLoginBtn").click(); } });
-document.getElementById("adminLogoutBtn").addEventListener("click", function(){ setAdminAuthed(false); showAdmin(); updateAccountLabel(); goToView("home"); });
+document.getElementById("adminLogoutBtn").addEventListener("click", function(){ setAdminAuthed(false); showAdmin(); updateAccountLabel(); goAfterAdminLogout(); });
 
 /* ---------- Admin: first-time account setup ---------- */
 document.getElementById("adminSetupBtn").addEventListener("click", function(){
@@ -4724,7 +4737,7 @@ function renderAccountModal(){
     document.getElementById("modalCard").innerHTML = html;
     document.getElementById("modalCloseBtn").addEventListener("click", closeAllPanels);
     document.getElementById("acctGoAdmin").addEventListener("click", function(){ closeAllPanels(); goToView("admin"); showAdmin(); });
-    document.getElementById("acctAdminLogout").addEventListener("click", function(){ setAdminAuthed(false); updateAccountLabel(); goToView("home"); });
+    document.getElementById("acctAdminLogout").addEventListener("click", function(){ setAdminAuthed(false); updateAccountLabel(); goAfterAdminLogout(); });
     return;
   }
 
@@ -6316,7 +6329,7 @@ window.addEventListener("storage", function(e){
     var wasOnAdmin = document.getElementById("view-admin").classList.contains("active");
     updateAccountLabel();
     if(wasOnAdmin){
-      goToView("home");
+      goAfterAdminLogout();
       showToast("⚠️ اتسجّل خروجك من لوحة التحكم — حصل تسجيل دخول عميل في تاب تاني بنفس المتصفح");
     }
   }

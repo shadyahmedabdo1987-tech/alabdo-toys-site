@@ -9,6 +9,18 @@
     document.documentElement.setAttribute("dir","ltr");
   }
 }catch(e){}})();</script>
+<!-- "وضع التطبيق": لما الموقع يتفتح من جوه تطبيق الأندرويد (أو متثبت كتطبيق على
+     الشاشة الرئيسية) بنحط class="app-mode" على <html> قبل ما الصفحة ترسم، فيظهر
+     بشكل تطبيق (شريط تبويبات تحت، كروت منتجات مدمجة، صفحة منتج كاملة...) بدل
+     شكل الموقع العادي. التطبيق بيبعت referrer = android-app://com.alabdotoys.app
+     في أول تحميل بس، فبنفتكره في sessionStorage لباقي الجلسة. -->
+<script>(function(){try{
+  var d=document.documentElement, ref=document.referrer||"", ss=window.sessionStorage;
+  var fromApp = ref.indexOf("android-app://com.alabdotoys.app")===0 || /[?&]source=app\b/.test(location.search);
+  if(fromApp && ss) ss.setItem("aa_app_mode","1");
+  var standalone = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone===true;
+  if(fromApp || standalone || (ss && ss.getItem("aa_app_mode")==="1")) d.classList.add("app-mode");
+}catch(e){}})();</script>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-2XED7JY5D6"></script>
 <script>
@@ -749,6 +761,137 @@ html[dir="ltr"] .mobile-nav.show{transform:translateX(0);}
   .stat-row{grid-template-columns:repeat(2,1fr);}
   .topbar .wrap{gap:16px; font-size:11.5px;}
 }
+
+/* =====================================================================
+   APP MODE - شكل التطبيق (جوه تطبيق الأندرويد أو لما الموقع متثبت كتطبيق)
+   كل القواعد هنا متربطة بـ html.app-mode، فالموقع العادي مبيتأثرش خالص.
+   ===================================================================== */
+.app-tabbar, .app-sheet, .card-quick{display:none;}
+.app-dl-btn{display:inline-flex; align-items:center; gap:10px; margin-top:16px; background:#000; color:#fff; border:1px solid rgba(255,255,255,.35); border-radius:12px; padding:8px 16px 8px 14px; text-decoration:none;}
+.app-dl-btn svg{width:26px; height:26px; color:#3ddc84;}
+.app-dl-btn span{display:flex; flex-direction:column; line-height:1.25;}
+.app-dl-btn small{font-size:11px; opacity:.85;}
+.app-dl-btn strong{font-size:16px;}
+html.app-mode .web-only, html.app-mode .app-hide{display:none !important;}
+html.app-mode .topbar, html.app-mode .main-nav, html.app-mode .site-footer, html.app-mode #installBanner,
+html.app-mode .menu-toggle, html.app-mode .header-actions, html.app-mode .skip-link{display:none !important;}
+html.app-mode body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
+html.app-mode .wrap{padding-inline:12px;}
+
+/* الهيدر: لوجو صغير + اسم + بحث بعرض الشاشة (زي تطبيقات التسوق) */
+html.app-mode .site-header{padding-top:env(safe-area-inset-top); box-shadow:0 1px 0 var(--border);}
+html.app-mode .header-row{flex-wrap:wrap; gap:8px 10px; padding-block:8px 10px;}
+html.app-mode .brand{flex:1 1 auto; min-width:0; gap:8px;}
+html.app-mode .brand-logo{width:34px; height:34px; animation:none;}
+html.app-mode .brand-text .name{font-size:17px;}
+html.app-mode .brand-text .tag{display:none;}
+html.app-mode .header-search{display:block !important; order:10; flex:1 1 100%; max-width:none;}
+html.app-mode .header-search input{padding:10px 42px 10px 14px; border-radius:12px; border:1.5px solid var(--border); background:var(--surface-3); font-size:14px;}
+html.app-mode .header-search button{width:30px; height:30px; box-shadow:none;}
+
+/* أقسام الصفحة الرئيسية أصغر ومتقاربة */
+html.app-mode .section{padding-block:14px;}
+html.app-mode .section-alt{background:transparent;}
+html.app-mode .section-head{margin-bottom:10px; align-items:center; flex-wrap:nowrap;}
+html.app-mode .section-head h2{font-size:17px; gap:6px;}
+html.app-mode .section-head .sub{display:none;}
+html.app-mode .link-more{font-size:13px;}
+html.app-mode .hero{background:none;}
+html.app-mode .hero-inner{padding-block:10px 0; gap:10px;}
+html.app-mode .hero-banner-wrap{border-radius:14px; box-shadow:0 4px 12px hsl(var(--shadow)/.12);}
+html.app-mode .wholesale-promo{box-shadow:none; border-radius:16px;}
+
+/* الأقسام: دواير تتسحب يمين وشمال */
+html.app-mode .cat-row{display:flex; gap:14px; overflow-x:auto; scrollbar-width:none; padding:2px 2px 6px;}
+html.app-mode .cat-row::-webkit-scrollbar, html.app-mode .promo-row::-webkit-scrollbar,
+html.app-mode #newArrivalsGrid::-webkit-scrollbar, html.app-mode #bestSellersGrid::-webkit-scrollbar,
+html.app-mode #filterList::-webkit-scrollbar{display:none;}
+html.app-mode .cat-chip{flex:0 0 72px; background:none; border:0; box-shadow:none; padding:0; gap:6px; font-size:11.5px; font-weight:700; transform:none;}
+html.app-mode .cat-chip:hover{transform:none; box-shadow:none;}
+html.app-mode .cat-chip .ic{width:62px; height:62px; box-shadow:0 2px 8px hsl(var(--shadow)/.14);}
+html.app-mode .promo-row{display:flex; gap:10px; overflow-x:auto; scrollbar-width:none; scroll-snap-type:x mandatory;}
+html.app-mode .promo-card{flex:0 0 80%; padding:16px 18px; border-radius:16px; scroll-snap-align:start;}
+html.app-mode .promo-card h3{font-size:17px;}
+html.app-mode .promo-card .emoji{font-size:32px;}
+
+/* كروت المنتجات: عمودين، صورة على خلفية بيضا، اسم في سطرين، سعر واضح */
+html.app-mode .grid-products{grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px;}
+html.app-mode #newArrivalsGrid, html.app-mode #bestSellersGrid{grid-template-columns:none; grid-auto-flow:column; grid-auto-columns:44%; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; padding-bottom:4px;}
+html.app-mode #newArrivalsGrid .card, html.app-mode #bestSellersGrid .card{scroll-snap-align:start;}
+html.app-mode .card{border:0; border-radius:14px; box-shadow:0 1px 4px hsl(var(--shadow)/.12);}
+html.app-mode .card-media{background:#fff !important;}
+html.app-mode .card-body{padding:8px 10px 10px; gap:3px;}
+html.app-mode .card-cat{display:none;}
+html.app-mode .card-title{font-size:12.5px; font-weight:700; line-height:1.45; min-height:36px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;}
+html.app-mode .card-rating{font-size:11px; gap:4px;}
+html.app-mode .card-rating .stars{letter-spacing:0;}
+html.app-mode .card-price{margin-top:2px; gap:6px; flex-wrap:wrap;}
+html.app-mode .card-price .price-now{font-size:15px;}
+html.app-mode .card-price .price-old{font-size:11px;}
+html.app-mode .card-badge{top:8px; inset-inline-start:8px; font-size:10.5px; padding:3px 8px; border-radius:6px;}
+html.app-mode .card-wish{top:8px; inset-inline-end:8px; width:30px; height:30px; box-shadow:0 1px 5px rgba(0,0,0,.16);}
+html.app-mode .card-quick{display:flex; position:absolute; bottom:8px; inset-inline-end:8px; width:34px; height:34px; border-radius:50%; border:0; background:var(--pink); color:#fff; align-items:center; justify-content:center; box-shadow:0 3px 8px hsl(var(--shadow)/.28); z-index:2; cursor:pointer;}
+html.app-mode .card-quick svg{width:18px; height:18px;}
+html.app-mode .card-quick:active{transform:scale(.9);}
+
+/* صفحة المنتجات: الأقسام شرايح فوق بدل القايمة الجانبية */
+html.app-mode #view-products .breadcrumb, html.app-mode #view-products .page-head p,
+html.app-mode .filter-box h4, html.app-mode #sortListMobileHidden{display:none !important;}
+html.app-mode #view-products .page-head{margin-bottom:8px;}
+html.app-mode #view-products .page-head h1{font-size:19px;}
+html.app-mode .products-layout{gap:10px; grid-template-columns:minmax(0,1fr);}
+html.app-mode .products-layout > *{min-width:0;}
+html.app-mode .filter-box{background:none; border:0; padding:0; position:static; border-radius:0;}
+html.app-mode #filterList{display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; padding-bottom:2px;}
+html.app-mode #filterList li{margin:0; flex:none;}
+html.app-mode #filterList button{white-space:nowrap; border:1px solid var(--border); background:var(--surface); border-radius:999px; padding:7px 14px; font-size:12.5px;}
+html.app-mode #filterList button span{display:none;}
+html.app-mode #filterList button.active{background:var(--pink); border-color:var(--pink); color:#fff;}
+html.app-mode .toolbar{margin-bottom:10px;}
+html.app-mode .toolbar select{padding:7px 10px; font-size:12.5px;}
+
+/* صفحة المنتج: شاشة كاملة، صورة كبيرة فوق، وشريط الشراء ثابت تحت */
+html.app-mode .modal-backdrop:has(> .modal-card:not(.acct-card)){padding:0; align-items:stretch; background:var(--surface);}
+html.app-mode .modal-card:not(.acct-card){max-width:none; width:100%; height:100%; max-height:none; border-radius:0; grid-template-columns:1fr; align-content:start; padding-top:env(safe-area-inset-top);}
+html.app-mode .modal-card:not(.acct-card) .modal-media{min-height:0; height:46vh; background:#fff !important;}
+html.app-mode .modal-card:not(.acct-card) .modal-info{padding:16px 16px 0; gap:10px;}
+html.app-mode .modal-card:not(.acct-card) .modal-info h3{font-size:18px;}
+html.app-mode .modal-card:not(.acct-card) .modal-close{top:calc(12px + env(safe-area-inset-top)); inset-inline-start:12px; inset-inline-end:auto; background:rgba(255,255,255,.94); color:#2a1f3d; box-shadow:0 2px 8px rgba(0,0,0,.18);}
+html.app-mode .modal-card:not(.acct-card) #modalActionsBox{position:sticky; bottom:0; z-index:3; margin:6px -16px 0; padding:12px 16px calc(12px + env(safe-area-inset-bottom)); background:var(--surface); border-top:1px solid var(--border); box-shadow:0 -6px 16px hsl(var(--shadow)/.10);}
+/* شاشات الحساب والدخول: تطلع من تحت (bottom sheet) */
+html.app-mode .modal-backdrop:has(> .modal-card.acct-card){padding:0; align-items:flex-end;}
+html.app-mode .modal-card.acct-card{max-width:none; border-radius:22px 22px 0 0; max-height:92vh; padding-bottom:env(safe-area-inset-bottom);}
+html.app-mode .drawer{width:100vw; padding-top:env(safe-area-inset-top);}
+html.app-mode .toast{bottom:calc(76px + env(safe-area-inset-bottom));}
+
+/* شريط التبويبات تحت */
+html.app-mode .app-tabbar{display:grid; grid-template-columns:repeat(5,1fr); position:fixed; inset-inline:0; bottom:0; z-index:70; background:var(--surface); border-top:1px solid var(--border); padding-bottom:env(safe-area-inset-bottom); box-shadow:0 -4px 14px hsl(var(--shadow)/.08);}
+.app-tab{appearance:none; border:0; background:none; font:inherit; position:relative; display:flex; flex-direction:column; align-items:center; gap:3px; padding:8px 2px 7px; color:var(--ink-faint); font-size:10.5px; font-weight:700; cursor:pointer; -webkit-tap-highlight-color:transparent;}
+.app-tab svg{width:23px; height:23px;}
+.app-tab.active{color:var(--pink);}
+.app-tab.active::before{content:""; position:absolute; top:0; width:30px; height:3px; border-radius:0 0 3px 3px; background:var(--pink);}
+.app-tab .tab-badge{position:absolute; top:3px; inset-inline-end:calc(50% - 20px); min-width:17px; height:17px; padding:0 4px; border-radius:9px; background:var(--pink); color:#fff; font-size:10px; font-weight:800; display:flex; align-items:center; justify-content:center; border:2px solid var(--surface);}
+.app-tab .tab-badge[data-zero="1"]{display:none;}
+
+/* شاشة "حسابي" (bottom sheet) */
+html.app-mode .app-sheet{display:flex; flex-direction:column; position:fixed; inset-inline:0; bottom:0; z-index:92; background:var(--surface); border-radius:22px 22px 0 0; max-height:90vh; overflow-y:auto; transform:translateY(105%); transition:transform .25s ease; padding:10px 16px calc(14px + env(safe-area-inset-bottom)); box-shadow:0 -10px 30px hsl(var(--shadow)/.2);}
+html.app-mode .app-sheet.show{transform:none;}
+.app-sheet .grab{width:40px; height:4px; border-radius:2px; background:var(--border); margin:0 auto 14px; flex:none;}
+.app-sheet-user{display:flex; align-items:center; gap:12px; background:linear-gradient(135deg,var(--pink),var(--pink-deep)); color:#fff; border-radius:16px; padding:14px;}
+.app-sheet-user .av{width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,.22); display:flex; align-items:center; justify-content:center; font-size:19px; font-weight:800; flex:none;}
+.app-sheet-user .t{flex:1; min-width:0; display:flex; flex-direction:column; line-height:1.4;}
+.app-sheet-user .t strong{font-size:15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.app-sheet-user .t span{font-size:12px; opacity:.9;}
+.app-sheet-user button{flex:none; border:0; background:#fff; color:var(--pink-deep); font:inherit; font-size:12.5px; font-weight:800; padding:8px 12px; border-radius:10px; cursor:pointer;}
+.app-sheet-list{display:flex; flex-direction:column; margin-top:8px;}
+.app-sheet-row{display:flex; align-items:center; gap:12px; width:100%; padding:12px 2px; border:0; border-bottom:1px solid var(--border); background:none; font:inherit; font-size:14.5px; font-weight:700; color:var(--ink); text-align:start; text-decoration:none; cursor:pointer;}
+.app-sheet-row:last-child{border-bottom:0;}
+.app-sheet-row .ic{width:34px; height:34px; border-radius:10px; background:var(--surface-2); color:var(--pink-deep); display:flex; align-items:center; justify-content:center; flex:none;}
+.app-sheet-row .ic svg{width:18px; height:18px;}
+.app-sheet-row .val{margin-inline-start:auto; color:var(--ink-soft); font-size:12.5px;}
+.app-sheet-row .chev{margin-inline-start:auto; color:var(--ink-faint); font-size:18px; line-height:1;}
+.app-sheet-row .val + .chev{margin-inline-start:6px;}
+.app-sheet-sep{height:8px; background:var(--bg); margin:4px -16px; flex:none;}
 @media (max-width:420px){
   .header-actions{gap:4px;}
   .icon-btn{padding:7px 8px; min-width:34px;}
@@ -835,6 +978,7 @@ html[dir="ltr"] .mobile-nav.show{transform:translateX(0);}
   <a href="#products" data-view-link="products" data-badge="wish" data-i18n>المفضلة ❤️</a>
   <a href="#about" data-view-link="about" data-i18n>من نحن</a>
   <a href="#contact" data-view-link="contact" data-i18n>تواصل معنا</a>
+  <a href="/alabdo-toys.apk" class="web-only" download data-i18n>📱 حمّل تطبيق أندرويد</a>
 </div>
 
 <main id="main">
@@ -880,7 +1024,7 @@ html[dir="ltr"] .mobile-nav.show{transform:translateX(0);}
         </div>
       </div>
 
-      <div class="hero-below">
+      <div class="hero-below app-hide">
         <span class="eyebrow" data-i18n>🎉 عروض وخصومات على مجموعة مختارة من المنتجات</span>
         <div class="hero-ctas">
           <button class="btn btn-primary" data-view-link="products">
@@ -949,7 +1093,7 @@ html[dir="ltr"] .mobile-nav.show{transform:translateX(0);}
     </div>
   </section>
 
-  <section class="section reveal">
+  <section class="section reveal app-hide">
     <div class="wrap">
       <div class="section-head">
         <div><h2 data-i18n>🧸 حكايتنا مع أطفالكم</h2><p class="sub" data-i18n>متجر آل عبده — الإسكندرية، مصر</p></div>
@@ -974,7 +1118,7 @@ html[dir="ltr"] .mobile-nav.show{transform:translateX(0);}
     </div>
   </section>
 
-  <section class="section reveal">
+  <section class="section reveal app-hide">
     <div class="wrap">
       <div class="trust-row">
         <div class="trust-item"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4a4 4 0 0 1 4 4v1a4 4 0 0 1-8 0V8a4 4 0 0 1 4-4Z"/><path d="M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6"/></svg></span><span data-i18n>خدمة عملاء متميزة</span></div>
@@ -986,7 +1130,7 @@ html[dir="ltr"] .mobile-nav.show{transform:translateX(0);}
     </div>
   </section>
 
-  <section class="section reveal" style="padding-top:0">
+  <section class="section reveal app-hide" style="padding-top:0">
     <div class="wrap">
       <div class="cta-ribbon">
         <h2 data-i18n>لأن طفولتهم تستحق الأفضل 💛</h2>
@@ -1627,6 +1771,17 @@ html[dir="ltr"] .mobile-nav.show{transform:translateX(0);}
 
 </main>
 
+<!-- ===================== APP MODE: bottom tab bar + "حسابي" sheet =====================
+     بيظهروا بس جوه التطبيق (html.app-mode) - على الموقع العادي مخفيين تمامًا. -->
+<nav class="app-tabbar" id="appTabbar" aria-label="التنقل في التطبيق" data-i18n-aria>
+  <button type="button" class="app-tab" data-tab="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1Z"/></svg><span data-i18n>الرئيسية</span></button>
+  <button type="button" class="app-tab" data-tab="cats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg><span data-i18n>الأقسام</span></button>
+  <button type="button" class="app-tab" data-tab="wish"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.6-9.5-9C.7 8.4 2.3 5 5.6 5 7.6 5 9 6 12 8.5 15 6 16.4 5 18.4 5c3.3 0 4.9 3.4 3.1 7-2.5 4.4-9.5 9-9.5 9Z"/></svg><span data-i18n>المفضلة</span></button>
+  <button type="button" class="app-tab" data-tab="cart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h2l2.4 12.2a2 2 0 0 0 2 1.8h7.7a2 2 0 0 0 2-1.6L21 8H6"/><circle cx="9" cy="20" r="1.6"/><circle cx="17" cy="20" r="1.6"/></svg><span data-i18n>السلة</span><span class="tab-badge" id="appTabCartCount" data-zero="1">0</span></button>
+  <button type="button" class="app-tab" data-tab="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.5-4 4.5-6 7.5-6s6 2 7.5 6"/></svg><span data-i18n>حسابي</span></button>
+</nav>
+<aside class="app-sheet" id="appSheet" role="dialog" aria-modal="true" aria-label="حسابي" data-i18n-aria></aside>
+
 <div class="overlay" id="overlay"></div>
 
 <aside class="drawer" id="cartDrawer" role="dialog" aria-label="عربة الشراء" aria-modal="true" data-i18n-aria>
@@ -1683,6 +1838,7 @@ html[dir="ltr"] .mobile-nav.show{transform:translateX(0);}
         <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h13M17 7l-3-3M17 7l-3 3"/><path d="M20 17H7M7 17l3 3M7 17l3-3"/></svg><span data-i18n>إنستاباي</span></span>
         <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 9v.01M18 15v.01"/></svg><span data-i18n>الدفع نقداً عند الاستلام</span></span>
       </div>
+      <a class="app-dl-btn web-only" href="/alabdo-toys.apk" download><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.6 9.48 19.44 6.3a.38.38 0 0 0-.66-.38l-1.87 3.23a11.5 11.5 0 0 0-9.82 0L5.22 5.92a.38.38 0 1 0-.66.38L6.4 9.48A10.8 10.8 0 0 0 1 18h22a10.8 10.8 0 0 0-5.4-8.52ZM7 15.25a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5Zm10 0a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5Z"/></svg><span><small data-i18n>حمّل تطبيقنا على</small><strong data-i18n>أندرويد</strong></span></a>
     </div>
     <div>
       <h4 data-i18n>معلومات مهمة</h4>
@@ -2673,6 +2829,20 @@ var I18N_EN = {
   "حذف حسابي نهائيًا": "Delete my account permanently",
   "متأكد إنك عايز تحذف حسابك نهائيًا؟ هيتمسح اسمك وبياناتك ومفضلتك وتقييماتك، ومش هينفع ترجّعه تاني.": "Are you sure you want to delete your account permanently? Your name, data, favorites and reviews will be erased, and this can't be undone.",
   "✅ اتحذف حسابك وكل بياناته نهائيًا": "✅ Your account and all its data were deleted permanently",
+
+  /* ---------- App mode (inside the Android app) + app download links ---------- */
+  "التنقل في التطبيق": "App navigation",
+  "أهلاً": "Hi",
+  "أهلاً بيك في متجر آل عبده": "Welcome to Al-Abdo Toys Store",
+  "سجّل دخولك عشان تتابع طلباتك": "Log in to track your orders",
+  "كلّمنا على واتساب": "Chat with us on WhatsApp",
+  "اللغة": "Language",
+  "الوضع الليلي": "Dark mode",
+  "مفعّل": "On",
+  "مقفول": "Off",
+  "حمّل تطبيقنا على": "Get our app on",
+  "أندرويد": "Android",
+  "📱 حمّل تطبيق أندرويد": "📱 Download the Android app",
 };
 
 /* ---------- اللغة (عربي/English) ----------
@@ -2934,7 +3104,12 @@ function resetCheckoutFields(){
   document.getElementById("checkoutPhoneError").style.display = "none";
 }
 
-function renderCartBadge(){ document.getElementById("cartCount").textContent = cartCount(); }
+function renderCartBadge(){
+  var n = cartCount();
+  document.getElementById("cartCount").textContent = n;
+  var tb = document.getElementById("appTabCartCount");
+  if(tb){ tb.textContent = n > 99 ? "99+" : n; tb.setAttribute("data-zero", n ? "0" : "1"); }
+}
 
 function renderCartDrawer(){
   var body = document.getElementById("cartBody");
@@ -3339,6 +3514,7 @@ var cartDrawer = document.getElementById("cartDrawer");
 var acctDrawer = document.getElementById("acctDrawer");
 var mobileNav = document.getElementById("mobileNav");
 var modalBackdrop = document.getElementById("modalBackdrop");
+var appSheet = document.getElementById("appSheet");
 
 function openDrawer(){
   cartDrawer.classList.add("show"); overlay.classList.add("show"); document.body.style.overflow="hidden";
@@ -3355,6 +3531,7 @@ function openDrawer(){
   }
 }
 function closeAllPanels(){
+  if(appSheet) appSheet.classList.remove("show");
   cartDrawer.classList.remove("show");
   acctDrawer.classList.remove("show");
   mobileNav.classList.remove("show");
@@ -3422,6 +3599,7 @@ function productCard(p, showCartActions){
          يسرقها منه (ده كان سبب إن زرار المفضلة مكنش بيستجيب خالص). */
       + '<button class="open-detail" data-open="'+p.id+'" aria-label="'+t("عرض تفاصيل")+' '+pName(p)+'"></button>'
       + '<button class="card-wish'+(FAVORITES[p.id]?' active':'')+'" data-wish="'+p.id+'" aria-label="'+(FAVORITES[p.id]?t('إزالة من المفضلة'):t('أضف للمفضلة'))+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.6-9.5-9C.7 8.4 2.3 5 5.6 5 7.6 5 9 6 12 8.5 15 6 16.4 5 18.4 5c3.3 0 4.9 3.4 3.1 7-2.5 4.4-9.5 9-9.5 9Z"/></svg></button>'
+      + (outOfStock ? '' : '<button class="card-quick" data-open="'+p.id+'" aria-label="'+t("أضف للسلة")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>')
     + '</div>'
     + '<div class="card-body">'
       + '<span class="card-cat">'+catName(p.cat)+'</span>'
@@ -3932,6 +4110,122 @@ document.getElementById("categoryRow").addEventListener("click", function(e){
 function doSearch(q){ state.q=q; state.cat="all"; state.badge=null; goToView("products"); renderProductsView(); }
 document.getElementById("searchForm").addEventListener("submit", function(e){ e.preventDefault(); doSearch(document.getElementById("searchInput").value); });
 document.getElementById("mobileSearchForm").addEventListener("submit", function(e){ e.preventDefault(); closeAllPanels(); doSearch(document.getElementById("mobileSearchInput").value); });
+
+
+/* ===================== APP MODE (جوه تطبيق الأندرويد) =====================
+   شريط التبويبات تحت + شاشة "حسابي" + زرار الرجوع في الموبايل بيقفل أي
+   شاشة مفتوحة (صفحة منتج / سلة / حساب) بدل ما يقفل التطبيق. */
+function isAppMode(){ return document.documentElement.classList.contains("app-mode"); }
+function appAnyPanelOpen(){
+  return [cartDrawer, acctDrawer, mobileNav, modalBackdrop, appSheet].some(function(el){ return el && el.classList.contains("show"); });
+}
+function appActiveTab(){
+  if(appSheet && appSheet.classList.contains("show")) return "me";
+  if(acctDrawer.classList.contains("show")) return "me";
+  if(cartDrawer.classList.contains("show")) return "cart";
+  var v = document.querySelector(".view.active");
+  var name = v ? v.dataset.view : "home";
+  if(name==="home") return "home";
+  if(name==="products") return state.badge==="wish" ? "wish" : "cats";
+  return "me";
+}
+function updateAppTabbar(){
+  if(!isAppMode()) return;
+  var cur = appActiveTab();
+  document.querySelectorAll("#appTabbar [data-tab]").forEach(function(b){
+    var on = b.dataset.tab===cur;
+    b.classList.toggle("active", on);
+    if(on) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current");
+  });
+}
+function appEsc(v){ return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+var APP_ICONS = {
+  orders:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2Z"/><path d="M9 8h6M9 12h6"/></svg>',
+  heart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.6-9.5-9C.7 8.4 2.3 5 5.6 5 7.6 5 9 6 12 8.5 15 6 16.4 5 18.4 5c3.3 0 4.9 3.4 3.1 7-2.5 4.4-9.5 9-9.5 9Z"/></svg>',
+  chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/></svg>',
+  wa:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.3 14.2c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .1-3.3-.8a11.4 11.4 0 0 1-4.5-4c-.4-.6-1-1.7-1-3.1s.8-2.1 1-2.4c.3-.3.6-.4.8-.4h.6c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .6l-.4.6-.4.4c-.1.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.4 1.5.3.2.5.1.7-.1l.9-1.1c.2-.3.4-.2.7-.1l2 1c.3.1.5.2.5.4.1.1.1.6-.2 1.2Z"/></svg>',
+  info:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg>',
+  doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 3h7l5 5v13H7Z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></svg>',
+  lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>',
+  trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>',
+  globe:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3Z"/></svg>',
+  moon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>'
+};
+function appSheetRow(action, icon, label, val, href){
+  var inner = '<span class="ic">'+APP_ICONS[icon]+'</span><span>'+label+'</span>'
+    + (val ? '<span class="val">'+val+'</span>' : '') + '<span class="chev">‹</span>';
+  if(href) return '<a class="app-sheet-row" data-sheet="'+action+'" href="'+href+'" target="_blank" rel="noopener">'+inner+'</a>';
+  return '<button type="button" class="app-sheet-row" data-sheet="'+action+'">'+inner+'</button>';
+}
+function renderAppSheet(){
+  if(!appSheet) return;
+  var c = getCustomerProfile();
+  var head = c
+    ? '<div class="app-sheet-user"><span class="av">'+appEsc((c.name||"؟").trim().charAt(0))+'</span><div class="t"><strong>'+appEsc(t("أهلاً")+" "+(c.name||""))+'</strong><span dir="ltr">'+appEsc(c.identifier)+'</span></div><button type="button" data-sheet="account">'+t("طلباتي")+'</button></div>'
+    : '<div class="app-sheet-user"><span class="av">👋</span><div class="t"><strong>'+t("أهلاً بيك في متجر آل عبده")+'</strong><span>'+t("سجّل دخولك عشان تتابع طلباتك")+'</span></div><button type="button" data-sheet="login">'+t("دخول")+'</button></div>';
+  var theme = document.documentElement.getAttribute("data-theme");
+  var dark = theme ? theme==="dark" : (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
+  var waMsg = LANG==="en" ? "Hello Al-Abdo Toys Store" : "السلام عليكم، متجر آل عبده";
+  appSheet.innerHTML = '<div class="grab"></div>' + head
+    + '<div class="app-sheet-list">'
+      + (c ? appSheetRow("account","orders",t("طلباتي")) : "")
+      + appSheetRow("wish","heart",t("المفضلة"))
+      + appSheetRow("whatsapp","wa",t("كلّمنا على واتساب"),"", "https://wa.me/"+STORE.phone+"?text="+encodeURIComponent(waMsg))
+      + appSheetRow("contact","chat",t("تواصل معنا"))
+    + '</div><div class="app-sheet-sep"></div><div class="app-sheet-list">'
+      + appSheetRow("lang","globe",t("اللغة"), LANG==="en" ? "English" : "العربية")
+      + appSheetRow("theme","moon",t("الوضع الليلي"), dark ? t("مفعّل") : t("مقفول"))
+    + '</div><div class="app-sheet-sep"></div><div class="app-sheet-list">'
+      + appSheetRow("about","info",t("من نحن"))
+      + appSheetRow("terms","doc",t("الشروط والأحكام"))
+      + appSheetRow("privacy","lock",t("سياسة الخصوصية"))
+      + appSheetRow("delete-account","trash",t("حذف الحساب"))
+    + '</div>';
+}
+function openAppSheet(){
+  renderAppSheet();
+  appSheet.classList.add("show"); overlay.classList.add("show"); document.body.style.overflow="hidden";
+}
+if(appSheet){
+  appSheet.addEventListener("click", function(e){
+    var b = e.target.closest("[data-sheet]"); if(!b) return;
+    var a = b.dataset.sheet;
+    if(a==="whatsapp"){ closeAllPanels(); return; }
+    e.preventDefault();
+    if(a==="login"){ closeAllPanels(); openAccountModal(); }
+    else if(a==="account"){ closeAllPanels(); openAcctDrawer(); }
+    else if(a==="wish"){ state.badge="wish"; state.cat="all"; state.q=""; goToView("products"); renderProductsView(); }
+    else if(a==="lang"){ closeAllPanels(); document.getElementById("langToggle").click(); }
+    else if(a==="theme"){ document.getElementById("themeToggle").click(); renderAppSheet(); }
+    else { goToView(a); }
+    updateAppTabbar();
+  });
+}
+document.getElementById("appTabbar").addEventListener("click", function(e){
+  var b = e.target.closest("[data-tab]"); if(!b) return;
+  var tab = b.dataset.tab;
+  if(tab==="me"){ if(appSheet.classList.contains("show")) closeAllPanels(); else { closeAllPanels(); openAppSheet(); } updateAppTabbar(); return; }
+  if(tab==="cart"){ closeAllPanels(); renderCartDrawer(); openDrawer(); updateAppTabbar(); return; }
+  if(tab==="home"){ goToView("home"); return; }
+  state.cat="all"; state.q="";
+  state.badge = tab==="wish" ? "wish" : null;
+  goToView("products"); renderProductsView();
+});
+/* أي شاشة بتتفتح (منتج/سلة/حساب/قايمة) بتاخد خطوة في التاريخ، فزرار الرجوع
+   بتاع الموبايل يقفلها بس ويفضل العميل جوه التطبيق. */
+(function(){
+  if(!isAppMode()) return;
+  function onPanelChange(){
+    if(appAnyPanelOpen()){
+      try{ if(!(history.state && history.state.aaPanel)) history.pushState({aaPanel:1}, "", location.href); }catch(e){}
+    }
+    updateAppTabbar();
+  }
+  var mo = new MutationObserver(onPanelChange);
+  [cartDrawer, acctDrawer, mobileNav, modalBackdrop, appSheet].forEach(function(el){ if(el) mo.observe(el, {attributes:true, attributeFilter:["class"]}); });
+  window.addEventListener("popstate", function(){ if(appAnyPanelOpen()) closeAllPanels(); });
+  updateAppTabbar();
+})();
 
 /* ---------- Contact form -> /api/inquiries ----------
    بتبعت رسالة "تواصل معنا" للسيرفر وبتتخزن في قائمة "استفسارات العملاء"
@@ -5963,8 +6257,14 @@ function goToView(name){
   closeAllPanels();
   window.scrollTo({top:0, behavior:"instant" in document.documentElement.style ? "instant" : "auto"});
   var hashToWrite = (name==="admin") ? ADMIN_SECRET_HASH : name;
-  if(location.hash.replace("#","")!==hashToWrite){ history.replaceState(null,"","#"+hashToWrite); }
+  if(location.hash.replace("#","")!==hashToWrite){
+    /* جوه التطبيق كل صفحة بتبقى خطوة في التاريخ عشان زرار الرجوع في الموبايل
+       يرجّع للصفحة اللي قبلها بدل ما يقفل التطبيق. */
+    if(isAppMode() && name!=="admin") history.pushState(null,"","#"+hashToWrite);
+    else history.replaceState(null,"","#"+hashToWrite);
+  }
   trackPageView(name);
+  updateAppTabbar();
 }
 document.addEventListener("click", function(e){
   var a = e.target.closest("[data-view-link]"); if(!a) return;

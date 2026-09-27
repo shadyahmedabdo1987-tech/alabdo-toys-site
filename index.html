@@ -1206,6 +1206,13 @@ html.admin-app #admSheet.show{display:flex;}
 #adminDashboard .admin-bar .adm-sync{margin-top:8px;}
 #admSyncPill{position:fixed; top:calc(64px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%); z-index:69; box-shadow:0 6px 18px rgba(0,0,0,.15);}
 html:not(.admin-app) #admSyncPill, html.admin-app:not(.adm-authed) #admSyncPill{display:none !important;}
+
+/* زرار "رجوع لحسابي" - بيظهر جوه التطبيق بس في الصفحة اللي اتفتحت من قائمة حسابي */
+.app-back-acct{display:none;}
+html.app-mode .app-back-acct:not([hidden]){display:inline-flex; align-items:center; gap:6px; position:fixed; z-index:65; inset-inline-start:14px; bottom:calc(80px + env(safe-area-inset-bottom));
+  border:0; border-radius:999px; padding:10px 16px; background:var(--ink); color:var(--bg); font-family:inherit; font-weight:800; font-size:13.5px; box-shadow:0 8px 22px rgba(0,0,0,.22); cursor:pointer;}
+html.app-mode .app-back-acct span[aria-hidden]{font-size:18px; line-height:1;}
+html[dir="ltr"] .app-back-acct span[aria-hidden]{transform:scaleX(-1);}
 </style>
 </head>
 <body>
@@ -2091,6 +2098,7 @@ html:not(.admin-app) #admSyncPill, html.admin-app:not(.adm-authed) #admSyncPill{
   <button type="button" class="app-tab" data-tab="cart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h2l2.4 12.2a2 2 0 0 0 2 1.8h7.7a2 2 0 0 0 2-1.6L21 8H6"/><circle cx="9" cy="20" r="1.6"/><circle cx="17" cy="20" r="1.6"/></svg><span data-i18n>السلة</span><span class="tab-badge" id="appTabCartCount" data-zero="1">0</span></button>
   <button type="button" class="app-tab" data-tab="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.5-4 4.5-6 7.5-6s6 2 7.5 6"/></svg><span data-i18n>حسابي</span></button>
 </nav>
+<button type="button" class="app-back-acct" id="appBackToAccount" hidden><span aria-hidden="true">‹</span> <span data-i18n>رجوع لحسابي</span></button>
 <aside class="app-sheet" id="appSheet" role="dialog" aria-modal="true" aria-label="حسابي" data-i18n-aria></aside>
 
 <!-- ===================== ADMIN APP: تطبيق "آل عبده - الإدارة" =====================
@@ -3482,6 +3490,10 @@ var I18N_EN = {
   "الخدمة دي لسه مش متاحة على السيرفر، جرّب كمان شوية.": "This service isn't available on the server yet — try again later.",
   "معلش، حصل خطأ وإحنا بنحفظ بياناتك. جرّب تاني.": "Sorry, something went wrong saving your details. Please try again.",
   "محتاجين اتصال بالإنترنت عشان نحفظ بياناتك. جرّب تاني.": "We need an internet connection to save your details. Please try again.",
+  "🧾 طلباتي": "🧾 My orders",
+  "رجوع لحسابي": "Back to my account",
+  "🗑️ حذف حسابي نهائيًا": "🗑️ Delete my account permanently",
+  "سجّل دخول الأول": "Log in first",
 };
 
 /* ---------- اللغة (عربي/English) ----------
@@ -4909,6 +4921,28 @@ var APP_ICONS = {
   globe:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3Z"/></svg>',
   moon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>'
 };
+/* الشاشة اللي اتفتحت من قائمة "حسابي" - لما تتقفل بنرجّع العميل للقائمة
+   لحد ما يقفلها هو بنفسه. {type:"panel"} لشاشة فوق الصفحة (طلباتي،
+   بياناتي، الدخول) أو {type:"view", view, fromView} لصفحة كاملة (المفضلة،
+   تواصل معنا، من نحن...). */
+var sheetReturn = null;
+function updateBackToAccount(){
+  var b = document.getElementById("appBackToAccount");
+  if(!b) return;
+  var active = document.querySelector(".view.active");
+  b.hidden = !(isAppMode() && sheetReturn && sheetReturn.type==="view" && active && active.dataset.view===sheetReturn.view && !appAnyPanelOpen());
+}
+function backToAccountSheet(){
+  var r = sheetReturn; sheetReturn = null;
+  if(r && r.type==="view"){
+    var to = (r.fromView && r.fromView!==r.view && r.fromView!=="admin") ? r.fromView : "home";
+    if(to==="products"){ state.badge=null; state.cat="all"; state.q=""; }
+    goToView(to);
+    if(to==="products") renderProductsView();
+  }
+  openAppSheet();
+  updateBackToAccount();
+}
 function appSheetRow(action, icon, label, val, href){
   var inner = '<span class="ic">'+APP_ICONS[icon]+'</span><span>'+label+'</span>'
     + (val ? '<span class="val">'+val+'</span>' : '') + '<span class="chev">‹</span>';
@@ -4947,6 +4981,11 @@ if(appSheet){
   appSheet.addEventListener("click", function(e){
     var b = e.target.closest("[data-sheet]"); if(!b) return;
     var a = b.dataset.sheet;
+    if(a==="account" || a==="profile" || a==="login") sheetReturn = { type:"panel" };
+    else if(a==="wish" || a==="contact" || a==="about" || a==="terms" || a==="privacy" || a==="delete-account"){
+      var activeV = document.querySelector(".view.active");
+      sheetReturn = { type:"view", view: a==="wish" ? "products" : a, fromView: activeV ? activeV.dataset.view : "home" };
+    }
     if(a==="whatsapp"){ closeAllPanels(); return; }
     e.preventDefault();
     if(a==="login"){ closeAllPanels(); openAccountModal(); }
@@ -4967,6 +5006,7 @@ if(appSheet){
 document.getElementById("appTabbar").addEventListener("click", function(e){
   var b = e.target.closest("[data-tab]"); if(!b) return;
   var tab = b.dataset.tab;
+  sheetReturn = null; updateBackToAccount();
   if(tab==="me"){ if(appSheet.classList.contains("show")) closeAllPanels(); else { closeAllPanels(); openAppSheet(); } updateAppTabbar(); return; }
   if(tab==="cart"){ closeAllPanels(); renderCartDrawer(); openDrawer(); updateAppTabbar(); return; }
   if(tab==="home"){ goToView("home"); return; }
@@ -4978,11 +5018,25 @@ document.getElementById("appTabbar").addEventListener("click", function(e){
    بتاع الموبايل يقفلها بس ويفضل العميل جوه التطبيق. */
 (function(){
   if(!isAppMode()) return;
+  var prevOpen = [];
   function onPanelChange(){
-    if(appAnyPanelOpen()){
+    var open = [cartDrawer, acctDrawer, mobileNav, modalBackdrop, appSheet].filter(function(el){ return el && el.classList.contains("show"); });
+    if(open.length){
       try{ if(!(history.state && history.state.aaPanel)) history.pushState({aaPanel:1}, "", location.href); }catch(e){}
+    } else if(prevOpen.length){
+      /* كل الشاشات اتقفلت: لو اللي اتقفل هو قائمة "حسابي" نفسها يبقى العميل
+         خرج منها بنفسه. لو كانت شاشة اتفتحت من "حسابي" (طلباتي، بياناتي،
+         الدخول...) نرجّعه لقائمة حسابي تاني. */
+      var sheetOnly = prevOpen.length===1 && prevOpen[0]===appSheet;
+      if(sheetOnly){ if(!(sheetReturn && sheetReturn.type==="view")) sheetReturn = null; }
+      else if(sheetReturn && sheetReturn.type==="panel"){
+        sheetReturn = null;
+        setTimeout(function(){ if(!appAnyPanelOpen()) openAppSheet(); }, 0);
+      }
     }
+    prevOpen = open;
     updateAppTabbar();
+    updateBackToAccount();
   }
   var mo = new MutationObserver(onPanelChange);
   [cartDrawer, acctDrawer, mobileNav, modalBackdrop, appSheet].forEach(function(el){ if(el) mo.observe(el, {attributes:true, attributeFilter:["class"]}); });
@@ -5906,6 +5960,15 @@ function renderAcctDrawerBody(){
   var body = document.getElementById("acctDrawerBody");
   var customer = getCustomerProfile();
   if(!customer){ return; }
+  var drawerTitle = document.querySelector("#acctDrawer .drawer-head h3");
+  /* جوه التطبيق "طلباتي" بتعرض الطلبات بس (البيانات والخروج والحذف في قائمة حسابي) */
+  if(isAppMode()){
+    if(drawerTitle) drawerTitle.textContent = t("🧾 طلباتي");
+    body.innerHTML = '<div id="acctDrawerOrders" style="display:flex; flex-direction:column; gap:10px;"><p style="color:var(--ink-soft); font-size:13px;">'+t("جاري التحميل...")+'</p></div>';
+    loadAcctDrawerOrders();
+    return;
+  }
+  if(drawerTitle) drawerTitle.textContent = t("🙋 حسابي");
   var html = '<div style="padding-bottom:4px; border-bottom:1px solid var(--border); margin-bottom:4px;">'
     + '<div style="font-size:16px; font-weight:800;">👋 '+(customer.name || t("أهلاً بيك"))+'</div>'
     + '<div style="color:var(--ink-soft); font-size:12.5px; margin-top:2px;">'+t("مسجّل برقم الموبايل")+': '+customer.identifier+'</div>'
@@ -5925,9 +5988,15 @@ function renderAcctDrawerBody(){
      لأي تطبيق فيه تسجيل حسابات) - بيمسح بيانات الحساب والمفضلة والتقييمات
      من السيرفر، والطلبات القديمة بتفضل كسجل مبيعات للمتجر بس من غير ربط
      بالحساب. شوف صفحة #delete-account للتفاصيل. */
-  document.getElementById("acctDrawerDelete").addEventListener("click", function(){
+  var drawerDel = document.getElementById("acctDrawerDelete");
+  if(drawerDel) drawerDel.addEventListener("click", function(){ customerDeleteAccount(this); });
+  loadAcctDrawerOrders();
+}
+/* حذف حساب العميل نهائيًا (من قائمة الحساب على الموقع، أو من صفحة "حذف
+   الحساب" جوه التطبيق). */
+function customerDeleteAccount(btn){
     if(!confirm(t("متأكد إنك عايز تحذف حسابك نهائيًا؟ هيتمسح اسمك وبياناتك ومفضلتك وتقييماتك، ومش هينفع ترجّعه تاني."))) return;
-    var btn = this;
+    btn = btn || {};
     btn.disabled = true;
     fetch("/api/customers/delete-account", { method:"POST", headers: customerAuthHeaders() })
       .then(function(r){ return r.json(); })
@@ -5941,7 +6010,8 @@ function renderAcctDrawerBody(){
         }
       })
       .catch(function(){ btn.disabled = false; showToast(t("⚠️ تعذر حذف الحساب، جرّب تاني.")); });
-  });
+}
+function loadAcctDrawerOrders(){
   fetch("/api/orders", { headers: customerAuthHeaders(), cache:"no-store" }).then(function(r){ return r.json(); })
     .then(function(res){
       var box = document.getElementById("acctDrawerOrders");
@@ -7071,6 +7141,9 @@ function hashToView(rawHash){
 function goToView(name){
   /* تطبيق الإدارة فيه لوحة التحكم بس */
   if(isAdminApp()) name = "admin";
+  if(sheetReturn && sheetReturn.type==="view" && name!==sheetReturn.view) sheetReturn = null;
+  if(name==="delete-account") setTimeout(updateDeleteAcctBtn, 0);
+  setTimeout(updateBackToAccount, 0);
   document.querySelectorAll(".view").forEach(function(v){ v.classList.toggle("active", v.dataset.view===name); });
   document.querySelectorAll("[data-view-link]").forEach(function(a){
     var match = a.dataset.viewLink===name;
@@ -7115,9 +7188,19 @@ document.addEventListener("click", function(e){
 /* أزرار صفحة "حذف الحساب" (#delete-account): "افتح حسابي" بيفتح قائمة
    الحساب لو مسجّل دخول أو شاشة الدخول لو لأ، وزرار الواتساب بيتكتب فيه
    نص طلب الحذف جاهز باللغة الحالية. */
+document.getElementById("appBackToAccount").addEventListener("click", backToAccountSheet);
+/* جوه التطبيق زرار صفحة "حذف الحساب" بيحذف الحساب على طول (لو العميل
+   مسجّل دخول)، لأن "طلباتي" في التطبيق بتعرض الطلبات بس. */
+function updateDeleteAcctBtn(){
+  var b = document.getElementById("deleteAcctOpenBtn");
+  if(!b || !isAppMode()) return;
+  b.textContent = (isCustomerAuthed() && !isAdminAuthed()) ? t("🗑️ حذف حسابي نهائيًا") : t("سجّل دخول الأول");
+}
 (function(){
   var openBtn = document.getElementById("deleteAcctOpenBtn");
   if(openBtn) openBtn.addEventListener("click", function(){
+    if(isAppMode() && isCustomerAuthed() && !isAdminAuthed()){ customerDeleteAccount(openBtn); return; }
+    if(isAppMode()) sheetReturn = { type:"panel" };
     if(isCustomerAuthed() && !isAdminAuthed()) openAcctDrawer(); else openAccountModal();
   });
   var wa = document.getElementById("deleteAcctWhatsapp");
@@ -7130,7 +7213,9 @@ document.addEventListener("click", function(e){
 })();
 window.addEventListener("hashchange", function(){
   var v = hashToView(location.hash.replace("#","") || "home");
+  var ret = sheetReturn;
   goToView(v);
+  if(isAppMode() && ret && ret.type==="view" && v!==ret.view){ sheetReturn = null; setTimeout(function(){ if(!appAnyPanelOpen()) openAppSheet(); }, 0); }
   if(v==="products") renderProductsView();
   if(v==="admin") showAdmin();
 });

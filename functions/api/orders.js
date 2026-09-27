@@ -47,6 +47,42 @@ export async function onRequestPost({ request, env }){
   if(!phone) return json({ ok:false, error:"missing_phone" }, 400);
   if(!customer && (!name || !governorate || !address)) return json({ ok:false, error:"missing_guest_info" }, 400);
 
+  /* التأكد من المخزون قبل تسجيل الطلب: لو أي صنف (منتج/لون/حجم علبة) متحدد
+     له كمية، والعميل طالب أكتر من الكمية المتاحة دلوقتي على السيرفر (مثلاً
+     عميل تاني اشترى نفس المنتج قبله بشوية)، الطلب بيترفض ومبيتسجلش، والموقع
+     بيرجّع العميل للسلة بعد ما يظبط الكمية على المتاح. */
+  try{
+    var stockCatalog = await getCatalog(env);
+    if(stockCatalog && Array.isArray(stockCatalog.products)){
+      var need = {};
+      body.items.forEach(function(it){
+        var key = String(it.id) + "::" + String(it.colorName || "").trim() + "::" + String(it.sizeLabel || "").trim();
+        need[key] = (need[key] || 0) + Math.max(0, +it.qty || 0);
+      });
+      var short = [];
+      Object.keys(need).forEach(function(key){
+        var parts = key.split("::");
+        var pid = parts[0], colorName = parts[1], sizeLabel = parts[2];
+        var p = stockCatalog.products.find(function(x){ return String(x.id) === pid; });
+        if(!p) return;
+        var stock = null;
+        if(sizeLabel && Array.isArray(p.sizes) && p.sizes.length){
+          var s = p.sizes.find(function(x){ return x.label === sizeLabel; });
+          stock = (s && s.stock != null) ? (+s.stock || 0) : null;
+        } else if(colorName && Array.isArray(p.colors) && p.colors.length){
+          var c = p.colors.find(function(x){ return x.name === colorName; });
+          stock = (c && c.stock != null) ? (+c.stock || 0) : null;
+        } else if(p.stock != null){
+          stock = +p.stock || 0;
+        }
+        if(stock != null && need[key] > stock){
+          short.push({ id: p.id, name: p.name, colorName: colorName || null, sizeLabel: sizeLabel || null, available: Math.max(0, stock), requested: need[key] });
+        }
+      });
+      if(short.length) return json({ ok:false, error:"insufficient_stock", items: short }, 409);
+    }
+  }catch(e){ /* لو الكتالوج مش متاح لأي سبب، الطلب بيكمّل زي الأول */ }
+
   var order = {
     id: "ord_" + Date.now().toString(36) + Math.floor(Math.random() * 999),
     customerId: customer ? customer.identifier : null,

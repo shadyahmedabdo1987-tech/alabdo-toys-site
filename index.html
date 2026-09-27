@@ -515,6 +515,13 @@ html[dir="ltr"] .drawer.show{transform:translateX(0);}
 .color-swatch.out{opacity:.45;}
 .color-swatch.out img{filter:grayscale(1);}
 .color-required-note{font-size:12.5px; color:var(--pink-deep); display:none; margin:0;}
+.size-options{display:flex; gap:10px; flex-wrap:wrap;}
+.size-option-btn{display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; background:var(--surface-2); border:2px solid var(--border); border-radius:14px; padding:8px 16px; min-width:92px;}
+.size-option-btn .size-label{font-size:13px; font-weight:800; color:var(--ink);}
+.size-option-btn .size-price{font-size:12px; color:var(--ink-soft);}
+.size-option-btn.active{border-color:var(--pink-deep); background:var(--pink-pale);}
+.size-option-btn.active .size-price{color:var(--pink-deep);}
+.size-option-btn.out{opacity:.5; cursor:not-allowed;}
 .seg-tabs{display:flex; gap:4px; background:var(--surface-3); padding:4px; border-radius:14px;}
 .seg-tabs button{flex:1; border:0; background:none; padding:10px 6px; border-radius:10px; font-weight:800; font-size:13px; color:var(--ink-soft);}
 .seg-tabs button.active{background:var(--surface); color:var(--pink-deep); box-shadow:0 2px 6px hsl(var(--shadow)/.14);}
@@ -1400,12 +1407,14 @@ html[dir="ltr"] .mobile-nav.show{transform:translateX(0);}
                   <select id="pfBadge"><option value="" data-i18n>بدون</option><option value="new" data-i18n>جديد</option></select>
                 </div>
               </div>
-              <div class="field-row">
+              <div class="field-row" id="pfPriceRow">
                 <div class="field"><label for="pfPrice" data-i18n>السعر الحالي (ج.م)</label><input id="pfPrice" type="number" min="0" required></div>
                 <div class="field"><label for="pfOld" data-i18n>السعر قبل الخصم (اختياري)</label><input id="pfOld" type="number" min="0" placeholder="اتركه فاضي لو مفيش خصم" data-i18n-placeholder></div>
               </div>
+              <p id="pfPriceSizesNote" style="color:var(--ink-soft); font-size:12px; margin-top:-6px; display:none;" data-i18n>المنتج ده بأحجام علب مختلفة، فالسعر بيتحدد لكل حجم على حدة تحت.</p>
               <div class="field" id="pfStockRow"><label for="pfStock" data-i18n>الكمية المتاحة (اتركها فاضية لو مش عايز تتبعها)</label><input id="pfStock" type="number" min="0" step="1" placeholder="مثلاً: 10" data-i18n-placeholder></div>
               <p id="pfStockColorsNote" style="color:var(--ink-soft); font-size:12px; margin-top:-6px; display:none;" data-i18n>المنتج ده بألوان، فالكمية بتتحدد لكل لون على حدة تحت.</p>
+              <p id="pfStockSizesNote" style="color:var(--ink-soft); font-size:12px; margin-top:-6px; display:none;" data-i18n>المنتج ده بأحجام علب، فالكمية بتتحدد لكل حجم على حدة تحت.</p>
               <div class="field-row">
                 <div class="field"><label for="pfRating" data-i18n>التقييم (من 5)</label><input id="pfRating" type="number" min="1" max="5" step="0.1" value="4.5"></div>
                 <div class="field"><label for="pfReviews" data-i18n>عدد التقييمات</label><input id="pfReviews" type="number" min="0" value="0"></div>
@@ -1434,6 +1443,17 @@ html[dir="ltr"] .mobile-nav.show{transform:translateX(0);}
                 <p id="pfColorImageChosen" style="color:var(--mint); font-size:12px; margin-top:4px; display:none;"></p>
                 <button type="button" class="btn btn-outline btn-sm" id="pfColorAddBtn" style="margin-top:10px;" data-i18n>➕ إضافة اللون</button>
                 <p style="color:var(--ink-soft); font-size:12px; margin-top:6px;" data-i18n>لو ضفت أكتر من لون، العميل هيضطر يختار اللون اللي عايزه من صفحة المنتج قبل ما يقدر يضيفه للسلة أو يطلبه.</p>
+              </div>
+              <div class="field">
+                <label data-i18n>أحجام العلب (اختياري، لو المنتج متاح بأكتر من حجم علبة بسعر وكمية مختلفين، زي علبة ٢٤ وعلبة ١٨)</label>
+                <div id="pfSizesList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:10px;"></div>
+                <div class="field-row">
+                  <div class="field"><label for="pfSizeLabel" style="font-size:12.5px; font-weight:700; color:var(--ink-soft);" data-i18n>اسم الحجم</label><input id="pfSizeLabel" type="text" placeholder="مثلاً: علبة 24 قطعة" data-i18n-placeholder></div>
+                  <div class="field"><label for="pfSizePrice" style="font-size:12.5px; font-weight:700; color:var(--ink-soft);" data-i18n>سعر الحجم ده (ج.م)</label><input id="pfSizePrice" type="number" min="0"></div>
+                </div>
+                <div class="field"><label for="pfSizeStock" style="font-size:12.5px; font-weight:700; color:var(--ink-soft);" data-i18n>الكمية المتاحة من الحجم ده (اتركها فاضية لو مش عايز تتبعها)</label><input id="pfSizeStock" type="number" min="0" step="1" placeholder="مثلاً: 10" data-i18n-placeholder></div>
+                <button type="button" class="btn btn-outline btn-sm" id="pfSizeAddBtn" style="margin-top:10px;" data-i18n>➕ إضافة الحجم</button>
+                <p style="color:var(--ink-soft); font-size:12px; margin-top:6px;" data-i18n>لو ضفت أكتر من حجم، العميل هيضطر يختار الحجم اللي عايزه قبل ما يقدر يضيفه للسلة أو يطلبه، وكل حجم بيتحسب بسعره وكميته المتاحة الخاصة بيه.</p>
               </div>
               <div class="hero-ctas" style="justify-content:flex-start;">
                 <button type="submit" class="btn btn-primary" id="productFormSubmit" data-i18n>إضافة المنتج</button>
@@ -1938,9 +1958,43 @@ function isTrackedOut(p, colorName){
   var s = variantStock(p, colorName);
   return s!=null && s<=0;
 }
+/* نفس فكرة variantStock/isTrackedOut بس لأحجام العلب (p.sizes) - كل حجم
+   (زي "علبة 24 قطعة") له كميته وسعره الخاصين، منفصلين عن باقي الأحجام. */
+function sizeStockFor(p, sizeLabel){
+  if(Array.isArray(p.sizes) && p.sizes.length){
+    var s = p.sizes.find(function(x){ return x.label===sizeLabel; });
+    return (s && s.stock!=null) ? (+s.stock||0) : null;
+  }
+  return null;
+}
+function isSizeTrackedOut(p, sizeLabel){
+  var s = sizeStockFor(p, sizeLabel);
+  return s!=null && s<=0;
+}
+/* السعر الفعلي على حسب الحجم المختار - لو المنتج بأحجام وله حجم متحدد
+   بسعر صحيح، بنرجع سعر الحجم ده؛ غير كده بنرجع سعر المنتج العادي. */
+function priceForSize(p, sizeLabel){
+  if(Array.isArray(p.sizes) && p.sizes.length && sizeLabel){
+    var s = p.sizes.find(function(x){ return x.label===sizeLabel; });
+    if(s && s.price!=null && !isNaN(+s.price)) return +s.price;
+  }
+  return p.price;
+}
+/* أقل سعر بين كل أحجام المنتج - بيتعرض كـ"يبدأ من" في كارت المنتج قبل
+   ما العميل يختار حجم معين. */
+function minSizePrice(p){
+  if(!Array.isArray(p.sizes) || !p.sizes.length) return p.price;
+  return p.sizes.reduce(function(min, s){
+    var pr = (s.price!=null && !isNaN(+s.price)) ? +s.price : p.price;
+    return Math.min(min, pr);
+  }, Infinity);
+}
 /* هل المنتج خلاص كله (من كل ألوانه)؟ بتترجع false لو فيه لون واحد على
    الأقل لسه متاح أو مش متتبع الكمية. */
 function productOutOfStockOverall(p){
+  if(Array.isArray(p.sizes) && p.sizes.length){
+    return p.sizes.every(function(s){ return s.stock!=null && +s.stock<=0; });
+  }
   if(Array.isArray(p.colors) && p.colors.length){
     return p.colors.every(function(c){ return c.stock!=null && +c.stock<=0; });
   }
@@ -1976,6 +2030,14 @@ function loadInitialData(done){
 }
 /* Pushes the current in-memory catalog (CATS/PRODUCTS) to the server so every
    visitor sees admin changes immediately — called after every admin save. */
+/* قفل بسيط بيمنع حفظتين يتنفذوا في نفس الوقت: لو ضفت/عدّلت/مسحت منتج أو
+   قسم وبعدها على طول ضفت/عدّلت حاجة تانية قبل ما أول عملية توصل للسيرفر
+   خالص، كانت العملية التانية بتجيب نسخة السيرفر القديمة (من غير أول
+   عملية) وتحفظ فوقها، فأول عملية كانت بتتمسح فعليًا من غير أي رسالة
+   خطأ - ده اللي كان بيسبب "ضفت منتجين، واحد بس ظاهر". دلوقتي أي عملية
+   جديدة وهي شغالة عملية قبلها بتتمنع وبتوضح رسالة "استنى شوية" بدل ما
+   تحصل الكارثة دي بصمت. */
+var catalogSaveBusy = false;
 function saveProductsToServer(onDone){
   saveDraft();
   fetch("/api/products", {
@@ -1984,17 +2046,28 @@ function saveProductsToServer(onDone){
     body: JSON.stringify({ categories: CATS, products: PRODUCTS })
   }).then(function(r){ return r.json().then(function(j){ return {status:r.status, body:j}; }); })
     .then(function(res){
+      catalogSaveBusy = false;
       if(res.status===200 && res.body && res.body.ok){ if(onDone) onDone(true); }
       else { if(onDone) onDone(false); showToast("⚠️ اتحفظ التعديل عندك بس، لكن معرفناش نبعته للسيرفر. جرّب تاني وانت متأكد إنك لسه مسجل دخول."); }
     })
-    .catch(function(){ if(onDone) onDone(false); showToast("⚠️ اتحفظ التعديل عندك بس، لكن السيرفر مش راضي يستجيب دلوقتي — جرّب تاني كمان شوية."); });
+    .catch(function(){ catalogSaveBusy = false; if(onDone) onDone(false); showToast("⚠️ اتحفظ التعديل عندك بس، لكن السيرفر مش راضي يستجيب دلوقتي — جرّب تاني كمان شوية."); });
 }
 /* بيسحب آخر نسخة من الكتالوج من السيرفر (مش من نسخة المتصفح القديمة اللي
    ممكن تكون فاتت عليها ساعات) قبل أي إضافة/تعديل/حذف في لوحة التحكم، وبعدين
    يطبّق التعديل المطلوب فوق النسخة الطازة دي. ده بيمنع مشكلة إن لو فتحت
    لوحة التحكم من جهازين مختلفين (موبايل ولابتوب مثلاً)، حفظ من جهاز يمسح
-   منتجات اتضافت من الجهاز التاني بعد ما فتحت الصفحة. */
+   منتجات اتضافت من الجهاز التاني بعد ما فتحت الصفحة.
+   catalogSaveBusy بيتقفل هنا وبيتفتح تاني في saveProductsToServer() فوق
+   (أو في أي حالة استثنائية زي الإلغاء أو رفض الحذف جوه fn نفسها) - لو فيه
+   عملية شغالة، بترفض تبدأ عملية جديدة بدل ما تدخل في السباق ده تاني. مؤقّت
+   الأمان تحت هو خط دفاع أخير بس، لو فيه أي مسار نسينا نصفّر فيه القفل. */
 function refreshThenRun(fn){
+  if(catalogSaveBusy){
+    showToast(LANG==="en" ? "⏳ Still saving the previous change — wait a second and try again" : "⏳ لسه بيحفظ التعديل اللي قبله، استنى ثانية وجرّب تاني");
+    return;
+  }
+  catalogSaveBusy = true;
+  setTimeout(function(){ catalogSaveBusy = false; }, 8000);
   fetch("/api/products", {cache:"no-store"}).then(function(r){ if(!r.ok) throw 0; return r.json(); })
     .then(function(data){ if(data) applyData(data); fn(); })
     .catch(function(){ fn(); });
@@ -2514,6 +2587,26 @@ var I18N_EN = {
   "🗑️ حذف الطلب": "🗑️ Delete Order",
   "🧭 الأقسام": "🧭 Categories",
   "🧾 طلبات العملاء": "🧾 Customer Orders",
+
+  /* ---------- Box sizes (added when the "sizes" variant feature was introduced) ---------- */
+  "أحجام العلب (اختياري، لو المنتج متاح بأكتر من حجم علبة بسعر وكمية مختلفين، زي علبة ٢٤ وعلبة ١٨)": "Box sizes (optional, if the product comes in more than one box size with different prices and quantities, like a box of 24 and a box of 18)",
+  "إزالة الحجم": "Remove size",
+  "اختر حجم العلبة": "Choose a box size",
+  "اسم الحجم": "Size name",
+  "الكمية المتاحة من الحجم ده (اتركها فاضية لو مش عايز تتبعها)": "Available quantity for this size (leave empty if you don't want to track it)",
+  "المنتج ده بأحجام علب مختلفة، فالسعر بيتحدد لكل حجم على حدة تحت.": "This product has different box sizes, so the price is set for each size below.",
+  "المنتج ده بأحجام علب، فالكمية بتتحدد لكل حجم على حدة تحت.": "This product has box sizes, so the quantity is set for each size below.",
+  "بدون أحجام (المنتج بسعر وكمية واحدة)": "No sizes (the product has one price and quantity)",
+  "حجم": "size",
+  "حجم خلص": "size out of stock",
+  "سعر الحجم ده (ج.م)": "Price for this size (EGP)",
+  "لو ضفت أكتر من حجم، العميل هيضطر يختار الحجم اللي عايزه قبل ما يقدر يضيفه للسلة أو يطلبه، وكل حجم بيتحسب بسعره وكميته المتاحة الخاصة بيه.": "If you add more than one size, the customer will have to choose the size they want before adding it to the cart or ordering it, and each size is priced and tracked separately.",
+  "مثلاً: علبة 24 قطعة": "e.g.: Box of 24 pieces",
+  "من فضلك اختار حجم العلبة الأول.": "Please pick a box size first.",
+  "يبدأ من": "Starting from",
+  "⚠️ اكتب اسم الحجم الأول": "⚠️ Write the size name first",
+  "⚠️ اكتب سعر الحجم ده": "⚠️ Write this size's price",
+  "➕ إضافة الحجم": "➕ Add size",
 };
 
 /* ---------- اللغة (عربي/English) ----------
@@ -2659,22 +2752,37 @@ function toggleFavorite(id){
   });
 }
 function cartCount(){ var n=0; Object.keys(cart).forEach(function(k){ n+=cart[k]; }); return n; }
-/* مفتاح السلة: مجرد رقم المنتج (زي القديم بالظبط) لو من غير لون، أو
-   "id::اسم اللون" لو العميل اختار لون معيّن - كده كل لون بيتحسب كصنف
-   منفصل في السلة (ممكن يطلب أحمر ٢ وأزرق ١ من نفس المنتج مع بعض). */
-function cartKeyFor(id, colorName){ return colorName ? (id+"::"+colorName) : String(id); }
+/* مفتاح السلة: مجرد رقم المنتج (زي القديم بالظبط) لو من غير لون ولا حجم،
+   أو "id::اسم اللون" لو العميل اختار لون معيّن، أو "id::sz::اسم الحجم"
+   لو العميل اختار حجم علبة معين - كده كل لون/حجم بيتحسب كصنف منفصل في
+   السلة (ممكن يطلب علبة ٢٤ قطعتين وعلبة ١٨ واحدة من نفس المنتج مع بعض). */
+function cartKeyFor(id, colorName, sizeLabel){
+  if(sizeLabel) return id+"::sz::"+sizeLabel;
+  return colorName ? (id+"::"+colorName) : String(id);
+}
+/* بتفك مفتاح السلة لرقم المنتج + (اسم لون أو اسم حجم لو موجودين) - بادئة
+   "sz::" بعد الفاصل الأول هي اللي بتفرّق إن ده حجم علبة مش لون. */
+function parseCartKey(key){
+  var sep = key.indexOf("::");
+  var id = sep===-1 ? key : key.slice(0, sep);
+  var rest = sep===-1 ? null : key.slice(sep+2);
+  var colorName = null, sizeLabel = null;
+  if(rest && rest.indexOf("sz::")===0){ sizeLabel = rest.slice(4); }
+  else { colorName = rest; }
+  return { id:id, colorName:colorName, sizeLabel:sizeLabel };
+}
 function cartItems(){
   return Object.keys(cart).map(function(key){
-    var sep = key.indexOf("::");
-    var id = sep===-1 ? key : key.slice(0, sep);
-    var colorName = sep===-1 ? null : key.slice(sep+2);
+    var parsed = parseCartKey(key);
+    var id = parsed.id, colorName = parsed.colorName, sizeLabel = parsed.sizeLabel;
     var p = PRODUCTS.find(function(x){ return String(x.id)===id; });
     if(!p) return null;
     var colorObj = (colorName && Array.isArray(p.colors)) ? p.colors.find(function(c){ return c.name===colorName; }) : null;
-    return { p:p, qty:cart[key], cartKey:key, colorName: colorObj ? colorObj.name : colorName, colorImage: colorObj ? colorObj.image : null };
+    var sizeObj = (sizeLabel && Array.isArray(p.sizes)) ? p.sizes.find(function(s){ return s.label===sizeLabel; }) : null;
+    return { p:p, qty:cart[key], cartKey:key, colorName: colorObj ? colorObj.name : colorName, colorImage: colorObj ? colorObj.image : null, sizeLabel: sizeObj ? sizeObj.label : sizeLabel };
   }).filter(Boolean);
 }
-function cartTotal(){ return cartItems().reduce(function(s,it){ return s + it.p.price*it.qty; },0); }
+function cartTotal(){ return cartItems().reduce(function(s,it){ return s + priceForSize(it.p, it.sizeLabel)*it.qty; },0); }
 /* مصاريف شحن ثابتة على كل طلب (١٠٠ جنيه) - بتتضاف على إجمالي المنتجات
    وبتظهر كبند منفصل في السلة والفاتورة، وبتتحسب بس لو السلة فيها أصناف. */
 var SHIPPING_COST = 100;
@@ -2700,35 +2808,37 @@ function resetCartCheckout(){
   cartCheckout = { step:"cart", method:null, proofData:null, proofName:null };
 }
 
-/* colorName اختياري - لو المنتج معاه ألوان، بيتحط جوه مفتاح السلة عشان
-   كل لون يتحسب كصنف منفصل (شوف cartKeyFor فوق). */
-function addToCart(id, qty, colorName){
+/* colorName/sizeLabel اختياريين - لو المنتج معاه ألوان أو أحجام علب،
+   بيتحطوا جوه مفتاح السلة عشان كل لون/حجم يتحسب كصنف منفصل (شوف
+   cartKeyFor فوق). منتج واحد بيستخدم لون أو حجم، مش الاتنين مع بعض. */
+function addToCart(id, qty, colorName, sizeLabel){
   qty = qty || 1;
   var p = PRODUCTS.find(function(x){ return x.id===id; });
   if(!p) return;
-  var key = cartKeyFor(id, colorName);
-  var stock = variantStock(p, colorName);
+  var key = cartKeyFor(id, colorName, sizeLabel);
+  var stock = sizeLabel ? sizeStockFor(p, sizeLabel) : variantStock(p, colorName);
+  var variantSuffix = (colorName?" ("+colorName+")":"")+(sizeLabel?" ("+sizeLabel+")":"");
   if(stock!=null && stock<=0){
     showToast(LANG==="en"
-      ? "⚠️ Sorry, \""+pName(p)+(colorName?" ("+colorName+")":"")+"\" is out of stock right now"
-      : "⚠️ للأسف «"+p.name+(colorName?" ("+colorName+")":"")+"» خلص من المخزون دلوقتي");
+      ? "⚠️ Sorry, \""+pName(p)+variantSuffix+"\" is out of stock right now"
+      : "⚠️ للأسف «"+p.name+variantSuffix+"» خلص من المخزون دلوقتي");
     return;
   }
   var nextQty = (cart[key]||0) + qty;
   if(stock!=null && nextQty>stock){
     nextQty = stock;
     showToast(LANG==="en"
-      ? "⚠️ Only "+stock+" left of \""+pName(p)+(colorName?" ("+colorName+")":"")+"\""
-      : "⚠️ الكمية المتاحة من «"+p.name+(colorName?" ("+colorName+")":"")+"» بقت "+stock+" بس");
+      ? "⚠️ Only "+stock+" left of \""+pName(p)+variantSuffix+"\""
+      : "⚠️ الكمية المتاحة من «"+p.name+variantSuffix+"» بقت "+stock+" بس");
   } else {
     showToast(LANG==="en"
-      ? "✅ \""+pName(p)+(colorName?" ("+colorName+")":"")+"\" added to cart"
-      : "✅ تمت إضافة «"+p.name+(colorName?" ("+colorName+")":"")+"» إلى السلة");
+      ? "✅ \""+pName(p)+variantSuffix+"\" added to cart"
+      : "✅ تمت إضافة «"+p.name+variantSuffix+"» إلى السلة");
   }
   cart[key] = nextQty;
   saveCart(); renderCartBadge(); renderCartDrawer();
   trackAnalyticsEvent("addToCart");
-  fbTrack("AddToCart", { content_name:p.name, content_ids:[String(p.id)], value:p.price, currency:"EGP" });
+  fbTrack("AddToCart", { content_name:p.name, content_ids:[String(p.id)], value:priceForSize(p, sizeLabel), currency:"EGP" });
   /* أول ما ينضاف منتج للسلة، نوجّه العميل للسلة على طول (بنقفل أي حاجة
      تانية مفتوحة زي مودال تفاصيل المنتج الأول، عشان السلة تظهر واضحة من
      غير ما تتراكب على حاجة تانية). */
@@ -2771,9 +2881,10 @@ function renderCartDrawer(){
       var thumbContent = itMainImg ? '<img src="'+itMainImg+'" alt="">' : categoryIcon(it.p.cat);
       var keyAttr = String(it.cartKey).replace(/"/g,"&quot;");
       var colorLine = it.colorName ? '<div style="font-size:12px; color:var(--ink-soft);">'+t("اللون")+': '+it.colorName+'</div>' : "";
+      var sizeLine = it.sizeLabel ? '<div style="font-size:12px; color:var(--ink-soft);">'+it.sizeLabel+'</div>' : "";
       return '<div class="cart-line">'
         + '<div class="thumb" style="background:'+CAT_MAP[it.p.cat].color+'">'+thumbContent+'</div>'
-        + '<div class="info"><div class="t">'+pName(it.p)+'</div>'+colorLine+'<div class="p tabular">'+fmt(it.p.price)+' '+t('ج.م')+' × '+it.qty+'</div>'
+        + '<div class="info"><div class="t">'+pName(it.p)+'</div>'+colorLine+sizeLine+'<div class="p tabular">'+fmt(priceForSize(it.p, it.sizeLabel))+' '+t('ج.م')+' × '+it.qty+'</div>'
         + '<div class="qty-stepper" style="margin-top:6px">'
           + '<button data-dec="'+keyAttr+'" aria-label="'+t("تقليل الكمية")+'">−</button>'
           + '<span class="tabular">'+it.qty+'</span>'
@@ -2918,7 +3029,7 @@ document.getElementById("cartBody").addEventListener("click", function(e){
   if(t.dataset.inc){
     var key=t.dataset.inc;
     var it = cartItems().find(function(x){ return x.cartKey===key; });
-    var stock = it ? variantStock(it.p, it.colorName) : null;
+    var stock = it ? (it.sizeLabel ? sizeStockFor(it.p, it.sizeLabel) : variantStock(it.p, it.colorName)) : null;
     var nextQty = (cart[key]||0)+1;
     if(stock!=null && nextQty>stock){ showToast(LANG==="en" ? "⚠️ Only "+stock+" available" : "⚠️ الكمية المتاحة بس "+stock+" قطعة"); return; }
     setQty(key, nextQty);
@@ -2963,14 +3074,13 @@ function reconcileCartStock(){
   var messages = [];
   var changed = false;
   Object.keys(cart).forEach(function(key){
-    var sep = key.indexOf("::");
-    var id = sep===-1 ? key : key.slice(0, sep);
-    var colorName = sep===-1 ? null : key.slice(sep+2);
+    var parsed = parseCartKey(key);
+    var id = parsed.id, colorName = parsed.colorName, sizeLabel = parsed.sizeLabel;
     var p = PRODUCTS.find(function(x){ return String(x.id)===id; });
     if(!p) return;
-    var stock = variantStock(p, colorName);
+    var stock = sizeLabel ? sizeStockFor(p, sizeLabel) : variantStock(p, colorName);
     if(stock==null) return;
-    var label = pName(p)+(colorName?" ("+colorName+")":"");
+    var label = pName(p)+(colorName?" ("+colorName+")":"")+(sizeLabel?" ("+sizeLabel+")":"");
     if(stock<=0){
       delete cart[key]; changed = true;
       messages.push(LANG==="en" ? "\""+label+"\" is out of stock and was removed from the cart" : "«"+label+"» خلص من المخزون واتشال من السلة");
@@ -3069,7 +3179,7 @@ function handlePaymentSubmit(e){
     method: "POST",
     headers: Object.assign({ "content-type":"application/json" }, customerAuthHeaders()),
     body: JSON.stringify({
-      items: items.map(function(it){ return { id:it.p.id, name:it.p.name+(it.colorName?" (اللون: "+it.colorName+")":""), price:it.p.price, qty:it.qty, colorName: it.colorName||null }; }),
+      items: items.map(function(it){ return { id:it.p.id, name:it.p.name+(it.colorName?" (اللون: "+it.colorName+")":"")+(it.sizeLabel?" ("+it.sizeLabel+")":""), price:priceForSize(it.p, it.sizeLabel), qty:it.qty, colorName: it.colorName||null, sizeLabel: it.sizeLabel||null }; }),
       subtotal: cartTotal(),
       shipping: SHIPPING_COST,
       total: grand,
@@ -3083,7 +3193,10 @@ function handlePaymentSubmit(e){
       /* بنخصم الكمية محليًا فورًا (زي بالظبط اللي بيحصل على السيرفر) عشان
          الواجهة تتحدث على طول من غير ما ننتظر تحميل الصفحة تاني. */
       items.forEach(function(it){
-        if(it.colorName && Array.isArray(it.p.colors)){
+        if(it.sizeLabel && Array.isArray(it.p.sizes)){
+          var s = it.p.sizes.find(function(x){ return x.label===it.sizeLabel; });
+          if(s && s.stock!=null) s.stock = Math.max(0, (+s.stock||0)-it.qty);
+        } else if(it.colorName && Array.isArray(it.p.colors)){
           var c = it.p.colors.find(function(x){ return x.name===it.colorName; });
           if(c && c.stock!=null) c.stock = Math.max(0, (+c.stock||0)-it.qty);
         } else if(it.p.stock!=null){
@@ -3217,7 +3330,7 @@ function productCard(p, showCartActions){
   var outOfStock = productOutOfStockOverall(p);
   var badgeHtml = "";
   if(outOfStock){ badgeHtml = '<span class="card-badge out-of-stock">'+t("غير متوفر")+'</span>'; }
-  else if(p.old){ var pct = Math.round((1-p.price/p.old)*100); badgeHtml = '<span class="card-badge">-'+pct+'%</span>'; }
+  else if(p.old && !(Array.isArray(p.sizes) && p.sizes.length)){ var pct = Math.round((1-p.price/p.old)*100); badgeHtml = '<span class="card-badge">-'+pct+'%</span>'; }
   else if(p.badge==="new"){ badgeHtml = '<span class="card-badge" style="background:var(--sky)">'+t("جديد")+'</span>'; }
   /* لو المنتج معاه أكتر من صورة، بنرسمهم كلهم فوق بعض (الأولى ظاهرة بس -
      class="active") وبنعلّم الحاوية بـ data-img-count عشان دالة
@@ -3248,7 +3361,9 @@ function productCard(p, showCartActions){
       + '<span class="card-cat">'+catName(p.cat)+'</span>'
       + '<h3 class="card-title">'+pName(p)+'</h3>'
       + '<div class="card-rating"><span class="stars">'+stars(p.rating)+'</span><span>('+p.reviews+')</span></div>'
-      + '<div class="card-price"><span class="price-now tabular">'+fmt(p.price)+' '+t('ج.م')+'</span>'+(p.old?'<span class="price-old tabular">'+fmt(p.old)+' '+t('ج.م')+'</span>':'')+'</div>'
+      + '<div class="card-price">'+((Array.isArray(p.sizes) && p.sizes.length)
+          ? '<span class="price-now tabular">'+t("يبدأ من")+' '+fmt(minSizePrice(p))+' '+t('ج.م')+'</span>'
+          : '<span class="price-now tabular">'+fmt(p.price)+' '+t('ج.م')+'</span>'+(p.old?'<span class="price-old tabular">'+fmt(p.old)+' '+t('ج.م')+'</span>':''))+'</div>'
       + (!showCartActions ? "" : outOfStock
           ? '<button class="card-add out-of-stock" data-notify="'+p.id+'">🔔 '+t("أعلمني عند التوفر")+'</button>'
           : '<div class="card-cart-row">'
@@ -3344,11 +3459,12 @@ function renderCategoryRow(){
 /* مودال "أعلمني عند التوفر" - بيتفتح لما العميل يدوس على زرار التنبيه
    (من كارت المنتج، أو من جوه تفاصيل المنتج لما يختار لون خلص). مفيش تسجيل
    دخول مطلوب هنا، بس رقم موبايل إلزامي عشان نقدر نكلمه. */
-function openStockNotifyModal(p, colorName){
+function openStockNotifyModal(p, colorName, sizeLabel){
+  var variantSuffix = (colorName?' ('+colorName+')':'')+(sizeLabel?' ('+sizeLabel+')':'');
   var html = '<button class="modal-close" id="modalCloseBtn" aria-label="إغلاق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
     + '<div class="modal-info" style="padding:34px 26px;">'
       + '<h3 style="margin-bottom:4px;">🔔 أعلمني عند التوفر</h3>'
-      + '<p style="color:var(--ink-soft); font-size:13.5px; margin-bottom:16px;">«'+pName(p)+(colorName?' ('+colorName+')':'')+'» مش متوفر دلوقتي. اكتب رقم موبايلك وهنكلمك أول ما يتوفر تاني.</p>'
+      + '<p style="color:var(--ink-soft); font-size:13.5px; margin-bottom:16px;">«'+pName(p)+variantSuffix+'» مش متوفر دلوقتي. اكتب رقم موبايلك وهنكلمك أول ما يتوفر تاني.</p>'
       + '<div style="display:flex; flex-direction:column; gap:10px;">'
         + '<div class="field"><label for="snName">الاسم (اختياري)</label><input id="snName"></div>'
         + '<div class="field"><label for="snPhone">رقم الموبايل *</label><input id="snPhone" type="tel" inputmode="numeric" required placeholder="01xxxxxxxxx"></div>'
@@ -3372,7 +3488,7 @@ function openStockNotifyModal(p, colorName){
     fetch("/api/stock-requests", {
       method: "POST",
       headers: { "content-type":"application/json" },
-      body: JSON.stringify({ productId:p.id, productName:p.name, colorName: colorName||null, name: document.getElementById("snName").value.trim(), phone: phone })
+      body: JSON.stringify({ productId:p.id, productName:p.name, colorName: colorName||null, sizeLabel: sizeLabel||null, name: document.getElementById("snName").value.trim(), phone: phone })
     }).then(function(r){ return r.json(); }).then(function(res){
       btn.disabled = false;
       if(res && res.ok){
@@ -3391,13 +3507,16 @@ function openStockNotifyModal(p, colorName){
 }
 
 var modalSelectedColor = null;
+var modalSelectedSize = null;
 var modalQty = 0;
 function openProductModal(id){
   var p = PRODUCTS.find(function(x){ return x.id===id; });
   if(!p) return;
   modalSelectedColor = null;
+  modalSelectedSize = null;
   modalQty = 0;
   var colors = Array.isArray(p.colors) ? p.colors : [];
+  var sizes = Array.isArray(p.sizes) ? p.sizes : [];
   var imgs = productImages(p);
   var modalImgContent = imgs.length
     ? '<img id="modalMainImg" src="'+imgs[0]+'" alt="'+pName(p)+'">'
@@ -3420,6 +3539,21 @@ function openProductModal(id){
       + '</div>'
       + '<p class="color-required-note" id="modalColorError">'+t("من فضلك اختار اللون الأول.")+'</p>';
   }
+  var sizePickerHtml = "";
+  if(sizes.length){
+    sizePickerHtml = '<p class="color-picker-label">'+t("اختر حجم العلبة")+'</p>'
+      + '<div class="size-options" id="modalSizeOptions">'
+        + sizes.map(function(s, i){
+          var out = isSizeTrackedOut(p, s.label);
+          var szPrice = (s.price!=null && !isNaN(+s.price)) ? +s.price : p.price;
+          return '<button type="button" class="size-option-btn'+(out?' out':'')+'" data-size-idx="'+i+'">'
+            + '<span class="size-label">'+String(s.label||"").replace(/</g,"&lt;")+(out?' ('+t("خلص")+')':'')+'</span>'
+            + '<span class="size-price tabular">'+fmt(szPrice)+' '+t("ج.م")+'</span>'
+          + '</button>';
+        }).join("")
+      + '</div>'
+      + '<p class="color-required-note" id="modalSizeError">'+t("من فضلك اختار حجم العلبة الأول.")+'</p>';
+  }
   document.getElementById("modalCard").classList.remove("acct-card");
   document.getElementById("modalCard").innerHTML =
     '<button class="modal-close" id="modalCloseBtn" aria-label="إغلاق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
@@ -3429,9 +3563,10 @@ function openProductModal(id){
       + '<h3>'+pName(p)+'</h3>'
       + galleryHtml
       + '<div class="card-rating"><span class="stars">'+stars(p.rating)+'</span><span>('+p.reviews+' '+t("تقييم")+')</span></div>'
-      + '<div class="card-price"><span class="price-now tabular" style="font-size:24px">'+fmt(p.price)+' '+t('ج.م')+'</span>'+(p.old?'<span class="price-old tabular">'+fmt(p.old)+' '+t('ج.م')+'</span>':'')+'</div>'
+      + '<div class="card-price" id="modalPriceBox"></div>'
       + '<p class="modal-desc">'+(p.desc && p.desc.trim() ? pDesc(p) : (LANG==="en" ? ("A high-quality "+catName(p.cat)+" toy, great as a gift or for everyday play, made of child-safe materials and quality-guaranteed by Al-Abdo Toys Store.") : ('لعبة عالية الجودة من '+catName(p.cat)+'، مناسبة كهدية أو للاستخدام اليومي، مصنوعة من خامات آمنة على الأطفال ومضمونة الجودة من متجر آل عبده.')))+'</p>'
       + colorPickerHtml
+      + sizePickerHtml
       + '<div class="modal-actions" id="modalActionsBox"></div>'
       + '<div class="modal-reviews" id="modalReviews" style="margin-top:20px; border-top:1.5px solid var(--border); padding-top:16px;">'
         + '<p style="color:var(--ink-soft); font-size:13px;">'+t("جاري تحميل التقييمات...")+'</p>'
@@ -3457,19 +3592,48 @@ function openProductModal(id){
     }
     return true;
   }
+  function validateSizeChosen(){
+    if(sizes.length && !modalSelectedSize){
+      document.getElementById("modalSizeError").style.display = "block";
+      return false;
+    }
+    return true;
+  }
+  /* بترسم سعر المودال: لو المنتج بأحجام علب ولسه محددش حجم، بيوضح "يبدأ
+     من" أقل سعر بين الأحجام؛ لو حدد حجم، بيوضح سعر الحجم ده بالظبط. */
+  function renderModalPrice(){
+    var box = document.getElementById("modalPriceBox");
+    if(!box) return;
+    if(sizes.length){
+      if(modalSelectedSize){
+        var szPrice = (modalSelectedSize.price!=null && !isNaN(+modalSelectedSize.price)) ? +modalSelectedSize.price : p.price;
+        box.innerHTML = '<span class="price-now tabular" style="font-size:24px">'+fmt(szPrice)+' '+t('ج.م')+'</span>';
+      } else {
+        box.innerHTML = '<span class="price-now tabular" style="font-size:24px">'+t("يبدأ من")+' '+fmt(minSizePrice(p))+' '+t('ج.م')+'</span>';
+      }
+      return;
+    }
+    box.innerHTML = '<span class="price-now tabular" style="font-size:24px">'+fmt(p.price)+' '+t('ج.م')+'</span>'+(p.old?'<span class="price-old tabular">'+fmt(p.old)+' '+t('ج.م')+'</span>':'');
+  }
   /* بترسم زراير "أضف للسلة"/"اطلب واتساب" العادية، أو زرار "أعلمني عند
-     التوفر" بدالها لو اللون المختار (أو المنتج كله لو من غير ألوان) خلص
-     من المخزون - وبتترسم من جديد كل ما العميل يغيّر اللون المختار. */
+     التوفر" بدالها لو اللون/الحجم المختار (أو المنتج كله لو من غير ألوان
+     ولا أحجام) خلص من المخزون - وبتترسم من جديد كل ما العميل يغيّر
+     اللون أو الحجم المختار. */
   function renderModalActions(){
     var box = document.getElementById("modalActionsBox");
     if(!box) return;
-    var outNow = colors.length
-      ? (modalSelectedColor ? isTrackedOut(p, modalSelectedColor.name) : productOutOfStockOverall(p))
-      : productOutOfStockOverall(p);
+    var outNow;
+    if(sizes.length){
+      outNow = modalSelectedSize ? isSizeTrackedOut(p, modalSelectedSize.label) : productOutOfStockOverall(p);
+    } else if(colors.length){
+      outNow = modalSelectedColor ? isTrackedOut(p, modalSelectedColor.name) : productOutOfStockOverall(p);
+    } else {
+      outNow = productOutOfStockOverall(p);
+    }
     if(outNow){
       box.innerHTML = '<button type="button" class="btn btn-outline" id="modalNotifyBtn" style="flex:1;">🔔 '+t("أعلمني عند التوفر")+'</button>';
       document.getElementById("modalNotifyBtn").addEventListener("click", function(){
-        openStockNotifyModal(p, modalSelectedColor ? modalSelectedColor.name : null);
+        openStockNotifyModal(p, modalSelectedColor ? modalSelectedColor.name : null, modalSelectedSize ? modalSelectedSize.label : null);
       });
       return;
     }
@@ -3491,11 +3655,12 @@ function openProductModal(id){
     });
     document.getElementById("modalAddBtn").addEventListener("click", function(){
       if(!validateColorChosen()) return;
+      if(!validateSizeChosen()) return;
       if(modalQty <= 0){
         showToast(t("من فضلك حدد الكمية قبل الإضافة للسلة"));
         return;
       }
-      addToCart(p.id, modalQty, modalSelectedColor ? modalSelectedColor.name : null);
+      addToCart(p.id, modalQty, modalSelectedColor ? modalSelectedColor.name : null, modalSelectedSize ? modalSelectedSize.label : null);
       modalQty = 0;
       var qv = document.getElementById("modalQtyVal"); if(qv) qv.textContent = modalQty;
     });
@@ -3516,6 +3681,18 @@ function openProductModal(id){
       renderModalActions();
     });
   }
+  if(sizes.length){
+    document.getElementById("modalSizeOptions").addEventListener("click", function(e){
+      var btn = e.target.closest("[data-size-idx]"); if(!btn) return;
+      modalSelectedSize = sizes[+btn.dataset.sizeIdx];
+      document.getElementById("modalSizeError").style.display = "none";
+      document.querySelectorAll("#modalSizeOptions .size-option-btn").forEach(function(b){ b.classList.remove("active"); });
+      btn.classList.add("active");
+      renderModalPrice();
+      renderModalActions();
+    });
+  }
+  renderModalPrice();
   renderModalActions();
   loadProductReviews(p);
 }
@@ -4652,6 +4829,7 @@ renderPfImagesPreview();
    الأدمن بيختار اسم اللون من لوحة ألوان جاهزة (زي لوحة إيموجي القسم
    بالظبط) بدل ما يكتبه بنفسه، وبعدين بيربطه بصورة توضح اللون ده. */
 var pfColorsData = [];
+var pfSizesData = [];
 var pfColorPendingName = null;
 var pfColorPendingImage = null;
 function renderPfColorNamePicker(){
@@ -4668,16 +4846,25 @@ document.getElementById("pfColorNamePicker").addEventListener("click", function(
   pfColorPendingName = btn.dataset.colorName;
   renderPfColorNamePicker();
 });
-/* بتظهر/تختفي خانة "الكمية المتاحة" العامة على حسب وجود ألوان - لو
-   المنتج بألوان، الكمية بتتحدد لكل لون على حدة جوه قائمة الألوان بدل
-   الخانة العامة دي. */
+/* بتظهر/تختفي خانة "الكمية المتاحة" العامة على حسب وجود ألوان أو أحجام -
+   لو المنتج بألوان أو بأحجام علب، الكمية (والسعر لو أحجام) بتتحدد لكل
+   لون/حجم على حدة جوه القايمة المناسبة بدل الخانات العامة دي. */
 function updatePfStockVisibility(){
   var row = document.getElementById("pfStockRow");
-  var note = document.getElementById("pfStockColorsNote");
+  var colorsNote = document.getElementById("pfStockColorsNote");
+  var sizesNote = document.getElementById("pfStockSizesNote");
+  var priceRow = document.getElementById("pfPriceRow");
+  var priceNote = document.getElementById("pfPriceSizesNote");
   if(!row) return;
-  var hasColors = pfColorsData.length > 0;
-  row.style.display = hasColors ? "none" : "block";
-  if(note) note.style.display = hasColors ? "block" : "none";
+  var hasSizes = pfSizesData.length > 0;
+  var hasColors = pfColorsData.length > 0 && !hasSizes;
+  row.style.display = (hasColors || hasSizes) ? "none" : "block";
+  if(colorsNote) colorsNote.style.display = hasColors ? "block" : "none";
+  if(sizesNote) sizesNote.style.display = hasSizes ? "block" : "none";
+  if(priceRow) priceRow.style.display = hasSizes ? "none" : "grid";
+  if(priceNote) priceNote.style.display = hasSizes ? "block" : "none";
+  var pfPriceInput = document.getElementById("pfPrice");
+  if(pfPriceInput) pfPriceInput.required = !hasSizes;
 }
 function renderPfColorsList(){
   var box = document.getElementById("pfColorsList");
@@ -4729,10 +4916,61 @@ document.getElementById("pfColorsList").addEventListener("input", function(e){
 renderPfColorNamePicker();
 renderPfColorsList();
 
+/* قايمة أحجام العلب (pfSizesData): كل حجم له اسم حر (زي "علبة 24 قطعة")
+   وسعره وكميته الخاصين - كل حقل قابل للتعديل مباشرة جوه القايمة نفسها. */
+function renderPfSizesList(){
+  var box = document.getElementById("pfSizesList");
+  if(!box) return;
+  if(!pfSizesData.length){ box.innerHTML = '<span style="color:var(--ink-soft); font-size:13px;">'+t("بدون أحجام (المنتج بسعر وكمية واحدة)")+'</span>'; updatePfStockVisibility(); return; }
+  box.innerHTML = pfSizesData.map(function(s, i){
+    return '<div style="display:flex; align-items:center; gap:8px; border:1.5px solid var(--border); border-radius:12px; padding:6px 10px; flex-wrap:wrap;">'
+      + '<input type="text" data-pf-size-label="'+i+'" value="'+String(s.label||"").replace(/"/g,"&quot;")+'" placeholder="'+t("اسم الحجم")+'" style="flex:1; min-width:120px; padding:6px 8px; border-radius:8px; border:1.5px solid var(--border); background:var(--surface-3); color:var(--ink); font-size:13px; font-weight:700;">'
+      + '<input type="number" min="0" data-pf-size-price="'+i+'" value="'+(s.price==null?"":s.price)+'" placeholder="'+t("السعر")+'" title="'+t("سعر الحجم ده (ج.م)")+'" style="width:90px; padding:6px 8px; border-radius:8px; border:1.5px solid var(--border); background:var(--surface-3); color:var(--ink); font-size:12.5px; flex:none;">'
+      + '<input type="number" min="0" step="1" data-pf-size-stock="'+i+'" value="'+(s.stock==null?"":s.stock)+'" placeholder="'+t("الكمية")+'" title="'+t("الكمية المتاحة من الحجم ده (اتركها فاضية لو مش عايز تتبعها)")+'" style="width:82px; padding:6px 8px; border-radius:8px; border:1.5px solid var(--border); background:var(--surface-3); color:var(--ink); font-size:12.5px; flex:none;">'
+      + '<button type="button" data-remove-pf-size="'+i+'" aria-label="'+t("إزالة الحجم")+'" style="border:0; background:var(--surface-2); width:26px; height:26px; border-radius:50%; color:var(--pink-deep); font-size:14px; line-height:1; cursor:pointer; flex:none;">×</button>'
+    + '</div>';
+  }).join("");
+  updatePfStockVisibility();
+}
+document.getElementById("pfSizeAddBtn").addEventListener("click", function(){
+  var label = document.getElementById("pfSizeLabel").value.trim();
+  var priceEl = document.getElementById("pfSizePrice");
+  var stockEl = document.getElementById("pfSizeStock");
+  if(!label){ showToast(t("⚠️ اكتب اسم الحجم الأول")); return; }
+  if(priceEl.value===""){ showToast(t("⚠️ اكتب سعر الحجم ده")); return; }
+  pfSizesData.push({ label:label, price:Math.max(0, +priceEl.value||0), stock: stockEl.value==="" ? null : Math.max(0, Math.round(+stockEl.value||0)) });
+  document.getElementById("pfSizeLabel").value = "";
+  priceEl.value = "";
+  stockEl.value = "";
+  renderPfSizesList();
+});
+document.getElementById("pfSizesList").addEventListener("click", function(e){
+  var btn = e.target.closest("[data-remove-pf-size]"); if(!btn) return;
+  pfSizesData.splice(+btn.dataset.removePfSize, 1);
+  renderPfSizesList();
+});
+document.getElementById("pfSizesList").addEventListener("input", function(e){
+  var labelEl = e.target.closest("[data-pf-size-label]");
+  if(labelEl){ var li = +labelEl.dataset.pfSizeLabel; if(pfSizesData[li]) pfSizesData[li].label = labelEl.value; return; }
+  var priceEl2 = e.target.closest("[data-pf-size-price]");
+  if(priceEl2){ var pi = +priceEl2.dataset.pfSizePrice; if(pfSizesData[pi]) pfSizesData[pi].price = priceEl2.value==="" ? 0 : Math.max(0, +priceEl2.value||0); return; }
+  var stockEl2 = e.target.closest("[data-pf-size-stock]");
+  if(stockEl2){ var si = +stockEl2.dataset.pfSizeStock; if(pfSizesData[si]) pfSizesData[si].stock = stockEl2.value==="" ? null : Math.max(0, Math.round(+stockEl2.value||0)); }
+});
+renderPfSizesList();
+
 /* بترجع HTML صغير يوضح الكمية المتاحة للمنتج في جدول لوحة التحكم - لو
    المنتج بألوان بيجمع كمية الألوان المتتبعة كلها، ولو مفيش أي تتبع كمية
    خالص (لا للمنتج ولا لأي لون) بيوضح إنها "غير متتبعة" (يعني متاح دايمًا). */
 function stockDisplayForProduct(p){
+  if(Array.isArray(p.sizes) && p.sizes.length){
+    var trackedSz = p.sizes.filter(function(s){ return s.stock!=null; });
+    if(!trackedSz.length) return '<span style="color:var(--ink-soft); font-size:12px;">'+t("غير متتبعة")+'</span>';
+    var totalSz = trackedSz.reduce(function(s,x){ return s+(+x.stock||0); },0);
+    var zeroSz = trackedSz.filter(function(x){ return +x.stock<=0; }).length;
+    var colorSz = totalSz<=0 ? "var(--pink-deep)" : (zeroSz>0 ? "var(--sunshine-deep)" : "inherit");
+    return '<span class="tabular" style="color:'+colorSz+'; font-weight:700;">'+totalSz+'</span>'+(zeroSz>0?' <span style="font-size:11px; color:var(--pink-deep);">('+zeroSz+' '+t("حجم خلص")+')</span>':'');
+  }
   if(Array.isArray(p.colors) && p.colors.length){
     var tracked = p.colors.filter(function(c){ return c.stock!=null; });
     if(!tracked.length) return '<span style="color:var(--ink-soft); font-size:12px;">'+t("غير متتبعة")+'</span>';
@@ -4751,11 +4989,13 @@ function renderAdminProductsTable(){
     var pRowMainImg = productMainImage(p);
     var thumbContent = pRowMainImg ? '<img src="'+pRowMainImg+'" alt="">' : categoryIcon(p.cat);
     var colorsBadge = (Array.isArray(p.colors) && p.colors.length) ? ' <span title="'+t("متاح بـ")+p.colors.length+' '+t("لون")+'" style="font-size:12px;">🎨</span>' : "";
+    var sizesBadge = (Array.isArray(p.sizes) && p.sizes.length) ? ' <span title="'+t("متاح بـ")+p.sizes.length+' '+t("حجم")+'" style="font-size:12px;">📦</span>' : "";
+    var hasSizes = Array.isArray(p.sizes) && p.sizes.length;
     return '<tr>'
       + '<td><div class="thumb-sm" style="background:'+(CAT_MAP[p.cat]?CAT_MAP[p.cat].color:'var(--surface-2)')+'">'+thumbContent+'</div></td>'
-      + '<td>'+pName(p)+colorsBadge+'</td>'
+      + '<td>'+pName(p)+colorsBadge+sizesBadge+'</td>'
       + '<td>'+catName(p.cat)+'</td>'
-      + '<td class="tabular">'+fmt(p.price)+' '+t("ج.م")+(p.old?' <span style="color:var(--ink-faint);text-decoration:line-through;font-size:11px;">'+fmt(p.old)+'</span>':'')+'</td>'
+      + '<td class="tabular">'+(hasSizes ? (t("يبدأ من")+' '+fmt(minSizePrice(p))+' '+t("ج.م")) : (fmt(p.price)+' '+t("ج.م")+(p.old?' <span style="color:var(--ink-faint);text-decoration:line-through;font-size:11px;">'+fmt(p.old)+'</span>':'')))+'</td>'
       + '<td>'+stockDisplayForProduct(p)+'</td>'
       + '<td><div class="admin-row-actions">'
         + '<button data-edit-product="'+p.id+'" aria-label="'+t("تعديل")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>'
@@ -5026,7 +5266,7 @@ function renderAdminStockPage(){
         var d = new Date(r.createdAt);
         return '<div class="order-card static">'
           + '<div class="order-card-top">'
-            + '<div><div class="order-card-id">'+String(r.productName||t("منتج"))+(r.colorName?' — '+t("اللون")+': '+t(r.colorName):'')+'</div>'
+            + '<div><div class="order-card-id">'+String(r.productName||t("منتج"))+(r.colorName?' — '+t("اللون")+': '+t(r.colorName):'')+(r.sizeLabel?' — '+r.sizeLabel:'')+'</div>'
               + '<div class="order-card-customer">'+(r.name||t("عميل"))+' — '+(r.phone||"-")+'</div></div>'
             + '<div class="order-card-date tabular">'+d.toLocaleDateString(LANG==="en"?"en-US":"ar-EG")+'</div>'
           + '</div>'
@@ -5397,7 +5637,8 @@ document.getElementById("productForm").addEventListener("submit", function(e){
     images: pfImagesData.slice(),
     image: pfImagesData[0] || null,
     colors: pfColorsData.slice(),
-    stock: pfColorsData.length ? null : (document.getElementById("pfStock").value==="" ? null : Math.max(0, Math.round(+document.getElementById("pfStock").value||0)))
+    sizes: pfSizesData.slice(),
+    stock: (pfColorsData.length || pfSizesData.length) ? null : (document.getElementById("pfStock").value==="" ? null : Math.max(0, Math.round(+document.getElementById("pfStock").value||0)))
   };
   if(!data.name || !data.cat) return;
   var wasEdit = !!id;
@@ -5435,6 +5676,11 @@ function resetProductForm(){
   document.getElementById("pfColorImageChosen").style.display = "none";
   renderPfColorNamePicker();
   renderPfColorsList();
+  pfSizesData = [];
+  document.getElementById("pfSizeLabel").value = "";
+  document.getElementById("pfSizePrice").value = "";
+  document.getElementById("pfSizeStock").value = "";
+  renderPfSizesList();
 }
 document.getElementById("productFormCancel").addEventListener("click", resetProductForm);
 document.getElementById("adminProductsBody").addEventListener("click", function(e){
@@ -5468,6 +5714,13 @@ document.getElementById("adminProductsBody").addEventListener("click", function(
     document.getElementById("pfColorImageChosen").style.display = "none";
     renderPfColorNamePicker();
     renderPfColorsList();
+    /* نفس فكرة نسخ الألوان - بننسخ كل حجم في أوبجكت جديد عشان أي تعديل
+       هنا يتنفذش على المنتج الحقيقي إلا لما نحفظ التعديل فعليًا. */
+    pfSizesData = Array.isArray(p.sizes) ? p.sizes.map(function(s){ return Object.assign({}, s); }) : [];
+    document.getElementById("pfSizeLabel").value = "";
+    document.getElementById("pfSizePrice").value = "";
+    document.getElementById("pfSizeStock").value = "";
+    renderPfSizesList();
     document.getElementById("productFormTitle").textContent = t("✏️ تعديل منتج");
     document.getElementById("productFormSubmit").textContent = t("حفظ التعديل");
     document.getElementById("productFormCancel").hidden = false;
@@ -5536,11 +5789,12 @@ document.getElementById("adminCatsBody").addEventListener("click", function(e){
   var cid = delBtn.dataset.delCat;
   refreshThenRun(function(){
     if(PRODUCTS.some(function(p){ return p.cat===cid; })){
+      catalogSaveBusy = false;
       renderAdminAll();
       alert(t("مينفعش تمسح القسم ده، لسه فيه منتجات جواه. غيّر قسم المنتجات دي الأول."));
       return;
     }
-    if(!confirm(t("متأكد إنك عايز تمسح القسم ده؟"))) return;
+    if(!confirm(t("متأكد إنك عايز تمسح القسم ده؟"))){ catalogSaveBusy = false; return; }
     CATS = CATS.filter(function(c){ return c.id!==cid; });
     rebuildCatMap();
     resetCatForm();

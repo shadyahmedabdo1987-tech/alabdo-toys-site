@@ -26,6 +26,7 @@ export async function onRequestPost({ request, env }){
     productId: body.productId,
     productName: (body.productName || "").trim(),
     colorName: (body.colorName || "").trim() || null,
+    sizeLabel: (body.sizeLabel || "").trim() || null,
     name: (body.name || "").trim(),
     phone: (body.phone || "").trim(),
     createdAt: Date.now()

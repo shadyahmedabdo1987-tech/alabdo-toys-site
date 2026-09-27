@@ -90,8 +90,14 @@ export async function onRequestPost({ request, env }){
         var p = catalog.products.find(function(x){ return String(x.id) === String(it.id); });
         if(!p) return;
         var colorName = String(it.colorName || "").trim();
+        var sizeLabel = String(it.sizeLabel || "").trim();
         var qty = Math.max(0, +it.qty || 0);
-        if(colorName && Array.isArray(p.colors)){
+        /* أحجام العلب (p.sizes): كل حجم له كميته الخاصة، فبنخصم من الحجم
+           اللي العميل اختاره بالظبط. */
+        if(sizeLabel && Array.isArray(p.sizes) && p.sizes.length){
+          var s = p.sizes.find(function(x){ return x.label === sizeLabel; });
+          if(s && s.stock != null){ s.stock = Math.max(0, (+s.stock||0) - qty); changed = true; }
+        } else if(colorName && Array.isArray(p.colors)){
           var c = p.colors.find(function(x){ return x.name === colorName; });
           if(c && c.stock != null){ c.stock = Math.max(0, (+c.stock||0) - qty); changed = true; }
         } else if(p.stock != null){

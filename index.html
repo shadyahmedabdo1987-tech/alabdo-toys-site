@@ -3967,10 +3967,46 @@ function reconcileCartStock(){
    على الجهاز)، عشان لو حد تاني اشترى نفس المنتج من شوية، العميل ميطلبش
    أكتر من المتاح فعلاً. */
 function refreshStockThen(cb){
-  fetch("/api/products?fresh=1", {cache:"no-store"}).then(function(r){ if(!r.ok) throw 0; return r.json(); })
-    .then(function(data){ if(data){ applyData(data); saveDraft(); } cb(); })
-    .catch(function(){ cb(); });
+  refreshLiveStock(function(){
+    if(!liveStockMissing){ cb(); return; }
+    fetch("/api/products?fresh=1", {cache:"no-store"}).then(function(r){ if(!r.ok) throw 0; return r.json(); })
+      .then(function(data){ if(data){ applyData(data); saveDraft(); } cb(); })
+      .catch(function(){ cb(); });
+  });
 }
+/* آخر كمية حقيقية لكل منتج من /api/stock (ملف صغير جدًا من غير صور).
+   الموبايل ممكن يكون فاتح نسخة قديمة محفوظة من المنتجات (عشان الفتح يبقى
+   سريع)، فبنجيب الكميات الحقيقية أول ما الصفحة تفتح، ولما العميل يفتح أي
+   منتج، وقبل إتمام الطلب - عشان حد "مش أكتر من المخزون" يبقى دايمًا صح. */
+var liveStockMissing = false;
+function refreshLiveStock(cb){
+  if(liveStockMissing || isAdminApp() || isAdminAuthed()){ if(cb) cb(false); return; }
+  fetch("/api/stock", {cache:"no-store"})
+    .then(function(r){ if(r.status===404 || r.status===405) throw "missing"; return r.json(); })
+    .then(function(j){
+      if(!j || !j.ok || !Array.isArray(j.items)) throw "missing";
+      var changed = false;
+      j.items.forEach(function(s){
+        var p = PRODUCTS.find(function(x){ return String(x.id)===String(s.id); });
+        if(!p) return;
+        if(p.stock!==s.stock && !(p.stock==null && s.stock==null)){ p.stock = s.stock; changed = true; }
+        if(Array.isArray(p.sizes)) (s.sizes||[]).forEach(function(ns){ var x = p.sizes.find(function(y){ return y.label===ns.label; }); if(x && x.stock!==ns.stock){ x.stock = ns.stock; changed = true; } });
+        if(Array.isArray(p.colors)) (s.colors||[]).forEach(function(nc){ var x = p.colors.find(function(y){ return y.name===nc.name; }); if(x && x.stock!==nc.stock){ x.stock = nc.stock; changed = true; } });
+      });
+      if(changed) saveDraft();
+      if(cb) cb(changed);
+    })
+    .catch(function(err){ if(err==="missing" || err instanceof SyntaxError) liveStockMissing = true; if(cb) cb(false); });
+}
+function refreshLiveStockAndViews(){
+  refreshLiveStock(function(changed){
+    if(!changed) return;
+    renderBestSellers(); renderNewArrivals();
+    if(document.getElementById("view-products").classList.contains("active")) renderProductsView();
+    reconcileCartStock();
+  });
+}
+document.addEventListener("visibilitychange", function(){ if(document.visibilityState==="visible") refreshLiveStockAndViews(); });
 function goToInfoStep(){
   var items = cartItems();
   if(!items.length) return;
@@ -4412,9 +4448,11 @@ function openStockNotifyModal(p, colorName, sizeLabel){
 var modalSelectedColor = null;
 var modalSelectedSize = null;
 var modalQty = 0;
+var modalOpenToken = 0;
 function openProductModal(id){
   var p = PRODUCTS.find(function(x){ return x.id===id; });
   if(!p) return;
+  var myModalToken = ++modalOpenToken;
   modalSelectedColor = null;
   modalSelectedSize = null;
   modalQty = 0;
@@ -4620,6 +4658,13 @@ function openProductModal(id){
   renderModalPrice();
   renderModalActions();
   loadProductReviews(p);
+  refreshLiveStock(function(changed){
+    if(changed && myModalToken===modalOpenToken && modalBackdrop.classList.contains("show") && document.getElementById("modalActionsBox")){
+      if(sizes.length) document.querySelectorAll("#modalSizeOptions .size-option-btn").forEach(function(b){ var sz = sizes[+b.dataset.sizeIdx]; if(sz) b.classList.toggle("out", isSizeTrackedOut(p, sz.label)); });
+      if(colors.length) document.querySelectorAll("#modalColorSwatches .color-swatch").forEach(function(b){ var cc = colors[+b.dataset.colorIdx]; if(cc) b.classList.toggle("out", isTrackedOut(p, cc.name)); });
+      renderModalActions();
+    }
+  });
 }
 modalBackdrop.addEventListener("click", function(e){
   if(e.target!==modalBackdrop) return;
@@ -7790,6 +7835,7 @@ loadInitialData(function(){
     else if(activeName==="home") goToView("home");
     if(document.getElementById("view-products").classList.contains("active")) renderProductsView();
     if(BOOT_VIEW==="admin") showAdmin();
+    else refreshLiveStockAndViews();
     initScrollReveal();
     loadHomeReviews();
   });

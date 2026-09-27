@@ -4602,12 +4602,10 @@ function renderAppSheet(){
     : '<div class="app-sheet-user"><span class="av">👋</span><div class="t"><strong>'+t("أهلاً بيك في متجر آل عبده")+'</strong><span>'+t("سجّل دخولك عشان تتابع طلباتك")+'</span></div><button type="button" data-sheet="login">'+t("دخول")+'</button></div>';
   var theme = document.documentElement.getAttribute("data-theme");
   var dark = theme ? theme==="dark" : (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
-  var waMsg = LANG==="en" ? "Hello Al-Abdo Toys Store" : "السلام عليكم، متجر آل عبده";
   appSheet.innerHTML = '<div class="grab"></div>' + head
     + '<div class="app-sheet-list">'
       + (c ? appSheetRow("account","orders",t("طلباتي")) : "")
       + appSheetRow("wish","heart",t("المفضلة"))
-      + appSheetRow("whatsapp","wa",t("كلّمنا على واتساب"),"", "https://wa.me/"+STORE.phone+"?text="+encodeURIComponent(waMsg))
       + appSheetRow("contact","chat",t("تواصل معنا"))
     + '</div><div class="app-sheet-sep"></div><div class="app-sheet-list">'
       + appSheetRow("lang","globe",t("اللغة"), LANG==="en" ? "English" : "العربية")

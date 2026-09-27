@@ -395,6 +395,7 @@ html[dir="ltr"] .payment-marquee-group{direction:ltr;}
 .card-cart-row .card-add{flex:1; min-width:0; justify-content:center;}
 .card-cart-row .qty-stepper{flex:none;}
 .modal-cart-row{display:flex; align-items:center; gap:10px;}
+.modal-stock-hint{margin:8px 2px 0; font-size:12.5px; font-weight:700; color:var(--sunshine-deep);}
 .modal-cart-row .btn{flex:1; min-width:0;}
 .modal-cart-row .qty-stepper{flex:none;}
 .modal-cart-row .qty-stepper button{width:40px; height:44px; font-size:16px;}
@@ -3157,6 +3158,12 @@ var I18N_EN = {
   "أهلاً بيك في متجر آل عبده": "Welcome to Al-Abdo Toys Store",
   "سجّل دخولك عشان تتابع طلباتك": "Log in to track your orders",
   "كلّمنا على واتساب": "Chat with us on WhatsApp",
+  "قطعة بس من المنتج ده": "left of this product",
+  "باقي": "Only",
+  "كل الكمية المتاحة من المنتج ده موجودة في سلتك بالفعل": "All available stock of this product is already in your cart",
+  "⚠️ الكمية المتاحة": "⚠️ Only",
+  "قطعة بس": "available",
+  "⚠️ الكمية المتاحة اتغيرت، راجع سلتك وجرّب تاني": "⚠️ Available stock changed — review your cart and try again",
   "اللغة": "Language",
   "الوضع الليلي": "Dark mode",
   "مفعّل": "On",
@@ -3758,13 +3765,28 @@ function reconcileCartStock(){
 /* التسجيل بقى اختياري - العميل يقدر يكمل طلبه كضيف بعد ما يكتب بياناته
    كاملة (اسم/موبايل/عنوان) في خطوة البيانات، من غير ما يعمل حساب. لو
    حابب يرجع يشوف طلباته وفواتيره بعدين، وقتها لازم يسجّل حساب. */
+/* قبل ما نكمّل الطلب بنجيب آخر كمية حقيقية من السيرفر (مش النسخة المحفوظة
+   على الجهاز)، عشان لو حد تاني اشترى نفس المنتج من شوية، العميل ميطلبش
+   أكتر من المتاح فعلاً. */
+function refreshStockThen(cb){
+  fetch("/api/products?fresh=1", {cache:"no-store"}).then(function(r){ if(!r.ok) throw 0; return r.json(); })
+    .then(function(data){ if(data){ applyData(data); saveDraft(); } cb(); })
+    .catch(function(){ cb(); });
+}
 function goToInfoStep(){
   var items = cartItems();
   if(!items.length) return;
-  var msgs = reconcileCartStock();
-  if(msgs.length){ showToast(msgs[0]); return; }
-  cartCheckout.step = "info";
-  renderCartFoot();
+  var btn = document.getElementById("cartContinueBtn");
+  if(btn.disabled) return;
+  btn.disabled = true;
+  refreshStockThen(function(){
+    btn.disabled = false;
+    var msgs = reconcileCartStock();
+    if(msgs.length){ showToast(msgs[0]); return; }
+    if(!cartItems().length) return;
+    cartCheckout.step = "info";
+    renderCartFoot();
+  });
 }
 document.getElementById("cartContinueBtn").addEventListener("click", goToInfoStep);
 document.getElementById("infoBackBtn").addEventListener("click", function(){
@@ -3816,6 +3838,16 @@ function showOrderSuccessModal(phone){
   setTimeout(goHome, 3000);
 }
 function handlePaymentSubmit(e){
+  if(e && e.preventDefault) e.preventDefault();
+  var btn = this;
+  if(btn.disabled) return;
+  btn.disabled = true;
+  refreshStockThen(function(){
+    btn.disabled = false;
+    submitOrderNow.call(btn, null);
+  });
+}
+function submitOrderNow(e){
   var items = cartItems();
   if(!items.length) return;
   var stockMsgs = reconcileCartStock();
@@ -3872,6 +3904,15 @@ function handlePaymentSubmit(e){
       resetCheckoutFields();
       resetCartCheckout();
       showOrderSuccessModal(f.phone);
+    } else if(res && res.error==="insufficient_stock"){
+      /* السيرفر رفض الطلب لأن الكمية المطلوبة أكتر من المتاح (حد تاني سبقه) -
+         بنحدّث الكميات ونرجّع العميل للسلة بعد ما نظبطها. */
+      refreshStockThen(function(){
+        var msgs = reconcileCartStock();
+        showToast(msgs[0] || t("⚠️ الكمية المتاحة اتغيرت، راجع سلتك وجرّب تاني"));
+        cartCheckout.step = "cart";
+        renderCartFoot();
+      });
     } else {
       errEl.textContent = t("معلش، حصل خطأ وإحنا بنسجل طلبك. جرّب تاني.");
       errEl.style.display = "block";
@@ -4283,6 +4324,18 @@ function openProductModal(id){
      التوفر" بدالها لو اللون/الحجم المختار (أو المنتج كله لو من غير ألوان
      ولا أحجام) خلص من المخزون - وبتترسم من جديد كل ما العميل يغيّر
      اللون أو الحجم المختار. */
+  /* الكمية اللي العميل لسه يقدر يضيفها من اللون/الحجم المختار (المخزون
+     ناقص اللي في السلة بالفعل). null = مش متتبعة أو لسه ما اختارش لون/حجم. */
+  function modalAvailable(){
+    var colorName = modalSelectedColor ? modalSelectedColor.name : null;
+    var sizeLabel = modalSelectedSize ? modalSelectedSize.label : null;
+    if(sizes.length && !sizeLabel) return null;
+    if(colors.length && !sizes.length && !colorName) return null;
+    var stock = sizeLabel ? sizeStockFor(p, sizeLabel) : variantStock(p, colorName);
+    if(stock==null) return null;
+    var inCart = cart[cartKeyFor(p.id, colorName, sizeLabel)] || 0;
+    return Math.max(0, stock - inCart);
+  }
   function renderModalActions(){
     var box = document.getElementById("modalActionsBox");
     if(!box) return;
@@ -4301,6 +4354,8 @@ function openProductModal(id){
       });
       return;
     }
+    var avNow = modalAvailable();
+    if(avNow!=null && modalQty>avNow) modalQty = avNow;
     box.innerHTML = '<div class="modal-cart-row">'
       + '<button class="btn btn-primary" id="modalAddBtn">'+t("أضف للسلة")+'</button>'
       + '<div class="qty-stepper">'
@@ -4308,12 +4363,20 @@ function openProductModal(id){
         + '<span id="modalQtyVal">'+modalQty+'</span>'
         + '<button type="button" id="modalQtyPlus" aria-label="'+t("زيادة الكمية")+'">+</button>'
       + '</div>'
-    + '</div>';
+    + '</div>'
+    + (avNow!=null && avNow<=10
+        ? '<p class="modal-stock-hint">'+(avNow>0 ? t("باقي")+' '+fmt(avNow)+' '+t("قطعة بس من المنتج ده") : t("كل الكمية المتاحة من المنتج ده موجودة في سلتك بالفعل"))+'</p>'
+        : '');
     document.getElementById("modalQtyMinus").addEventListener("click", function(){
       modalQty = Math.max(0, modalQty-1);
       document.getElementById("modalQtyVal").textContent = modalQty;
     });
     document.getElementById("modalQtyPlus").addEventListener("click", function(){
+      var av = modalAvailable();
+      if(av!=null && modalQty+1>av){
+        showToast(av<=0 ? t("كل الكمية المتاحة من المنتج ده موجودة في سلتك بالفعل") : t("⚠️ الكمية المتاحة")+' '+fmt(av)+' '+t("قطعة بس"));
+        return;
+      }
       modalQty = modalQty+1;
       document.getElementById("modalQtyVal").textContent = modalQty;
     });

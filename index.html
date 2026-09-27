@@ -270,6 +270,11 @@ ul{margin:0; padding:0; list-style:none;}
 .payment-chip.pm-cash{background:rgba(20,140,90,.1); color:#128a56;}
 .payment-chip.pm-cash .chip-ic{background:#1a9d63;}
 .payment-marquee-dot{color:var(--ink-soft); opacity:.5; font-size:12px;}
+/* الشريط بيتحرك دايمًا من اليمين للشمال في اتجاه LTR (حتى والصفحة عربي)،
+   عشان على الموبايل ميفضلش فاضي نص الوقت؛ والكلام جوه كل مجموعة يفضل RTL. */
+.payment-marquee{direction:ltr;}
+.payment-marquee-group{direction:rtl;}
+html[dir="ltr"] .payment-marquee-group{direction:ltr;}
 @keyframes paymentMarquee{ from{transform:translateX(0);} to{transform:translateX(-50%);} }
 @media (prefers-reduced-motion: reduce){ .payment-marquee-track{animation-duration:70s;} }
 @media (max-width:640px){ .payment-marquee-track{padding:9px 16px;} .payment-marquee-group{gap:26px; margin-inline-end:26px;} }
@@ -1019,7 +1024,7 @@ html.app-mode .app-sheet.show{transform:none;}
   <section class="section reveal" style="padding-bottom:0">
     <div class="wrap">
       <div class="wholesale-promo">
-        <div class="wholesale-top">
+        <div class="wholesale-top app-hide">
           <div class="wholesale-top-text">
             <h3 data-i18n>تصفّح كل منتجاتنا بحرية</h3>
             <p data-i18n>سجّل مجاناً واطلب منتجاتك مباشرة.</p>

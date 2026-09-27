@@ -1196,6 +1196,16 @@ html.admin-app #admSheet.show{display:flex;}
 .adm-qsub{font-size:12px; font-weight:800; color:var(--ink-soft); margin-top:4px;}
 .adm-sheet-foot{display:flex; gap:8px; flex:none; padding-top:10px; border-top:1px solid var(--border);}
 .adm-sheet-foot .btn{flex:1; justify-content:center; min-height:48px;}
+
+/* مؤشر حفظ تعديلات لوحة التحكم (بيحفظ / مستني النت / اتحفظ) */
+.adm-sync{display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:999px; font-size:12px; font-weight:800; background:var(--surface-2); color:var(--ink);}
+.adm-sync[hidden]{display:none !important;}
+.adm-sync.is-saving{background:#e3effc; color:#1f5fa8;}
+.adm-sync.is-err{background:#fde8ed; color:#b3263f;}
+.adm-sync.is-ok{background:#dcf5ea; color:#0c7a57;}
+#adminDashboard .admin-bar .adm-sync{margin-top:8px;}
+#admSyncPill{position:fixed; top:calc(64px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%); z-index:69; box-shadow:0 6px 18px rgba(0,0,0,.15);}
+html:not(.admin-app) #admSyncPill, html.admin-app:not(.adm-authed) #admSyncPill{display:none !important;}
 </style>
 </head>
 <body>
@@ -1862,7 +1872,7 @@ html.admin-app #admSheet.show{display:flex;}
         <div class="adm-screen" id="admSettingsScreen"></div>
         <div class="adm-screen" id="admMore"></div>
         <div class="admin-bar">
-          <div><h1 style="font-size:22px;" data-i18n>لوحة تحكم المنتجات</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;" data-i18n>أضف وعدّل وامسح المنتجات والأقسام — أي تعديل بيظهر لكل زوار الموقع فورًا.</p></div>
+          <div><h1 style="font-size:22px;" data-i18n>لوحة تحكم المنتجات</h1><span class="adm-sync" hidden></span><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;" data-i18n>أضف وعدّل وامسح المنتجات والأقسام — أي تعديل بيظهر لكل زوار الموقع فورًا.</p></div>
           <div class="admin-actions">
             <button class="btn btn-primary btn-sm" id="adminAnalyticsBtn" type="button" data-i18n>📊 تحليل الزوار</button>
             <button class="btn btn-primary btn-sm" id="adminInquiriesBtn" type="button"><span data-i18n>📨 استفسارات العملاء</span><span id="adminInquiriesBadge" class="admin-badge" hidden>0</span></button>
@@ -2091,6 +2101,7 @@ html.admin-app #admSheet.show{display:flex;}
   <div class="adm-tb-title"><img src="icon-192.png" alt="" width="30" height="30"><span id="admTitle"></span></div>
   <div class="adm-tb-actions" id="admTbActions"></div>
 </header>
+<div class="adm-sync" id="admSyncPill" hidden></div>
 <nav class="adm-x" id="admTabbar" aria-label="تنقل لوحة التحكم" data-i18n-aria>
   <button type="button" class="adm-tab" data-adm-tab="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1Z"/></svg><span data-i18n>الرئيسية</span></button>
   <button type="button" class="adm-tab" data-adm-tab="products"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5Z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg><span data-i18n>المنتجات</span></button>
@@ -2535,9 +2546,13 @@ function saveDraft(){
   try{ localStorage.setItem(DATA_KEY, JSON.stringify({categories:CATS, products:PRODUCTS})); }catch(e){}
 }
 function loadInitialData(done){
-  fetch("/api/products", {cache:"no-store"}).then(function(r){ if(!r.ok) throw 0; return r.json(); })
+  /* لوحة التحكم دايمًا بتجيب آخر نسخة من السيرفر (مش النسخة المحفوظة على
+     الجهاز)، عشان اللي تشوفه يبقى هو المتسجل فعلاً. */
+  var adminNow = isAdminApp() || location.hash.replace("#","")===ADMIN_SECRET_HASH;
+  fetch(adminNow ? "/api/products?fresh=1" : "/api/products", {cache:"no-store"}).then(function(r){ if(!r.ok) throw 0; return r.json(); })
     .then(function(data){
       if(data){ applyData(data); saveDraft(); }
+      if(adminNow && catalogOps.length) catalogOps.forEach(applyCatalogOpLocal);
       done();
     })
     .catch(function(){
@@ -2596,6 +2611,183 @@ function refreshThenRun(fn){
     .then(function(data){ if(data) applyData(data); fn(); })
     .catch(function(){ fn(); });
 }
+
+/* ---------- حفظ تعديلات لوحة التحكم كـ"تعديلات صغيرة" (catalog ops) ----------
+   قبل كده أي تعديل (حتى +1 في الكمية) كان بينزّل الكتالوج كله بكل صور
+   المنتجات، يغيّر رقم واحد، ويرفع الكتالوج كله تاني - على نت الموبايل ده
+   بياخد وقت طويل، ولو حفظتين اتداخلوا كانت النسخة الأقدم ممكن توصل
+   الأخيرة وتمسح التعديل الأحدث من غير ما تحس. دلوقتي كل تعديل بيتبعت لوحده
+   (بضع بايتات) لـ /api/catalog-ops، والسيرفر بيطبّقه على آخر نسخة محفوظة.
+   التعديلات اللي لسه ما وصلتش بتتحفظ على الموبايل وبتتبعت تاني لوحدها
+   لحد ما السيرفر يأكد إنها اتحفظت (حتى لو النت قطع أو قفلت التطبيق). */
+var CATALOG_OPS_KEY = "aa_admin_pending_ops";
+var catalogOps = [];
+try{ catalogOps = JSON.parse(localStorage.getItem(CATALOG_OPS_KEY) || "[]") || []; }catch(e){ catalogOps = []; }
+if(!Array.isArray(catalogOps)) catalogOps = [];
+var catalogOpsSending = false, catalogOpsRetryTimer = null, catalogOpsRetryMs = 2000, catalogOpsLegacy = false, catalogOpsState = "idle";
+function persistCatalogOps(){
+  try{ localStorage.setItem(CATALOG_OPS_KEY, JSON.stringify(catalogOps)); }
+  catch(e){ /* مساحة الموبايل مش كفاية (صور كبيرة) - بتفضل في الذاكرة لحد ما تتبعت */ }
+}
+function opsFindProduct(id){ return PRODUCTS.find(function(x){ return String(x.id)===String(id); }); }
+function applyCatalogOpLocal(o){
+  var p;
+  if(o.op==="stock"){
+    p = opsFindProduct(o.id); if(!p) return;
+    var d = Math.round(+o.delta||0);
+    if(o.sizeLabel && Array.isArray(p.sizes)){ var s = p.sizes.find(function(x){ return x.label===o.sizeLabel; }); if(s && s.stock!=null) s.stock = Math.max(0,(+s.stock||0)+d); }
+    else if(o.colorName && Array.isArray(p.colors)){ var c = p.colors.find(function(x){ return x.name===o.colorName; }); if(c && c.stock!=null) c.stock = Math.max(0,(+c.stock||0)+d); }
+    else if(p.stock!=null) p.stock = Math.max(0,(+p.stock||0)+d);
+  } else if(o.op==="set"){
+    p = opsFindProduct(o.id); if(!p) return;
+    if("price" in o) p.price = o.price;
+    if("old" in o) p.old = o.old;
+    if("stock" in o) p.stock = o.stock;
+    if(Array.isArray(o.sizes) && Array.isArray(p.sizes)) o.sizes.forEach(function(ns){ var s2 = p.sizes.find(function(x){ return x.label===ns.label; }); if(s2){ if("price" in ns) s2.price = ns.price; if("stock" in ns) s2.stock = ns.stock; } });
+    if(Array.isArray(o.colors) && Array.isArray(p.colors)) o.colors.forEach(function(nc){ var c2 = p.colors.find(function(x){ return x.name===nc.name; }); if(c2 && ("stock" in nc)) c2.stock = nc.stock; });
+  } else if(o.op==="upsert"){
+    p = opsFindProduct(o.product.id);
+    if(p) Object.assign(p, JSON.parse(JSON.stringify(o.product)));
+    else PRODUCTS.push(JSON.parse(JSON.stringify(o.product)));
+  } else if(o.op==="delete"){
+    PRODUCTS = PRODUCTS.filter(function(x){ return String(x.id)!==String(o.id); });
+  } else if(o.op==="cat-upsert"){
+    var cat = CATS.find(function(x){ return x.id===o.category.id; });
+    if(cat) Object.assign(cat, o.category); else CATS.push(Object.assign({}, o.category));
+    rebuildCatMap();
+  } else if(o.op==="cat-delete"){
+    if(!PRODUCTS.some(function(x){ return x.cat===o.id; })){ CATS = CATS.filter(function(x){ return x.id!==o.id; }); rebuildCatMap(); }
+  }
+}
+function renderPublicViews(){
+  renderCategoryRow();
+  renderBestSellers();
+  renderNewArrivals();
+  if(document.getElementById("view-products").classList.contains("active")) renderProductsView();
+  renderCartDrawer();
+}
+function renderAfterCatalogChange(){
+  saveDraft();
+  renderAdminProductsTable();
+  renderAdminCatsTable();
+  renderPublicViews();
+}
+function queueCatalogOps(ops){
+  ops.forEach(function(o){ o._t = Date.now(); catalogOps.push(o); applyCatalogOpLocal(o); });
+  persistCatalogOps();
+  renderAfterCatalogChange();
+  sendCatalogOps();
+}
+function updateCatalogSyncStatus(state){
+  if(state) catalogOpsState = state;
+  var n = catalogOps.length;
+  var txt = "", cls = "";
+  if(n && catalogOpsState==="auth"){ txt = "⚠️ "+t("سجّل دخول تاني عشان التعديلات تتحفظ"); cls = "is-err"; }
+  else if(n && catalogOpsState==="offline"){ txt = "⚠️ "+t("مستني النت")+" ("+fmt(n)+")"; cls = "is-err"; }
+  else if(n){ txt = "⏳ "+t("بيحفظ...")+" ("+fmt(n)+")"; cls = "is-saving"; }
+  else if(catalogOpsState==="saved"){ txt = "✅ "+t("اتحفظ"); cls = "is-ok"; }
+  document.querySelectorAll(".adm-sync").forEach(function(el){
+    el.textContent = txt; el.className = "adm-sync "+cls; el.hidden = !txt;
+  });
+  if(!n && catalogOpsState==="saved"){
+    clearTimeout(updateCatalogSyncStatus._t);
+    updateCatalogSyncStatus._t = setTimeout(function(){ if(!catalogOps.length){ catalogOpsState = "idle"; updateCatalogSyncStatus(); } }, 2500);
+  }
+}
+function scheduleCatalogOpsRetry(state){
+  updateCatalogSyncStatus(state || "offline");
+  clearTimeout(catalogOpsRetryTimer);
+  catalogOpsRetryTimer = setTimeout(sendCatalogOps, catalogOpsRetryMs);
+  catalogOpsRetryMs = Math.min(30000, catalogOpsRetryMs*2);
+}
+function opsPayload(batch){ return batch.map(function(o){ var c = Object.assign({}, o); delete c._t; return c; }); }
+function sendCatalogOps(){
+  clearTimeout(catalogOpsRetryTimer);
+  if(catalogOpsSending) return;
+  if(!catalogOps.length){ updateCatalogSyncStatus(); return; }
+  if(!isAdminAuthed()){ updateCatalogSyncStatus("auth"); return; }
+  catalogOpsSending = true;
+  updateCatalogSyncStatus("saving");
+  var batch = catalogOps.slice(0, 15);
+  if(catalogOpsLegacy){ sendCatalogOpsLegacy(batch); return; }
+  fetch("/api/catalog-ops", {
+    method: "POST",
+    headers: Object.assign({ "content-type":"application/json" }, adminAuthHeaders()),
+    body: JSON.stringify({ ops: opsPayload(batch) })
+  }).then(function(r){ return r.text().then(function(tx){ var j = null; try{ j = JSON.parse(tx); }catch(e){} return { status:r.status, body:j }; }); })
+    .then(function(res){
+      catalogOpsSending = false;
+      if(res.body && res.body.ok){ onCatalogOpsSaved(batch, res.body); return; }
+      if(res.status===404 || res.status===405 || (res.status===200 && !res.body) || (res.status===409 && res.body && res.body.error==="no_catalog")){
+        /* ملف /api/catalog-ops لسه مش مرفوع على السيرفر - نرجع للطريقة القديمة مؤقتًا */
+        catalogOpsLegacy = true; sendCatalogOps(); return;
+      }
+      if(res.status===401){ updateCatalogSyncStatus("auth"); return; }
+      if(res.status===400){
+        catalogOps.splice(0, batch.length); persistCatalogOps();
+        showToast(t("⚠️ تعديل ما اتحفظش لأن بياناته ناقصة"));
+        sendCatalogOps(); return;
+      }
+      scheduleCatalogOpsRetry("offline");
+    })
+    .catch(function(){ catalogOpsSending = false; scheduleCatalogOpsRetry("offline"); });
+}
+/* الرد من السيرفر فيه القيم الحقيقية بعد التعديل - بنحدّث بيها الجهاز،
+   وبعدين نطبّق تاني أي تعديلات لسه في الطابور (ما اتبعتتش) عشان تفضل ظاهرة. */
+function onCatalogOpsSaved(batch, res){
+  catalogOpsRetryMs = 2000;
+  catalogOps.splice(0, batch.length);
+  persistCatalogOps();
+  var changedIds = {};
+  (res.changed||[]).forEach(function(s){
+    var p = opsFindProduct(s.id); if(!p) return;
+    changedIds[String(s.id)] = true;
+    p.price = s.price; p.old = s.old; p.stock = s.stock;
+    if(Array.isArray(p.sizes)) (s.sizes||[]).forEach(function(ns){ var x = p.sizes.find(function(y){ return y.label===ns.label; }); if(x){ x.price = ns.price; x.stock = ns.stock; } });
+    if(Array.isArray(p.colors)) (s.colors||[]).forEach(function(nc){ var x = p.colors.find(function(y){ return y.name===nc.name; }); if(x) x.stock = nc.stock; });
+  });
+  if(Array.isArray(res.categories) && res.categories.length){ CATS = res.categories; rebuildCatMap(); }
+  catalogOps.forEach(function(o){
+    if(o.op==="stock" && !changedIds[String(o.id)]) return;
+    applyCatalogOpLocal(o);
+  });
+  if(res.skipped && res.skipped.length) showToast(t("⚠️ فيه تعديل ما اتطبقش (المنتج أو القسم اتمسح أو القسم لسه فيه منتجات)"));
+  renderAfterCatalogChange();
+  if(catalogOps.length) sendCatalogOps();
+  else updateCatalogSyncStatus("saved");
+}
+/* الطريقة القديمة (لو /api/catalog-ops مش موجود): نجيب آخر نسخة، نطبّق
+   التعديلات عليها، ونرفع الكتالوج كله - بس برضه بالترتيب ومن غير تداخل. */
+function sendCatalogOpsLegacy(batch){
+  fetch("/api/products?fresh=1", {cache:"no-store"}).then(function(r){ if(!r.ok) throw 0; return r.json(); })
+    .then(function(data){
+      if(data && Array.isArray(data.products)) applyData(data);
+      batch.forEach(applyCatalogOpLocal);
+      return fetch("/api/products", {
+        method: "POST",
+        headers: Object.assign({ "content-type":"application/json" }, adminAuthHeaders()),
+        body: JSON.stringify({ categories: CATS, products: PRODUCTS })
+      });
+    })
+    .then(function(r){ return r.json().then(function(j){ return { status:r.status, body:j }; }); })
+    .then(function(res){
+      catalogOpsSending = false;
+      if(res.status===401){ updateCatalogSyncStatus("auth"); return; }
+      if(!(res.body && res.body.ok)){ scheduleCatalogOpsRetry("offline"); return; }
+      catalogOpsRetryMs = 2000;
+      catalogOps.splice(0, batch.length);
+      persistCatalogOps();
+      catalogOps.forEach(applyCatalogOpLocal);
+      renderAfterCatalogChange();
+      if(catalogOps.length) sendCatalogOps(); else updateCatalogSyncStatus("saved");
+    })
+    .catch(function(){ catalogOpsSending = false; scheduleCatalogOpsRetry("offline"); });
+}
+window.addEventListener("online", function(){ catalogOpsRetryMs = 2000; sendCatalogOps(); });
+document.addEventListener("visibilitychange", function(){ if(document.visibilityState==="visible" && catalogOps.length) sendCatalogOps(); });
+window.addEventListener("beforeunload", function(e){
+  if(catalogOps.length && isAdminAuthed()){ e.preventDefault(); e.returnValue = ""; }
+});
 
 /* ---------- Theme ---------- */
 var root = document.documentElement;
@@ -3270,6 +3462,12 @@ var I18N_EN = {
   "من المعرض": "From gallery",
   "دوس على أي صورة عشان تخليها الصورة الرئيسية.": "Tap any photo to make it the main one.",
   "حفظ وإضافة تاني": "Save & add another",
+  "سجّل دخول تاني عشان التعديلات تتحفظ": "Log in again so your changes can be saved",
+  "مستني النت": "Waiting for internet",
+  "بيحفظ...": "Saving...",
+  "اتحفظ": "Saved",
+  "⚠️ تعديل ما اتحفظش لأن بياناته ناقصة": "⚠️ A change wasn't saved because its data was incomplete",
+  "⚠️ فيه تعديل ما اتطبقش (المنتج أو القسم اتمسح أو القسم لسه فيه منتجات)": "⚠️ A change wasn't applied (the product or category was deleted, or the category still has products)",
 };
 
 /* ---------- اللغة (عربي/English) ----------
@@ -4947,6 +5145,7 @@ function showAdmin(){
     document.getElementById("adminDashboard").classList.add("active");
     renderAdminAll();
     if(ADM) ADM.onShow();
+    sendCatalogOps();
     return;
   }
   if(ADM) ADM.onLogout();
@@ -6500,11 +6699,7 @@ function renderAdminAll(){
 }
 function refreshPublicViews(){
   saveProductsToServer();
-  renderCategoryRow();
-  renderBestSellers();
-  renderNewArrivals();
-  if(document.getElementById("view-products").classList.contains("active")) renderProductsView();
-  renderCartDrawer();
+  renderPublicViews();
 }
 
 document.getElementById("productForm").addEventListener("submit", function(e){
@@ -6529,21 +6724,16 @@ document.getElementById("productForm").addEventListener("submit", function(e){
   };
   if(!data.name || !data.cat) return;
   var wasEdit = !!id;
-  refreshThenRun(function(){
-    if(id){
-      var existing = PRODUCTS.find(function(p){ return String(p.id)===String(id); });
-      if(existing) Object.assign(existing, data);
-      else { data.id = id; PRODUCTS.push(data); }
-    } else {
-      data.id = Date.now();
-      PRODUCTS.push(data);
-    }
-    resetProductForm();
-    renderAdminProductsTable();
-    refreshPublicViews();
-    showToast(wasEdit ? t("✅ اتحدث المنتج") : t("✅ اتضاف المنتج"));
-    if(ADM) ADM.afterSave(wasEdit, data.cat);
-  });
+  if(id){
+    var existingP = PRODUCTS.find(function(p){ return String(p.id)===String(id); });
+    data.id = existingP ? existingP.id : id;
+  } else {
+    data.id = Date.now();
+  }
+  queueCatalogOps([{ op:"upsert", product:data }]);
+  resetProductForm();
+  showToast(wasEdit ? t("✅ اتحدث المنتج") : t("✅ اتضاف المنتج"));
+  if(ADM) ADM.afterSave(wasEdit, data.cat);
 });
 function resetProductForm(){
   document.getElementById("productForm").reset();
@@ -6614,12 +6804,9 @@ function adminEditProduct(p){
 function adminDeleteProduct(pid){
   pid = String(pid);
   if(!confirm(t("متأكد إنك عايز تمسح المنتج ده؟"))) return;
-  refreshThenRun(function(){
-    PRODUCTS = PRODUCTS.filter(function(x){ return String(x.id)!==pid; });
-    renderAdminProductsTable();
-    refreshPublicViews();
-    showToast(t("🗑️ اتمسح المنتج"));
-  });
+  var delP = PRODUCTS.find(function(x){ return String(x.id)===pid; });
+  queueCatalogOps([{ op:"delete", id: delP ? delP.id : pid }]);
+  showToast(t("🗑️ اتمسح المنتج"));
 }
 document.getElementById("adminProductsBody").addEventListener("click", function(e){
   var editBtn = e.target.closest("[data-edit-product]");
@@ -6638,19 +6825,10 @@ document.getElementById("catForm").addEventListener("submit", function(e){
   var icon = document.getElementById("cfIcon").value.trim() || "🎯";
   if(!name) return;
   var wasEdit = !!id;
-  refreshThenRun(function(){
-    if(id){
-      var existing = CATS.find(function(c){ return c.id===id; });
-      if(existing){ existing.name = name; existing.name_en = nameEn; existing.icon = icon; existing.color = selectedCatColor; }
-    } else {
-      CATS.push({id: slugId("cat"), name:name, name_en:nameEn, icon:icon, color:selectedCatColor});
-    }
-    rebuildCatMap();
-    resetCatForm();
-    renderAdminAll();
-    refreshPublicViews();
-    showToast(wasEdit ? t("✅ اتحدث القسم") : t("✅ اتضاف القسم"));
-  });
+  queueCatalogOps([{ op:"cat-upsert", category:{ id: id || slugId("cat"), name:name, name_en:nameEn, icon:icon, color:selectedCatColor } }]);
+  resetCatForm();
+  renderAdminAll();
+  showToast(wasEdit ? t("✅ اتحدث القسم") : t("✅ اتضاف القسم"));
 });
 function resetCatForm(){
   document.getElementById("catForm").reset();
@@ -6681,20 +6859,14 @@ document.getElementById("adminCatsBody").addEventListener("click", function(e){
   }
   var delBtn = e.target.closest("[data-del-cat]"); if(!delBtn) return;
   var cid = delBtn.dataset.delCat;
-  refreshThenRun(function(){
-    if(PRODUCTS.some(function(p){ return p.cat===cid; })){
-      catalogSaveBusy = false;
-      renderAdminAll();
-      alert(t("مينفعش تمسح القسم ده، لسه فيه منتجات جواه. غيّر قسم المنتجات دي الأول."));
-      return;
-    }
-    if(!confirm(t("متأكد إنك عايز تمسح القسم ده؟"))){ catalogSaveBusy = false; return; }
-    CATS = CATS.filter(function(c){ return c.id!==cid; });
-    rebuildCatMap();
-    resetCatForm();
-    renderAdminAll();
-    refreshPublicViews();
-  });
+  if(PRODUCTS.some(function(p){ return p.cat===cid; })){
+    alert(t("مينفعش تمسح القسم ده، لسه فيه منتجات جواه. غيّر قسم المنتجات دي الأول."));
+    return;
+  }
+  if(!confirm(t("متأكد إنك عايز تمسح القسم ده؟"))) return;
+  queueCatalogOps([{ op:"cat-delete", id:cid }]);
+  resetCatForm();
+  renderAdminAll();
 });
 document.getElementById("adminExportBtn").addEventListener("click", function(){
   var blob = new Blob([JSON.stringify({categories:CATS, products:PRODUCTS}, null, 2)], {type:"application/json"});
@@ -6711,6 +6883,7 @@ document.getElementById("adminImportFile").addEventListener("change", function(e
   reader.onload = function(){
     try{
       applyData(JSON.parse(reader.result));
+      catalogOps = []; persistCatalogOps();
       renderAdminAll();
       refreshPublicViews();
       showToast(t("✅ اتحمّلت البيانات من الملف"));
@@ -6725,6 +6898,7 @@ document.getElementById("adminResetBtn").addEventListener("click", function(){
   PRODUCTS = DEFAULT_PRODUCTS.map(function(p){ return Object.assign({}, p); });
   rebuildCatMap();
   try{ localStorage.removeItem(DATA_KEY); }catch(e){}
+  catalogOps = []; persistCatalogOps();
   renderAdminAll();
   refreshPublicViews();
 });
@@ -7283,26 +7457,12 @@ var ADM = null;
   });
 
   /* +/− للكمية: التعديلات بتتجمع وبتتحفظ مرة واحدة بعد ما تبطّل تدوس (أقل من ثانية) */
+  /* كل ضغطة +/− بتتسجل على الجهاز فورًا وبتتبعت للسيرفر كتعديل صغير
+     (شوف queueCatalogOps) - مفيش حاجة بتضيع لو دوست بسرعة. */
   function bumpStock(id, d){
     var p = findP(id); if(!p || p.stock==null) return;
-    var next = (+p.stock||0) + (pendingDelta[id]||0) + d;
-    if(next < 0) return;
-    pendingDelta[id] = (pendingDelta[id]||0) + d;
-    renderProducts();
-    clearTimeout(flushTimer);
-    flushTimer = setTimeout(flushStock, 900);
-  }
-  function flushStock(){
-    var ids = Object.keys(pendingDelta).filter(function(k){ return pendingDelta[k]; });
-    if(!ids.length){ pendingDelta = {}; return; }
-    if(catalogSaveBusy){ flushTimer = setTimeout(flushStock, 700); return; }
-    var deltas = pendingDelta; pendingDelta = {};
-    refreshThenRun(function(){
-      ids.forEach(function(id){ var p = findP(id); if(p && p.stock!=null) p.stock = Math.max(0, (+p.stock||0) + deltas[id]); });
-      renderAdminProductsTable();
-      refreshPublicViews();
-      showToast(t("✅ اتحفظت الكمية"));
-    });
+    if((+p.stock||0) + d < 0) return;
+    queueCatalogOps([{ op:"stock", id:p.id, delta:d }]);
   }
 
   /* ---------- تعديل سريع (شيت من تحت) ---------- */
@@ -7380,25 +7540,16 @@ var ADM = null;
     var labels = hasSizes(p0) ? p0.sizes.map(function(s){ return s.label; }) : null;
     var colorNames = hasColors(p0) ? p0.colors.map(function(c){ return c.name; }) : null;
     closeSheet();
-    refreshThenRun(function(){
-      var p = findP(id);
-      if(!p){ catalogSaveBusy = false; showToast(t("⚠️ المنتج ده اتمسح")); return; }
-      if(labels && hasSizes(p)){
-        labels.forEach(function(label, i){
-          var s = p.sizes.find(function(x){ return x.label===label; });
-          if(s && vals.sizes[i]){ s.price = vals.sizes[i].price; s.stock = vals.sizes[i].stock; }
-        });
-      } else if(!labels){
-        p.price = vals.price; p.old = vals.old;
-        if(colorNames && hasColors(p)){
-          colorNames.forEach(function(name, i){ var c = p.colors.find(function(x){ return x.name===name; }); if(c && (i in vals.colors)) c.stock = vals.colors[i]; });
-        } else if(!colorNames) p.stock = vals.stock;
-      }
-      delete pendingDelta[id];
-      renderAdminProductsTable();
-      refreshPublicViews();
-      showToast(t("✅ اتحفظ التعديل"));
-    });
+    var op = { op:"set", id:p0.id };
+    if(labels){
+      op.sizes = labels.map(function(label, i){ return { label:label, price:vals.sizes[i].price, stock:vals.sizes[i].stock }; });
+    } else {
+      op.price = vals.price; op.old = vals.old;
+      if(colorNames) op.colors = colorNames.map(function(name, i){ return { name:name, stock:vals.colors[i] }; });
+      else op.stock = vals.stock;
+    }
+    queueCatalogOps([op]);
+    showToast(t("✅ اتحفظ التعديل"));
   }
 
   /* ---------- فورم المنتج ---------- */

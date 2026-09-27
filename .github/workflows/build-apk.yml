@@ -5,8 +5,9 @@
 # الملف ده بيعمل لوحده أول ما يترفع:
 #   1) بيضيف .well-known/assetlinks.json (عشان التطبيق يفتح من غير شريط عنوان)
 #   2) بيطبّق تصحيح خصم مخزون أحجام العلب في functions/api (مرة واحدة بس)
-#   3) بيبني ملف الـ APK ويحطه في فرع apk-build (من غير توقيع - التوقيع
-#      بيحصل برّه بمفتاح المتجر الخاص عشان المفتاح ميترفعش على الإنترنت)
+#   3) بيضيف functions/api/customers/delete-account.js (حذف الحساب - مطلوب لجوجل بلاي)
+#   4) بيبني ملف الـ APK وملف AAB (لجوجل بلاي) ويحطهم في فرع apk-build من غير
+#      توقيع - التوقيع بيحصل برّه بمفتاح المتجر عشان المفتاح ميترفعش على الإنترنت
 # وتقدر تشغّله تاني يدوي من Actions ← Build Android APK ← Run workflow.
 
 name: Build Android APK
@@ -36,11 +37,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Site setup (assetlinks + sizes stock fix)
+      - name: Site setup (assetlinks + sizes stock fix + account deletion API)
         run: |
           set -e
           mkdir -p .well-known
-          cat > .well-known/assetlinks.json <<'EOF'
+          [ -f .well-known/assetlinks.json ] || cat > .well-known/assetlinks.json <<'EOF'
           [
             {
               "relation": ["delegate_permission/common.handle_all_urls"],
@@ -88,13 +89,54 @@ jobs:
               print("stock-requests.js: nothing to do")
           EOF
 
+          if [ ! -f functions/api/customers/delete-account.js ]; then
+            cat > functions/api/customers/delete-account.js <<'EOF'
+          import { json, getCustomers, saveCustomers, getList, saveList, requireCustomer } from "../../_lib.js";
+
+          /* POST /api/customers/delete-account - customer only (X-Customer-Id /
+             X-Customer-Pass headers, same as every other customer endpoint).
+             Permanently deletes the logged-in customer's own account: login data,
+             name, email, phone, saved address and favorites, plus every product
+             review they wrote. Past orders are kept as the store's sales records
+             (invoices) but are unlinked from the deleted account. Required by Google
+             Play's account deletion policy (in-app + web deletion path).
+             (ASCII-only comments on purpose, same as _lib.js.) */
+          export async function onRequestPost({ request, env }){
+            var customer = await requireCustomer(request, env);
+            if(!customer) return json({ ok:false, error:"unauthorized" }, 401);
+            var id = customer.identifier;
+
+            var list = await getCustomers(env);
+            var next = list.filter(function(c){ return c.identifier !== id; });
+            await saveCustomers(env, next);
+
+            try{
+              var reviews = await getList(env, "reviews");
+              var keptReviews = reviews.filter(function(r){ return r.customerId !== id; });
+              if(keptReviews.length !== reviews.length) await saveList(env, "reviews", keptReviews);
+            }catch(e){ /* the account itself is already deleted */ }
+
+            try{
+              var orders = await getList(env, "orders");
+              var changed = false;
+              orders.forEach(function(o){
+                if(o.customerId === id){ o.customerId = null; changed = true; }
+              });
+              if(changed) await saveList(env, "orders", orders);
+            }catch(e){ /* the account itself is already deleted */ }
+
+            return json({ ok:true });
+          }
+          EOF
+          fi
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .well-known/assetlinks.json functions/api/orders.js functions/api/stock-requests.js
+          git add .well-known/assetlinks.json functions/api/orders.js functions/api/stock-requests.js functions/api/customers/delete-account.js
           if git diff --cached --quiet; then
             echo "site already set up"
           else
-            git commit -m "Android app: assetlinks + box-size stock fix"
+            git commit -m "Android app: site setup (assetlinks, box-size stock fix, account deletion API)"
             git pull --rebase origin main
             git push origin HEAD:main
           fi
@@ -108,7 +150,7 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: "8.11.1"
+          gradle-version: "8.13"
 
       - name: Set up Python (for icons)
         uses: actions/setup-python@v5
@@ -136,7 +178,7 @@ jobs:
 
           cat > $P/build.gradle <<'EOF'
           plugins {
-              id 'com.android.application' version '8.7.3' apply false
+              id 'com.android.application' version '8.13.0' apply false
           }
           EOF
 
@@ -153,12 +195,12 @@ jobs:
 
           android {
               namespace 'com.alabdotoys.app'
-              compileSdk 35
+              compileSdk 36
 
               defaultConfig {
                   applicationId 'com.alabdotoys.app'
                   minSdk 21
-                  targetSdk 35
+                  targetSdk 36
                   versionCode Integer.parseInt(System.getenv('APP_VERSION_CODE') ?: '1')
                   versionName '1.0.' + (System.getenv('APP_VERSION_CODE') ?: '1')
               }
@@ -315,13 +357,13 @@ jobs:
           print("icons ok")
           EOF
 
-      - name: Build APK (unsigned)
+      - name: Build APK + AAB (unsigned)
         run: |
           set -o pipefail
           cd "$P"
-          gradle assembleRelease --no-daemon --stacktrace 2>&1 | tee "$RUNNER_TEMP/build.log"
+          gradle assembleRelease bundleRelease --no-daemon --stacktrace 2>&1 | tee "$RUNNER_TEMP/build.log"
 
-      - name: Align APK and publish to branch apk-build
+      - name: Align APK and publish APK + AAB to branch apk-build
         run: |
           set -e
           BT=$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)
@@ -331,6 +373,7 @@ jobs:
           "$ANDROID_HOME/build-tools/$BT/zipalign" -p -f 4 "$P/app/build/outputs/apk/release/app-release-unsigned.apk" "$OUT/alabdo-toys-unsigned.apk"
           "$ANDROID_HOME/build-tools/$BT/zipalign" -c -p 4 "$OUT/alabdo-toys-unsigned.apk"
           cp "$ANDROID_HOME/build-tools/$BT/lib/apksigner.jar" "$OUT/apksigner.jar"
+          cp "$P/app/build/outputs/bundle/release/app-release.aab" "$OUT/alabdo-toys-unsigned.aab"
           echo "ok run ${{ github.run_number }} build-tools $BT $(date -u)" > "$OUT/info.txt"
           tail -n 60 "$RUNNER_TEMP/build.log" > "$OUT/build.log"
           cd "$OUT"

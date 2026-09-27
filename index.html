@@ -904,6 +904,297 @@ html.app-mode .app-sheet.show{transform:none;}
   .icon-btn svg{width:18px; height:18px;}
   .brand-text .name{font-size:15px;}
 }
+/* ==================================================================
+   تطبيق "آل عبده - الإدارة" (html.admin-app) - شكل تطبيق موبايل احترافي
+   للوحة التحكم: شريط علوي كحلي، تبويبات تحت، لوحة ملخص، قايمة منتجات
+   بكروت وأدوات سريعة، وفورم إضافة منتج مقسّم لأقسام. كل ده بيظهر بس
+   جوه تطبيق الإدارة - الموقع العادي ولوحة التحكم من الكمبيوتر زي ما هم.
+   ================================================================== */
+.adm-x, .adm-screen{display:none;}
+
+html.admin-app{
+  --bg:#f3f4f9; --surface:#ffffff; --surface-2:#eceef6; --surface-3:#f7f8fc;
+  --ink:#1b2033; --ink-soft:#5f6780; --ink-faint:#979db3; --border:#e2e5ef;
+  --adm-bar:#1b2440; --adm-bar-2:#2b3a67; --adm-bar-ink:#ffffff;
+  --adm-danger:#cf2f53; --adm-danger-pale:#fde8ed;
+  --adm-warn:#a86a00; --adm-warn-pale:#fff2d4;
+  --adm-ok:#0f8a64; --adm-ok-pale:#dcf5ea;
+  --adm-sky:#1f73c9; --adm-sky-pale:#e3effc;
+  --adm-shadow:0 1px 2px rgba(27,36,64,.06), 0 6px 18px rgba(27,36,64,.07);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  html.admin-app:not([data-theme="light"]){
+    --bg:#0e1220; --surface:#181e33; --surface-2:#222a45; --surface-3:#1c2340;
+    --ink:#edf0f8; --ink-soft:#a8afc7; --ink-faint:#6f7792; --border:#2a3252;
+    --adm-bar:#121829; --adm-bar-2:#1f2a4d;
+    --adm-danger:#ff7c95; --adm-danger-pale:#3b1824;
+    --adm-warn:#ffc75a; --adm-warn-pale:#372c12;
+    --adm-ok:#4fdcaa; --adm-ok-pale:#12302a;
+    --adm-sky:#74b9ff; --adm-sky-pale:#16263f;
+    --adm-shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 22px rgba(0,0,0,.25);
+    color-scheme:dark;
+  }
+}
+html.admin-app[data-theme="dark"]{
+  --bg:#0e1220; --surface:#181e33; --surface-2:#222a45; --surface-3:#1c2340;
+  --ink:#edf0f8; --ink-soft:#a8afc7; --ink-faint:#6f7792; --border:#2a3252;
+  --adm-bar:#121829; --adm-bar-2:#1f2a4d;
+  --adm-danger:#ff7c95; --adm-danger-pale:#3b1824;
+  --adm-warn:#ffc75a; --adm-warn-pale:#372c12;
+  --adm-ok:#4fdcaa; --adm-ok-pale:#12302a;
+  --adm-sky:#74b9ff; --adm-sky-pale:#16263f;
+  --adm-shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 22px rgba(0,0,0,.25);
+  color-scheme:dark;
+}
+
+/* الموقع نفسه (الهيدر والفوتر وباقي الصفحات) مش بيظهر جوه تطبيق الإدارة */
+html.admin-app #siteHeader, html.admin-app .site-footer, html.admin-app .mobile-nav,
+html.admin-app .skip-link{display:none !important;}
+html.admin-app body{background:var(--bg);}
+html.admin-app #view-admin > .section{padding-block:0;}
+html.admin-app #view-admin > .section > .wrap{padding-inline:0; max-width:none;}
+
+/* ---------- شاشة الدخول ---------- */
+html.admin-app:not(.adm-authed) #admLoginBrand{display:flex;}
+#admLoginBrand{flex-direction:column; align-items:center; gap:10px; text-align:center; color:var(--adm-bar-ink);
+  background:linear-gradient(160deg,var(--adm-bar),var(--adm-bar-2)); padding:calc(34px + env(safe-area-inset-top)) 20px 64px; margin-bottom:-44px;}
+#admLoginBrand img{width:72px; height:72px; border-radius:22px; background:#fff; padding:4px; box-shadow:0 8px 24px rgba(0,0,0,.25);}
+#admLoginBrand strong{display:block; font-family:"Baloo Bhaijaan 2","Almarai",sans-serif; font-size:22px;}
+#admLoginBrand span{font-size:13px; opacity:.78;}
+html.admin-app .admin-login{margin:0 16px 24px; max-width:none; box-shadow:var(--adm-shadow); border-color:transparent; position:relative;}
+@media (min-width:520px){ html.admin-app .admin-login{max-width:420px; margin-inline:auto;} }
+
+/* ---------- الشريط العلوي والتبويبات ---------- */
+html.admin-app.adm-authed body{padding-top:calc(56px + env(safe-area-inset-top)); padding-bottom:calc(78px + env(safe-area-inset-bottom));}
+html.admin-app.adm-authed #admTopbar{display:grid;}
+#admTopbar{position:fixed; top:0; inset-inline:0; z-index:70; grid-template-columns:44px 1fr auto; align-items:center; gap:4px;
+  height:calc(56px + env(safe-area-inset-top)); padding:env(safe-area-inset-top) 8px 0; background:var(--adm-bar); color:var(--adm-bar-ink);
+  box-shadow:0 2px 10px rgba(10,14,30,.18);}
+.adm-tb-btn{width:40px; height:40px; border:0; border-radius:12px; background:transparent; color:inherit; display:flex; align-items:center; justify-content:center;}
+.adm-tb-btn:active{background:rgba(255,255,255,.12);}
+.adm-tb-btn svg{width:22px; height:22px;}
+.adm-tb-btn:focus-visible{outline:2px solid #fff; outline-offset:-2px;}
+#admBackBtn[hidden]{display:flex !important; visibility:hidden;}
+html[dir="ltr"] #admBackBtn svg{transform:scaleX(-1);}
+.adm-tb-title{display:flex; align-items:center; gap:10px; min-width:0;}
+.adm-tb-title img{width:30px; height:30px; border-radius:9px; background:#fff; padding:2px; flex:none;}
+.adm-tb-title span{font-family:"Baloo Bhaijaan 2","Almarai",sans-serif; font-weight:700; font-size:18px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.adm-tb-actions{display:flex; gap:2px;}
+
+html.admin-app.adm-authed #admTabbar{display:grid;}
+#admTabbar{position:fixed; bottom:0; inset-inline:0; z-index:70; grid-template-columns:repeat(5,1fr); align-items:end;
+  padding:6px 4px calc(6px + env(safe-area-inset-bottom)); background:var(--surface); border-top:1px solid var(--border);
+  box-shadow:0 -4px 16px rgba(27,36,64,.06);}
+html.admin-app[data-adm-screen="form"] #admTabbar{display:none;}
+.adm-tab{position:relative; border:0; background:none; color:var(--ink-faint); display:flex; flex-direction:column; align-items:center; gap:3px; font-size:11.5px; font-weight:700; padding:4px 0;}
+.adm-tab svg{width:24px; height:24px;}
+.adm-tab.on{color:var(--adm-bar);}
+html.admin-app[data-theme="dark"] .adm-tab.on{color:var(--adm-sky);}
+@media (prefers-color-scheme:dark){ html.admin-app:not([data-theme="light"]) .adm-tab.on{color:var(--adm-sky);} }
+.adm-tab.on::before{content:""; position:absolute; top:-7px; width:28px; height:3px; border-radius:0 0 3px 3px; background:currentColor;}
+.adm-fab{justify-self:center; width:58px; height:58px; margin-top:-26px; border-radius:50%; border:4px solid var(--bg); background:var(--pink); color:#fff;
+  display:flex; align-items:center; justify-content:center; box-shadow:0 8px 20px rgba(238,31,108,.38);}
+.adm-fab svg{width:26px; height:26px;}
+.adm-fab:active{transform:scale(.95);}
+.adm-badge{position:absolute; top:0; inset-inline-start:calc(50% + 6px); min-width:18px; height:18px; padding:0 5px; border-radius:9px;
+  background:var(--adm-danger); color:#fff; font-size:10.5px; font-weight:800; line-height:18px; text-align:center; font-style:normal;}
+.adm-badge[hidden]{display:none !important;}
+
+html.admin-app.adm-authed .toast{bottom:calc(86px + env(safe-area-inset-bottom));}
+html.admin-app .toast{background:var(--adm-bar-2); color:#fff; box-shadow:0 8px 24px rgba(0,0,0,.25);}
+html.admin-app[data-adm-screen="form"] .toast{bottom:calc(92px + env(safe-area-inset-bottom));}
+
+/* لوحة التحكم القديمة (أزرار فوق وجدول) مستبدلة بالشاشات الجديدة */
+html.admin-app #adminDashboard > .admin-bar, html.admin-app #adminDashboard > .admin-note,
+html.admin-app #adminDashboard > .admin-grid, html.admin-app .admin-wrap > .admin-bar{display:none !important;}
+html.admin-app .admin-wrap{padding:14px 16px 8px;}
+html.admin-app #adminDashboard{padding:0;}
+html.admin-app.adm-authed .adm-screen.on{display:block;}
+.adm-screen{padding:14px 16px 8px;}
+
+/* ---------- عناصر مشتركة ---------- */
+.adm-card{background:var(--surface); border-radius:18px; box-shadow:var(--adm-shadow); padding:16px;}
+.adm-h{display:flex; align-items:center; justify-content:space-between; gap:10px; margin:22px 2px 10px;}
+.adm-h h2{font-size:16.5px;}
+.adm-h button{border:0; background:none; color:var(--pink-deep); font-weight:800; font-size:13px; padding:4px;}
+.adm-empty{color:var(--ink-soft); font-size:13.5px; text-align:center; padding:26px 12px;}
+.adm-num{font-variant-numeric:tabular-nums;}
+
+/* ---------- الرئيسية ---------- */
+.adm-hero{border-radius:22px; padding:18px; color:#fff; background:linear-gradient(140deg,var(--adm-bar) 0%,var(--adm-bar-2) 100%); position:relative; overflow:hidden;}
+.adm-hero::after{content:""; position:absolute; inset-inline-end:-40px; top:-50px; width:170px; height:170px; border-radius:50%; background:radial-gradient(circle,rgba(238,31,108,.28),transparent 70%);}
+.adm-hero small{display:block; font-size:12.5px; opacity:.75;}
+.adm-hero h1{font-size:22px; margin:2px 0 12px; position:relative; z-index:1;}
+.adm-hero-row{display:flex; gap:18px; position:relative; z-index:1;}
+.adm-hero-row div{display:flex; flex-direction:column;}
+.adm-hero-row b{font-family:"Baloo Bhaijaan 2","Almarai",sans-serif; font-size:22px; line-height:1.2; font-variant-numeric:tabular-nums;}
+.adm-hero-row span{font-size:11.5px; opacity:.75;}
+
+.adm-kpis{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:12px;}
+.adm-kpi{border:0; text-align:start; background:var(--surface); border-radius:18px; box-shadow:var(--adm-shadow); padding:14px; display:flex; flex-direction:column; gap:6px; color:var(--ink);}
+.adm-kpi-top{display:flex; align-items:center; justify-content:space-between;}
+.adm-kpi-ic{width:34px; height:34px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:17px; background:var(--surface-2);}
+.adm-kpi b{font-family:"Baloo Bhaijaan 2","Almarai",sans-serif; font-size:28px; line-height:1; font-variant-numeric:tabular-nums;}
+.adm-kpi span{font-size:12.5px; color:var(--ink-soft); font-weight:700;}
+.adm-kpi.is-danger .adm-kpi-ic{background:var(--adm-danger-pale);} .adm-kpi.is-danger b{color:var(--adm-danger);}
+.adm-kpi.is-warn .adm-kpi-ic{background:var(--adm-warn-pale);} .adm-kpi.is-warn b{color:var(--adm-warn);}
+.adm-kpi.is-ok .adm-kpi-ic{background:var(--adm-ok-pale);}
+.adm-kpi.is-sky .adm-kpi-ic{background:var(--adm-sky-pale);}
+.adm-kpi:active{transform:scale(.98);}
+
+.adm-alerts{display:flex; flex-direction:column; background:var(--surface); border-radius:18px; box-shadow:var(--adm-shadow); overflow:hidden;}
+.adm-alert{display:flex; align-items:center; gap:12px; padding:13px 14px; border:0; background:none; text-align:start; color:var(--ink); border-bottom:1px solid var(--border); font-size:13.5px; font-weight:700;}
+.adm-alert:last-child{border-bottom:0;}
+.adm-alert .dot{width:10px; height:10px; border-radius:50%; flex:none;}
+.adm-alert .txt{flex:1; min-width:0;}
+.adm-alert .txt small{display:block; font-weight:400; color:var(--ink-soft); font-size:12px;}
+.adm-alert .chev{color:var(--ink-faint); font-size:18px;}
+.adm-alert.is-danger .dot{background:var(--adm-danger);} .adm-alert.is-warn .dot{background:var(--adm-warn);}
+.adm-alert.is-sky .dot{background:var(--adm-sky);} .adm-alert.is-ok .dot{background:var(--adm-ok);}
+
+.adm-actions{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px;}
+.adm-action{border:0; background:var(--surface); border-radius:16px; box-shadow:var(--adm-shadow); padding:12px 4px; display:flex; flex-direction:column; align-items:center; gap:7px; font-size:11.5px; font-weight:800; color:var(--ink); line-height:1.3;}
+.adm-action i{font-style:normal; width:42px; height:42px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:20px; background:var(--surface-2);}
+.adm-action.primary i{background:var(--pink); color:#fff;}
+.adm-action:active{transform:scale(.97);}
+
+.adm-orders-mini{display:flex; flex-direction:column; gap:8px;}
+.adm-omini{display:flex; align-items:center; gap:12px; border:0; text-align:start; background:var(--surface); border-radius:16px; box-shadow:var(--adm-shadow); padding:12px 14px; color:var(--ink);}
+.adm-omini .av{width:40px; height:40px; border-radius:12px; background:var(--adm-sky-pale); color:var(--adm-sky); display:flex; align-items:center; justify-content:center; font-weight:800; flex:none;}
+.adm-omini .mid{flex:1; min-width:0;}
+.adm-omini .mid b{display:block; font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.adm-omini .mid small{color:var(--ink-soft); font-size:12px;}
+.adm-omini .amt{font-weight:800; font-size:13.5px; font-variant-numeric:tabular-nums; white-space:nowrap;}
+
+/* ---------- المنتجات ---------- */
+.adm-search{position:sticky; top:calc(56px + env(safe-area-inset-top)); z-index:5; margin:-14px -16px 0; padding:12px 16px 8px; background:var(--bg);}
+.adm-search-box{display:flex; align-items:center; gap:8px; background:var(--surface); border:1.5px solid var(--border); border-radius:14px; padding:0 12px;}
+.adm-search-box svg{width:18px; height:18px; color:var(--ink-faint); flex:none;}
+.adm-search-box input{flex:1; min-width:0; border:0; background:transparent; color:var(--ink); padding:12px 0; font-size:15px; outline:none;}
+.adm-search-box:focus-within{border-color:var(--adm-sky);}
+.adm-chips{display:flex; gap:8px; overflow-x:auto; padding:8px 0 4px; scrollbar-width:none;}
+.adm-chips::-webkit-scrollbar{display:none;}
+.adm-chip{flex:none; border:1.5px solid var(--border); background:var(--surface); color:var(--ink); border-radius:999px; padding:7px 13px; font-size:12.5px; font-weight:800; white-space:nowrap;}
+.adm-chip em{font-style:normal; color:var(--ink-faint); font-variant-numeric:tabular-nums; margin-inline-start:4px;}
+.adm-chip.on{background:var(--adm-bar); border-color:var(--adm-bar); color:#fff;}
+.adm-chip.on em{color:rgba(255,255,255,.7);}
+.adm-chip.is-danger:not(.on){color:var(--adm-danger);} .adm-chip.is-warn:not(.on){color:var(--adm-warn);}
+.adm-count-line{font-size:12px; color:var(--ink-soft); margin:6px 2px 8px;}
+
+.adm-plist{display:flex; flex-direction:column; gap:10px;}
+.adm-pcard{background:var(--surface); border-radius:18px; box-shadow:var(--adm-shadow); padding:12px; display:grid; grid-template-columns:72px minmax(0,1fr); gap:12px;}
+.adm-pthumb{width:72px; height:72px; border-radius:14px; overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:28px; border:0; padding:0; background:var(--surface-2);}
+.adm-pthumb img{width:100%; height:100%; object-fit:cover; display:block;}
+.adm-pinfo{min-width:0; display:flex; flex-direction:column; gap:4px;}
+.adm-pname{border:0; background:none; padding:0; text-align:start; color:var(--ink); font-weight:800; font-size:14.5px; line-height:1.4;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;}
+.adm-pmeta{display:flex; align-items:center; flex-wrap:wrap; gap:6px; font-size:12px; color:var(--ink-soft);}
+.adm-price{font-weight:800; color:var(--ink); font-size:14px; font-variant-numeric:tabular-nums;}
+.adm-price s{color:var(--ink-faint); font-weight:400; font-size:12px; margin-inline-start:4px;}
+.adm-pill{display:inline-flex; align-items:center; gap:4px; border-radius:999px; padding:3px 9px; font-size:11.5px; font-weight:800; font-variant-numeric:tabular-nums;}
+.adm-pill.is-out{background:var(--adm-danger-pale); color:var(--adm-danger);}
+.adm-pill.is-low{background:var(--adm-warn-pale); color:var(--adm-warn);}
+.adm-pill.is-ok{background:var(--adm-ok-pale); color:var(--adm-ok);}
+.adm-pill.is-none{background:var(--surface-2); color:var(--ink-soft);}
+.adm-prow{grid-column:1 / -1; display:flex; align-items:center; gap:8px; border-top:1px solid var(--border); padding-top:10px;}
+.adm-stepper{display:flex; align-items:center; background:var(--surface-2); border-radius:12px; overflow:hidden;}
+.adm-stepper button{width:38px; height:36px; border:0; background:transparent; color:var(--ink); font-size:20px; font-weight:700; line-height:1;}
+.adm-stepper button:active{background:var(--border);}
+.adm-stepper b{min-width:36px; text-align:center; font-size:14.5px; font-variant-numeric:tabular-nums;}
+.adm-stepper input{width:58px; text-align:center; border:0; background:transparent; color:var(--ink); font-size:15px; font-weight:800; padding:6px 0; font-variant-numeric:tabular-nums;}
+.adm-stepper.pending b{color:var(--adm-sky);}
+.adm-ibtns{display:flex; gap:6px; margin-inline-start:auto;}
+.adm-ibtn{height:36px; min-width:36px; padding:0 10px; border-radius:12px; border:0; background:var(--surface-2); color:var(--ink); display:flex; align-items:center; justify-content:center; gap:5px; font-size:12px; font-weight:800;}
+.adm-ibtn svg{width:17px; height:17px;}
+.adm-ibtn.is-danger{color:var(--adm-danger);}
+.adm-ibtn.is-quick{background:var(--adm-sky-pale); color:var(--adm-sky);}
+.adm-ibtn:active{transform:scale(.96);}
+.adm-skel{height:118px; border-radius:18px; background:linear-gradient(90deg,var(--surface) 0%,var(--surface-2) 50%,var(--surface) 100%); background-size:200% 100%; animation:skShimmer 1.3s linear infinite;}
+
+/* ---------- فورم المنتج ---------- */
+#admFormScreen{padding-bottom:100px;}
+#admFormScreen #productFormTitle{display:none;}
+#admFormScreen #productForm{gap:12px !important;}
+.adm-sec{background:var(--surface); border-radius:18px; box-shadow:var(--adm-shadow); padding:14px 14px 16px; display:flex; flex-direction:column; gap:12px;}
+.adm-sec > h3, .adm-sec > summary{font-size:15px; font-weight:800; margin:0; display:flex; align-items:center; gap:8px; font-family:"Almarai",sans-serif;}
+.adm-sec > h3 i, .adm-sec > summary i{font-style:normal; width:30px; height:30px; border-radius:10px; background:var(--surface-2); display:flex; align-items:center; justify-content:center; font-size:15px;}
+details.adm-sec{gap:0;}
+details.adm-sec > summary{list-style:none; cursor:pointer;}
+details.adm-sec > summary::-webkit-details-marker{display:none;}
+details.adm-sec > summary::after{content:"⌄"; margin-inline-start:auto; color:var(--ink-faint); font-size:18px; transition:transform .2s;}
+details.adm-sec[open] > summary::after{transform:rotate(180deg);}
+details.adm-sec > summary small{font-weight:400; color:var(--ink-soft); font-size:12px;}
+details.adm-sec[open] > .adm-sec-body{margin-top:12px;}
+.adm-sec-body{display:flex; flex-direction:column; gap:12px;}
+.adm-sec .field input, .adm-sec .field select, .adm-sec .field textarea{font-size:15.5px;}
+.adm-sec .field label{font-size:13px;}
+.adm-sec select{width:100%; padding:12px 14px; border-radius:12px; border:1.5px solid var(--border); background:var(--surface-3); color:var(--ink); font-size:15px; font-family:inherit;}
+.adm-sec .image-upload-row + p{display:none;}
+
+.adm-photo-btns{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+.adm-photo-btn{border:1.5px dashed var(--border); background:var(--surface-3); color:var(--ink); border-radius:16px; padding:16px 8px; display:flex; flex-direction:column; align-items:center; gap:6px; font-weight:800; font-size:13px;}
+.adm-photo-btn i{font-style:normal; font-size:26px;}
+.adm-photo-btn.primary{border-style:solid; border-color:transparent; background:var(--adm-bar); color:#fff;}
+html.admin-app #admFormScreen .image-upload-actions{display:none;}
+html.admin-app #pfImagesPreview{gap:10px !important;}
+html.admin-app #pfImagesPreview > div{width:84px !important; height:84px !important;}
+html.admin-app #pfImagesPreview > div img{border-radius:14px !important; cursor:pointer;}
+html.admin-app #pfImagesPreview > div:first-child::after{content:attr(data-main); position:absolute; bottom:5px; inset-inline-start:5px; background:var(--adm-bar); color:#fff; font-size:10px; font-weight:800; padding:1px 7px; border-radius:999px;}
+html.admin-app #pfImagesPreview > div > button{width:24px !important; height:24px !important; font-size:14px !important;}
+.adm-hint{color:var(--ink-soft); font-size:12px; margin:0;}
+
+html.admin-app #admFormScreen .hero-ctas{position:fixed; bottom:0; inset-inline:0; z-index:60; margin:0; display:flex; gap:8px; flex-wrap:nowrap;
+  padding:10px 16px calc(10px + env(safe-area-inset-bottom)); background:var(--surface); border-top:1px solid var(--border); box-shadow:0 -6px 18px rgba(27,36,64,.08);}
+html.admin-app #admFormScreen .hero-ctas .btn{flex:1; justify-content:center; min-height:48px; font-size:15px;}
+html.admin-app #admFormScreen #productFormCancel{display:none !important;}
+#admSaveAnother{flex:0 1 auto !important; white-space:nowrap;}
+#admSaveAnother[hidden]{display:none !important;}
+
+/* ---------- المزيد / الأقسام / الإعدادات ---------- */
+.adm-list{background:var(--surface); border-radius:18px; box-shadow:var(--adm-shadow); overflow:hidden; margin-bottom:14px;}
+.adm-li{width:100%; display:flex; align-items:center; gap:12px; padding:14px; border:0; background:none; color:var(--ink); text-align:start; font-size:14.5px; font-weight:700; border-bottom:1px solid var(--border);}
+.adm-li:last-child{border-bottom:0;}
+.adm-li i{font-style:normal; width:36px; height:36px; border-radius:11px; background:var(--surface-2); display:flex; align-items:center; justify-content:center; font-size:17px; flex:none;}
+.adm-li .txt{flex:1; min-width:0;}
+.adm-li .txt small{display:block; font-weight:400; color:var(--ink-soft); font-size:12px;}
+.adm-li .cnt{background:var(--adm-danger); color:#fff; border-radius:999px; min-width:22px; height:22px; padding:0 7px; font-size:11.5px; font-weight:800; display:flex; align-items:center; justify-content:center;}
+.adm-li .chev{color:var(--ink-faint); font-size:18px;}
+html[dir="ltr"] .adm-li .chev, html[dir="ltr"] .adm-alert .chev{transform:scaleX(-1);}
+.adm-li.is-danger{color:var(--adm-danger);}
+.adm-li:active{background:var(--surface-2);}
+.adm-group-title{font-size:12.5px; color:var(--ink-soft); font-weight:800; margin:4px 4px 8px;}
+.adm-ver{text-align:center; color:var(--ink-faint); font-size:11.5px; margin:10px 0 4px;}
+#admCatsScreen .adm-card + .adm-card, #admSettingsScreen .adm-card + .adm-card{margin-top:12px;}
+#admCatsScreen h3, #admSettingsScreen h3{font-size:15.5px; margin:0 0 12px !important;}
+html.admin-app .admin-table td{padding:10px 6px;}
+html.admin-app .admin-row-actions button{width:36px; height:36px;}
+
+/* ---------- الصفحات الفرعية (الطلبات، العملاء...) ---------- */
+html.admin-app .order-card{border-radius:18px; box-shadow:var(--adm-shadow); border-color:transparent;}
+html.admin-app .admin-wrap .admin-card{border-radius:18px; box-shadow:var(--adm-shadow); border-color:transparent;}
+
+/* ---------- شيت التعديل السريع ---------- */
+html.admin-app #admSheetBackdrop.show{display:block;}
+#admSheetBackdrop{position:fixed; inset:0; z-index:91; background:rgba(10,14,30,.5);}
+html.admin-app #admSheet.show{display:flex;}
+#admSheet{position:fixed; inset-inline:0; bottom:0; z-index:92; max-height:88vh; flex-direction:column; background:var(--surface); border-radius:24px 24px 0 0;
+  box-shadow:0 -10px 40px rgba(0,0,0,.25); padding:8px 16px calc(14px + env(safe-area-inset-bottom)); animation:admUp .22s ease;}
+@keyframes admUp{from{transform:translateY(40px); opacity:.4;} to{transform:none; opacity:1;}}
+@media (prefers-reduced-motion:reduce){ #admSheet{animation:none;} }
+.adm-grab{width:42px; height:5px; border-radius:3px; background:var(--border); margin:2px auto 10px; flex:none;}
+.adm-sheet-head{display:flex; align-items:center; gap:12px; flex:none; padding-bottom:12px; border-bottom:1px solid var(--border);}
+.adm-sheet-head img, .adm-sheet-head .ph{width:48px; height:48px; border-radius:12px; object-fit:cover; background:var(--surface-2); display:flex; align-items:center; justify-content:center; font-size:22px; flex:none;}
+.adm-sheet-head b{flex:1; min-width:0; font-size:15px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;}
+.adm-sheet-body{overflow-y:auto; padding:12px 2px; display:flex; flex-direction:column; gap:12px;}
+.adm-qrow{display:flex; align-items:center; gap:10px;}
+.adm-qrow > label, .adm-qrow > .lbl{flex:1; min-width:0; font-size:13.5px; font-weight:800;}
+.adm-qrow > .lbl small{display:block; font-weight:400; color:var(--ink-soft); font-size:11.5px;}
+.adm-qrow img{width:36px; height:36px; border-radius:9px; object-fit:cover; flex:none;}
+.adm-qin{width:110px; padding:10px 12px; border-radius:12px; border:1.5px solid var(--border); background:var(--surface-3); color:var(--ink); font-size:15px; font-weight:800; text-align:center; font-variant-numeric:tabular-nums;}
+.adm-qsub{font-size:12px; font-weight:800; color:var(--ink-soft); margin-top:4px;}
+.adm-sheet-foot{display:flex; gap:8px; flex:none; padding-top:10px; border-top:1px solid var(--border);}
+.adm-sheet-foot .btn{flex:1; justify-content:center; min-height:48px;}
 </style>
 </head>
 <body>
@@ -1492,6 +1783,8 @@ html.app-mode .app-sheet.show{transform:none;}
   <div class="section">
     <div class="wrap">
 
+      <div class="adm-x" id="admLoginBrand"><img src="icon-192.png" alt="" width="72" height="72"><div><strong data-i18n>آل عبده - الإدارة</strong><span data-i18n>لوحة تحكم المتجر — لصاحب المتجر بس</span></div></div>
+
       <div id="adminSetup" class="admin-login">
         <span style="font-size:34px;">🆕</span>
         <h2 style="font-size:19px;" data-i18n>أول مرة؟ اعمل حساب دخول لنفسك</h2>
@@ -1553,6 +1846,20 @@ html.app-mode .app-sheet.show{transform:none;}
       </div>
 
       <div id="adminDashboard" class="admin-wrap">
+        <!-- شاشات تطبيق الإدارة (بتظهر بس جوه html.admin-app، شوف قسم ADMIN APP في الجافاسكريبت) -->
+        <div class="adm-screen" id="admHome"></div>
+        <div class="adm-screen" id="admProducts">
+          <div class="adm-search">
+            <label class="adm-search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" id="admSearch" placeholder="ابحث باسم المنتج..." data-i18n-placeholder autocomplete="off"></label>
+            <div class="adm-chips" id="admChips"></div>
+          </div>
+          <div class="adm-count-line" id="admCountLine"></div>
+          <div class="adm-plist" id="admPList"></div>
+        </div>
+        <div class="adm-screen" id="admFormScreen"></div>
+        <div class="adm-screen" id="admCatsScreen"></div>
+        <div class="adm-screen" id="admSettingsScreen"></div>
+        <div class="adm-screen" id="admMore"></div>
         <div class="admin-bar">
           <div><h1 style="font-size:22px;" data-i18n>لوحة تحكم المنتجات</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;" data-i18n>أضف وعدّل وامسح المنتجات والأقسام — أي تعديل بيظهر لكل زوار الموقع فورًا.</p></div>
           <div class="admin-actions">
@@ -1774,6 +2081,25 @@ html.app-mode .app-sheet.show{transform:none;}
   <button type="button" class="app-tab" data-tab="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.5-4 4.5-6 7.5-6s6 2 7.5 6"/></svg><span data-i18n>حسابي</span></button>
 </nav>
 <aside class="app-sheet" id="appSheet" role="dialog" aria-modal="true" aria-label="حسابي" data-i18n-aria></aside>
+
+<!-- ===================== ADMIN APP: تطبيق "آل عبده - الإدارة" =====================
+     شريط علوي + تبويبات تحت + شيت "تعديل سريع". بيظهروا بس جوه تطبيق
+     الإدارة (html.admin-app) وبعد تسجيل الدخول - على الموقع مخفيين تمامًا. -->
+<header class="adm-x" id="admTopbar">
+  <button type="button" class="adm-tb-btn" id="admBackBtn" aria-label="رجوع" data-i18n-aria><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+  <div class="adm-tb-title"><img src="icon-192.png" alt="" width="30" height="30"><span id="admTitle"></span></div>
+  <div class="adm-tb-actions" id="admTbActions"></div>
+</header>
+<nav class="adm-x" id="admTabbar" aria-label="تنقل لوحة التحكم" data-i18n-aria>
+  <button type="button" class="adm-tab" data-adm-tab="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1Z"/></svg><span data-i18n>الرئيسية</span></button>
+  <button type="button" class="adm-tab" data-adm-tab="products"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5Z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg><span data-i18n>المنتجات</span></button>
+  <button type="button" class="adm-fab" data-adm-tab="add" aria-label="إضافة منتج جديد" data-i18n-aria><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+  <button type="button" class="adm-tab" data-adm-tab="orders"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2Z"/><path d="M9 8h6M9 12h6"/></svg><span data-i18n>الطلبات</span><b class="adm-badge" id="admOrdersBadge" hidden></b></button>
+  <button type="button" class="adm-tab" data-adm-tab="more"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg><span data-i18n>المزيد</span><b class="adm-badge" id="admMoreBadge" hidden></b></button>
+</nav>
+<div class="adm-x" id="admSheetBackdrop"></div>
+<aside class="adm-x" id="admSheet" role="dialog" aria-modal="true" aria-label="تعديل سريع" data-i18n-aria></aside>
+<input type="file" id="admCamInput" accept="image/*" capture="environment" hidden>
 
 <div class="overlay" id="overlay"></div>
 
@@ -2838,6 +3164,105 @@ var I18N_EN = {
   "حمّل تطبيقنا على": "Get our app on",
   "أندرويد": "Android",
   "📱 حمّل تطبيق أندرويد": "📱 Download the Android app",
+  /* تطبيق "آل عبده - الإدارة" (شاشات الموبايل) */
+  "(نسخة)": "(copy)",
+  "آخر الطلبات": "Latest orders",
+  "آل عبده - الإدارة": "Al-Abdo Admin",
+  "لوحة تحكم المتجر — لصاحب المتجر بس": "Store dashboard — for the store owner only",
+  "إضافة منتج جديد": "Add new product",
+  "إعدادات الحساب": "Account settings",
+  "ابحث باسم المنتج...": "Search by product name...",
+  "اختصارات": "Shortcuts",
+  "استفسار من العملاء": "customer inquiries",
+  "استفسارات العملاء": "Customer inquiries",
+  "البيانات": "Data",
+  "الحساب والتطبيق": "Account & app",
+  "السعر قبل الخصم": "Price before discount",
+  "الطلبات": "Orders",
+  "العملاء مش هيقدروا يطلبوه — زوّد الكمية": "Customers can't order it — add stock",
+  "الكل": "All",
+  "الكمية (فاضي = مش متتبعة)": "Quantity (empty = not tracked)",
+  "الكمية 3 أو أقل": "3 or fewer left",
+  "الكمية المتاحة": "Available quantity",
+  "الكمية لكل لون (فاضي = مش متتبعة)": "Quantity per color (empty = not tracked)",
+  "المتجر": "Store",
+  "الوضع الليلي / النهاري": "Dark / light mode",
+  "بيانات العملاء": "Customer data",
+  "بيمسح كل منتجاتك ويرجّع المنتجات التجريبية": "Deletes all your products and restores the demo ones",
+  "تحديث": "Refresh",
+  "تحليل الزوار": "Visitor analytics",
+  "تسجيل الخروج": "Log out",
+  "تعديل سريع": "Quick edit",
+  "تنزيل ملف بكل المنتجات والأقسام": "Download a file with all products and categories",
+  "تنقل لوحة التحكم": "Dashboard navigation",
+  "حفظ": "Save",
+  "حفظ المنتج": "Save product",
+  "خلصت": "Sold out",
+  "خلصت من المخزن": "Out of stock",
+  "رئيسية": "Main",
+  "رجّع نسخة احتياطية قديمة": "Restore an older backup",
+  "رسايل صفحة تواصل معنا": "Messages from the contact page",
+  "زوّد واحد": "Add one",
+  "سريع": "Quick",
+  "صباح الخير": "Good morning",
+  "صوّر وأضف": "Snap & add",
+  "طلب أعلمني عند التوفر": "notify-me requests",
+  "طلبات التوفر": "Back-in-stock requests",
+  "طلبات النهارده": "Today's orders",
+  "عرض الكل": "View all",
+  "عملاء مستنيين منتجات ترجع": "Customers waiting for products to return",
+  "فاضي = مش متتبعة": "Empty = not tracked",
+  "فاضي = مفيش خصم": "Empty = no discount",
+  "في تعديلات في المنتج لسه ما اتحفظتش. تخرج من غير حفظ؟": "You have unsaved product changes. Leave without saving?",
+  "قربت تخلص": "Running low",
+  "قربت تخلص (3 أو أقل)": "Running low (3 or fewer)",
+  "قسم": "categories",
+  "كل الطلبات": "All orders",
+  "كل حاجة تمام ✅": "All good ✅",
+  "كل حجم بسعره وكميته": "Each size has its own price and quantity",
+  "مبيعات النهارده (ج.م)": "Today's sales (EGP)",
+  "متأكد إنك عايز تسجّل خروج؟": "Are you sure you want to log out?",
+  "متاح": "In stock",
+  "متبقي": "Left",
+  "محتاج انتباهك": "Needs your attention",
+  "مساء الخير": "Good evening",
+  "مفيش منتجات بالاسم ده": "No products with that name",
+  "مفيش منتجات خلصت ولا طلبات مستنية": "No sold-out products or waiting requests",
+  "مفيش منتجات هنا": "No products here",
+  "من غير كمية": "No quantity",
+  "منتج جديد": "New product",
+  "منتج خلص من المخزن": "products out of stock",
+  "منتج قرب يخلص": "products running low",
+  "نسخ المنتج": "Duplicate product",
+  "نسخة احتياطية": "Backup",
+  "نقّص واحد": "Remove one",
+  "⚠️ اكتب السعر": "⚠️ Enter the price",
+  "⚠️ المنتج ده اتمسح": "⚠️ This product was deleted",
+  "⚠️ مفيش اتصال بالسيرفر دلوقتي": "⚠️ Can't reach the server right now",
+  "✅ اتحدثت البيانات": "✅ Data refreshed",
+  "✅ اتحفظ التعديل": "✅ Change saved",
+  "✅ اتحفظت الكمية": "✅ Quantity saved",
+  "✅ بقت الصورة الرئيسية": "✅ Set as the main photo",
+  "🗑️ اتمسح المنتج": "🗑️ Product deleted",
+  "المنتجات": "Products",
+  "إضافة منتج": "Add product",
+  "المزيد": "More",
+  "تعديل منتج": "Edit product",
+  "نسخ منتج": "Duplicate product",
+  "طلبات العملاء": "Customer orders",
+  "صور المنتج": "Product photos",
+  "بيانات المنتج": "Product details",
+  "السعر والكمية": "Price & stock",
+  "أحجام العلب": "Box sizes",
+  "لو المنتج بأكتر من حجم علبة بسعر وكمية مختلفين": "If the product comes in several box sizes with different prices and stock",
+  "الألوان": "Colors",
+  "لو المنتج متاح بأكتر من لون": "If the product comes in more than one color",
+  "خيارات إضافية": "More options",
+  "الاسم والوصف بالإنجليزي، والتقييم": "English name & description, and rating",
+  "صوّر المنتج": "Take a photo",
+  "من المعرض": "From gallery",
+  "دوس على أي صورة عشان تخليها الصورة الرئيسية.": "Tap any photo to make it the main one.",
+  "حفظ وإضافة تاني": "Save & add another",
 };
 
 /* ---------- اللغة (عربي/English) ----------
@@ -4454,13 +4879,16 @@ function showAdmin(){
   document.getElementById("adminOrdersPage").classList.remove("active");
   document.getElementById("adminStockPage").classList.remove("active");
   var authed = isAdminAuthed();
+  document.documentElement.classList.toggle("adm-authed", authed);
   if(authed){
     document.getElementById("adminSetup").style.display = "none";
     document.getElementById("adminLogin").style.display = "none";
     document.getElementById("adminDashboard").classList.add("active");
     renderAdminAll();
+    if(ADM) ADM.onShow();
     return;
   }
+  if(ADM) ADM.onLogout();
   document.getElementById("adminDashboard").classList.remove("active");
   checkAdminStatus().then(function(exists){
     /* couldn't reach the server (offline, or the backend isn't set up yet) —
@@ -5200,8 +5628,8 @@ function renderPfImagesPreview(){
   }).join("");
 }
 document.getElementById("pfImagePickBtn").addEventListener("click", function(){ document.getElementById("pfImageInput").click(); });
-document.getElementById("pfImageInput").addEventListener("change", function(e){
-  var files = Array.prototype.slice.call(e.target.files || []);
+/* بتضيف صور للمنتج (من المعرض أو من الكاميرا في تطبيق الإدارة) بعد ضغطها */
+function addPfImageFiles(files){
   if(!files.length) return;
   var remaining = files.length;
   files.forEach(function(file){
@@ -5211,6 +5639,9 @@ document.getElementById("pfImageInput").addEventListener("change", function(e){
       if(remaining===0){ renderPfImagesPreview(); document.getElementById("pfImageInput").value = ""; }
     });
   });
+}
+document.getElementById("pfImageInput").addEventListener("change", function(e){
+  addPfImageFiles(Array.prototype.slice.call(e.target.files || []));
 });
 document.getElementById("pfImagesPreview").addEventListener("click", function(e){
   var btn = e.target.closest("[data-remove-pf-img]"); if(!btn) return;
@@ -5397,6 +5828,7 @@ function renderAdminProductsTable(){
       + '</div></td>'
     + '</tr>';
   }).join("");
+  if(ADM) ADM.refresh();
 }
 function renderAdminCatsTable(){
   document.getElementById("adminCatCount").textContent = CATS.length;
@@ -6049,6 +6481,7 @@ document.getElementById("productForm").addEventListener("submit", function(e){
     renderAdminProductsTable();
     refreshPublicViews();
     showToast(wasEdit ? t("✅ اتحدث المنتج") : t("✅ اتضاف المنتج"));
+    if(ADM) ADM.afterSave(wasEdit, data.cat);
   });
 });
 function resetProductForm(){
@@ -6077,12 +6510,9 @@ function resetProductForm(){
   renderPfSizesList();
 }
 document.getElementById("productFormCancel").addEventListener("click", resetProductForm);
-document.getElementById("adminProductsBody").addEventListener("click", function(e){
-  var editBtn = e.target.closest("[data-edit-product]");
-  var delBtn = e.target.closest("[data-del-product]");
-  if(editBtn){
-    var p = PRODUCTS.find(function(x){ return String(x.id)===editBtn.dataset.editProduct; });
-    if(!p) return;
+/* بيملا فورم المنتج ببيانات منتج موجود عشان يتعدّل (بيستخدمها جدول لوحة
+   التحكم، وكروت المنتجات وزرار "نسخ" في تطبيق الإدارة). */
+function adminEditProduct(p){
     document.getElementById("pfId").value = p.id;
     document.getElementById("pfName").value = p.name;
     document.getElementById("pfDesc").value = p.desc || "";
@@ -6118,17 +6548,26 @@ document.getElementById("adminProductsBody").addEventListener("click", function(
     document.getElementById("productFormTitle").textContent = t("✏️ تعديل منتج");
     document.getElementById("productFormSubmit").textContent = t("حفظ التعديل");
     document.getElementById("productFormCancel").hidden = false;
-    document.getElementById("productForm").scrollIntoView({behavior:"smooth", block:"start"});
+    if(!isAdminApp()) document.getElementById("productForm").scrollIntoView({behavior:"smooth", block:"start"});
+}
+function adminDeleteProduct(pid){
+  pid = String(pid);
+  if(!confirm(t("متأكد إنك عايز تمسح المنتج ده؟"))) return;
+  refreshThenRun(function(){
+    PRODUCTS = PRODUCTS.filter(function(x){ return String(x.id)!==pid; });
+    renderAdminProductsTable();
+    refreshPublicViews();
+    showToast(t("🗑️ اتمسح المنتج"));
+  });
+}
+document.getElementById("adminProductsBody").addEventListener("click", function(e){
+  var editBtn = e.target.closest("[data-edit-product]");
+  var delBtn = e.target.closest("[data-del-product]");
+  if(editBtn){
+    var p = PRODUCTS.find(function(x){ return String(x.id)===editBtn.dataset.editProduct; });
+    if(p) adminEditProduct(p);
   }
-  if(delBtn){
-    var pid = delBtn.dataset.delProduct;
-    if(!confirm(t("متأكد إنك عايز تمسح المنتج ده؟"))) return;
-    refreshThenRun(function(){
-      PRODUCTS = PRODUCTS.filter(function(x){ return String(x.id)!==pid; });
-      renderAdminProductsTable();
-      refreshPublicViews();
-    });
-  }
+  if(delBtn) adminDeleteProduct(delBtn.dataset.delProduct);
 });
 document.getElementById("catForm").addEventListener("submit", function(e){
   e.preventDefault();
@@ -6248,6 +6687,8 @@ function hashToView(rawHash){
   return KNOWN_VIEWS.indexOf(rawHash)!==-1 ? rawHash : "home";
 }
 function goToView(name){
+  /* تطبيق الإدارة فيه لوحة التحكم بس */
+  if(isAdminApp()) name = "admin";
   document.querySelectorAll(".view").forEach(function(v){ v.classList.toggle("active", v.dataset.view===name); });
   document.querySelectorAll("[data-view-link]").forEach(function(a){
     var match = a.dataset.viewLink===name;
@@ -6429,6 +6870,690 @@ if("serviceWorker" in navigator && (location.protocol==="https:" || location.hos
   });
 }
 
+/* ==================================================================
+   ADMIN APP - شكل تطبيق "آل عبده - الإدارة" (بيشتغل بس لو html.admin-app)
+   بيبني شاشات موبايل فوق نفس منطق لوحة التحكم الموجود (نفس الفورم ونفس
+   الحفظ على السيرفر بالظبط) - مفيش أي تغيير في طريقة حفظ البيانات:
+   - الرئيسية: ملخص (المنتجات، اللي خلص، اللي قرب يخلص، طلبات النهارده)
+     + تنبيهات "محتاج انتباهك" + اختصارات + آخر الطلبات.
+   - المنتجات: بحث وفلاتر، كروت فيها +/− للكمية، تعديل سريع للسعر والكمية
+     (حتى لكل حجم/لون)، نسخ منتج، تعديل وحذف.
+   - فورم المنتج: مقسّم لأقسام، وأول حاجة زرار "صوّر المنتج" بالكاميرا.
+   - زرار الرجوع في الموبايل بيرجع خطوة جوه التطبيق بدل ما يقفله.
+   ================================================================== */
+var ADM = null;
+(function(){
+  if(!isAdminApp()) return;
+  var html = document.documentElement;
+  var dash = document.getElementById("adminDashboard");
+  var LOW_STOCK = 3;
+  var SUB_PAGES = {
+    orders:    { page:"adminOrdersPage",    open:openAdminOrdersPage,    render:renderAdminOrdersPage,    title:"طلبات العملاء" },
+    stock:     { page:"adminStockPage",     open:openAdminStockPage,     render:renderAdminStockPage,     title:"طلبات التوفر" },
+    analytics: { page:"adminAnalyticsPage", open:openAdminAnalyticsPage, render:renderAdminAnalyticsPage, title:"تحليل الزوار" },
+    inquiries: { page:"adminInquiriesPage", open:openAdminInquiriesPage, render:renderAdminInquiriesPage, title:"استفسارات العملاء" },
+    customers: { page:"adminCustomersPage", open:openAdminCustomersPage, render:renderAdminCustomersPage, title:"بيانات العملاء" }
+  };
+  var SCREENS = { home:"admHome", products:"admProducts", form:"admFormScreen", cats:"admCatsScreen", settings:"admSettingsScreen", more:"admMore" };
+  var TITLES = { home:"لوحة التحكم", products:"المنتجات", form:"إضافة منتج", more:"المزيد", cats:"الأقسام", settings:"إعدادات الحساب" };
+  var TAB_OF = { home:"home", products:"products", form:"products", orders:"orders", more:"more", cats:"more", settings:"more", stock:"more", analytics:"more", inquiries:"more", customers:"more" };
+  var cur = null, parentOf = {}, shownOnce = false;
+  var pendingDelta = {}, flushTimer = null;
+  var list = { filter:"all", q:"" };
+  var stats = { at:0, loading:false, orders:null, ordersToday:0, inquiries:null, stock:null };
+  var formMode = "new", formDirty = false, addAnother = false, lastCat = null;
+
+  var ICON = {
+    refresh:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>',
+    plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+    bolt:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h7l-1 8 9-12h-7Z"/></svg>',
+    copy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>',
+    edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+    trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>'
+  };
+  function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+  function money(n){ return fmt(+n||0)+" "+t("ج.م"); }
+  function findP(id){ return PRODUCTS.find(function(x){ return String(x.id)===String(id); }); }
+  function hasSizes(p){ return Array.isArray(p.sizes) && p.sizes.length>0; }
+  function hasColors(p){ return Array.isArray(p.colors) && p.colors.length>0; }
+
+  /* حالة المخزون لكل منتج: out (خلص) / low (قرب يخلص) / ok / none (مش متتبع) */
+  function stockInfo(p){
+    var parts = hasSizes(p) ? p.sizes : (hasColors(p) ? p.colors : null);
+    if(parts){
+      var tracked = parts.filter(function(x){ return x.stock!=null; });
+      if(!tracked.length) return { state:"none", total:null };
+      var total = tracked.reduce(function(s,x){ return s+(+x.stock||0); },0);
+      var zero = tracked.filter(function(x){ return +x.stock<=0; }).length;
+      if(productOutOfStockOverall(p)) return { state:"out", total:0, zero:zero };
+      if(zero>0 || tracked.some(function(x){ return +x.stock<=LOW_STOCK; })) return { state:"low", total:total, zero:zero };
+      return { state:"ok", total:total };
+    }
+    if(p.stock==null) return { state:"none", total:null };
+    var s = +p.stock + (pendingDelta[p.id]||0);
+    if(s<=0) return { state:"out", total:0 };
+    if(s<=LOW_STOCK) return { state:"low", total:s };
+    return { state:"ok", total:s };
+  }
+  function counts(){
+    var c = { all:PRODUCTS.length, out:0, low:0, none:0 };
+    PRODUCTS.forEach(function(p){ var s = stockInfo(p).state; if(s==="out") c.out++; else if(s==="low") c.low++; else if(s==="none") c.none++; });
+    return c;
+  }
+
+  /* ---------- التنقل بين الشاشات ---------- */
+  function closeSubPages(){
+    Object.keys(SUB_PAGES).forEach(function(k){ var el = document.getElementById(SUB_PAGES[k].page); if(el) el.classList.remove("active"); });
+    dash.classList.add("active");
+  }
+  function go(name, opts){
+    opts = opts || {};
+    if(cur==="form" && name!=="form" && !opts.force && formDirty){
+      if(!confirm(t("في تعديلات في المنتج لسه ما اتحفظتش. تخرج من غير حفظ؟"))) return;
+    }
+    if(cur==="form" && name!=="form"){ formDirty = false; resetProductForm(); }
+    closeAllPanels(); closeSheet();
+    closeSubPages();
+    Object.keys(SCREENS).forEach(function(k){ var el = document.getElementById(SCREENS[k]); if(el) el.classList.toggle("on", k===name); });
+    if(SUB_PAGES[name]) SUB_PAGES[name].open();
+    var isRoot = (name==="home" || name==="products" || name==="orders" || name==="more");
+    if(!isRoot && opts.parent) parentOf[name] = opts.parent;
+    else if(!isRoot && !parentOf[name]) parentOf[name] = "home";
+    cur = name;
+    html.setAttribute("data-adm-screen", name);
+    if(!opts.fromPop){
+      try{
+        if(name==="home"){ if(history.state && history.state.adm) history.replaceState(null, "", location.href); }
+        else if(!(history.state && history.state.adm)) history.pushState({adm:1}, "", location.href);
+      }catch(e){}
+    }
+    updateBars();
+    window.scrollTo(0,0);
+    if(name==="home") renderHome();
+    if(name==="products") renderProducts();
+    if(name==="more") renderMore();
+  }
+  function goBack(fromPop){
+    var isRoot = (cur==="home" || cur==="products" || cur==="orders" || cur==="more");
+    go(isRoot ? "home" : (parentOf[cur] || "home"), { fromPop:fromPop });
+  }
+  window.addEventListener("popstate", function(){
+    if(!isAdminAuthed()) return;
+    if(document.getElementById("admSheet").classList.contains("show") || modalBackdrop.classList.contains("show")){
+      closeSheet(); closeAllPanels();
+      if(cur && cur!=="home"){ try{ history.pushState({adm:1}, "", location.href); }catch(e){} }
+      return;
+    }
+    if(cur && cur!=="home"){
+      var before = cur;
+      goBack(true);
+      if(cur===before){ try{ history.pushState({adm:1}, "", location.href); }catch(e){} return; }
+      if(cur!=="home"){ try{ history.pushState({adm:1}, "", location.href); }catch(e){} }
+    }
+  });
+
+  function updateBars(){
+    var title = SUB_PAGES[cur] ? SUB_PAGES[cur].title : TITLES[cur];
+    if(cur==="form") title = formMode==="edit" ? "تعديل منتج" : (formMode==="dup" ? "نسخ منتج" : "إضافة منتج");
+    document.getElementById("admTitle").textContent = t(title || "لوحة التحكم");
+    document.getElementById("admBackBtn").hidden = (cur==="home");
+    var acts = "";
+    if(cur==="home" || SUB_PAGES[cur]) acts += '<button type="button" class="adm-tb-btn" data-adm-act="refresh" aria-label="'+t("تحديث")+'">'+ICON.refresh+'</button>';
+    if(cur==="products") acts += '<button type="button" class="adm-tb-btn" data-adm-act="add" aria-label="'+t("إضافة منتج جديد")+'">'+ICON.plus+'</button>';
+    document.getElementById("admTbActions").innerHTML = acts;
+    var tab = TAB_OF[cur] || "home";
+    document.querySelectorAll("#admTabbar [data-adm-tab]").forEach(function(b){ b.classList.toggle("on", b.dataset.admTab===tab); });
+  }
+  document.getElementById("admBackBtn").addEventListener("click", function(){ goBack(false); });
+  document.getElementById("admTbActions").addEventListener("click", function(e){
+    var b = e.target.closest("[data-adm-act]"); if(!b) return;
+    if(b.dataset.admAct==="add") openForm("new");
+    if(b.dataset.admAct==="refresh"){
+      if(SUB_PAGES[cur]) SUB_PAGES[cur].render();
+      else { stats.at = 0; reloadCatalog(); }
+    }
+  });
+  document.getElementById("admTabbar").addEventListener("click", function(e){
+    var b = e.target.closest("[data-adm-tab]"); if(!b) return;
+    var tab = b.dataset.admTab;
+    if(tab==="add"){ openForm("new"); return; }
+    if(tab==="products"){ list.filter = "all"; }
+    go(tab);
+  });
+
+  /* ---------- تحميل الكتالوج والملخص من السيرفر ---------- */
+  function reloadCatalog(){
+    fetch("/api/products?fresh=1", {cache:"no-store"}).then(function(r){ if(!r.ok) throw 0; return r.json(); })
+      .then(function(data){ if(data){ applyData(data); saveDraft(); } CATALOG_READY = true; renderAdminAll(); showToast(t("✅ اتحدثت البيانات")); })
+      .catch(function(){ showToast(t("⚠️ مفيش اتصال بالسيرفر دلوقتي")); });
+    loadStats(true);
+  }
+  function loadStats(force){
+    if(stats.loading) return;
+    if(!force && Date.now()-stats.at < 60000) return;
+    stats.loading = true;
+    var h = { headers: adminAuthHeaders(), cache:"no-store" };
+    function get(url, key){ return fetch(url, h).then(function(r){ return r.json(); }).then(function(j){ return (j && j.ok && Array.isArray(j[key])) ? j[key] : null; }).catch(function(){ return null; }); }
+    Promise.all([ get("/api/orders","orders"), get("/api/inquiries","inquiries"), get("/api/stock-requests","requests") ]).then(function(r){
+      stats.loading = false; stats.at = Date.now();
+      stats.orders = r[0]; stats.inquiries = r[1] ? r[1].length : null; stats.stock = r[2] ? r[2].length : null;
+      var start = new Date(); start.setHours(0,0,0,0);
+      stats.ordersToday = stats.orders ? stats.orders.filter(function(o){ return +new Date(o.createdAt) >= +start; }).length : 0;
+      if(stats.inquiries!=null) updateAdminInquiriesBadge(stats.inquiries);
+      updateBadges();
+      if(cur==="home") renderHome();
+      if(cur==="more") renderMore();
+    });
+  }
+  function setBadge(id, n){ var b = document.getElementById(id); if(!b) return; if(n>0){ b.textContent = n>99 ? "99+" : n; b.hidden = false; } else b.hidden = true; }
+  function updateBadges(){
+    setBadge("admOrdersBadge", stats.ordersToday);
+    setBadge("admMoreBadge", (stats.inquiries||0) + (stats.stock||0));
+  }
+
+  /* ---------- الرئيسية ---------- */
+  function renderHome(){
+    var box = document.getElementById("admHome");
+    if(!box) return;
+    loadStats(false);
+    var c = counts();
+    var hr = new Date().getHours();
+    var greet = hr < 12 ? t("صباح الخير") : t("مساء الخير");
+    var dateTxt = new Date().toLocaleDateString(LANG==="en"?"en-US":"ar-EG", { weekday:"long", day:"numeric", month:"long" });
+    var ready = CATALOG_READY;
+    var dash_ = function(n){ return ready ? fmt(n) : "—"; };
+    var todaySales = 0;
+    if(stats.orders){ var st = new Date(); st.setHours(0,0,0,0); stats.orders.forEach(function(o){ if(+new Date(o.createdAt) >= +st) todaySales += (+o.total||0); }); }
+    var h = '';
+    h += '<section class="adm-hero"><small>'+esc(dateTxt)+'</small><h1>'+greet+' 👋</h1>'
+      + '<div class="adm-hero-row">'
+        + '<div><b>'+(stats.orders ? fmt(stats.ordersToday) : "—")+'</b><span>'+t("طلبات النهارده")+'</span></div>'
+        + '<div><b>'+(stats.orders ? fmt(todaySales) : "—")+'</b><span>'+t("مبيعات النهارده (ج.م)")+'</span></div>'
+      + '</div></section>';
+    h += '<div class="adm-kpis">'
+      + kpi("all", "📦", dash_(c.all), t("كل المنتجات"), "is-sky")
+      + kpi("out", "⛔", dash_(c.out), t("خلصت من المخزن"), c.out ? "is-danger" : "is-ok")
+      + kpi("low", "⚠️", dash_(c.low), t("قربت تخلص (3 أو أقل)"), c.low ? "is-warn" : "is-ok")
+      + kpi("orders", "🧾", stats.orders ? fmt(stats.orders.length) : "—", t("كل الطلبات"), "is-sky")
+    + '</div>';
+
+    var alerts = [];
+    if(ready && c.out) alerts.push(alertRow("out", "is-danger", fmt(c.out)+' '+t("منتج خلص من المخزن"), t("العملاء مش هيقدروا يطلبوه — زوّد الكمية")));
+    if(ready && c.low) alerts.push(alertRow("low", "is-warn", fmt(c.low)+' '+t("منتج قرب يخلص"), t("الكمية 3 أو أقل")));
+    if(stats.stock) alerts.push(alertRow("stock", "is-sky", fmt(stats.stock)+' '+t("طلب أعلمني عند التوفر"), t("عملاء مستنيين منتجات ترجع")));
+    if(stats.inquiries) alerts.push(alertRow("inquiries", "is-sky", fmt(stats.inquiries)+' '+t("استفسار من العملاء"), t("رسايل صفحة تواصل معنا")));
+    h += '<div class="adm-h"><h2>'+t("محتاج انتباهك")+'</h2></div>';
+    h += alerts.length ? '<div class="adm-alerts">'+alerts.join("")+'</div>'
+      : '<div class="adm-alerts"><div class="adm-alert is-ok"><span class="dot"></span><span class="txt">'+t("كل حاجة تمام ✅")+'<small>'+t("مفيش منتجات خلصت ولا طلبات مستنية")+'</small></span></div></div>';
+
+    h += '<div class="adm-h"><h2>'+t("اختصارات")+'</h2></div><div class="adm-actions">'
+      + '<button type="button" class="adm-action primary" data-adm-quick="new"><i>➕</i>'+t("منتج جديد")+'</button>'
+      + '<button type="button" class="adm-action" data-adm-quick="camera"><i>📷</i>'+t("صوّر وأضف")+'</button>'
+      + '<button type="button" class="adm-action" data-adm-quick="orders"><i>🧾</i>'+t("الطلبات")+'</button>'
+      + '<button type="button" class="adm-action" data-adm-quick="cats"><i>🧭</i>'+t("الأقسام")+'</button>'
+    + '</div>';
+
+    h += '<div class="adm-h"><h2>'+t("آخر الطلبات")+'</h2>'+(stats.orders && stats.orders.length ? '<button type="button" data-adm-quick="orders">'+t("عرض الكل")+'</button>' : '')+'</div>';
+    if(!stats.orders) h += '<div class="adm-skel" style="height:64px"></div>';
+    else if(!stats.orders.length) h += '<div class="adm-card adm-empty">'+t("لسه مفيش طلبات مسجّلة.")+'</div>';
+    else {
+      var recent = stats.orders.slice(-3).reverse();
+      h += '<div class="adm-orders-mini">' + recent.map(function(o, i){
+        var name = o.customerName || o.name || "-";
+        var d = new Date(o.createdAt);
+        return '<button type="button" class="adm-omini" data-adm-order="'+i+'"><span class="av">'+esc(String(name).trim().charAt(0) || "#")+'</span>'
+          + '<span class="mid"><b>'+esc(name)+'</b><small class="adm-num">'+t("فاتورة #")+esc(String(o.id||"").slice(-6))+' · '+d.toLocaleDateString(LANG==="en"?"en-US":"ar-EG")+'</small></span>'
+          + '<span class="amt">'+money(o.total)+'</span></button>';
+      }).join("") + '</div>';
+    }
+    box.innerHTML = h;
+    box.querySelectorAll("[data-adm-order]").forEach(function(b){
+      b.addEventListener("click", function(){ var recent = stats.orders.slice(-3).reverse(); showAdminOrderInvoiceModal(recent[+b.dataset.admOrder]); });
+    });
+  }
+  function kpi(key, ic, num, label, cls){
+    return '<button type="button" class="adm-kpi '+cls+'" data-adm-kpi="'+key+'"><span class="adm-kpi-top"><span class="adm-kpi-ic">'+ic+'</span></span><b>'+num+'</b><span>'+label+'</span></button>';
+  }
+  function alertRow(key, cls, title, sub){
+    return '<button type="button" class="adm-alert '+cls+'" data-adm-alert="'+key+'"><span class="dot"></span><span class="txt">'+title+'<small>'+sub+'</small></span><span class="chev">‹</span></button>';
+  }
+  document.getElementById("admHome").addEventListener("click", function(e){
+    var k = e.target.closest("[data-adm-kpi]");
+    if(k){
+      var key = k.dataset.admKpi;
+      if(key==="orders"){ go("orders"); return; }
+      list.filter = key; go("products"); return;
+    }
+    var a = e.target.closest("[data-adm-alert]");
+    if(a){
+      var ak = a.dataset.admAlert;
+      if(ak==="out" || ak==="low"){ list.filter = ak; go("products"); }
+      else go(ak, { parent:"home" });
+      return;
+    }
+    var q = e.target.closest("[data-adm-quick]");
+    if(q){
+      var qk = q.dataset.admQuick;
+      if(qk==="new") openForm("new");
+      if(qk==="camera"){ openForm("new"); setTimeout(function(){ document.getElementById("admCamInput").click(); }, 60); }
+      if(qk==="orders") go("orders");
+      if(qk==="cats") go("cats", { parent:"home" });
+    }
+  });
+
+  /* ---------- المنتجات ---------- */
+  function renderProducts(){
+    var listEl = document.getElementById("admPList");
+    if(!listEl) return;
+    var c = counts();
+    var chips = [
+      { k:"all", label:t("الكل"), n:c.all, cls:"" },
+      { k:"out", label:t("خلصت"), n:c.out, cls:"is-danger" },
+      { k:"low", label:t("قربت تخلص"), n:c.low, cls:"is-warn" },
+      { k:"none", label:t("من غير كمية"), n:c.none, cls:"" }
+    ];
+    CATS.forEach(function(cat){
+      chips.push({ k:"cat:"+cat.id, label:catName(cat.id), n:PRODUCTS.filter(function(p){ return p.cat===cat.id; }).length, cls:"" });
+    });
+    document.getElementById("admChips").innerHTML = chips.map(function(ch){
+      return '<button type="button" class="adm-chip '+ch.cls+(list.filter===ch.k?' on':'')+'" data-adm-filter="'+esc(ch.k)+'">'+esc(ch.label)+'<em>'+fmt(ch.n)+'</em></button>';
+    }).join("");
+    if(!CATALOG_READY){ listEl.innerHTML = '<div class="adm-skel"></div><div class="adm-skel"></div><div class="adm-skel"></div>'; document.getElementById("admCountLine").textContent = t("جاري التحميل..."); return; }
+    var q = list.q.trim().toLowerCase();
+    var items = PRODUCTS.slice().reverse().filter(function(p){
+      var st = stockInfo(p).state;
+      if(list.filter==="out" && st!=="out") return false;
+      if(list.filter==="low" && st!=="low") return false;
+      if(list.filter==="none" && st!=="none") return false;
+      if(list.filter.indexOf("cat:")===0 && p.cat!==list.filter.slice(4)) return false;
+      if(q){
+        var hay = (String(p.name||"")+" "+String(p.name_en||"")).toLowerCase();
+        if(hay.indexOf(q)===-1) return false;
+      }
+      return true;
+    });
+    document.getElementById("admCountLine").textContent = fmt(items.length)+' '+t("منتج");
+    if(!items.length){ listEl.innerHTML = '<div class="adm-card adm-empty">'+(q ? t("مفيش منتجات بالاسم ده") : t("مفيش منتجات هنا"))+'</div>'; return; }
+    listEl.innerHTML = items.map(productCard).join("");
+  }
+  function productCard(p){
+    var img = productMainImage(p);
+    var si = stockInfo(p);
+    var pill;
+    if(si.state==="out") pill = '<span class="adm-pill is-out">'+t("خلص")+'</span>';
+    else if(si.state==="low") pill = '<span class="adm-pill is-low">'+t("متبقي")+' '+fmt(si.total)+(si.zero?' · '+fmt(si.zero)+' '+t("خلص"):'')+'</span>';
+    else if(si.state==="ok") pill = '<span class="adm-pill is-ok">'+t("متاح")+' '+fmt(si.total)+'</span>';
+    else pill = '<span class="adm-pill is-none">'+t("غير متتبعة")+'</span>';
+    var price = hasSizes(p) ? (t("يبدأ من")+' '+money(minSizePrice(p))) : (money(p.price) + (p.old ? '<s>'+fmt(p.old)+'</s>' : ''));
+    var variants = hasSizes(p) ? ('📦 '+fmt(p.sizes.length)+' '+t("حجم")) : (hasColors(p) ? ('🎨 '+fmt(p.colors.length)+' '+t("لون")) : '');
+    var simpleTracked = !hasSizes(p) && !hasColors(p) && p.stock!=null;
+    var stepper = simpleTracked
+      ? '<div class="adm-stepper'+(pendingDelta[p.id]?' pending':'')+'"><button type="button" data-adm-step="-1" data-id="'+p.id+'" aria-label="'+t("نقّص واحد")+'">−</button><b>'+fmt(Math.max(0,(+p.stock||0)+(pendingDelta[p.id]||0)))+'</b><button type="button" data-adm-step="1" data-id="'+p.id+'" aria-label="'+t("زوّد واحد")+'">+</button></div>'
+      : '';
+    return '<article class="adm-pcard">'
+      + '<button type="button" class="adm-pthumb" data-adm-edit="'+p.id+'" style="background:'+(CAT_MAP[p.cat]?CAT_MAP[p.cat].color:'var(--surface-2)')+'" aria-label="'+t("تعديل")+'">'+(img ? '<img src="'+img+'" alt="" loading="lazy">' : categoryIcon(p.cat))+'</button>'
+      + '<div class="adm-pinfo">'
+        + '<button type="button" class="adm-pname" data-adm-edit="'+p.id+'">'+esc(pName(p))+'</button>'
+        + '<div class="adm-pmeta"><span class="adm-price">'+price+'</span></div>'
+        + '<div class="adm-pmeta">'+pill+'<span>'+esc(catName(p.cat))+'</span>'+(variants?'<span>'+variants+'</span>':'')+(p.badge==="new"?'<span>🆕</span>':'')+'</div>'
+      + '</div>'
+      + '<div class="adm-prow">'+stepper
+        + '<div class="adm-ibtns">'
+          + '<button type="button" class="adm-ibtn is-quick" data-adm-quickedit="'+p.id+'">'+ICON.bolt+'<span>'+t("سريع")+'</span></button>'
+          + '<button type="button" class="adm-ibtn" data-adm-dup="'+p.id+'" aria-label="'+t("نسخ المنتج")+'">'+ICON.copy+'</button>'
+          + '<button type="button" class="adm-ibtn" data-adm-edit="'+p.id+'" aria-label="'+t("تعديل")+'">'+ICON.edit+'</button>'
+          + '<button type="button" class="adm-ibtn is-danger" data-adm-del="'+p.id+'" aria-label="'+t("حذف")+'">'+ICON.trash+'</button>'
+        + '</div>'
+      + '</div>'
+    + '</article>';
+  }
+  document.getElementById("admSearch").addEventListener("input", function(){ list.q = this.value; renderProducts(); });
+  document.getElementById("admChips").addEventListener("click", function(e){
+    var b = e.target.closest("[data-adm-filter]"); if(!b) return;
+    list.filter = b.dataset.admFilter; renderProducts();
+  });
+  document.getElementById("admPList").addEventListener("click", function(e){
+    var b;
+    if((b = e.target.closest("[data-adm-step]"))){ bumpStock(b.dataset.id, +b.dataset.admStep); return; }
+    if((b = e.target.closest("[data-adm-quickedit]"))){ openQuick(b.dataset.admQuickedit); return; }
+    if((b = e.target.closest("[data-adm-dup]"))){ var pd = findP(b.dataset.admDup); if(pd) openForm("dup", pd); return; }
+    if((b = e.target.closest("[data-adm-edit]"))){ var pe = findP(b.dataset.admEdit); if(pe) openForm("edit", pe); return; }
+    if((b = e.target.closest("[data-adm-del]"))){ adminDeleteProduct(b.dataset.admDel); return; }
+  });
+
+  /* +/− للكمية: التعديلات بتتجمع وبتتحفظ مرة واحدة بعد ما تبطّل تدوس (أقل من ثانية) */
+  function bumpStock(id, d){
+    var p = findP(id); if(!p || p.stock==null) return;
+    var next = (+p.stock||0) + (pendingDelta[id]||0) + d;
+    if(next < 0) return;
+    pendingDelta[id] = (pendingDelta[id]||0) + d;
+    renderProducts();
+    clearTimeout(flushTimer);
+    flushTimer = setTimeout(flushStock, 900);
+  }
+  function flushStock(){
+    var ids = Object.keys(pendingDelta).filter(function(k){ return pendingDelta[k]; });
+    if(!ids.length){ pendingDelta = {}; return; }
+    if(catalogSaveBusy){ flushTimer = setTimeout(flushStock, 700); return; }
+    var deltas = pendingDelta; pendingDelta = {};
+    refreshThenRun(function(){
+      ids.forEach(function(id){ var p = findP(id); if(p && p.stock!=null) p.stock = Math.max(0, (+p.stock||0) + deltas[id]); });
+      renderAdminProductsTable();
+      refreshPublicViews();
+      showToast(t("✅ اتحفظت الكمية"));
+    });
+  }
+
+  /* ---------- تعديل سريع (شيت من تحت) ---------- */
+  var quickId = null;
+  function stepperInput(attr, val, ph){
+    return '<div class="adm-stepper"><button type="button" data-q-step="-1">−</button><input type="number" inputmode="numeric" min="0" step="1" '+attr+' value="'+(val==null?"":val)+'" placeholder="'+(ph||"—")+'"><button type="button" data-q-step="1">+</button></div>';
+  }
+  function openQuick(id){
+    var p = findP(id); if(!p) return;
+    quickId = id;
+    var img = productMainImage(p);
+    var h = '<div class="adm-grab"></div>'
+      + '<div class="adm-sheet-head">'+(img ? '<img src="'+img+'" alt="">' : '<span class="ph">'+categoryIcon(p.cat)+'</span>')+'<b>'+esc(pName(p))+'</b></div>'
+      + '<div class="adm-sheet-body">';
+    if(hasSizes(p)){
+      h += '<div class="adm-qsub">'+t("كل حجم بسعره وكميته")+'</div>';
+      p.sizes.forEach(function(s, i){
+        h += '<div class="adm-qrow"><span class="lbl">'+esc(s.label)+'</span><input class="adm-qin" type="number" inputmode="decimal" min="0" data-q-size-price="'+i+'" value="'+(s.price==null?"":s.price)+'" aria-label="'+t("السعر")+'"></div>'
+          + '<div class="adm-qrow"><span class="lbl"><small>'+t("الكمية (فاضي = مش متتبعة)")+'</small></span>'+stepperInput('data-q-size-stock="'+i+'"', s.stock)+'</div>';
+      });
+    } else {
+      h += '<div class="adm-qrow"><label for="admQPrice">'+t("السعر الحالي (ج.م)")+'</label><input class="adm-qin" id="admQPrice" type="number" inputmode="decimal" min="0" value="'+(p.price==null?"":p.price)+'"></div>'
+        + '<div class="adm-qrow"><label for="admQOld">'+t("السعر قبل الخصم")+'<small style="display:block;font-weight:400;color:var(--ink-soft);font-size:11.5px">'+t("فاضي = مفيش خصم")+'</small></label><input class="adm-qin" id="admQOld" type="number" inputmode="decimal" min="0" value="'+(p.old||"")+'"></div>';
+      if(hasColors(p)){
+        h += '<div class="adm-qsub">'+t("الكمية لكل لون (فاضي = مش متتبعة)")+'</div>';
+        p.colors.forEach(function(c, i){
+          h += '<div class="adm-qrow">'+(c.image?'<img src="'+c.image+'" alt="">':'')+'<span class="lbl">'+esc(t(String(c.name||"")))+'</span>'+stepperInput('data-q-color-stock="'+i+'"', c.stock)+'</div>';
+        });
+      } else {
+        h += '<div class="adm-qrow"><span class="lbl">'+t("الكمية المتاحة")+'<small>'+t("فاضي = مش متتبعة")+'</small></span>'+stepperInput('id="admQStock"', p.stock)+'</div>';
+      }
+    }
+    h += '</div><div class="adm-sheet-foot"><button type="button" class="btn btn-outline" data-q-close>'+t("إلغاء")+'</button><button type="button" class="btn btn-primary" data-q-save>'+t("حفظ")+'</button></div>';
+    var sheet = document.getElementById("admSheet");
+    sheet.innerHTML = h;
+    sheet.classList.add("show");
+    document.getElementById("admSheetBackdrop").classList.add("show");
+    try{ if(!(history.state && history.state.adm)) history.pushState({adm:1}, "", location.href); }catch(e){}
+  }
+  function closeSheet(){
+    var s = document.getElementById("admSheet"); if(s) s.classList.remove("show");
+    var b = document.getElementById("admSheetBackdrop"); if(b) b.classList.remove("show");
+    quickId = null;
+  }
+  document.getElementById("admSheetBackdrop").addEventListener("click", closeSheet);
+  document.getElementById("admSheet").addEventListener("click", function(e){
+    var st = e.target.closest("[data-q-step]");
+    if(st){
+      var inp = st.parentNode.querySelector("input");
+      var v = inp.value==="" ? 0 : (+inp.value||0);
+      v = Math.max(0, v + (+st.dataset.qStep));
+      inp.value = v;
+      return;
+    }
+    if(e.target.closest("[data-q-close]")){ closeSheet(); return; }
+    if(e.target.closest("[data-q-save]")) saveQuick();
+  });
+  function numOrNull(v){ return v==="" ? null : Math.max(0, Math.round(+v||0)); }
+  function saveQuick(){
+    var id = quickId, sheet = document.getElementById("admSheet");
+    var p0 = findP(id); if(!p0) return;
+    var vals = { sizes:{}, colors:{} };
+    if(hasSizes(p0)){
+      sheet.querySelectorAll("[data-q-size-price]").forEach(function(el){ (vals.sizes[el.dataset.qSizePrice] = vals.sizes[el.dataset.qSizePrice] || {}).price = el.value==="" ? 0 : Math.max(0, +el.value||0); });
+      sheet.querySelectorAll("[data-q-size-stock]").forEach(function(el){ (vals.sizes[el.dataset.qSizeStock] = vals.sizes[el.dataset.qSizeStock] || {}).stock = numOrNull(el.value); });
+    } else {
+      var pr = document.getElementById("admQPrice").value;
+      if(pr===""){ showToast(t("⚠️ اكتب السعر")); return; }
+      vals.price = Math.max(0, +pr||0);
+      var old = document.getElementById("admQOld").value;
+      vals.old = old==="" ? null : Math.max(0, +old||0);
+      if(hasColors(p0)) sheet.querySelectorAll("[data-q-color-stock]").forEach(function(el){ vals.colors[el.dataset.qColorStock] = numOrNull(el.value); });
+      else vals.stock = numOrNull(document.getElementById("admQStock").value);
+    }
+    var labels = hasSizes(p0) ? p0.sizes.map(function(s){ return s.label; }) : null;
+    var colorNames = hasColors(p0) ? p0.colors.map(function(c){ return c.name; }) : null;
+    closeSheet();
+    refreshThenRun(function(){
+      var p = findP(id);
+      if(!p){ catalogSaveBusy = false; showToast(t("⚠️ المنتج ده اتمسح")); return; }
+      if(labels && hasSizes(p)){
+        labels.forEach(function(label, i){
+          var s = p.sizes.find(function(x){ return x.label===label; });
+          if(s && vals.sizes[i]){ s.price = vals.sizes[i].price; s.stock = vals.sizes[i].stock; }
+        });
+      } else if(!labels){
+        p.price = vals.price; p.old = vals.old;
+        if(colorNames && hasColors(p)){
+          colorNames.forEach(function(name, i){ var c = p.colors.find(function(x){ return x.name===name; }); if(c && (i in vals.colors)) c.stock = vals.colors[i]; });
+        } else if(!colorNames) p.stock = vals.stock;
+      }
+      delete pendingDelta[id];
+      renderAdminProductsTable();
+      refreshPublicViews();
+      showToast(t("✅ اتحفظ التعديل"));
+    });
+  }
+
+  /* ---------- فورم المنتج ---------- */
+  function buildForm(){
+    var screen = document.getElementById("admFormScreen");
+    var form = document.getElementById("productForm");
+    screen.appendChild(document.getElementById("productFormTitle"));
+    screen.appendChild(form);
+    function fieldOf(id){ return document.getElementById(id).closest(".field"); }
+    function sec(icon, title){
+      var s = document.createElement("section"); s.className = "adm-sec";
+      s.innerHTML = '<h3><i>'+icon+'</i><span data-i18n>'+title+'</span></h3>';
+      return s;
+    }
+    function det(icon, title, sub, id){
+      var d = document.createElement("details"); d.className = "adm-sec"; d.id = id;
+      d.innerHTML = '<summary><i>'+icon+'</i><span><span data-i18n>'+title+'</span><small style="display:block" data-i18n>'+sub+'</small></span></summary><div class="adm-sec-body"></div>';
+      return d;
+    }
+    var imagesField = fieldOf("pfImagesPreview");
+    var colorsField = fieldOf("pfColorsList");
+    var sizesField = fieldOf("pfSizesList");
+    var enBlock = document.getElementById("pfNameEn").closest(".field").parentNode;
+    var ratingRow = document.getElementById("pfRating").closest(".field-row");
+    var catRow = document.getElementById("pfCat").closest(".field-row");
+    var actions = document.getElementById("productFormSubmit").closest(".hero-ctas");
+
+    var sPhotos = sec("📸", "صور المنتج");
+    sPhotos.insertAdjacentHTML("beforeend",
+      '<div class="adm-photo-btns"><button type="button" class="adm-photo-btn primary" id="admCamBtn"><i>📷</i><span data-i18n>صوّر المنتج</span></button>'
+      + '<button type="button" class="adm-photo-btn" id="admGalleryBtn"><i>🖼️</i><span data-i18n>من المعرض</span></button></div>');
+    var lbl = imagesField.querySelector("label"); if(lbl) lbl.style.display = "none";
+    sPhotos.appendChild(imagesField);
+    sPhotos.insertAdjacentHTML("beforeend", '<p class="adm-hint" data-i18n>دوس على أي صورة عشان تخليها الصورة الرئيسية.</p>');
+
+    var sBasic = sec("📝", "بيانات المنتج");
+    sBasic.appendChild(fieldOf("pfName"));
+    sBasic.appendChild(fieldOf("pfDesc"));
+    sBasic.appendChild(catRow);
+
+    var sPrice = sec("💰", "السعر والكمية");
+    ["pfPriceRow","pfPriceSizesNote","pfStockRow","pfStockColorsNote","pfStockSizesNote"].forEach(function(id){ sPrice.appendChild(document.getElementById(id)); });
+
+    var dSizes = det("📦", "أحجام العلب", "لو المنتج بأكتر من حجم علبة بسعر وكمية مختلفين", "admSecSizes");
+    var szLabel = sizesField.querySelector(":scope > label"); if(szLabel) szLabel.style.display = "none";
+    dSizes.querySelector(".adm-sec-body").appendChild(sizesField);
+    var dColors = det("🎨", "الألوان", "لو المنتج متاح بأكتر من لون", "admSecColors");
+    var clLabel = colorsField.querySelector(":scope > label"); if(clLabel) clLabel.style.display = "none";
+    dColors.querySelector(".adm-sec-body").appendChild(colorsField);
+    var dMore = det("⚙️", "خيارات إضافية", "الاسم والوصف بالإنجليزي، والتقييم", "admSecMore");
+    dMore.querySelector(".adm-sec-body").appendChild(enBlock);
+    dMore.querySelector(".adm-sec-body").appendChild(ratingRow);
+
+    [sPhotos, sBasic, sPrice, dSizes, dColors, dMore].forEach(function(s){ form.insertBefore(s, actions); });
+    actions.insertAdjacentHTML("afterbegin", '<button type="submit" class="btn btn-outline" id="admSaveAnother" data-i18n>حفظ وإضافة تاني</button>');
+    applyI18n();
+
+    document.getElementById("admCamBtn").addEventListener("click", function(){ document.getElementById("admCamInput").click(); });
+    document.getElementById("admGalleryBtn").addEventListener("click", function(){ document.getElementById("pfImageInput").click(); });
+    document.getElementById("admCamInput").addEventListener("change", function(){
+      var files = Array.prototype.slice.call(this.files || []);
+      if(files.length) addPfImageFiles(files);
+      this.value = "";
+      formDirty = true;
+    });
+    document.getElementById("pfImageInput").addEventListener("change", function(){ formDirty = true; });
+    document.getElementById("pfImagesPreview").addEventListener("click", function(e){
+      if(e.target.closest("[data-remove-pf-img]")){ formDirty = true; return; }
+      var img = e.target.closest("img"); if(!img) return;
+      var wrap = img.parentNode, idx = Array.prototype.indexOf.call(wrap.parentNode.children, wrap);
+      if(idx<=0) return;
+      var moved = pfImagesData.splice(idx, 1)[0];
+      pfImagesData.unshift(moved);
+      renderPfImagesPreview(); markMain();
+      formDirty = true;
+      showToast(t("✅ بقت الصورة الرئيسية"));
+    });
+    new MutationObserver(markMain).observe(document.getElementById("pfImagesPreview"), { childList:true });
+    form.addEventListener("input", function(){ formDirty = true; });
+    form.addEventListener("change", function(){ formDirty = true; });
+    document.getElementById("admSaveAnother").addEventListener("click", function(){ addAnother = true; });
+    document.getElementById("productFormSubmit").addEventListener("click", function(){ addAnother = false; });
+    form.addEventListener("invalid", function(e){
+      var d = e.target.closest("details"); if(d) d.open = true;
+    }, true);
+  }
+  function markMain(){
+    var first = document.querySelector("#pfImagesPreview > div:first-child");
+    if(first) first.setAttribute("data-main", t("رئيسية"));
+  }
+  function openForm(mode, p){
+    if(cur==="form" && formDirty && !confirm(t("في تعديلات في المنتج لسه ما اتحفظتش. تخرج من غير حفظ؟"))) return;
+    var from = (cur==="form") ? (parentOf.form || "products") : (cur || "home");
+    resetProductForm();
+    formMode = mode;
+    if(mode==="edit" || mode==="dup") adminEditProduct(p);
+    if(mode==="dup"){
+      document.getElementById("pfId").value = "";
+      document.getElementById("pfName").value = (p.name||"") + " " + t("(نسخة)");
+      document.getElementById("productFormSubmit").textContent = t("إضافة المنتج");
+      document.getElementById("productFormCancel").hidden = true;
+    }
+    if(mode==="new"){
+      if(lastCat && CAT_MAP[lastCat]) document.getElementById("pfCat").value = lastCat;
+      document.getElementById("productFormSubmit").textContent = t("حفظ المنتج");
+    }
+    document.getElementById("admSaveAnother").hidden = (mode==="edit");
+    document.getElementById("admSecSizes").open = !!(p && hasSizes(p));
+    document.getElementById("admSecColors").open = !!(p && hasColors(p));
+    document.getElementById("admSecMore").open = false;
+    markMain();
+    go("form", { parent: from==="form" ? "products" : from, force:true });
+    formDirty = (mode==="dup");
+  }
+
+  /* ---------- المزيد ---------- */
+  function li(act, ic, title, sub, cnt, cls){
+    return '<button type="button" class="adm-li '+(cls||"")+'" data-adm-more="'+act+'"><i>'+ic+'</i><span class="txt">'+title+(sub?'<small>'+sub+'</small>':'')+'</span>'+(cnt?'<span class="cnt">'+fmt(cnt)+'</span>':'')+'<span class="chev">‹</span></button>';
+  }
+  function renderMore(){
+    loadStats(false);
+    var box = document.getElementById("admMore");
+    var sess = getAdminSession() || {};
+    var h = '<div class="adm-group-title">'+t("المتجر")+'</div><div class="adm-list">'
+      + li("cats", "🧭", t("الأقسام"), fmt(CATS.length)+' '+t("قسم"))
+      + li("stock", "🔔", t("طلبات التوفر"), t("عملاء مستنيين منتجات ترجع"), stats.stock)
+      + li("inquiries", "📨", t("استفسارات العملاء"), t("رسايل صفحة تواصل معنا"), stats.inquiries)
+      + li("customers", "👥", t("بيانات العملاء"), "")
+      + li("analytics", "📊", t("تحليل الزوار"), "")
+    + '</div>'
+    + '<div class="adm-group-title">'+t("البيانات")+'</div><div class="adm-list">'
+      + li("export", "⬇️", t("نسخة احتياطية"), t("تنزيل ملف بكل المنتجات والأقسام"))
+      + li("import", "⬆️", t("استيراد ملف بيانات"), t("رجّع نسخة احتياطية قديمة"))
+    + '</div>'
+    + '<div class="adm-group-title">'+t("الحساب والتطبيق")+'</div><div class="adm-list">'
+      + li("settings", "⚙️", t("إعدادات الحساب"), esc(sess.username||""))
+      + li("theme", "🌓", t("الوضع الليلي / النهاري"), "")
+      + li("logout", "🚪", t("تسجيل الخروج"), "", 0, "is-danger")
+    + '</div>'
+    + '<div class="adm-list">' + li("reset", "♻️", t("استعادة الافتراضي"), t("بيمسح كل منتجاتك ويرجّع المنتجات التجريبية"), 0, "is-danger") + '</div>'
+    + '<p class="adm-ver">'+t("آل عبده - الإدارة")+'</p>';
+    box.innerHTML = h;
+  }
+  document.getElementById("admMore").addEventListener("click", function(e){
+    var b = e.target.closest("[data-adm-more]"); if(!b) return;
+    var a = b.dataset.admMore;
+    if(a==="cats" || a==="settings" || SUB_PAGES[a]){ go(a, { parent:"more" }); return; }
+    if(a==="export") document.getElementById("adminExportBtn").click();
+    if(a==="import") document.getElementById("adminImportBtn").click();
+    if(a==="reset") document.getElementById("adminResetBtn").click();
+    if(a==="theme") document.getElementById("themeToggle").click();
+    if(a==="logout"){ if(confirm(t("متأكد إنك عايز تسجّل خروج؟"))) document.getElementById("adminLogoutBtn").click(); }
+  });
+
+  /* ---------- الأقسام والإعدادات: نفس الفورمات القديمة في شاشات لوحدها ---------- */
+  function buildCatsAndSettings(){
+    var cats = document.getElementById("admCatsScreen");
+    var c1 = document.createElement("div"); c1.className = "adm-card";
+    c1.appendChild(document.getElementById("catFormTitle"));
+    c1.appendChild(document.getElementById("catForm"));
+    var c2 = document.createElement("div"); c2.className = "adm-card";
+    var catsTable = document.getElementById("adminCatsBody").closest("table");
+    var catsH = document.getElementById("adminCatCount").closest("h3");
+    c2.appendChild(catsH);
+    c2.appendChild(catsTable.parentNode);
+    cats.appendChild(c1); cats.appendChild(c2);
+    var set = document.getElementById("admSettingsScreen");
+    var sForm = document.getElementById("adminSettingsForm");
+    var sH = sForm.previousElementSibling;
+    var s1 = document.createElement("div"); s1.className = "adm-card";
+    if(sH && sH.tagName==="H3") s1.appendChild(sH);
+    s1.appendChild(sForm);
+    set.appendChild(s1);
+    /* تعديل قسم من الجدول بيملا الفورم اللي فوقه - نطلع لفوق عشان يبان */
+    document.getElementById("adminCatsBody").addEventListener("click", function(e){
+      if(e.target.closest("[data-edit-cat]")) window.scrollTo({ top:0, behavior:"smooth" });
+    });
+  }
+
+  buildForm();
+  buildCatsAndSettings();
+  /* فاتورة طلب مفتوحة (مودال): زرار الرجوع في الموبايل يقفلها بس */
+  new MutationObserver(function(){
+    if(modalBackdrop.classList.contains("show") && isAdminAuthed()){
+      try{ if(!(history.state && history.state.adm)) history.pushState({adm:1}, "", location.href); }catch(e){}
+    }
+  }).observe(modalBackdrop, { attributes:true, attributeFilter:["class"] });
+
+  ADM = {
+    /* بيتنادى من showAdmin() بعد تسجيل الدخول */
+    onShow: function(){
+      if(!shownOnce){ shownOnce = true; go("home", { force:true }); }
+      else updateBars();
+    },
+    onLogout: function(){ shownOnce = false; cur = null; closeSheet(); stats = { at:0, loading:false, orders:null, ordersToday:0, inquiries:null, stock:null }; updateBadges(); },
+    /* بعد أي تغيير في المنتجات (إضافة/تعديل/حذف/تحميل من السيرفر) */
+    refresh: function(){
+      if(cur==="products") renderProducts();
+      if(cur==="home") renderHome();
+      if(cur==="more") renderMore();
+    },
+    /* بعد حفظ منتج من الفورم */
+    afterSave: function(wasEdit, cat){
+      lastCat = cat || lastCat;
+      formDirty = false;
+      if(addAnother && !wasEdit){
+        addAnother = false;
+        openForm("new");
+        return;
+      }
+      addAnother = false;
+      go("products", { force:true });
+    }
+  };
+})();
+
 /* الصفحة بتظهر على طول (مع كروت "جاري التحميل") بدل ما تفضل فاضية لحد
    ما المنتجات توصل - ولو العميل فتح صفحة تانية في الوقت ده، مش بنرجّعه
    للرئيسية غصب عنه لما التحميل يخلص. */
@@ -6437,6 +7562,7 @@ document.getElementById("newArrivalsGrid").innerHTML = skeletonCards(4);
 initScrollReveal();
 renderCartBadge();
 var BOOT_VIEW = hashToView(location.hash.replace("#","") || "home");
+if(isAdminApp()){ BOOT_VIEW = "admin"; goToView("admin"); showAdmin(); }
 if(BOOT_VIEW!=="home" && BOOT_VIEW!=="admin"){ goToView(BOOT_VIEW); if(BOOT_VIEW==="products") renderProductsView(); }
 loadInitialData(function(){
   refreshFavoritesFromServer(function(){

@@ -129,6 +129,7 @@ jobs:
 
               <uses-permission android:name="android.permission.INTERNET" />
               <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+              <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
               <application
                   android:allowBackup="true"
@@ -160,6 +161,11 @@ jobs:
                           <data android:scheme="https" android:host="alabdo-toys.com" />
                       </intent-filter>
                   </activity>
+
+                  <service
+                      android:name=".CartReminderJob"
+                      android:permission="android.permission.BIND_JOB_SERVICE"
+                      android:exported="false" />
 
                   <provider
                       android:name="androidx.core.content.FileProvider"
@@ -253,6 +259,8 @@ jobs:
           import android.graphics.Insets;
           import android.net.Uri;
           import android.os.Build;
+          import android.Manifest;
+          import android.content.pm.PackageManager;
           import android.os.Bundle;
           import android.os.Handler;
           import android.os.Looper;
@@ -300,6 +308,8 @@ jobs:
               private Uri cameraUri;
               private boolean splashHidden = false;
               private ObjectAnimator splashSpin;
+              /* التطبيق ظاهر قدام العميل دلوقتي؟ (تذكير السلة مش بيطلع وهو فاتح التطبيق) */
+              static volatile boolean foreground = false;
 
               @Override
               protected void onCreate(Bundle savedInstanceState) {
@@ -414,6 +424,39 @@ jobs:
                           @Override public void run() { hideSplash(); }
                       });
                   }
+                  /* الصفحة بتبلغنا بعدد المنتجات اللي في السلة (عشان تذكير السلة) */
+                  @JavascriptInterface
+                  public void cartChanged(int count, String names) {
+                      CartReminderJob.saveCart(getApplicationContext(), count, names);
+                      if (count > 0) runOnUiThread(new Runnable() {
+                          @Override public void run() { askNotificationPermissionOnce(); }
+                      });
+                  }
+              }
+
+              /* أندرويد 13 وأحدث: لازم العميل يوافق على الإشعارات - بنسأله مرة واحدة
+                 بس، أول ما يحط منتج في السلة. */
+              private void askNotificationPermissionOnce() {
+                  if (Build.VERSION.SDK_INT < 33) return;
+                  if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) return;
+                  android.content.SharedPreferences sp = getSharedPreferences(CartReminderJob.PREFS, MODE_PRIVATE);
+                  if (sp.getBoolean("asked_notif", false)) return;
+                  sp.edit().putBoolean("asked_notif", true).apply();
+                  requestPermissions(new String[]{ Manifest.permission.POST_NOTIFICATIONS }, 2001);
+              }
+
+              @Override
+              protected void onStart() {
+                  super.onStart();
+                  foreground = true;
+                  CartReminderJob.cancelAll(this);
+              }
+
+              @Override
+              protected void onStop() {
+                  foreground = false;
+                  CartReminderJob.scheduleReminders(this);
+                  super.onStop();
               }
 
               private static void setHeight(View v, int h) {
@@ -422,6 +465,8 @@ jobs:
               }
 
               private String startUrl(Intent intent) {
+                  String open = intent != null ? intent.getStringExtra("aa_open") : null;
+                  if ("cart".equals(open) || "clearcart".equals(open)) return HOME + "&aa_open=" + open;
                   Uri data = intent != null ? intent.getData() : null;
                   if (data != null && isOwnSite(data)) return data.toString();
                   return HOME;
@@ -446,7 +491,7 @@ jobs:
                   s.setSupportMultipleWindows(false);
                   s.setJavaScriptCanOpenWindowsAutomatically(false);
                   s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-                  s.setUserAgentString(s.getUserAgentString() + " AlAbdoApp/3");
+                  s.setUserAgentString(s.getUserAgentString() + " AlAbdoApp/4");
                   CookieManager.getInstance().setAcceptCookie(true);
                   web.setOverScrollMode(View.OVER_SCROLL_NEVER);
               web.addJavascriptInterface(new SplashBridge(), "AlAbdoNative");
@@ -607,6 +652,12 @@ jobs:
               @Override
               protected void onNewIntent(Intent intent) {
                   super.onNewIntent(intent);
+                  /* جاي من إشعار السلة والتطبيق مفتوح: نفتح السلة من غير ما نعيد تحميل الصفحة */
+                  final String open = intent != null ? intent.getStringExtra("aa_open") : null;
+                  if ("cart".equals(open) || "clearcart".equals(open)) {
+                      web.evaluateJavascript("window.aaNotifOpen ? aaNotifOpen('" + open + "') : location.replace('" + HOME + "&aa_open=" + open + "')", null);
+                      return;
+                  }
                   Uri data = intent != null ? intent.getData() : null;
                   if (data != null && isOwnSite(data)) web.loadUrl(data.toString());
               }
@@ -633,6 +684,123 @@ jobs:
                   super.onDestroy();
               }
           }
+          EOF
+
+          cat > $P/app/src/main/java/com/alabdotoys/app/CartReminderJob.java <<'EOF'
+          package com.alabdotoys.app;
+
+          import android.app.Notification;
+          import android.app.NotificationChannel;
+          import android.app.NotificationManager;
+          import android.app.PendingIntent;
+          import android.app.job.JobInfo;
+          import android.app.job.JobParameters;
+          import android.app.job.JobScheduler;
+          import android.app.job.JobService;
+          import android.content.ComponentName;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.content.SharedPreferences;
+          import android.os.Build;
+
+          /* تذكير السلة: لو العميل قفل التطبيق وفي منتجات في السلة، بيطلعله إشعار بعد
+             ساعة، وتاني بعد يوم، يفكّره يكمّل الطلب أو يمسح السلة. أول ما يفتح
+             التطبيق أو السلة تفضى، التذكيرات دي بتتلغي. */
+          public class CartReminderJob extends JobService {
+              static final String PREFS = "alabdo_cart";
+              static final int JOB_1H = 101, JOB_24H = 102;
+              static final int NOTIF_ID = 501;
+              static final String CHANNEL = "cart_reminder";
+
+              static void saveCart(Context c, int count, String names) {
+                  c.getSharedPreferences(PREFS, MODE_PRIVATE).edit()
+                      .putInt("count", Math.max(0, count))
+                      .putString("names", names == null ? "" : names)
+                      .apply();
+                  if (count <= 0) cancelAll(c);
+              }
+
+              static int cartCount(Context c) {
+                  return c.getSharedPreferences(PREFS, MODE_PRIVATE).getInt("count", 0);
+              }
+
+              /* التطبيق اتقفل (راح في الخلفية) والسلة فيها منتجات */
+              static void scheduleReminders(Context c) {
+                  if (cartCount(c) <= 0) return;
+                  JobScheduler js = (JobScheduler) c.getSystemService(Context.JOB_SCHEDULER_SERVICE);
+                  if (js == null) return;
+                  ComponentName cn = new ComponentName(c, CartReminderJob.class);
+                  long hour = 60L * 60L * 1000L;
+                  js.schedule(new JobInfo.Builder(JOB_1H, cn).setMinimumLatency(hour).setOverrideDeadline(hour + 20L * 60L * 1000L).build());
+                  js.schedule(new JobInfo.Builder(JOB_24H, cn).setMinimumLatency(24L * hour).setOverrideDeadline(25L * hour).build());
+              }
+
+              /* العميل فتح التطبيق، أو السلة فضيت */
+              static void cancelAll(Context c) {
+                  JobScheduler js = (JobScheduler) c.getSystemService(Context.JOB_SCHEDULER_SERVICE);
+                  if (js != null) { js.cancel(JOB_1H); js.cancel(JOB_24H); }
+                  NotificationManager nm = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
+                  if (nm != null) nm.cancel(NOTIF_ID);
+              }
+
+              @Override
+              public boolean onStartJob(JobParameters params) {
+                  try {
+                      if (!MainActivity.foreground) showReminder(this);
+                  } catch (Exception e) { /* ignore */ }
+                  return false;
+              }
+
+              @Override
+              public boolean onStopJob(JobParameters params) { return false; }
+
+              private static PendingIntent open(Context c, String what, int req) {
+                  Intent i = new Intent(c, MainActivity.class);
+                  i.putExtra("aa_open", what);
+                  i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                  int flags = PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE;
+                  return PendingIntent.getActivity(c, req, i, flags);
+              }
+
+              @SuppressWarnings("deprecation")
+              static void showReminder(Context c) {
+                  SharedPreferences sp = c.getSharedPreferences(PREFS, MODE_PRIVATE);
+                  int count = sp.getInt("count", 0);
+                  if (count <= 0) return;
+                  String names = sp.getString("names", "");
+                  NotificationManager nm = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
+                  if (nm == null) return;
+                  if (Build.VERSION.SDK_INT >= 26 && nm.getNotificationChannel(CHANNEL) == null) {
+                      NotificationChannel ch = new NotificationChannel(CHANNEL, "تذكير السلة", NotificationManager.IMPORTANCE_DEFAULT);
+                      ch.setDescription("بيفكّرك لو سايب منتجات في السلة من غير ما تكمّل الطلب");
+                      nm.createNotificationChannel(ch);
+                  }
+                  String title = "🛒 سلتك مستنياك في متجر آل عبده";
+                  String text = "عندك " + count + (count == 1 ? " قطعة" : (count <= 10 ? " قطع" : " قطعة")) + " في السلة"
+                      + (names.isEmpty() ? "" : ": " + names)
+                      + ". كمّل طلبك قبل ما الكميات تخلص، أو امسح السلة لو غيّرت رأيك.";
+                  Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(c, CHANNEL) : new Notification.Builder(c);
+                  b.setSmallIcon(R.drawable.ic_stat_notify)
+                      .setColor(0xFFEE1F6C)
+                      .setContentTitle(title)
+                      .setContentText(text)
+                      .setStyle(new Notification.BigTextStyle().bigText(text))
+                      .setAutoCancel(true)
+                      .setContentIntent(open(c, "cart", 1))
+                      .addAction(new Notification.Action.Builder(null, "كمّل الطلب", open(c, "cart", 2)).build())
+                      .addAction(new Notification.Action.Builder(null, "امسح السلة", open(c, "clearcart", 3)).build());
+                  if (Build.VERSION.SDK_INT < 26) b.setPriority(Notification.PRIORITY_DEFAULT);
+                  try { nm.notify(NOTIF_ID, b.build()); } catch (SecurityException e) { /* notifications not allowed */ }
+              }
+          }
+          EOF
+
+          mkdir -p $P/app/src/main/res/drawable
+          cat > $P/app/src/main/res/drawable/ic_stat_notify.xml <<'EOF'
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+              <path android:fillColor="#FFFFFFFF" android:pathData="M7,18c-1.1,0 -1.99,0.9 -1.99,2S5.9,22 7,22s2,-0.9 2,-2 -0.9,-2 -2,-2zM1,2v2h2l3.6,7.59 -1.35,2.45c-0.16,0.28 -0.25,0.61 -0.25,0.96 0,1.1 0.9,2 2,2h12v-2H7.42c-0.14,0 -0.25,-0.11 -0.25,-0.25l0.03,-0.12 0.9,-1.63h7.45c0.75,0 1.41,-0.41 1.75,-1.03l3.58,-6.49c0.08,-0.14 0.12,-0.31 0.12,-0.48 0,-0.55 -0.45,-1 -1,-1H5.21l-0.94,-2H1zM17,18c-1.1,0 -1.99,0.9 -1.99,2s0.89,2 1.99,2 2,-0.9 2,-2 -0.9,-2 -2,-2z"/>
+          </vector>
           EOF
 
       - name: Generate icons from the site's icons

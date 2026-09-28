@@ -1969,6 +1969,7 @@ setTimeout(appSplashHide, 15000);
               <div class="field" id="pfStockRow"><label for="pfStock" data-i18n>الكمية المتاحة (اتركها فاضية لو مش عايز تتبعها)</label><input id="pfStock" type="number" min="0" step="1" placeholder="مثلاً: 10" data-i18n-placeholder></div>
               <p id="pfStockColorsNote" style="color:var(--ink-soft); font-size:12px; margin-top:-6px; display:none;" data-i18n>المنتج ده بألوان، فالكمية بتتحدد لكل لون على حدة تحت.</p>
               <p id="pfStockSizesNote" style="color:var(--ink-soft); font-size:12px; margin-top:-6px; display:none;" data-i18n>المنتج ده بأحجام علب، فالكمية بتتحدد لكل حجم على حدة تحت.</p>
+              <div class="field" id="pfLowAtRow"><label for="pfLowAt" data-i18n>حد التنبيه "قرب يخلص" للمنتج ده (اختياري)</label><input id="pfLowAt" type="number" min="0" step="1" inputmode="numeric" placeholder="فاضي = الحد العام للمتجر" data-i18n-placeholder><small id="pfLowAtHint" style="display:block; color:var(--ink-soft); font-size:12px; margin-top:4px;"></small></div>
               <div class="field-row">
                 <div class="field"><label for="pfRating" data-i18n>التقييم (من 5)</label><input id="pfRating" type="number" min="1" max="5" step="0.1" value="4.5"></div>
                 <div class="field"><label for="pfReviews" data-i18n>عدد التقييمات</label><input id="pfReviews" type="number" min="0" value="0"></div>
@@ -2591,14 +2592,27 @@ function productOutOfStockOverall(p){
 /* ---------- Data source: /api/products (shared, live for every visitor) > this
    browser's last-known copy (offline fallback only) > built-in defaults ---------- */
 var DATA_KEY = "aa_store_data";
+/* إعدادات المتجر المحفوظة مع الكتالوج على السيرفر.
+   lowStock = حد التنبيه العام: المنتج "قرب يخلص" لما كميته توصل للرقم ده أو أقل
+   (صاحب المتجر بيغيّره من تطبيق الإدارة، وكل منتج ممكن يكون له حد خاص بيه lowAt). */
+var STORE_SETTINGS = { lowStock: 3 };
+function applyStoreSettings(st){
+  if(!st || typeof st!=="object") return;
+  if(st.lowStock!=null && !isNaN(+st.lowStock)) STORE_SETTINGS.lowStock = Math.max(0, Math.round(+st.lowStock));
+}
+function lowStockLimit(p){
+  if(p && p.lowAt!=null && p.lowAt!=="" && !isNaN(+p.lowAt)) return Math.max(0, Math.round(+p.lowAt));
+  return STORE_SETTINGS.lowStock;
+}
 function applyData(data){
+  if(data && data.settings) applyStoreSettings(data.settings);
   if(data && Array.isArray(data.categories) && data.categories.length) CATS = data.categories;
   if(data && Array.isArray(data.products) && data.products.length) PRODUCTS = data.products;
   rebuildCatMap();
 }
 function saveDraft(){
   /* offline safety net only, not the source of truth anymore — see saveProductsToServer() */
-  try{ localStorage.setItem(DATA_KEY, JSON.stringify({categories:CATS, products:PRODUCTS})); }catch(e){}
+  try{ localStorage.setItem(DATA_KEY, JSON.stringify({categories:CATS, products:PRODUCTS, settings:STORE_SETTINGS})); }catch(e){}
 }
 function loadInitialData(done){
   /* لوحة التحكم دايمًا بتجيب آخر نسخة من السيرفر (مش النسخة المحفوظة على
@@ -2698,6 +2712,7 @@ function applyCatalogOpLocal(o){
     if("price" in o) p.price = o.price;
     if("old" in o) p.old = o.old;
     if("stock" in o) p.stock = o.stock;
+    if("lowAt" in o) p.lowAt = o.lowAt;
     if(Array.isArray(o.sizes) && Array.isArray(p.sizes)) o.sizes.forEach(function(ns){ var s2 = p.sizes.find(function(x){ return x.label===ns.label; }); if(s2){ if("price" in ns) s2.price = ns.price; if("stock" in ns) s2.stock = ns.stock; } });
     if(Array.isArray(o.colors) && Array.isArray(p.colors)) o.colors.forEach(function(nc){ var c2 = p.colors.find(function(x){ return x.name===nc.name; }); if(c2 && ("stock" in nc)) c2.stock = nc.stock; });
   } else if(o.op==="set-images"){
@@ -2717,6 +2732,8 @@ function applyCatalogOpLocal(o){
     rebuildCatMap();
   } else if(o.op==="cat-delete"){
     if(!PRODUCTS.some(function(x){ return x.cat===o.id; })){ CATS = CATS.filter(function(x){ return x.id!==o.id; }); rebuildCatMap(); }
+  } else if(o.op==="settings"){
+    if("lowStock" in o) applyStoreSettings({ lowStock:o.lowStock });
   }
 }
 function renderPublicViews(){
@@ -2808,6 +2825,7 @@ function onCatalogOpsSaved(batch, res){
     if(Array.isArray(p.colors)) (s.colors||[]).forEach(function(nc){ var x = p.colors.find(function(y){ return y.name===nc.name; }); if(x) x.stock = nc.stock; });
   });
   if(Array.isArray(res.categories) && res.categories.length){ CATS = res.categories; rebuildCatMap(); }
+  if(res.settings) applyStoreSettings(res.settings);
   catalogOps.forEach(function(o){
     if(o.op==="stock" && !changedIds[String(o.id)]) return;
     applyCatalogOpLocal(o);
@@ -2827,7 +2845,7 @@ function sendCatalogOpsLegacy(batch){
       return fetch("/api/products", {
         method: "POST",
         headers: Object.assign({ "content-type":"application/json" }, adminAuthHeaders()),
-        body: JSON.stringify({ categories: CATS, products: PRODUCTS })
+        body: JSON.stringify({ categories: CATS, products: PRODUCTS, settings: STORE_SETTINGS })
       });
     })
     .then(function(r){ return r.json().then(function(j){ return { status:r.status, body:j }; }); })
@@ -2872,6 +2890,25 @@ document.getElementById("themeToggle").addEventListener("click", function(){
    الأقسام السبعة، ومحافظات مصر. الصفحات القانونية ولوحة التحكم وأسماء/أوصاف
    المنتجات هتتضاف في مراحل تالية. */
 var I18N_EN = {
+  "تنبيه المخزون المنخفض": "Low-stock alert",
+  "حد التنبيه للمنتج ده": "Alert level for this product",
+  "فاضي = الحد العام للمتجر": "Empty = store default",
+  "حد التنبيه للمخزون المنخفض": "Low-stock alert level",
+  "لما كمية أي منتج توصل للرقم ده أو أقل، بيظهرلك في \"قربت تخلص\" وفي تنبيهات الرئيسية.": "When a product's quantity reaches this number or less, it shows under \"Running low\" and in the home alerts.",
+  "الحد العام لكل المنتجات": "Default for all products",
+  "مثلاً 3 = نبّهني لما يفضل 3 قطع أو أقل": "e.g. 3 = alert me when 3 pieces or fewer are left",
+  "وعايز منتج معيّن يبقى له حد مختلف؟ افتح \"تعديل سريع\" للمنتج واكتب الحد بتاعه.": "Want a different level for one product? Open its \"Quick edit\" and set its own level.",
+  "منتج ليه حد خاص دلوقتي.": "products have their own level now.",
+  "⚠️ اكتب رقم": "⚠️ Enter a number",
+  "✅ حد التنبيه بقى": "✅ Alert level is now",
+  "المخزون": "Stock",
+  "نبّهني لما المنتج يوصل": "Alert me when a product reaches",
+  "قطع أو أقل": "pieces or fewer",
+  "أو أقل": "or fewer",
+  "الكمية وصلت لحد التنبيه أو أقل": "Quantity reached the alert level or lower",
+  "حد التنبيه \"قرب يخلص\" للمنتج ده (اختياري)": "\"Running low\" alert level for this product (optional)",
+  "الحد العام للمتجر دلوقتي:": "Current store default:",
+  "اكتب رقم هنا لو المنتج ده محتاج حد مختلف": "enter a number here if this product needs a different level",
   "منتجات أصلية ومضمونة": "Genuine, guaranteed products",
   "دفع عند الاستلام": "Cash on delivery",
   "توصيل سريع لكل المحافظات": "Fast delivery to all governorates",
@@ -6474,7 +6511,7 @@ function stockDisplayForProduct(p){
     return '<span class="tabular" style="color:'+color+'; font-weight:700;">'+total+'</span>'+(zero>0?' <span style="font-size:11px; color:var(--pink-deep);">('+zero+' '+t("لون خلص")+')</span>':'');
   }
   if(p.stock==null) return '<span style="color:var(--ink-soft); font-size:12px;">'+t("غير متتبعة")+'</span>';
-  var color2 = p.stock<=0 ? "var(--pink-deep)" : (p.stock<=5 ? "var(--sunshine-deep)" : "inherit");
+  var color2 = p.stock<=0 ? "var(--pink-deep)" : (p.stock<=lowStockLimit(p) ? "var(--sunshine-deep)" : "inherit");
   return '<span class="tabular" style="color:'+color2+'; font-weight:700;">'+p.stock+'</span>';
 }
 function renderAdminProductsTable(){
@@ -7129,7 +7166,8 @@ document.getElementById("productForm").addEventListener("submit", function(e){
     image: pfImagesData[0] || null,
     colors: pfColorsData.slice(),
     sizes: pfSizesData.slice(),
-    stock: (pfColorsData.length || pfSizesData.length) ? null : (document.getElementById("pfStock").value==="" ? null : Math.max(0, Math.round(+document.getElementById("pfStock").value||0)))
+    stock: (pfColorsData.length || pfSizesData.length) ? null : (document.getElementById("pfStock").value==="" ? null : Math.max(0, Math.round(+document.getElementById("pfStock").value||0))),
+    lowAt: document.getElementById("pfLowAt").value==="" ? null : Math.max(0, Math.round(+document.getElementById("pfLowAt").value||0))
   };
   if(!data.name || !data.cat) return;
   var wasEdit = !!id;
@@ -7158,12 +7196,18 @@ document.getElementById("productForm").addEventListener("submit", function(e){
   } else finishSave();
 });
 var pfSaving = false;
+function updatePfLowAtHint(){
+  var el = document.getElementById("pfLowAtHint"); if(!el) return;
+  el.textContent = t("الحد العام للمتجر دلوقتي:")+" "+fmt(STORE_SETTINGS.lowStock)+" — "+t("اكتب رقم هنا لو المنتج ده محتاج حد مختلف");
+}
 function resetProductForm(){
   document.getElementById("productForm").reset();
   document.getElementById("pfId").value = "";
   document.getElementById("pfRating").value = "4.5";
   document.getElementById("pfReviews").value = "0";
   document.getElementById("pfStock").value = "";
+  document.getElementById("pfLowAt").value = "";
+  updatePfLowAtHint();
   document.getElementById("productFormTitle").textContent = t("➕ إضافة منتج جديد");
   document.getElementById("productFormSubmit").textContent = t("إضافة المنتج");
   document.getElementById("productFormCancel").hidden = true;
@@ -7199,6 +7243,8 @@ function adminEditProduct(p){
     document.getElementById("pfReviews").value = p.reviews;
     document.getElementById("pfBadge").value = p.badge || "";
     document.getElementById("pfStock").value = (p.stock==null ? "" : p.stock);
+    document.getElementById("pfLowAt").value = (p.lowAt==null ? "" : p.lowAt);
+    updatePfLowAtHint();
     pfImagesData = productImages(p).slice();
     document.getElementById("pfImageInput").value = "";
     renderPfImagesPreview();
@@ -7565,7 +7611,6 @@ var ADM = null;
   if(!isAdminApp()) return;
   var html = document.documentElement;
   var dash = document.getElementById("adminDashboard");
-  var LOW_STOCK = 3;
   var SUB_PAGES = {
     orders:    { page:"adminOrdersPage",    open:openAdminOrdersPage,    render:renderAdminOrdersPage,    title:"طلبات العملاء" },
     stock:     { page:"adminStockPage",     open:openAdminStockPage,     render:renderAdminStockPage,     title:"طلبات التوفر" },
@@ -7605,13 +7650,14 @@ var ADM = null;
       var total = tracked.reduce(function(s,x){ return s+(+x.stock||0); },0);
       var zero = tracked.filter(function(x){ return +x.stock<=0; }).length;
       if(productOutOfStockOverall(p)) return { state:"out", total:0, zero:zero };
-      if(zero>0 || tracked.some(function(x){ return +x.stock<=LOW_STOCK; })) return { state:"low", total:total, zero:zero };
+      var lim = lowStockLimit(p);
+      if(zero>0 || tracked.some(function(x){ return +x.stock<=lim; })) return { state:"low", total:total, zero:zero };
       return { state:"ok", total:total };
     }
     if(p.stock==null) return { state:"none", total:null };
     var s = +p.stock + (pendingDelta[p.id]||0);
     if(s<=0) return { state:"out", total:0 };
-    if(s<=LOW_STOCK) return { state:"low", total:s };
+    if(s<=lowStockLimit(p)) return { state:"low", total:s };
     return { state:"ok", total:s };
   }
   function counts(){
@@ -7752,13 +7798,13 @@ var ADM = null;
     h += '<div class="adm-kpis">'
       + kpi("all", "📦", dash_(c.all), t("كل المنتجات"), "is-sky")
       + kpi("out", "⛔", dash_(c.out), t("خلصت من المخزن"), c.out ? "is-danger" : "is-ok")
-      + kpi("low", "⚠️", dash_(c.low), t("قربت تخلص (3 أو أقل)"), c.low ? "is-warn" : "is-ok")
+      + kpi("low", "⚠️", dash_(c.low), t("قربت تخلص")+' ('+fmt(STORE_SETTINGS.lowStock)+' '+t("أو أقل")+')', c.low ? "is-warn" : "is-ok")
       + kpi("orders", "🧾", stats.orders ? fmt(stats.orders.length) : "—", t("كل الطلبات"), "is-sky")
     + '</div>';
 
     var alerts = [];
     if(ready && c.out) alerts.push(alertRow("out", "is-danger", fmt(c.out)+' '+t("منتج خلص من المخزن"), t("العملاء مش هيقدروا يطلبوه — زوّد الكمية")));
-    if(ready && c.low) alerts.push(alertRow("low", "is-warn", fmt(c.low)+' '+t("منتج قرب يخلص"), t("الكمية 3 أو أقل")));
+    if(ready && c.low) alerts.push(alertRow("low", "is-warn", fmt(c.low)+' '+t("منتج قرب يخلص"), t("الكمية وصلت لحد التنبيه أو أقل")+' ('+fmt(STORE_SETTINGS.lowStock)+')'));
     if(stats.stock) alerts.push(alertRow("stock", "is-sky", fmt(stats.stock)+' '+t("طلب أعلمني عند التوفر"), t("عملاء مستنيين منتجات ترجع")));
     if(stats.inquiries) alerts.push(alertRow("inquiries", "is-sky", fmt(stats.inquiries)+' '+t("استفسار من العملاء"), t("رسايل صفحة تواصل معنا")));
     h += '<div class="adm-h"><h2>'+t("محتاج انتباهك")+'</h2></div>';
@@ -7939,6 +7985,8 @@ var ADM = null;
         h += '<div class="adm-qrow"><span class="lbl">'+t("الكمية المتاحة")+'<small>'+t("فاضي = مش متتبعة")+'</small></span>'+stepperInput('id="admQStock"', p.stock)+'</div>';
       }
     }
+    h += '<div class="adm-qsub">'+t("تنبيه المخزون المنخفض")+'</div>'
+      + '<div class="adm-qrow"><span class="lbl">'+t("حد التنبيه للمنتج ده")+'<small>'+t("فاضي = الحد العام للمتجر")+' ('+fmt(STORE_SETTINGS.lowStock)+')</small></span>'+stepperInput('id="admQLowAt"', p.lowAt)+'</div>';
     h += '</div><div class="adm-sheet-foot"><button type="button" class="btn btn-outline" data-q-close>'+t("إلغاء")+'</button><button type="button" class="btn btn-primary" data-q-save>'+t("حفظ")+'</button></div>';
     var sheet = document.getElementById("admSheet");
     sheet.innerHTML = h;
@@ -7962,9 +8010,37 @@ var ADM = null;
       return;
     }
     if(e.target.closest("[data-q-close]")){ closeSheet(); return; }
+    if(e.target.closest("[data-lowdef-save]")){ saveLowDefault(); return; }
     if(e.target.closest("[data-q-save]")) saveQuick();
   });
   function numOrNull(v){ return v==="" ? null : Math.max(0, Math.round(+v||0)); }
+
+  /* ---------- حد التنبيه العام للمخزون المنخفض ---------- */
+  function openLowDefault(){
+    var custom = PRODUCTS.filter(function(p){ return p.lowAt!=null; }).length;
+    var h = '<div class="adm-grab"></div>'
+      + '<div class="adm-sheet-head"><span class="ph">⚠️</span><b>'+t("حد التنبيه للمخزون المنخفض")+'</b></div>'
+      + '<div class="adm-sheet-body">'
+      + '<p class="adm-hint" style="margin:0 0 10px">'+t("لما كمية أي منتج توصل للرقم ده أو أقل، بيظهرلك في \"قربت تخلص\" وفي تنبيهات الرئيسية.")+'</p>'
+      + '<div class="adm-qrow"><span class="lbl">'+t("الحد العام لكل المنتجات")+'<small>'+t("مثلاً 3 = نبّهني لما يفضل 3 قطع أو أقل")+'</small></span>'+stepperInput('id="admLowDef"', STORE_SETTINGS.lowStock, "3")+'</div>'
+      + '<p class="adm-hint" style="margin:10px 0 0">'+t("وعايز منتج معيّن يبقى له حد مختلف؟ افتح \"تعديل سريع\" للمنتج واكتب الحد بتاعه.")
+        + (custom ? ' '+fmt(custom)+' '+t("منتج ليه حد خاص دلوقتي.") : '')+'</p>'
+      + '</div><div class="adm-sheet-foot"><button type="button" class="btn btn-outline" data-q-close>'+t("إلغاء")+'</button><button type="button" class="btn btn-primary" data-lowdef-save>'+t("حفظ")+'</button></div>';
+    var sheet = document.getElementById("admSheet");
+    sheet.innerHTML = h;
+    sheet.classList.add("show");
+    document.getElementById("admSheetBackdrop").classList.add("show");
+    try{ if(!(history.state && history.state.adm)) history.pushState({adm:1}, "", location.href); }catch(e){}
+  }
+  function saveLowDefault(){
+    var v = document.getElementById("admLowDef").value;
+    if(v===""){ showToast(t("⚠️ اكتب رقم")); return; }
+    var n = Math.max(0, Math.round(+v||0));
+    closeSheet();
+    if(n!==STORE_SETTINGS.lowStock) queueCatalogOps([{ op:"settings", lowStock:n }]);
+    showToast(t("✅ حد التنبيه بقى")+" "+fmt(n));
+    ADM.refresh();
+  }
   function saveQuick(){
     var id = quickId, sheet = document.getElementById("admSheet");
     var p0 = findP(id); if(!p0) return;
@@ -7981,6 +8057,8 @@ var ADM = null;
       if(hasColors(p0)) sheet.querySelectorAll("[data-q-color-stock]").forEach(function(el){ vals.colors[el.dataset.qColorStock] = numOrNull(el.value); });
       else vals.stock = numOrNull(document.getElementById("admQStock").value);
     }
+    var lowIn = document.getElementById("admQLowAt");
+    var lowAtVal = lowIn ? numOrNull(lowIn.value) : (p0.lowAt==null ? null : p0.lowAt);
     var labels = hasSizes(p0) ? p0.sizes.map(function(s){ return s.label; }) : null;
     var colorNames = hasColors(p0) ? p0.colors.map(function(c){ return c.name; }) : null;
     closeSheet();
@@ -7992,6 +8070,7 @@ var ADM = null;
       if(colorNames) op.colors = colorNames.map(function(name, i){ return { name:name, stock:vals.colors[i] }; });
       else op.stock = vals.stock;
     }
+    if(lowAtVal !== (p0.lowAt==null ? null : +p0.lowAt)) op.lowAt = lowAtVal;
     queueCatalogOps([op]);
     showToast(t("✅ اتحفظ التعديل"));
   }
@@ -8035,7 +8114,7 @@ var ADM = null;
     sBasic.appendChild(catRow);
 
     var sPrice = sec("💰", "السعر والكمية");
-    ["pfPriceRow","pfPriceSizesNote","pfStockRow","pfStockColorsNote","pfStockSizesNote"].forEach(function(id){ sPrice.appendChild(document.getElementById(id)); });
+    ["pfPriceRow","pfPriceSizesNote","pfStockRow","pfStockColorsNote","pfStockSizesNote","pfLowAtRow"].forEach(function(id){ sPrice.appendChild(document.getElementById(id)); });
 
     var dSizes = det("📦", "أحجام العلب", "لو المنتج بأكتر من حجم علبة بسعر وكمية مختلفين", "admSecSizes");
     var szLabel = sizesField.querySelector(":scope > label"); if(szLabel) szLabel.style.display = "none";
@@ -8124,6 +8203,9 @@ var ADM = null;
       + li("customers", "👥", t("بيانات العملاء"), "")
       + li("analytics", "📊", t("تحليل الزوار"), "")
     + '</div>'
+    + '<div class="adm-group-title">'+t("المخزون")+'</div><div class="adm-list">'
+      + li("lowstock", "⚠️", t("حد التنبيه للمخزون المنخفض"), t("نبّهني لما المنتج يوصل")+' '+fmt(STORE_SETTINGS.lowStock)+' '+t("قطع أو أقل"))
+    + '</div>'
     + (function(){
         var left = PRODUCTS.reduce(function(s2, p){ return s2 + productDataImages(p).length; }, 0);
         return '<div class="adm-group-title">'+t("سرعة الموقع")+'</div><div class="adm-list">'
@@ -8147,6 +8229,7 @@ var ADM = null;
     var b = e.target.closest("[data-adm-more]"); if(!b) return;
     var a = b.dataset.admMore;
     if(a==="cats" || a==="settings" || SUB_PAGES[a]){ go(a, { parent:"more" }); return; }
+    if(a==="lowstock"){ openLowDefault(); return; }
     if(a==="speed"){ if(imgMigrateRunning) showToast(t("⏳ النقل شغال، استنى لحد ما يخلص")); else if(imgEndpointMissing) showToast(t("⚠️ ملف img.js مش موجود على السيرفر")); else { migrateCatalogImages(); if(!imgMigrateRunning) showToast(t("كل الصور اتنقلت ✅ الموقع بيفتح بسرعة")); } return; }
     if(a==="export") document.getElementById("adminExportBtn").click();
     if(a==="import") document.getElementById("adminImportBtn").click();

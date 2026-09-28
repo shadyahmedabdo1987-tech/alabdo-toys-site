@@ -4965,13 +4965,30 @@ function renderFilterList(){
   }).join("");
 }
 
+/* توحيد الكتابة للبحث: من غير تشكيل، وأ/إ/آ = ا، ة = ه، ى = ي، والأرقام العربي = الإنجليزي */
+function normSearch(s){
+  return String(s||"").toLowerCase()
+    .replace(/[\u064B-\u065F\u0670\u0640]/g,"")
+    .replace(/[أإآٱ]/g,"ا").replace(/ة/g,"ه").replace(/ى/g,"ي").replace(/ؤ/g,"و").replace(/ئ/g,"ي")
+    .replace(/[٠-٩]/g,function(d){ return String("٠١٢٣٤٥٦٧٨٩".indexOf(d)); })
+    .replace(/\s+/g," ").trim();
+}
 function applyProducts(){
   var list = PRODUCTS.slice();
   if(state.cat!=="all"){ list = list.filter(function(p){ return p.cat===state.cat; }); }
   if(state.badge==="sale"){ list = list.filter(function(p){ return p.old; }); }
   if(state.badge==="new"){ list = list.filter(function(p){ return p.badge==="new"; }); }
   if(state.badge==="wish"){ list = list.filter(function(p){ return !!FAVORITES[p.id]; }); }
-  if(state.q){ var q=state.q.trim().toLowerCase(); list = list.filter(function(p){ return p.name.toLowerCase().indexOf(q)>-1 || (p.name_en && p.name_en.toLowerCase().indexOf(q)>-1); }); }
+  if(state.q && normSearch(state.q)){
+    /* كل كلمة كتبها العميل (حتى لو أول حروف بس) لازم تبقى موجودة في اسم
+       المنتج (عربي أو إنجليزي) أو اسم قسمه - ومن غير فرق بين أ/إ/ا و ة/ه و ى/ي */
+    var qWords = normSearch(state.q).split(" ");
+    list = list.filter(function(p){
+      var c = CATS.find(function(x){ return x.id===p.cat; });
+      var hay = normSearch(p.name+" "+(p.name_en||"")+" "+(c ? (c.name||"")+" "+(c.name_en||"") : ""));
+      return qWords.every(function(w){ return hay.indexOf(w)>-1; });
+    });
+  }
   if(state.sort==="price-asc") list.sort(function(a,b){ return a.price-b.price; });
   else if(state.sort==="price-desc") list.sort(function(a,b){ return b.price-a.price; });
   else if(state.sort==="discount") list.sort(function(a,b){ var da=a.old?1-a.price/a.old:0, db=b.old?1-b.price/b.old:0; return db-da; });
@@ -4987,6 +5004,9 @@ function skeletonCards(n){
   return h;
 }
 function renderProductsView(){
+  /* خانة البحث بتفضل متطابقة مع الفلتر الحالي (لو دخلنا قسم أو "كل المنتجات" تتمسح) */
+  var sIn = document.getElementById("searchInput");
+  if(sIn && document.activeElement!==sIn && sIn.value!==(state.q||"")) sIn.value = state.q||"";
   if(!CATALOG_READY){
     document.getElementById("productsGrid").innerHTML = skeletonCards(6);
     document.getElementById("emptyState").hidden = true;
@@ -5027,6 +5047,24 @@ document.getElementById("categoryRow").addEventListener("click", function(e){
 });
 
 function doSearch(q){ state.q=q; state.cat="all"; state.badge=null; goToView("products"); renderProductsView(); }
+/* بحث فوري: المنتجات بتظهر مع أول حروف بتتكتب، ولو البحث اتمسح بترجع كل
+   المنتجات تاني (من غير ما نضغط زرار البحث). */
+var liveSearchTimer = null;
+function liveSearch(inp){
+  clearTimeout(liveSearchTimer);
+  liveSearchTimer = setTimeout(function(){
+    var q = inp.value;
+    var onProducts = document.getElementById("view-products").classList.contains("active");
+    if(normSearch(q)){
+      state.q = q; state.cat = "all"; state.badge = null;
+      if(!onProducts) goToView("products");
+      renderProductsView();
+    } else if(onProducts && state.q){
+      state.q = ""; renderProductsView();
+    }
+  }, 120);
+}
+document.getElementById("searchInput").addEventListener("input", function(){ liveSearch(this); });
 document.getElementById("searchForm").addEventListener("submit", function(e){ e.preventDefault(); doSearch(document.getElementById("searchInput").value); });
 document.getElementById("mobileSearchForm").addEventListener("submit", function(e){ e.preventDefault(); closeAllPanels(); doSearch(document.getElementById("mobileSearchInput").value); });
 
@@ -7320,6 +7358,7 @@ function goToView(name){
   if(name==="delete-account") setTimeout(updateDeleteAcctBtn, 0);
   setTimeout(updateBackToAccount, 0);
   document.querySelectorAll(".view").forEach(function(v){ v.classList.toggle("active", v.dataset.view===name); });
+  if(name!=="products"){ var sIn = document.getElementById("searchInput"); if(sIn && sIn.value && document.activeElement!==sIn) sIn.value = ""; }
   document.querySelectorAll("[data-view-link]").forEach(function(a){
     var match = a.dataset.viewLink===name;
     /* لصفحة المنتجات فيه أكتر من رابط بيودّي لها (جميع المنتجات / وصل حديثاً

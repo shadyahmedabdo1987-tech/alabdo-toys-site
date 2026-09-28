@@ -113,7 +113,10 @@ export async function getCatalog(env){
   }catch(e){ return null; }
 }
 export async function saveCatalog(env, catalog){
-  await env.STORE_KV.put("products", JSON.stringify({ categories: catalog.categories||[], products: catalog.products||[] }));
+  /* keep every other field of the catalog (settings like the low-stock
+     alert level, rev...) - only categories/products are normalized */
+  var out = Object.assign({}, catalog, { categories: catalog.categories||[], products: catalog.products||[] });
+  await env.STORE_KV.put("products", JSON.stringify(out));
 }
 
 /* Reads customer credentials off X-Customer-Id / X-Customer-Pass headers

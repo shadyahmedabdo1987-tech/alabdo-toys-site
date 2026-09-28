@@ -810,7 +810,9 @@ html.app-mode .link-more{font-size:13px;}
 html.app-mode .hero{background:none;}
 html.app-mode .hero-inner{padding-block:10px 0; gap:10px;}
 html.app-mode .hero-banner-wrap{border-radius:14px; box-shadow:0 4px 12px hsl(var(--shadow)/.12);}
-html.app-mode .wholesale-promo{box-shadow:none; border-radius:16px;}
+/* بانر الخصومات جوه التطبيق: من غير الإطار الوردي، وبياخد العرض كله زي البانر الرئيسي */
+html.app-mode .wholesale-promo{background:none; border:0; padding:0; box-shadow:none; border-radius:0; max-width:none; gap:0;}
+html.app-mode .wholesale-discount-banner{aspect-ratio:1600/620; border-radius:14px; box-shadow:0 4px 12px hsl(var(--shadow)/.12);}
 
 /* الأقسام: دواير تتسحب يمين وشمال */
 html.app-mode .cat-row{display:flex; gap:14px; overflow-x:auto; scrollbar-width:none; padding:2px 2px 6px;}

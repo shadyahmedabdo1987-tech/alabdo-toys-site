@@ -416,8 +416,13 @@ jobs:
               private String startUrl(Intent intent) {
                   /* جاي من إشعار المخزون: نفتح المنتجات على فلتر "خلصت" أو "قربت تخلص" */
                   String f = intent != null ? intent.getStringExtra("admf") : null;
-                  if ("out".equals(f) || "low".equals(f)) return HOME.replace("?source=admin", "?source=admin&admf=" + f);
+                  if (isAdmf(f)) return HOME.replace("?source=admin", "?source=admin&admf=" + f);
                   return HOME;
+              }
+
+              /* الشاشات اللي الإشعارات بتفتحها: خلصت / قربت تخلص / الطلبات / الاستفسارات / طلبات التوفر */
+              private static boolean isAdmf(String f) {
+                  return "out".equals(f) || "low".equals(f) || "orders".equals(f) || "inquiries".equals(f) || "stock".equals(f) || "customers".equals(f);
               }
 
               /* أندرويد 13 وأحدث: لازم توافق على الإشعارات (بنسأل مرة واحدة) */
@@ -456,7 +461,7 @@ jobs:
                   s.setSupportMultipleWindows(false);
                   s.setJavaScriptCanOpenWindowsAutomatically(false);
                   s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-                  s.setUserAgentString(s.getUserAgentString() + " AlAbdoAdmin/4");
+                  s.setUserAgentString(s.getUserAgentString() + " AlAbdoAdmin/5");
                   CookieManager.getInstance().setAcceptCookie(true);
                   web.setOverScrollMode(View.OVER_SCROLL_NEVER);
 
@@ -492,6 +497,18 @@ jobs:
                       public void saveFile(final String name, final String mime, final String content) {
                           runOnUiThread(new Runnable() { @Override public void run() { saveToDownloads(name, mime, content); } });
                       }
+                      /* مفتاح إشعارات الطلبات (بيتحفظ على الموبايل بس) */
+                      @android.webkit.JavascriptInterface
+                      public void setNotifyToken(String token) {
+                          StockWatchJob.setNotifyToken(getApplicationContext(), token);
+                          if (token != null && !token.isEmpty()) {
+                              try { StockWatchJob.ensureScheduled(getApplicationContext()); } catch (Exception e) { /* ignore */ }
+                          }
+                      }
+                      @android.webkit.JavascriptInterface
+                      public boolean hasNotifyToken() { return !StockWatchJob.getNotifyToken(getApplicationContext()).isEmpty(); }
+                      @android.webkit.JavascriptInterface
+                      public String getNotifyToken() { return StockWatchJob.getNotifyToken(getApplicationContext()); }
                       @android.webkit.JavascriptInterface
                       public void appReady() {
                           runOnUiThread(new Runnable() { @Override public void run() { hideSplash(); } });
@@ -665,7 +682,7 @@ jobs:
                   /* تطبيق الإدارة مش بيستقبل لينكات من برّه - بس إشعارات المخزون بتفتح
                      المنتجات على الفلتر المناسب */
                   String f = intent != null ? intent.getStringExtra("admf") : null;
-                  if ("out".equals(f) || "low".equals(f)) {
+                  if (isAdmf(f)) {
                       web.evaluateJavascript("window.admOpenFilter && admOpenFilter('" + f + "')", null);
                   }
               }
@@ -734,6 +751,19 @@ jobs:
               static final String GROUP = "alabdo_stock";
               static final int SUMMARY_ID = 900;
               static final String URL_STOCK = "https://alabdo-toys.com/api/stock";
+              static final String URL_FEED = "https://alabdo-toys.com/api/admin/feed";
+              static final String CH_ORDERS = "new_orders", CH_MSGS = "customer_msgs";
+
+              /* مفتاح الإشعارات (بياخده التطبيق بعد تسجيل الدخول - بيقرا الجديد بس) */
+              static void setNotifyToken(Context c, String token) {
+                  SharedPreferences.Editor e = c.getSharedPreferences(PREFS, MODE_PRIVATE).edit();
+                  if (token == null || token.isEmpty()) e.remove("notify_token");
+                  else e.putString("notify_token", token).putBoolean("feed_baseline", false);
+                  e.apply();
+              }
+              static String getNotifyToken(Context c) {
+                  return c.getSharedPreferences(PREFS, MODE_PRIVATE).getString("notify_token", "");
+              }
 
               /* بتتنادى كل ما التطبيق يفتح: تتأكد إن المراقبة شغالة + تشيك دلوقتي */
               static void ensureScheduled(Context c) {
@@ -763,6 +793,8 @@ jobs:
                           boolean retry = false;
                           try { check(getApplicationContext()); }
                           catch (Exception e) { retry = params.getJobId() == JOB_NOW; }
+                          try { checkFeed(getApplicationContext()); }
+                          catch (Exception e) { retry = params.getJobId() == JOB_NOW; }
                           jobFinished(params, retry);
                       }
                   }).start();
@@ -772,14 +804,20 @@ jobs:
               @Override
               public boolean onStopJob(JobParameters params) { return true; }
 
-              private static String fetch() throws Exception {
-                  HttpURLConnection con = (HttpURLConnection) new URL(URL_STOCK + "?t=" + System.currentTimeMillis()).openConnection();
+              static class Unauthorized extends Exception {}
+
+              private static String fetch() throws Exception { return fetch(URL_STOCK, null); }
+
+              private static String fetch(String url, String token) throws Exception {
+                  HttpURLConnection con = (HttpURLConnection) new URL(url + "?t=" + System.currentTimeMillis()).openConnection();
+                  if (token != null) con.setRequestProperty("X-Notify-Token", token);
                   con.setConnectTimeout(15000);
                   con.setReadTimeout(20000);
                   con.setUseCaches(false);
                   con.setRequestProperty("Cache-Control", "no-cache");
                   con.setRequestProperty("User-Agent", "AlAbdoAdmin/3 stock-watch");
                   try {
+                      if (con.getResponseCode() == 401) throw new Unauthorized();
                       if (con.getResponseCode() != 200) throw new Exception("http " + con.getResponseCode());
                       InputStream in = con.getInputStream();
                       ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -882,12 +920,100 @@ jobs:
 
               private static int notifId(String id) { return 1000 + (id.hashCode() & 0x3fff); }
 
+              /* ---------- طلبات جديدة / استفسارات / طلبات توفّر ---------- */
+              static void checkFeed(Context c) throws Exception {
+                  SharedPreferences sp = c.getSharedPreferences(PREFS, MODE_PRIVATE);
+                  String tok = sp.getString("notify_token", "");
+                  if (tok.isEmpty()) return;
+                  JSONObject res;
+                  try { res = new JSONObject(fetch(URL_FEED, tok)); }
+                  catch (Unauthorized u) { sp.edit().remove("notify_token").apply(); return; }
+                  NotificationManager nm = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
+                  if (nm == null) return;
+                  ensureChannels(nm);
+                  boolean baseline = sp.getBoolean("feed_baseline", false);
+                  JSONObject seen = new JSONObject(sp.getString("feed_seen", "{}"));
+                  JSONObject nowSeen = new JSONObject();
+                  String[] types = { "orders", "inquiries", "stockRequests", "customers" };
+                  for (String type : types) {
+                      JSONArray items = res.optJSONArray(type);
+                      if (items == null) items = new JSONArray();
+                      Set<String> old = new HashSet<>();
+                      JSONArray oldArr = seen.optJSONArray(type);
+                      if (oldArr != null) for (int i = 0; i < oldArr.length(); i++) old.add(oldArr.optString(i));
+                      JSONArray ids = new JSONArray();
+                      java.util.List<JSONObject> fresh = new java.util.ArrayList<>();
+                      for (int i = 0; i < items.length(); i++) {
+                          JSONObject it = items.optJSONObject(i);
+                          if (it == null) continue;
+                          String id = it.optString("id", "");
+                          ids.put(id);
+                          if (!old.contains(id)) fresh.add(it);
+                      }
+                      nowSeen.put(type, ids);
+                      if (!baseline || fresh.isEmpty()) continue;
+                      if (fresh.size() > 4) {
+                          String t = "orders".equals(type) ? ("🧾 " + num(fresh.size()) + " طلبات جديدة")
+                              : "inquiries".equals(type) ? ("📨 " + num(fresh.size()) + " استفسارات جديدة")
+                              : "customers".equals(type) ? ("👤 " + num(fresh.size()) + " عملاء جداد سجّلوا")
+                              : ("🔔 " + num(fresh.size()) + " طلبات توفّر جديدة");
+                          post(c, nm, 3000 + (type.hashCode() & 0x1ff), "orders".equals(type) ? CH_ORDERS : CH_MSGS, t, "دوس عشان تشوفهم.", admfOf(type));
+                          continue;
+                      }
+                      for (JSONObject it : fresh) postFeedItem(c, nm, type, it);
+                  }
+                  sp.edit().putString("feed_seen", nowSeen.toString()).putBoolean("feed_baseline", true).apply();
+              }
+
+              private static String admfOf(String type) {
+                  if ("customers".equals(type)) return "customers";
+                  return "orders".equals(type) ? "orders" : ("inquiries".equals(type) ? "inquiries" : "stock");
+              }
+
+              private static String money(double v) {
+                  return (v == Math.floor(v) ? String.valueOf((long) v) : String.valueOf(v)) + " ج.م";
+              }
+
+              private static void postFeedItem(Context c, NotificationManager nm, String type, JSONObject it) {
+                  String id = it.optString("id", "");
+                  int nid = 4000 + (id.hashCode() & 0x3fff);
+                  String name = it.optString("name", "").trim();
+                  if ("orders".equals(type)) {
+                      int qty = it.optInt("qty", 0);
+                      post(c, nm, nid, CH_ORDERS, "🧾 طلب جديد" + (name.isEmpty() ? "" : " من " + name),
+                          "الإجمالي " + money(it.optDouble("total", 0)) + (qty > 0 ? " · " + num(qty) + (qty == 1 ? " قطعة" : " قطع") : ""), "orders");
+                  } else if ("customers".equals(type)) {
+                      String gov = it.optString("governorate", "").trim();
+                      post(c, nm, nid, CH_MSGS, "👤 عميل جديد سجّل" + (name.isEmpty() ? "" : ": " + name),
+                          (gov.isEmpty() ? "" : "من " + gov + " - ") + "دوس عشان تشوف بيانات العملاء.", "customers");
+                  } else if ("inquiries".equals(type)) {
+                      post(c, nm, nid, CH_MSGS, "📨 استفسار جديد" + (name.isEmpty() ? "" : " من " + name),
+                          it.optString("message", ""), "inquiries");
+                  } else {
+                      String variant = "";
+                      if (!it.isNull("colorName") && !it.optString("colorName", "").isEmpty()) variant += " (" + it.optString("colorName") + ")";
+                      if (!it.isNull("sizeLabel") && !it.optString("sizeLabel", "").isEmpty()) variant += " (" + it.optString("sizeLabel") + ")";
+                      post(c, nm, nid, CH_MSGS, "🔔 طلب توفّر: " + it.optString("productName", "") + variant,
+                          (name.isEmpty() ? "عميل" : name) + " مستني المنتج يرجع - كلّمه أول ما تزوّد الكمية.", "stock");
+                  }
+              }
+
               private static void ensureChannels(NotificationManager nm) {
                   if (Build.VERSION.SDK_INT < 26) return;
                   if (nm.getNotificationChannel(CH_OUT) == null) {
                       NotificationChannel a = new NotificationChannel(CH_OUT, "منتجات خلصت من المخزن", NotificationManager.IMPORTANCE_HIGH);
                       a.setDescription("إشعار لكل منتج كميته خلصت");
                       nm.createNotificationChannel(a);
+                  }
+                  if (nm.getNotificationChannel(CH_ORDERS) == null) {
+                      NotificationChannel o = new NotificationChannel(CH_ORDERS, "طلبات جديدة", NotificationManager.IMPORTANCE_HIGH);
+                      o.setDescription("إشعار لكل طلب جديد من العملاء");
+                      nm.createNotificationChannel(o);
+                  }
+                  if (nm.getNotificationChannel(CH_MSGS) == null) {
+                      NotificationChannel m = new NotificationChannel(CH_MSGS, "استفسارات وطلبات توفّر وعملاء جداد", NotificationManager.IMPORTANCE_DEFAULT);
+                      m.setDescription("إشعار لما عميل يبعت استفسار، أو يطلب يتبلّغ لما منتج يرجع، أو يسجّل حساب جديد");
+                      nm.createNotificationChannel(m);
                   }
                   if (nm.getNotificationChannel(CH_LOW) == null) {
                       NotificationChannel b = new NotificationChannel(CH_LOW, "منتجات قربت تخلص", NotificationManager.IMPORTANCE_DEFAULT);
@@ -901,7 +1027,7 @@ jobs:
                   Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(c, ch) : new Notification.Builder(c);
                   b.setSmallIcon(R.drawable.ic_stat_notify).setColor(0xFFEE1F6C)
                       .setLargeIcon(android.graphics.BitmapFactory.decodeResource(c.getResources(), R.drawable.notif_logo));
-                  if (Build.VERSION.SDK_INT < 26) b.setPriority(CH_OUT.equals(ch) ? Notification.PRIORITY_HIGH : Notification.PRIORITY_DEFAULT);
+                  if (Build.VERSION.SDK_INT < 26) b.setPriority((CH_OUT.equals(ch) || CH_ORDERS.equals(ch)) ? Notification.PRIORITY_HIGH : Notification.PRIORITY_DEFAULT);
                   return b;
               }
 
@@ -913,13 +1039,14 @@ jobs:
               }
 
               private static void post(Context c, NotificationManager nm, int id, String ch, String title, String text, String filter) {
+                  boolean stockGroup = CH_OUT.equals(ch) || CH_LOW.equals(ch);
                   Notification.Builder b = builder(c, ch)
                       .setContentTitle(title)
                       .setContentText(text)
                       .setStyle(new Notification.BigTextStyle().bigText(text))
                       .setAutoCancel(true)
                       .setContentIntent(open(c, filter, id));
-                  if (Build.VERSION.SDK_INT >= 24) b.setGroup(GROUP);
+                  if (Build.VERSION.SDK_INT >= 24 && stockGroup) b.setGroup(GROUP);
                   try { nm.notify(id, b.build()); } catch (SecurityException e) { /* not allowed */ }
               }
           }

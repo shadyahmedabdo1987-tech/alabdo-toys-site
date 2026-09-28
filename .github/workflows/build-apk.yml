@@ -243,6 +243,8 @@ jobs:
           cat > $P/app/src/main/java/com/alabdotoys/app/MainActivity.java <<'EOF'
           package com.alabdotoys.app;
 
+          import android.animation.ObjectAnimator;
+          import android.animation.ValueAnimator;
           import android.app.Activity;
           import android.content.ActivityNotFoundException;
           import android.content.Intent;
@@ -261,7 +263,9 @@ jobs:
           import android.view.Window;
           import android.view.WindowInsets;
           import android.view.WindowInsetsController;
+          import android.view.animation.LinearInterpolator;
           import android.webkit.CookieManager;
+          import android.webkit.JavascriptInterface;
           import android.webkit.ValueCallback;
           import android.webkit.WebChromeClient;
           import android.webkit.WebResourceError;
@@ -295,6 +299,7 @@ jobs:
               private ValueCallback<Uri[]> fileCallback;
               private Uri cameraUri;
               private boolean splashHidden = false;
+              private ObjectAnimator splashSpin;
 
               @Override
               protected void onCreate(Bundle savedInstanceState) {
@@ -365,26 +370,50 @@ jobs:
                   }
                   new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                       @Override public void run() { hideSplash(); }
-                  }, 8000);
+                  }, 15000);
               }
 
+              /* شاشة الافتتاح: اللوجو بيلف حوالين نفسه (زي لوجو الموقع) وبتفضل
+                 ظاهرة لحد ما الصفحة تبلغنا إن المنتجات حملت (appReady)،
+                 وبحد أقصى 15 ثانية لو النت بطيء جدًا. */
               private View buildSplash() {
                   FrameLayout f = new FrameLayout(this);
                   f.setBackgroundColor(0xFFFFF8EF);
                   ImageView logo = new ImageView(this);
                   logo.setImageResource(R.drawable.splash_logo);
-                  int size = (int) (140 * getResources().getDisplayMetrics().density);
+                  float density = getResources().getDisplayMetrics().density;
+                  int size = (int) (140 * density);
                   f.addView(logo, new FrameLayout.LayoutParams(size, size, Gravity.CENTER));
                   f.setClickable(true);
+                  logo.setCameraDistance(9000 * density);
+                  splashSpin = ObjectAnimator.ofFloat(logo, "rotationY", 0f, 360f);
+                  splashSpin.setDuration(2000);
+                  splashSpin.setInterpolator(new LinearInterpolator());
+                  splashSpin.setRepeatCount(ValueAnimator.INFINITE);
+                  splashSpin.setRepeatMode(ValueAnimator.RESTART);
+                  splashSpin.start();
                   return f;
               }
 
               private void hideSplash() {
                   if (splashHidden || splash == null) return;
                   splashHidden = true;
-                  splash.animate().alpha(0f).setDuration(250).withEndAction(new Runnable() {
-                      @Override public void run() { splash.setVisibility(View.GONE); }
+                  splash.animate().alpha(0f).setDuration(300).withEndAction(new Runnable() {
+                      @Override public void run() {
+                          splash.setVisibility(View.GONE);
+                          if (splashSpin != null) splashSpin.cancel();
+                      }
                   }).start();
+              }
+
+              /* الصفحة بتنادي AlAbdoNative.appReady() لما المنتجات تترسم */
+              private class SplashBridge {
+                  @JavascriptInterface
+                  public void appReady() {
+                      runOnUiThread(new Runnable() {
+                          @Override public void run() { hideSplash(); }
+                      });
+                  }
               }
 
               private static void setHeight(View v, int h) {
@@ -417,9 +446,10 @@ jobs:
                   s.setSupportMultipleWindows(false);
                   s.setJavaScriptCanOpenWindowsAutomatically(false);
                   s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-                  s.setUserAgentString(s.getUserAgentString() + " AlAbdoApp/2");
+                  s.setUserAgentString(s.getUserAgentString() + " AlAbdoApp/3");
                   CookieManager.getInstance().setAcceptCookie(true);
                   web.setOverScrollMode(View.OVER_SCROLL_NEVER);
+              web.addJavascriptInterface(new SplashBridge(), "AlAbdoNative");
 
                   web.setWebViewClient(new WebViewClient() {
                       @Override
@@ -427,9 +457,13 @@ jobs:
                           return handleUrl(request.getUrl());
                       }
                       @Override
-                      public void onPageCommitVisible(WebView view, String url) { hideSplash(); }
-                      @Override
-                      public void onPageFinished(WebView view, String url) { hideSplash(); }
+                      public void onPageFinished(WebView view, String url) {
+                          /* نسخة قديمة من الموقع (من غير appReady)؟ نقفل الشاشة على طول */
+                          if (splashHidden) return;
+                          view.evaluateJavascript("window.AA_SPLASH===1", new ValueCallback<String>() {
+                              @Override public void onReceiveValue(String v) { if (!"true".equals(v)) hideSplash(); }
+                          });
+                      }
                       @Override
                       public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
                           if (request.isForMainFrame()) showOffline();

@@ -2890,6 +2890,8 @@ document.getElementById("themeToggle").addEventListener("click", function(){
    الأقسام السبعة، ومحافظات مصر. الصفحات القانونية ولوحة التحكم وأسماء/أوصاف
    المنتجات هتتضاف في مراحل تالية. */
 var I18N_EN = {
+  "تمسح كل المنتجات اللي في السلة؟": "Remove all products from your cart?",
+  "🗑️ السلة اتمسحت": "🗑️ Cart cleared",
   "تنبيه المخزون المنخفض": "Low-stock alert",
   "حد التنبيه للمنتج ده": "Alert level for this product",
   "فاضي = الحد العام للمتجر": "Empty = store default",
@@ -3860,7 +3862,31 @@ function renderCartBadge(){
   document.getElementById("cartCount").textContent = n;
   var tb = document.getElementById("appTabCartCount");
   if(tb){ tb.textContent = n > 99 ? "99+" : n; tb.setAttribute("data-zero", n ? "0" : "1"); }
+  notifyNativeCart(n);
 }
+/* تطبيق الأندرويد بيعرف عدد المنتجات اللي في السلة، عشان لو العميل قفل
+   التطبيق وسايب منتجات في السلة يطلعله إشعار يفكّره يكمّل الطلب أو يمسحها. */
+function notifyNativeCart(n){
+  try{
+    var nat = window.AlAbdoNative;
+    if(!nat || typeof nat.cartChanged !== "function") return;
+    var names = (CATALOG_READY && n) ? cartItems().map(function(it){ return pName(it.p); }).slice(0, 3).join("، ") : "";
+    nat.cartChanged(n, names);
+  }catch(e){}
+}
+/* فتح السلة من إشعار التطبيق: "cart" = افتح السلة، "clearcart" = افتح السلة
+   واسأل العميل لو عايز يمسح كل المنتجات اللي فيها. */
+function aaNotifOpen(what){
+  if(what!=="cart" && what!=="clearcart") return;
+  closeAllPanels(); renderCartDrawer(); openDrawer();
+  if(typeof updateAppTabbar === "function") updateAppTabbar();
+  if(what==="clearcart" && cartCount()>0){
+    setTimeout(function(){
+      if(confirm(t("تمسح كل المنتجات اللي في السلة؟"))){ clearCart(); showToast(t("🗑️ السلة اتمسحت")); }
+    }, 350);
+  }
+}
+window.aaNotifOpen = aaNotifOpen;
 
 function renderCartDrawer(){
   var body = document.getElementById("cartBody");
@@ -7626,6 +7652,21 @@ var ADM = null;
   var list = { filter:"all", q:"" };
   var stats = { at:0, loading:false, orders:null, ordersToday:0, inquiries:null, stock:null };
   var formMode = "new", formDirty = false, addAnother = false, lastCat = null;
+  /* إشعار "خلص من المخزن" / "قرب يخلص" من التطبيق بيفتح المنتجات على الفلتر ده */
+  var pendingFilter = null;
+  try{
+    var admf = new URLSearchParams(location.search).get("admf");
+    if(admf==="out" || admf==="low"){
+      pendingFilter = admf;
+      var u0 = new URL(location.href); u0.searchParams.delete("admf");
+      history.replaceState(history.state, "", u0.pathname + u0.search + u0.hash);
+    }
+  }catch(e){}
+  window.admOpenFilter = function(f){
+    if(f!=="out" && f!=="low") return;
+    if(shownOnce && isAdminAuthed()){ closeSheet(); list.filter = f; go("products"); }
+    else pendingFilter = f;
+  };
 
   var ICON = {
     refresh:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>',
@@ -8277,6 +8318,7 @@ var ADM = null;
     onShow: function(){
       if(!shownOnce){ shownOnce = true; go("home", { force:true }); }
       else updateBars();
+      if(pendingFilter){ list.filter = pendingFilter; pendingFilter = null; go("products"); }
     },
     onLogout: function(){ shownOnce = false; cur = null; closeSheet(); stats = { at:0, loading:false, orders:null, ordersToday:0, inquiries:null, stock:null }; updateBadges(); },
     /* بعد أي تغيير في المنتجات (إضافة/تعديل/حذف/تحميل من السيرفر) */
@@ -8328,6 +8370,15 @@ loadInitialData(function(){
     initScrollReveal();
     loadHomeReviews();
     appSplashWhenImagesReady();
+    /* جاي من إشعار السلة (?aa_open=cart أو clearcart) */
+    try{
+      var aaOpen = new URLSearchParams(location.search).get("aa_open");
+      if(aaOpen){
+        var u = new URL(location.href); u.searchParams.delete("aa_open");
+        history.replaceState(history.state, "", u.pathname + u.search + u.hash);
+        setTimeout(function(){ aaNotifOpen(aaOpen); }, 400);
+      }
+    }catch(e){}
   });
 });
 /* المنتجات اترسمت: نستنى صور أول شاشة (البانر + أول كروت) تحمل - بحد أقصى

@@ -520,6 +520,26 @@ jobs:
                       public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
                           return openFileChooser(callback, params);
                       }
+                      /* أي رسالة تأكيد/تنبيه من الصفحة: بشكل التطبيق، من غير "The page at ... displays" */
+                      @Override
+                      public boolean onJsAlert(WebView view, String url, String message, final android.webkit.JsResult result) {
+                          new android.app.AlertDialog.Builder(view.getContext(), android.R.style.Theme_DeviceDefault_Light_Dialog_Alert)
+                              .setMessage(message)
+                              .setPositiveButton("تمام", (d, w) -> result.confirm())
+                              .setOnCancelListener(d -> result.cancel())
+                              .show();
+                          return true;
+                      }
+                      @Override
+                      public boolean onJsConfirm(WebView view, String url, String message, final android.webkit.JsResult result) {
+                          new android.app.AlertDialog.Builder(view.getContext(), android.R.style.Theme_DeviceDefault_Light_Dialog_Alert)
+                              .setMessage(message)
+                              .setPositiveButton("تمام", (d, w) -> result.confirm())
+                              .setNegativeButton("إلغاء", (d, w) -> result.cancel())
+                              .setOnCancelListener(d -> result.cancel())
+                              .show();
+                          return true;
+                      }
                   });
 
                   web.setDownloadListener((url, userAgent, contentDisposition, mimeType, contentLength) -> openExternal(Uri.parse(url)));

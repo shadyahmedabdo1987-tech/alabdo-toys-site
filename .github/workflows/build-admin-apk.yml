@@ -130,6 +130,10 @@ jobs:
               <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
               <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
               <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+              <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+              <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+              <uses-permission android:name="android.permission.WAKE_LOCK" />
+              <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
               <application
                   android:allowBackup="false"
@@ -155,6 +159,29 @@ jobs:
                       </intent-filter>
 
                   </activity>
+
+                  <service
+                      android:name=".WatchService"
+                      android:foregroundServiceType="specialUse"
+                      android:exported="false">
+                      <property
+                          android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                          android:value="Store owner app: alerts the owner about new customer orders, messages and stock running out while the app is closed" />
+                  </service>
+
+                  <receiver
+                      android:name=".WatchTick"
+                      android:exported="false" />
+
+                  <receiver
+                      android:name=".BootReceiver"
+                      android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.intent.action.BOOT_COMPLETED" />
+                          <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                          <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                      </intent-filter>
+                  </receiver>
 
                   <service
                       android:name=".StockWatchJob"
@@ -426,20 +453,49 @@ jobs:
               }
 
               /* أندرويد 13 وأحدث: لازم توافق على الإشعارات (بنسأل مرة واحدة) */
-              private void askNotificationPermissionOnce() {
-                  if (Build.VERSION.SDK_INT < 33) return;
-                  if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) return;
+              /* بترجع true لو ظهر سؤال الإذن دلوقتي */
+              private boolean askNotificationPermissionOnce() {
+                  if (Build.VERSION.SDK_INT < 33) return false;
+                  if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) return false;
                   android.content.SharedPreferences sp = getSharedPreferences(StockWatchJob.PREFS, MODE_PRIVATE);
-                  if (sp.getBoolean("asked_notif", false)) return;
+                  if (sp.getBoolean("asked_notif", false)) return false;
                   sp.edit().putBoolean("asked_notif", true).apply();
                   requestPermissions(new String[]{ Manifest.permission.POST_NOTIFICATIONS }, 2001);
+                  return true;
               }
 
               @Override
               protected void onStart() {
                   super.onStart();
-                  askNotificationPermissionOnce();
+                  if (!askNotificationPermissionOnce()) askBatteryExemptionOnce();
                   try { StockWatchJob.ensureScheduled(this); } catch (Exception e) { /* ignore */ }
+                  /* المتابعة في الخلفية: الإشعارات بتوصل حتى لو التطبيق مقفول */
+                  WatchService.start(this);
+                  WatchTick.scheduleNext(this, 60000L);
+              }
+
+              @Override
+              public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+                  super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+                  if (requestCode == 2001) {
+                      WatchService.start(this); /* نحدّث الإشعار الثابت بعد الموافقة */
+                      askBatteryExemptionOnce();
+                  }
+              }
+
+              /* نطلب من أندرويد ما يوقّفش التطبيق عشان توفير البطارية (مرة واحدة بس) -
+                 من غيرها ممكن الإشعارات تتأخر أو ما توصلش والتطبيق مقفول. */
+              private void askBatteryExemptionOnce() {
+                  if (Build.VERSION.SDK_INT < 23) return;
+                  try {
+                      android.os.PowerManager pm = (android.os.PowerManager) getSystemService(POWER_SERVICE);
+                      if (pm == null || pm.isIgnoringBatteryOptimizations(getPackageName())) return;
+                      android.content.SharedPreferences sp = getSharedPreferences(StockWatchJob.PREFS, MODE_PRIVATE);
+                      if (sp.getBoolean("asked_battery", false)) return;
+                      sp.edit().putBoolean("asked_battery", true).apply();
+                      Intent i = new Intent(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:" + getPackageName()));
+                      startActivity(i);
+                  } catch (Exception e) { /* some phones don't have this screen */ }
               }
 
               private static boolean isOwnSite(Uri u) {
@@ -461,7 +517,7 @@ jobs:
                   s.setSupportMultipleWindows(false);
                   s.setJavaScriptCanOpenWindowsAutomatically(false);
                   s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-                  s.setUserAgentString(s.getUserAgentString() + " AlAbdoAdmin/5");
+                  s.setUserAgentString(s.getUserAgentString() + " AlAbdoAdmin/6");
                   CookieManager.getInstance().setAcceptCookie(true);
                   web.setOverScrollMode(View.OVER_SCROLL_NEVER);
 
@@ -488,6 +544,26 @@ jobs:
                       @Override
                       public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
                           return openFileChooser(callback, params);
+                      }
+                      /* أي رسالة تأكيد/تنبيه من الصفحة: بشكل التطبيق، من غير "The page at ... displays" */
+                      @Override
+                      public boolean onJsAlert(WebView view, String url, String message, final android.webkit.JsResult result) {
+                          new android.app.AlertDialog.Builder(view.getContext(), android.R.style.Theme_DeviceDefault_Light_Dialog_Alert)
+                              .setMessage(message)
+                              .setPositiveButton("تمام", (d, w) -> result.confirm())
+                              .setOnCancelListener(d -> result.cancel())
+                              .show();
+                          return true;
+                      }
+                      @Override
+                      public boolean onJsConfirm(WebView view, String url, String message, final android.webkit.JsResult result) {
+                          new android.app.AlertDialog.Builder(view.getContext(), android.R.style.Theme_DeviceDefault_Light_Dialog_Alert)
+                              .setMessage(message)
+                              .setPositiveButton("تمام", (d, w) -> result.confirm())
+                              .setNegativeButton("إلغاء", (d, w) -> result.cancel())
+                              .setOnCancelListener(d -> result.cancel())
+                              .show();
+                          return true;
                       }
                   });
 
@@ -711,6 +787,148 @@ jobs:
           }
           EOF
 
+          cat > $P/app/src/main/java/com/alabdotoys/admin/WatchService.java <<'EOF'
+          package com.alabdotoys.admin;
+
+          import android.app.Notification;
+          import android.app.NotificationChannel;
+          import android.app.NotificationManager;
+          import android.app.PendingIntent;
+          import android.app.Service;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.os.Build;
+          import android.os.IBinder;
+
+          /* خدمة شغالة في الخلفية طول الوقت (حتى لو التطبيق مقفول) بتتابع الطلبات
+             والاستفسارات وطلبات التوفر والعملاء الجداد والمخزون، وتطلع إشعار أول بأول.
+             أندرويد بيشترط إشعار صغير ثابت ("شغّال") عشان يسيب الخدمة دي تشتغل. */
+          public class WatchService extends Service {
+              static final String CH = "watch_service";
+              static final int ID = 77;
+
+              static void start(Context c) {
+                  try {
+                      Intent i = new Intent(c, WatchService.class);
+                      if (Build.VERSION.SDK_INT >= 26) c.startForegroundService(i);
+                      else c.startService(i);
+                  } catch (Exception e) { /* not allowed right now - the alarm/job still run */ }
+              }
+
+              @SuppressWarnings("deprecation")
+              private Notification buildNotif() {
+                  NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                  if (Build.VERSION.SDK_INT >= 26 && nm != null && nm.getNotificationChannel(CH) == null) {
+                      NotificationChannel ch = new NotificationChannel(CH, "متابعة الطلبات في الخلفية", NotificationManager.IMPORTANCE_MIN);
+                      ch.setDescription("إشعار ثابت صغير بيوضح إن التطبيق بيتابع الطلبات والمخزون وهو مقفول");
+                      ch.setShowBadge(false);
+                      nm.createNotificationChannel(ch);
+                  }
+                  Intent open = new Intent(this, MainActivity.class);
+                  open.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                  PendingIntent pi = PendingIntent.getActivity(this, 7, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                  Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(this, CH) : new Notification.Builder(this);
+                  b.setSmallIcon(R.drawable.ic_stat_notify)
+                      .setColor(0xFFEE1F6C)
+                      .setContentTitle("آل عبده - الإدارة شغّال")
+                      .setContentText("بيتابع الطلبات والمخزون ويبلّغك أول بأول")
+                      .setOngoing(true)
+                      .setShowWhen(false)
+                      .setContentIntent(pi);
+                  if (Build.VERSION.SDK_INT < 26) b.setPriority(Notification.PRIORITY_MIN);
+                  return b.build();
+              }
+
+              @Override
+              public void onCreate() {
+                  super.onCreate();
+                  try { startForeground(ID, buildNotif()); } catch (Exception e) { stopSelf(); }
+              }
+
+              @Override
+              public int onStartCommand(Intent intent, int flags, int startId) {
+                  WatchTick.scheduleNext(this, 5000L);
+                  return START_STICKY;
+              }
+
+              @Override
+              public IBinder onBind(Intent intent) { return null; }
+          }
+          EOF
+
+          cat > $P/app/src/main/java/com/alabdotoys/admin/WatchTick.java <<'EOF'
+          package com.alabdotoys.admin;
+
+          import android.app.AlarmManager;
+          import android.app.PendingIntent;
+          import android.content.BroadcastReceiver;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.os.Build;
+          import android.os.PowerManager;
+
+          /* منبّه كل دقيقتين تقريبًا: بيصحّي الموبايل لحظات، يشيك على الجديد، ويطلع
+             الإشعارات، وبعدين يرجع ينام. (لو الموبايل في وضع توفير الطاقة العميق،
+             أندرويد بيسمح بيه كل 9-15 دقيقة بس.) */
+          public class WatchTick extends BroadcastReceiver {
+              static final String ACTION = "com.alabdotoys.admin.WATCH_TICK";
+              static final long EVERY = 2L * 60L * 1000L;
+
+              static void scheduleNext(Context c, long delayMs) {
+                  AlarmManager am = (AlarmManager) c.getSystemService(Context.ALARM_SERVICE);
+                  if (am == null) return;
+                  Intent i = new Intent(c, WatchTick.class).setAction(ACTION);
+                  PendingIntent pi = PendingIntent.getBroadcast(c, 9, i, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                  long at = System.currentTimeMillis() + delayMs;
+                  if (Build.VERSION.SDK_INT >= 23) am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi);
+                  else am.set(AlarmManager.RTC_WAKEUP, at, pi);
+              }
+
+              @Override
+              public void onReceive(final Context ctx, Intent intent) {
+                  final Context c = ctx.getApplicationContext();
+                  final PendingResult pr = goAsync();
+                  PowerManager pm = (PowerManager) c.getSystemService(Context.POWER_SERVICE);
+                  final PowerManager.WakeLock wl = pm != null ? pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "alabdo:watch") : null;
+                  if (wl != null) wl.acquire(50000L);
+                  new Thread(new Runnable() {
+                      @Override public void run() {
+                          try { StockWatchJob.runAll(c); }
+                          catch (Throwable t) { /* ignore */ }
+                          finally {
+                              scheduleNext(c, EVERY);
+                              try { if (wl != null && wl.isHeld()) wl.release(); } catch (Exception e) { /* ignore */ }
+                              pr.finish();
+                          }
+                      }
+                  }).start();
+              }
+          }
+          EOF
+
+          cat > $P/app/src/main/java/com/alabdotoys/admin/BootReceiver.java <<'EOF'
+          package com.alabdotoys.admin;
+
+          import android.content.BroadcastReceiver;
+          import android.content.Context;
+          import android.content.Intent;
+
+          /* بعد ما الموبايل يفتح من جديد (أو التطبيق يتحدّث): نرجّع المتابعة تشتغل
+             لوحدها من غير ما تحتاج تفتح التطبيق. */
+          public class BootReceiver extends BroadcastReceiver {
+              @Override
+              public void onReceive(Context ctx, Intent intent) {
+                  String a = intent != null ? intent.getAction() : null;
+                  if (Intent.ACTION_BOOT_COMPLETED.equals(a) || Intent.ACTION_MY_PACKAGE_REPLACED.equals(a) || "android.intent.action.QUICKBOOT_POWERON".equals(a)) {
+                      Context c = ctx.getApplicationContext();
+                      WatchService.start(c);
+                      WatchTick.scheduleNext(c, 30000L);
+                      try { StockWatchJob.ensureScheduled(c); } catch (Exception e) { /* ignore */ }
+                  }
+              }
+          }
+          EOF
+
           cat > $P/app/src/main/java/com/alabdotoys/admin/StockWatchJob.java <<'EOF'
           package com.alabdotoys.admin;
 
@@ -790,12 +1008,8 @@ jobs:
               public boolean onStartJob(final JobParameters params) {
                   new Thread(new Runnable() {
                       @Override public void run() {
-                          boolean retry = false;
-                          try { check(getApplicationContext()); }
-                          catch (Exception e) { retry = params.getJobId() == JOB_NOW; }
-                          try { checkFeed(getApplicationContext()); }
-                          catch (Exception e) { retry = params.getJobId() == JOB_NOW; }
-                          jobFinished(params, retry);
+                          boolean ok = runAll(getApplicationContext());
+                          jobFinished(params, !ok && params.getJobId() == JOB_NOW);
                       }
                   }).start();
                   return true;
@@ -804,6 +1018,15 @@ jobs:
               @Override
               public boolean onStopJob(JobParameters params) { return true; }
 
+              /* المخزون + الطلبات/الاستفسارات/طلبات التوفر/العملاء - واحدة ورا التانية
+                 (مش مع بعض، عشان الإشعار ما يطلعش مرتين) */
+              static synchronized boolean runAll(Context c) {
+                  boolean ok = true;
+                  try { check(c); } catch (Exception e) { ok = false; }
+                  try { checkFeed(c); } catch (Exception e) { ok = false; }
+                  return ok;
+              }
+
               static class Unauthorized extends Exception {}
 
               private static String fetch() throws Exception { return fetch(URL_STOCK, null); }
@@ -811,8 +1034,8 @@ jobs:
               private static String fetch(String url, String token) throws Exception {
                   HttpURLConnection con = (HttpURLConnection) new URL(url + "?t=" + System.currentTimeMillis()).openConnection();
                   if (token != null) con.setRequestProperty("X-Notify-Token", token);
-                  con.setConnectTimeout(15000);
-                  con.setReadTimeout(20000);
+                  con.setConnectTimeout(10000);
+                  con.setReadTimeout(12000);
                   con.setUseCaches(false);
                   con.setRequestProperty("Cache-Control", "no-cache");
                   con.setRequestProperty("User-Agent", "AlAbdoAdmin/3 stock-watch");

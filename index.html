@@ -787,6 +787,21 @@ html[dir="ltr"] .mobile-nav.show{transform:translateX(0);}
    ===================================================================== */
 .app-tabbar, .app-sheet, .card-quick{display:none;}
 .skeleton-card{pointer-events:none;}
+/* رسايل التأكيد (بدل رسالة المتصفح الرمادي "The page at ... displays") -
+   نفس شكل التطبيق في المتجر وفي تطبيق الإدارة وعلى الموقع. */
+.aa-dlg{position:fixed; inset:0; z-index:200000; display:flex; align-items:center; justify-content:center; padding:20px; background:rgba(20,12,34,.46); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); opacity:0; transition:opacity .18s ease;}
+.aa-dlg.show{opacity:1;}
+.aa-dlg-card{--aa-danger:#e0364f; width:100%; max-width:360px; background:var(--surface); color:var(--ink); border-radius:24px; padding:26px 22px 20px; text-align:center; box-shadow:0 24px 60px rgba(20,10,40,.35); transform:translateY(18px) scale(.96); transition:transform .22s cubic-bezier(.2,.9,.3,1.2);}
+.aa-dlg.show .aa-dlg-card{transform:none;}
+.aa-dlg-ic{width:64px; height:64px; margin:0 auto 14px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:30px; background:var(--surface-2);}
+.aa-dlg-card.is-danger .aa-dlg-ic{background:color-mix(in srgb, var(--aa-danger) 14%, var(--surface));}
+.aa-dlg-title{font-size:19px; font-weight:800; margin:0 0 6px; line-height:1.4; text-wrap:balance;}
+.aa-dlg-msg{font-size:14.5px; color:var(--ink-soft); margin:0; line-height:1.7; text-wrap:pretty;}
+.aa-dlg-btns{display:flex; gap:10px; margin-top:22px;}
+.aa-dlg-btns .btn{flex:1 1 0; padding:12px 14px; font-size:15px; min-height:48px;}
+.aa-dlg-card.is-danger .aa-dlg-ok{background:linear-gradient(180deg, var(--aa-danger), color-mix(in srgb, var(--aa-danger) 80%, black)); box-shadow:0 1px 0 rgba(255,255,255,.3) inset, 0 4px 0 color-mix(in srgb, var(--aa-danger) 60%, black), 0 10px 18px rgba(224,54,79,.28);}
+.aa-dlg-btns .btn:focus-visible{outline:3px solid color-mix(in srgb, var(--pink) 45%, transparent); outline-offset:2px;}
+@media (prefers-reduced-motion: reduce){ .aa-dlg, .aa-dlg-card{transition:none;} }
 /* شاشة الافتتاح جوه الصفحة: نفس لون ومقاس شاشة التطبيق الأصلية، واللوجو بيلف
    زي لوجو الموقع (rotateY) لحد ما المنتجات تحمل. */
 #appSplash{display:none;}
@@ -2890,6 +2905,26 @@ document.getElementById("themeToggle").addEventListener("click", function(){
    الأقسام السبعة، ومحافظات مصر. الصفحات القانونية ولوحة التحكم وأسماء/أوصاف
    المنتجات هتتضاف في مراحل تالية. */
 var I18N_EN = {
+  "تمسح السلة؟": "Clear your cart?",
+  "كل المنتجات اللي في السلة هتتشال.": "All products in your cart will be removed.",
+  "امسح السلة": "Clear cart",
+  "متأكد إنك عايز تسجّل خروج؟ السلة هتفضل زي ما هي.": "Are you sure you want to log out? Your cart will stay as it is.",
+  "حذف الحساب نهائيًا": "Delete account permanently",
+  "احذف حسابي": "Delete my account",
+  "حذف الطلب": "Delete order",
+  "احذف": "Delete",
+  "مسح حساب العميل": "Delete customer account",
+  "امسح": "Delete",
+  "مسح المنتج": "Delete product",
+  "القسم فيه منتجات": "This category has products",
+  "مسح القسم": "Delete category",
+  "الملف مش مظبوط": "Invalid file",
+  "استعادة": "Restore",
+  "تعديلات مش محفوظة": "Unsaved changes",
+  "اخرج من غير حفظ": "Leave without saving",
+  "كمّل التعديل": "Keep editing",
+  "متأكد إنك عايز تسجّل خروج؟ إشعارات الطلبات هتقف لحد ما تسجّل دخول تاني.": "Are you sure you want to log out? Order notifications will stop until you log in again.",
+  "تمام": "OK",
   "تمسح كل المنتجات اللي في السلة؟": "Remove all products from your cart?",
   "🗑️ السلة اتمسحت": "🗑️ Cart cleared",
   "تنبيه المخزون المنخفض": "Low-stock alert",
@@ -3687,6 +3722,58 @@ function fbTrack(name, params){
   if(typeof fbq === "function") fbq("track", name, params || {});
 }
 
+/* ---------- رسايل التأكيد والتنبيه (شكل التطبيق) ----------
+   appConfirm({icon, title, message, ok, cancel, danger}) => Promise<true/false>
+   appAlert({icon, title, message, ok}) => Promise */
+function appDialog(o, withCancel){
+  return new Promise(function(resolve){
+    var prevFocus = document.activeElement;
+    var wrap = document.createElement("div");
+    wrap.className = "aa-dlg";
+    wrap.setAttribute("role", withCancel ? "alertdialog" : "dialog");
+    wrap.setAttribute("aria-modal", "true");
+    var card = document.createElement("div");
+    card.className = "aa-dlg-card" + (o.danger ? " is-danger" : "");
+    var esc = function(x){ return String(x==null?"":x).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); };
+    card.innerHTML = (o.icon ? '<div class="aa-dlg-ic" aria-hidden="true">'+esc(o.icon)+'</div>' : '')
+      + (o.title ? '<h3 class="aa-dlg-title" id="aaDlgTitle">'+esc(o.title)+'</h3>' : '')
+      + (o.message ? '<p class="aa-dlg-msg" id="aaDlgMsg">'+esc(o.message)+'</p>' : '')
+      + '<div class="aa-dlg-btns">'
+        + (withCancel ? '<button type="button" class="btn btn-outline aa-dlg-cancel">'+esc(o.cancel || t("إلغاء"))+'</button>' : '')
+        + '<button type="button" class="btn btn-primary aa-dlg-ok">'+esc(o.ok || t("تمام"))+'</button>'
+      + '</div>';
+    if(o.title) wrap.setAttribute("aria-labelledby", "aaDlgTitle");
+    if(o.message) wrap.setAttribute("aria-describedby", "aaDlgMsg");
+    wrap.appendChild(card);
+    document.body.appendChild(wrap);
+    var done = false;
+    function close(val){
+      if(done) return; done = true;
+      document.removeEventListener("keydown", onKey, true);
+      wrap.classList.remove("show");
+      setTimeout(function(){ if(wrap.parentNode) wrap.parentNode.removeChild(wrap); try{ if(prevFocus && prevFocus.focus) prevFocus.focus(); }catch(e){} }, 200);
+      resolve(val);
+    }
+    function onKey(e){
+      if(e.key==="Escape"){ e.preventDefault(); close(false); }
+      else if(e.key==="Tab"){
+        var bs = card.querySelectorAll("button"); if(!bs.length) return;
+        var first = bs[0], last = bs[bs.length-1];
+        if(e.shiftKey && document.activeElement===first){ e.preventDefault(); last.focus(); }
+        else if(!e.shiftKey && document.activeElement===last){ e.preventDefault(); first.focus(); }
+      }
+    }
+    document.addEventListener("keydown", onKey, true);
+    wrap.addEventListener("click", function(e){ if(e.target===wrap) close(false); });
+    card.querySelector(".aa-dlg-ok").addEventListener("click", function(){ close(true); });
+    var cb = card.querySelector(".aa-dlg-cancel"); if(cb) cb.addEventListener("click", function(){ close(false); });
+    requestAnimationFrame(function(){ wrap.classList.add("show"); });
+    setTimeout(function(){ var f = card.querySelector(withCancel ? ".aa-dlg-cancel" : ".aa-dlg-ok"); if(f) f.focus({preventScroll:true}); }, 30);
+  });
+}
+function appConfirm(o){ return appDialog(o || {}, true); }
+function appAlert(o){ return appDialog(o || {}, false); }
+
 /* ---------- Cart ---------- */
 var cart = {};
 try{ cart = JSON.parse(localStorage.getItem("aa_cart") || "{}"); }catch(e){ cart = {}; }
@@ -3882,7 +3969,8 @@ function aaNotifOpen(what){
   if(typeof updateAppTabbar === "function") updateAppTabbar();
   if(what==="clearcart" && cartCount()>0){
     setTimeout(function(){
-      if(confirm(t("تمسح كل المنتجات اللي في السلة؟"))){ clearCart(); showToast(t("🗑️ السلة اتمسحت")); }
+      appConfirm({ icon:"🛒", title:t("تمسح السلة؟"), message:t("كل المنتجات اللي في السلة هتتشال."), ok:t("امسح السلة"), danger:true })
+        .then(function(ok){ if(ok){ clearCart(); showToast(t("🗑️ السلة اتمسحت")); } });
     }, 350);
   }
 }
@@ -5245,9 +5333,11 @@ if(appSheet){
     if(a==="login"){ closeAllPanels(); openAccountModal(); }
     else if(a==="profile"){ closeAllPanels(); openProfileModal(); }
     else if(a==="logout"){
-      if(!confirm(t("متأكد إنك عايز تسجّل خروج؟"))) return;
-      clearCustomerProfile(); FAVORITES = {}; refreshFavoriteViews(); updateAccountLabel(); closeAllPanels(); goToView("home");
-      showToast(t("✅ اتسجّل خروجك"));
+      appConfirm({ icon:"🚪", title:t("تسجيل الخروج"), message:t("متأكد إنك عايز تسجّل خروج؟ السلة هتفضل زي ما هي."), ok:t("تسجيل الخروج") }).then(function(ok){
+        if(!ok) return;
+        clearCustomerProfile(); FAVORITES = {}; refreshFavoriteViews(); updateAccountLabel(); closeAllPanels(); goToView("home");
+        showToast(t("✅ اتسجّل خروجك"));
+      });
     }
     else if(a==="account"){ closeAllPanels(); openAcctDrawer(); }
     else if(a==="wish"){ state.badge="wish"; state.cat="all"; state.q=""; goToView("products"); renderProductsView(); }
@@ -6249,8 +6339,12 @@ function renderAcctDrawerBody(){
 }
 /* حذف حساب العميل نهائيًا (من قائمة الحساب على الموقع، أو من صفحة "حذف
    الحساب" جوه التطبيق). */
-function customerDeleteAccount(btn){
-    if(!confirm(t("متأكد إنك عايز تحذف حسابك نهائيًا؟ هيتمسح اسمك وبياناتك ومفضلتك وتقييماتك، ومش هينفع ترجّعه تاني."))) return;
+function customerDeleteAccount(btn, confirmed){
+    if(!confirmed){
+      appConfirm({ icon:"⚠️", title:t("حذف الحساب نهائيًا"), message:t("متأكد إنك عايز تحذف حسابك نهائيًا؟ هيتمسح اسمك وبياناتك ومفضلتك وتقييماتك، ومش هينفع ترجّعه تاني."), ok:t("احذف حسابي"), danger:true })
+        .then(function(ok){ if(ok) customerDeleteAccount(btn, true); });
+      return;
+    }
     btn = btn || {};
     btn.disabled = true;
     fetch("/api/customers/delete-account", { method:"POST", headers: customerAuthHeaders() })
@@ -6772,9 +6866,13 @@ function showAdminOrderEditForm(order){
   });
 }
 /* حذف طلب نهائيًا (بعد تأكيد من الأدمن) وتحديث صفحة الطلبات فورًا. */
-function deleteAdminOrder(order){
+function deleteAdminOrder(order, confirmed){
   if(!order) return;
-  if(!confirm(t("متأكد إنك عايز تحذف الطلب ده نهائيًا؟ الخطوة دي مش هترجع."))) return;
+  if(!confirmed){
+    appConfirm({ icon:"🗑️", title:t("حذف الطلب"), message:t("متأكد إنك عايز تحذف الطلب ده نهائيًا؟ الخطوة دي مش هترجع."), ok:t("احذف"), danger:true })
+      .then(function(ok){ if(ok) deleteAdminOrder(order, true); });
+    return;
+  }
   fetch("/api/orders", {
     method: "DELETE",
     headers: Object.assign({ "content-type":"application/json" }, adminAuthHeaders()),
@@ -7043,8 +7141,8 @@ function renderAdminCustomersPage(){
         btn.addEventListener("click", function(){
           var c = ADMIN_CUSTOMERS_CACHE[+btn.dataset.custDel];
           if(!c) return;
-          if(!confirm(t('متأكد إنك عايز تمسح حساب "')+(c.name||c.identifier)+t('" نهائيًا؟'))) return;
-          deleteAdminCustomer(c);
+          appConfirm({ icon:"🗑️", title:t("مسح حساب العميل"), message:t('متأكد إنك عايز تمسح حساب "')+(c.name||c.identifier)+t('" نهائيًا؟'), ok:t("امسح"), danger:true })
+            .then(function(ok){ if(ok) deleteAdminCustomer(c); });
         });
       });
     })
@@ -7296,9 +7394,14 @@ function adminEditProduct(p){
     document.getElementById("productFormCancel").hidden = false;
     if(!isAdminApp()) document.getElementById("productForm").scrollIntoView({behavior:"smooth", block:"start"});
 }
-function adminDeleteProduct(pid){
+function adminDeleteProduct(pid, confirmed){
   pid = String(pid);
-  if(!confirm(t("متأكد إنك عايز تمسح المنتج ده؟"))) return;
+  if(!confirmed){
+    var p0 = PRODUCTS.find(function(x){ return String(x.id)===pid; });
+    appConfirm({ icon:"🗑️", title:t("مسح المنتج"), message: (p0 ? '"'+pName(p0)+'" — ' : '') + t("متأكد إنك عايز تمسح المنتج ده؟"), ok:t("امسح"), danger:true })
+      .then(function(ok){ if(ok) adminDeleteProduct(pid, true); });
+    return;
+  }
   var delP = PRODUCTS.find(function(x){ return String(x.id)===pid; });
   queueCatalogOps([{ op:"delete", id: delP ? delP.id : pid }]);
   showToast(t("🗑️ اتمسح المنتج"));
@@ -7355,13 +7458,15 @@ document.getElementById("adminCatsBody").addEventListener("click", function(e){
   var delBtn = e.target.closest("[data-del-cat]"); if(!delBtn) return;
   var cid = delBtn.dataset.delCat;
   if(PRODUCTS.some(function(p){ return p.cat===cid; })){
-    alert(t("مينفعش تمسح القسم ده، لسه فيه منتجات جواه. غيّر قسم المنتجات دي الأول."));
+    appAlert({ icon:"📦", title:t("القسم فيه منتجات"), message:t("مينفعش تمسح القسم ده، لسه فيه منتجات جواه. غيّر قسم المنتجات دي الأول.") });
     return;
   }
-  if(!confirm(t("متأكد إنك عايز تمسح القسم ده؟"))) return;
-  queueCatalogOps([{ op:"cat-delete", id:cid }]);
-  resetCatForm();
-  renderAdminAll();
+  appConfirm({ icon:"🗑️", title:t("مسح القسم"), message:t("متأكد إنك عايز تمسح القسم ده؟"), ok:t("امسح"), danger:true }).then(function(ok){
+    if(!ok) return;
+    queueCatalogOps([{ op:"cat-delete", id:cid }]);
+    resetCatForm();
+    renderAdminAll();
+  });
 });
 document.getElementById("adminExportBtn").addEventListener("click", function(){
   /* جوه تطبيق "آل عبده - الإدارة" (متصفح داخلي) الملف بيتحفظ عن طريق
@@ -7389,20 +7494,22 @@ document.getElementById("adminImportFile").addEventListener("change", function(e
       renderAdminAll();
       refreshPublicViews();
       showToast(t("✅ اتحمّلت البيانات من الملف"));
-    }catch(err){ alert(t("الملف مش JSON صحيح")); }
+    }catch(err){ appAlert({ icon:"📄", title:t("الملف مش مظبوط"), message:t("الملف مش JSON صحيح") }); }
   };
   reader.readAsText(file);
   e.target.value = "";
 });
 document.getElementById("adminResetBtn").addEventListener("click", function(){
-  if(!confirm(t("هيرجع كل حاجة للبيانات الافتراضية على الموقع لكل الزوار (هيمسح تعديلاتك الحالية). متأكد؟"))) return;
-  CATS = DEFAULT_CATS.map(function(c){ return Object.assign({}, c); });
-  PRODUCTS = DEFAULT_PRODUCTS.map(function(p){ return Object.assign({}, p); });
-  rebuildCatMap();
-  try{ localStorage.removeItem(DATA_KEY); }catch(e){}
-  catalogOps = []; persistCatalogOps();
-  renderAdminAll();
-  refreshPublicViews();
+  appConfirm({ icon:"♻️", title:t("استعادة الافتراضي"), message:t("هيرجع كل حاجة للبيانات الافتراضية على الموقع لكل الزوار (هيمسح تعديلاتك الحالية). متأكد؟"), ok:t("استعادة"), danger:true }).then(function(ok){
+    if(!ok) return;
+    CATS = DEFAULT_CATS.map(function(c){ return Object.assign({}, c); });
+    PRODUCTS = DEFAULT_PRODUCTS.map(function(p){ return Object.assign({}, p); });
+    rebuildCatMap();
+    try{ localStorage.removeItem(DATA_KEY); }catch(e){}
+    catalogOps = []; persistCatalogOps();
+    renderAdminAll();
+    refreshPublicViews();
+  });
 });
 
 /* ---------- View router ---------- */
@@ -7737,7 +7844,8 @@ var ADM = null;
   function go(name, opts){
     opts = opts || {};
     if(cur==="form" && name!=="form" && !opts.force && formDirty){
-      if(!confirm(t("في تعديلات في المنتج لسه ما اتحفظتش. تخرج من غير حفظ؟"))) return;
+      unsavedConfirm().then(function(ok){ if(ok) go(name, Object.assign({}, opts, { force:true })); });
+      return;
     }
     if(cur==="form" && name!=="form"){ formDirty = false; resetProductForm(); }
     closeAllPanels(); closeSheet();
@@ -8226,8 +8334,14 @@ var ADM = null;
     var first = document.querySelector("#pfImagesPreview > div:first-child");
     if(first) first.setAttribute("data-main", t("رئيسية"));
   }
+  function unsavedConfirm(){
+    return appConfirm({ icon:"📝", title:t("تعديلات مش محفوظة"), message:t("في تعديلات في المنتج لسه ما اتحفظتش. تخرج من غير حفظ؟"), ok:t("اخرج من غير حفظ"), cancel:t("كمّل التعديل"), danger:true });
+  }
   function openForm(mode, p){
-    if(cur==="form" && formDirty && !confirm(t("في تعديلات في المنتج لسه ما اتحفظتش. تخرج من غير حفظ؟"))) return;
+    if(cur==="form" && formDirty){
+      unsavedConfirm().then(function(ok){ if(ok){ formDirty = false; openForm(mode, p); } });
+      return;
+    }
     var from = (cur==="form") ? (parentOf.form || "products") : (cur || "home");
     resetProductForm();
     formMode = mode;
@@ -8298,7 +8412,10 @@ var ADM = null;
     if(a==="import") document.getElementById("adminImportBtn").click();
     if(a==="reset") document.getElementById("adminResetBtn").click();
     if(a==="theme") document.getElementById("themeToggle").click();
-    if(a==="logout"){ if(confirm(t("متأكد إنك عايز تسجّل خروج؟"))) document.getElementById("adminLogoutBtn").click(); }
+    if(a==="logout"){
+      appConfirm({ icon:"🚪", title:t("تسجيل الخروج"), message:t("متأكد إنك عايز تسجّل خروج؟ إشعارات الطلبات هتقف لحد ما تسجّل دخول تاني."), ok:t("تسجيل الخروج") })
+        .then(function(ok){ if(ok) document.getElementById("adminLogoutBtn").click(); });
+    }
   });
 
   /* ---------- الأقسام والإعدادات: نفس الفورمات القديمة في شاشات لوحدها ---------- */

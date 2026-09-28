@@ -26,7 +26,18 @@
   var fromApp = ref.indexOf("android-app://com.alabdotoys.app")===0 || /[?&]source=app\b/.test(location.search) || /AlAbdoApp\//.test(navigator.userAgent);
   if(fromApp && ss) ss.setItem("aa_app_mode","1");
   var standalone = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone===true;
-  if(fromApp || standalone || (ss && ss.getItem("aa_app_mode")==="1")) d.classList.add("app-mode");
+  if(fromApp || standalone || (ss && ss.getItem("aa_app_mode")==="1")){
+    d.classList.add("app-mode");
+    /* شاشة الافتتاح (اللوجو اللي بيلف لحد ما المنتجات تحمل):
+       - تطبيق الأندرويد الجديد عنده شاشة افتتاح أصلية فيها اللوجو بيلف، وبتفضل
+         ظاهرة لحد ما الصفحة تقولها "خلاص" (AlAbdoNative.appReady) - فالصفحة
+         بتعلن إنها هتبلغه (AA_SPLASH=1).
+       - أي حالة تانية (نسخة التطبيق القديمة / متثبت من المتصفح) بنعرض نفس
+         الشاشة جوه الصفحة نفسها. */
+    var nat = window.AlAbdoNative;
+    if(nat && typeof nat.appReady === "function") window.AA_SPLASH = 1;
+    else d.classList.add("app-splash-web");
+  }
 }catch(e){}})();</script>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-2XED7JY5D6"></script>
@@ -770,6 +781,15 @@ html[dir="ltr"] .mobile-nav.show{transform:translateX(0);}
    ===================================================================== */
 .app-tabbar, .app-sheet, .card-quick{display:none;}
 .skeleton-card{pointer-events:none;}
+/* شاشة الافتتاح جوه الصفحة: نفس لون ومقاس شاشة التطبيق الأصلية، واللوجو بيلف
+   زي لوجو الموقع (rotateY) لحد ما المنتجات تحمل. */
+#appSplash{display:none;}
+html.app-splash-web #appSplash{display:flex; position:fixed; inset:0; z-index:100000; align-items:center; justify-content:center; background:#FFF8EF; perspective:900px; transition:opacity .3s ease;}
+html.app-splash-web #appSplash.out{opacity:0; pointer-events:none;}
+#appSplash img{width:140px; height:140px; object-fit:contain; transform-style:preserve-3d; will-change:transform; animation:appSplashSpin 2s linear infinite;}
+@keyframes appSplashSpin{ from{transform:rotateY(0deg);} to{transform:rotateY(360deg);} }
+@media (prefers-reduced-motion: reduce){ #appSplash img{animation:appSplashPulse 1.4s ease-in-out infinite alternate;} }
+@keyframes appSplashPulse{ from{transform:scale(.94); opacity:.75;} to{transform:scale(1); opacity:1;} }
 .skeleton-card .card-media, .skeleton-card .sk-line{background:linear-gradient(90deg,var(--surface-2) 0%,var(--surface-3) 50%,var(--surface-2) 100%); background-size:200% 100%; animation:skShimmer 1.2s linear infinite;}
 .skeleton-card .card-body{gap:8px;}
 html.app-mode .skeleton-card .card-media{background:linear-gradient(90deg,var(--surface-2) 0%,var(--surface-3) 50%,var(--surface-2) 100%) !important; background-size:200% 100% !important;}
@@ -1222,6 +1242,21 @@ html[dir="ltr"] .app-back-acct span[aria-hidden]{transform:scaleX(-1);}
 </style>
 </head>
 <body>
+<div id="appSplash" aria-hidden="true"><img src="icon-512.png" alt="" width="140" height="140" fetchpriority="high"></div>
+<script>
+/* بتقفل شاشة الافتتاح (اللي في الصفحة، أو شاشة التطبيق الأصلية) - بتتنادي
+   لما المنتجات تحمل وتترسم، ومعاها حد أقصى 15 ثانية لو النت بطيء جدًا. */
+function appSplashHide(){
+  if(window.__aaSplashGone) return; window.__aaSplashGone = true;
+  try{ if(window.AlAbdoNative && typeof window.AlAbdoNative.appReady === "function") window.AlAbdoNative.appReady(); }catch(e){}
+  var el = document.getElementById("appSplash");
+  if(el && document.documentElement.classList.contains("app-splash-web")){
+    el.classList.add("out");
+    setTimeout(function(){ document.documentElement.classList.remove("app-splash-web"); if(el.parentNode) el.parentNode.removeChild(el); }, 350);
+  }
+}
+setTimeout(appSplashHide, 15000);
+</script>
 
 <a href="#main" class="skip-link">تخطي إلى المحتوى</a>
 
@@ -8164,8 +8199,28 @@ loadInitialData(function(){
     else refreshLiveStockAndViews();
     initScrollReveal();
     loadHomeReviews();
+    appSplashWhenImagesReady();
   });
 });
+/* المنتجات اترسمت: نستنى صور أول شاشة (البانر + أول كروت) تحمل - بحد أقصى
+   ثانيتين ونص - وبعدين نقفل شاشة الافتتاح، فالعميل يدخل على متجر جاهز. */
+function appSplashWhenImagesReady(){
+  if(window.__aaSplashGone) return;
+  var vh = window.innerHeight || 800, left = 0, done = false;
+  function fin(){ if(done) return; done = true; appSplashHide(); }
+  var imgs = [].slice.call(document.querySelectorAll(".view.active img")).filter(function(im){
+    if(im.complete) return false;
+    var r = im.getBoundingClientRect();
+    return r.width > 0 && r.bottom > 0 && r.top < vh;
+  }).slice(0, 10);
+  left = imgs.length;
+  if(!left){ requestAnimationFrame(fin); return; }
+  imgs.forEach(function(im){
+    function one(){ im.removeEventListener("load", one); im.removeEventListener("error", one); if(--left <= 0) fin(); }
+    im.addEventListener("load", one); im.addEventListener("error", one);
+  });
+  setTimeout(fin, 2500);
+}
 
 })();
 </script>

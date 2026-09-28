@@ -899,7 +899,8 @@ jobs:
               @SuppressWarnings("deprecation")
               private static Notification.Builder builder(Context c, String ch) {
                   Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(c, ch) : new Notification.Builder(c);
-                  b.setSmallIcon(R.drawable.ic_stat_notify).setColor(0xFFEE1F6C);
+                  b.setSmallIcon(R.drawable.ic_stat_notify).setColor(0xFFEE1F6C)
+                      .setLargeIcon(android.graphics.BitmapFactory.decodeResource(c.getResources(), R.drawable.notif_logo));
                   if (Build.VERSION.SDK_INT < 26) b.setPriority(CH_OUT.equals(ch) ? Notification.PRIORITY_HIGH : Notification.PRIORITY_DEFAULT);
                   return b;
               }
@@ -924,13 +925,6 @@ jobs:
           }
           EOF
 
-          mkdir -p $P/app/src/main/res/drawable
-          cat > $P/app/src/main/res/drawable/ic_stat_notify.xml <<'EOF'
-          <vector xmlns:android="http://schemas.android.com/apk/res/android"
-              android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
-              <path android:fillColor="#FFFFFFFF" android:pathData="M20,2H4c-1,0 -2,0.9 -2,2v3.01c0,0.72 0.43,1.34 1,1.69V20c0,1.1 1.1,2 2,2h14c0.9,0 2,-0.9 2,-2V8.7c0.57,-0.35 1,-0.97 1,-1.69V4c0,-1.1 -1,-2 -2,-2zM15,14H9v-2h6v2zM20,7H4V4h16v3z"/>
-          </vector>
-          EOF
 
       - name: Generate admin icons (store icon + gear badge)
         run: |
@@ -977,6 +971,16 @@ jobs:
                   mask.resize((round(108*f),)*2, Image.LANCZOS).save(os.path.join(dd,"ic_launcher_foreground.png"))
               os.makedirs(os.path.join(res,"drawable-xxxhdpi"), exist_ok=True)
               legacy.resize((480,480), Image.LANCZOS).save(os.path.join(res,"drawable-xxxhdpi","splash_logo.png"))
+              import base64, io
+              # notification icons: small (white shield with the letter from the logo) + large (the store logo in color)
+              ICON_B64 = "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"
+              small = Image.open(io.BytesIO(base64.b64decode(ICON_B64))).convert("RGBA")
+              for dn, px in {"mdpi":24, "hdpi":36, "xhdpi":48, "xxhdpi":72, "xxxhdpi":96}.items():
+                  dd = os.path.join(res, "drawable-" + dn); os.makedirs(dd, exist_ok=True)
+                  small.resize((px, px), Image.LANCZOS).save(os.path.join(dd, "ic_stat_notify.png"))
+              nd = os.path.join(res, "drawable-nodpi"); os.makedirs(nd, exist_ok=True)
+              Image.open("icon-512.png").convert("RGBA").resize((256, 256), Image.LANCZOS).save(os.path.join(nd, "notif_logo.png"))
+              print("notification icons ok")
               print("icons ok")
           EOF
 

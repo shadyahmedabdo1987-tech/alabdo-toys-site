@@ -21,7 +21,13 @@
      بيرجع لشاشة دخول لوحة التحكم بدل الرئيسية. */
   var fromAdminApp = ref.indexOf("android-app://com.alabdotoys.admin")===0 || /[?&]source=admin\b/.test(location.search) || /AlAbdoAdmin\//.test(navigator.userAgent);
   if(fromAdminApp && ss) ss.setItem("aa_admin_app","1");
-  if(fromAdminApp || (ss && ss.getItem("aa_admin_app")==="1")){ d.classList.add("admin-app"); return; }
+  if(fromAdminApp || (ss && ss.getItem("aa_admin_app")==="1")){
+    d.classList.add("admin-app");
+    /* تطبيق الإدارة الجديد: شاشة الافتتاح (اللوجو بيلف) بتفضل لحد ما البيانات تحمل */
+    var natA = window.AlAbdoNative;
+    if(natA && typeof natA.appReady === "function") window.AA_SPLASH = 1;
+    return;
+  }
   /* تطبيق الأندرويد الجديد (متصفح داخلي WebView) بيضيف "AlAbdoApp/" لبيانات المتصفح */
   var fromApp = ref.indexOf("android-app://com.alabdotoys.app")===0 || /[?&]source=app\b/.test(location.search) || /AlAbdoApp\//.test(navigator.userAgent);
   if(fromApp && ss) ss.setItem("aa_app_mode","1");

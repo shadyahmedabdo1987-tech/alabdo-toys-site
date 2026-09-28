@@ -22,7 +22,8 @@
   var fromAdminApp = ref.indexOf("android-app://com.alabdotoys.admin")===0 || /[?&]source=admin\b/.test(location.search);
   if(fromAdminApp && ss) ss.setItem("aa_admin_app","1");
   if(fromAdminApp || (ss && ss.getItem("aa_admin_app")==="1")){ d.classList.add("admin-app"); return; }
-  var fromApp = ref.indexOf("android-app://com.alabdotoys.app")===0 || /[?&]source=app\b/.test(location.search);
+  /* تطبيق الأندرويد الجديد (متصفح داخلي WebView) بيضيف "AlAbdoApp/" لبيانات المتصفح */
+  var fromApp = ref.indexOf("android-app://com.alabdotoys.app")===0 || /[?&]source=app\b/.test(location.search) || /AlAbdoApp\//.test(navigator.userAgent);
   if(fromApp && ss) ss.setItem("aa_app_mode","1");
   var standalone = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone===true;
   if(fromApp || standalone || (ss && ss.getItem("aa_app_mode")==="1")) d.classList.add("app-mode");

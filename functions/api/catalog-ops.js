@@ -12,6 +12,7 @@ import { json, requireAdmin } from "../_lib.js";
    Supported ops (applied in order):
      {op:"stock",  id, delta, colorName?, sizeLabel?}   add/subtract stock
      {op:"set",    id, price?, old?, stock?, sizes?:[{label,price,stock}], colors?:[{name,stock}]}
+     {op:"set-images", id, images?, image?, colors?:[{name,image}]}   photo links only
      {op:"upsert", product}         add a product, or update it (merge by id)
      {op:"delete", id}
      {op:"cat-upsert", category}    add/update a category (merge by id)
@@ -98,6 +99,18 @@ export async function onRequestPost({ request, env }){
         });
       }
       changedIds[String(p.id)] = true;
+    }
+    else if(o.op === "set-images"){
+      /* move a product's photos to /api/img links (only the photo fields change) */
+      p = findP(o.id); if(!p){ skipped.push(i); return; }
+      if(Array.isArray(o.images)) p.images = o.images.filter(function(x){ return typeof x === "string" && x; });
+      if(has(o, "image")) p.image = o.image || null;
+      if(Array.isArray(o.colors) && Array.isArray(p.colors)){
+        o.colors.forEach(function(nc){
+          var c3 = p.colors.find(function(x){ return x.name === nc.name; });
+          if(c3 && typeof nc.image === "string" && nc.image) c3.image = nc.image;
+        });
+      }
     }
     else if(o.op === "upsert"){
       var np = o.product;

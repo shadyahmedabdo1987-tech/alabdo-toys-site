@@ -5596,7 +5596,7 @@ document.getElementById("adminPassShow").addEventListener("change", function(){
   document.getElementById("adminPassInput").type = this.checked ? "text" : "password";
 });
 document.getElementById("adminPassInput").addEventListener("keydown", function(e){ if(e.key==="Enter"){ e.preventDefault(); document.getElementById("adminLoginBtn").click(); } });
-document.getElementById("adminLogoutBtn").addEventListener("click", function(){ setAdminAuthed(false); showAdmin(); updateAccountLabel(); goAfterAdminLogout(); });
+document.getElementById("adminLogoutBtn").addEventListener("click", function(){ if(ADM && ADM.onExplicitLogout) ADM.onExplicitLogout(adminAuthHeaders()); setAdminAuthed(false); showAdmin(); updateAccountLabel(); goAfterAdminLogout(); });
 
 /* ---------- Admin: first-time account setup ---------- */
 document.getElementById("adminSetupBtn").addEventListener("click", function(){
@@ -7654,17 +7654,39 @@ var ADM = null;
   var formMode = "new", formDirty = false, addAnother = false, lastCat = null;
   /* إشعار "خلص من المخزن" / "قرب يخلص" من التطبيق بيفتح المنتجات على الفلتر ده */
   var pendingFilter = null;
+  var ADMF_OK = { out:1, low:1, orders:1, inquiries:1, stock:1, customers:1 };
+  function applyAdmf(f){
+    if(f==="out" || f==="low"){ list.filter = f; go("products"); }
+    else go(f, { parent:"home" });
+  }
+  /* إشعارات الطلبات والاستفسارات وطلبات التوفر: التطبيق بياخد "مفتاح إشعارات"
+     خاص (بيقرا الجديد بس، ومش بيقدر يغيّر أي حاجة) بدل ما يحتفظ بالباسورد. */
+  function ensureNotifyToken(){
+    var nat = window.AlAbdoNative;
+    if(!nat || typeof nat.setNotifyToken !== "function" || typeof nat.hasNotifyToken !== "function") return;
+    try{ if(nat.hasNotifyToken()) return; }catch(e){ return; }
+    fetch("/api/admin/feed", { method:"POST", headers: Object.assign({ "content-type":"application/json" }, adminAuthHeaders()), body: JSON.stringify({ action:"token" }) })
+      .then(function(r){ return r.json(); })
+      .then(function(j){ if(j && j.ok && j.token) nat.setNotifyToken(j.token); })
+      .catch(function(){});
+  }
+  function revokeNotifyToken(authHeaders){
+    var nat = window.AlAbdoNative;
+    if(!nat || typeof nat.getNotifyToken !== "function") return;
+    var tok = ""; try{ tok = nat.getNotifyToken() || ""; nat.setNotifyToken(""); }catch(e){}
+    if(tok && authHeaders) fetch("/api/admin/feed", { method:"POST", headers: Object.assign({ "content-type":"application/json" }, authHeaders), body: JSON.stringify({ action:"revoke", token: tok }) }).catch(function(){});
+  }
   try{
     var admf = new URLSearchParams(location.search).get("admf");
-    if(admf==="out" || admf==="low"){
+    if(ADMF_OK[admf]){
       pendingFilter = admf;
       var u0 = new URL(location.href); u0.searchParams.delete("admf");
       history.replaceState(history.state, "", u0.pathname + u0.search + u0.hash);
     }
   }catch(e){}
   window.admOpenFilter = function(f){
-    if(f!=="out" && f!=="low") return;
-    if(shownOnce && isAdminAuthed()){ closeSheet(); list.filter = f; go("products"); }
+    if(!ADMF_OK[f]) return;
+    if(shownOnce && isAdminAuthed()){ closeSheet(); applyAdmf(f); }
     else pendingFilter = f;
   };
 
@@ -8318,8 +8340,11 @@ var ADM = null;
     onShow: function(){
       if(!shownOnce){ shownOnce = true; go("home", { force:true }); }
       else updateBars();
-      if(pendingFilter){ list.filter = pendingFilter; pendingFilter = null; go("products"); }
+      if(pendingFilter){ var pf = pendingFilter; pendingFilter = null; applyAdmf(pf); }
+      ensureNotifyToken();
     },
+    /* تسجيل خروج بزرار "تسجيل الخروج" بس (مش لما التطبيق يتقفل) = إشعارات الطلبات بتقف */
+    onExplicitLogout: function(authHeaders){ revokeNotifyToken(authHeaders); },
     onLogout: function(){ shownOnce = false; cur = null; closeSheet(); stats = { at:0, loading:false, orders:null, ordersToday:0, inquiries:null, stock:null }; updateBadges(); },
     /* بعد أي تغيير في المنتجات (إضافة/تعديل/حذف/تحميل من السيرفر) */
     refresh: function(){

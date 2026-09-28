@@ -92,9 +92,12 @@ src="https://www.facebook.com/tr?id=604071008636850&ev=PageView&noscript=1"
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="آل عبده">
 <meta name="mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" as="image" href="hero-banner-3.jpg" fetchpriority="high">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;600;700;800&family=Almarai:wght@300;400;700;800&display=swap">
+<!-- الخطوط بتتحمّل من غير ما توقف ظهور الصفحة (بتظهر بخط الموبايل لحظة وبعدين بتتغير) -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;600;700;800&family=Almarai:wght@300;400;700;800&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;600;700;800&family=Almarai:wght@300;400;700;800&display=swap"></noscript>
 
 <!-- بيانات منظمة (Structured Data) بتساعد جوجل يفهم إن الموقع ده متجر
      حقيقي، وممكن تظهر معلومات المتجر (زي رقم التليفون والعنوان) بشكل
@@ -3504,6 +3507,13 @@ var I18N_EN = {
   "بيسرّع الموقع: بينقل الصور": "Speeding up the site: moving photos",
   "✅ الموقع بقى أسرع: صور المنتجات اتنقلت": "✅ The site is faster now: product photos were moved",
   "⏳ بيرفع الصور...": "⏳ Uploading photos...",
+  "سرعة الموقع": "Site speed",
+  "نقل صور المنتجات": "Move product photos",
+  "صور المنتجات": "Product photos",
+  "صورة لسه جوه القائمة — دوس لنقلها": "photos still inside the catalog — tap to move them",
+  "كل الصور اتنقلت ✅ الموقع بيفتح بسرعة": "All photos moved ✅ the site opens fast",
+  "⏳ النقل شغال، استنى لحد ما يخلص": "⏳ Moving photos — wait until it finishes",
+  "⚠️ ملف img.js مش موجود على السيرفر": "⚠️ img.js is missing on the server",
 };
 
 /* ---------- اللغة (عربي/English) ----------
@@ -7454,9 +7464,7 @@ document.getElementById("checkoutGovernorate").innerHTML = governorateOptionsHtm
 /* PWA: يخلي التطبيق قابل للتنصيب (Play Store / أضف للشاشة الرئيسية) — لو الملف
    مفتوح كـ file:// أو من غير service-worker.js جنبه، بيتجاهل بهدوء. */
 if("serviceWorker" in navigator && (location.protocol==="https:" || location.hostname==="localhost" || location.hostname==="127.0.0.1")){
-  window.addEventListener("load", function(){
-    navigator.serviceWorker.register("service-worker.js").catch(function(){});
-  });
+  navigator.serviceWorker.register("service-worker.js").catch(function(){});
 }
 
 /* ==================================================================
@@ -8034,6 +8042,12 @@ var ADM = null;
       + li("customers", "👥", t("بيانات العملاء"), "")
       + li("analytics", "📊", t("تحليل الزوار"), "")
     + '</div>'
+    + (function(){
+        var left = PRODUCTS.reduce(function(s2, p){ return s2 + productDataImages(p).length; }, 0);
+        return '<div class="adm-group-title">'+t("سرعة الموقع")+'</div><div class="adm-list">'
+          + li("speed", "🖼️", left ? t("نقل صور المنتجات") : t("صور المنتجات"), left ? (fmt(left)+' '+t("صورة لسه جوه القائمة — دوس لنقلها")) : t("كل الصور اتنقلت ✅ الموقع بيفتح بسرعة"), left)
+          + '</div>';
+      })()
     + '<div class="adm-group-title">'+t("البيانات")+'</div><div class="adm-list">'
       + li("export", "⬇️", t("نسخة احتياطية"), t("تنزيل ملف بكل المنتجات والأقسام"))
       + li("import", "⬆️", t("استيراد ملف بيانات"), t("رجّع نسخة احتياطية قديمة"))
@@ -8051,6 +8065,7 @@ var ADM = null;
     var b = e.target.closest("[data-adm-more]"); if(!b) return;
     var a = b.dataset.admMore;
     if(a==="cats" || a==="settings" || SUB_PAGES[a]){ go(a, { parent:"more" }); return; }
+    if(a==="speed"){ if(imgMigrateRunning) showToast(t("⏳ النقل شغال، استنى لحد ما يخلص")); else if(imgEndpointMissing) showToast(t("⚠️ ملف img.js مش موجود على السيرفر")); else { migrateCatalogImages(); if(!imgMigrateRunning) showToast(t("كل الصور اتنقلت ✅ الموقع بيفتح بسرعة")); } return; }
     if(a==="export") document.getElementById("adminExportBtn").click();
     if(a==="import") document.getElementById("adminImportBtn").click();
     if(a==="reset") document.getElementById("adminResetBtn").click();

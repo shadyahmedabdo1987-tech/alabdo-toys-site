@@ -1,6 +1,9 @@
 /* متجر آل عبده — service worker:
-   - صفحة الموقع (index.html): من النت الأول دايمًا، وبس لو النت قاطع بنفتح
-     آخر نسخة محفوظة - عشان أي تحديث للموقع يوصل للعملاء فورًا.
+   - صفحة الموقع (index.html): بنحاول نجيبها من النت، ولو النت أبطأ من
+     ثانية ونص (أو قاطع) بنفتح آخر نسخة محفوظة على طول وبنحدّثها في الخلفية -
+     عشان الموقع والتطبيق يفتحوا بسرعة حتى على نت ضعيف. أي تحديث للموقع
+     بيوصل فورًا لو النت كويس، أو من الفتحة اللي بعدها لو النت بطيء.
+   - صور المنتجات (/api/img): من النسخة المحفوظة على طول (الصورة مبتتغيرش).
    - الصور والأيقونات: من النسخة المحفوظة الأول (أسرع)، وبتتحدث في الخلفية.
    - قائمة المنتجات (/api/products): بتظهر فورًا من آخر نسخة محفوظة على
      الجهاز، وبتتحدث من السيرفر في الخلفية للمرة الجاية - عشان التطبيق يفتح
@@ -8,7 +11,9 @@
    - لوحة التحكم بتطلب /api/products?fresh=1، وده بيعدّي على السيرفر مباشرة
      دايمًا، عشان التعديل يتعمل على آخر نسخة حقيقية (ومفيش منتج يتمسح).
    - باقي /api/* (الطلبات والحسابات...) وملف التطبيق .apk: من السيرفر دايمًا. */
-var CACHE_NAME = "aalabda-store-v5";
+var CACHE_NAME = "aalabda-store-v6";
+var IMG_CACHE = "aalabda-img-v1";
+var NAV_TIMEOUT_MS = 1500;
 var CATALOG_KEY = "/api/products";
 var CORE_ASSETS = [
   "./index.html",
@@ -29,7 +34,7 @@ self.addEventListener("activate", function (event) {
   event.waitUntil(
     caches.keys().then(function (keys) {
       return Promise.all(
-        keys.filter(function (k) { return k !== CACHE_NAME; })
+        keys.filter(function (k) { return k !== CACHE_NAME && k !== IMG_CACHE; })
             .map(function (k) { return caches.delete(k); })
       );
     }).then(function () { return self.clients.claim(); })
@@ -59,19 +64,37 @@ self.addEventListener("fetch", function (event) {
     );
     return;
   }
+  /* صور المنتجات: كل لينك صورة ثابت للأبد (اسمه جاي من محتوى الصورة) */
+  if (url.pathname === "/api/img") {
+    event.respondWith(
+      caches.open(IMG_CACHE).then(function (cache) {
+        return cache.match(req).then(function (cached) {
+          if (cached) return cached;
+          return fetch(req).then(function (response) {
+            if (response && response.ok) cache.put(req, response.clone());
+            return response;
+          });
+        });
+      })
+    );
+    return;
+  }
   if (url.pathname.indexOf("/api/") === 0) return;
   if (/\.apk$/i.test(url.pathname)) return;
 
   if (req.mode === "navigate") {
     event.respondWith(
-      fetch(req).then(function (response) {
-        if (response && response.ok) {
-          var copy = response.clone();
-          caches.open(CACHE_NAME).then(function (cache) { cache.put("./index.html", copy); });
-        }
-        return response;
-      }).catch(function () {
-        return caches.match("./index.html");
+      caches.open(CACHE_NAME).then(function (cache) {
+        return cache.match("./index.html").then(function (cached) {
+          var network = fetch(req).then(function (response) {
+            if (response && response.ok) cache.put("./index.html", response.clone());
+            return response;
+          });
+          if (!cached) return network;
+          event.waitUntil(network.catch(function () {}));
+          var slow = new Promise(function (resolve) { setTimeout(function () { resolve(cached); }, NAV_TIMEOUT_MS); });
+          return Promise.race([network.catch(function () { return cached; }), slow]);
+        });
       })
     );
     return;

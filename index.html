@@ -2654,6 +2654,11 @@ function applyCatalogOpLocal(o){
     if("stock" in o) p.stock = o.stock;
     if(Array.isArray(o.sizes) && Array.isArray(p.sizes)) o.sizes.forEach(function(ns){ var s2 = p.sizes.find(function(x){ return x.label===ns.label; }); if(s2){ if("price" in ns) s2.price = ns.price; if("stock" in ns) s2.stock = ns.stock; } });
     if(Array.isArray(o.colors) && Array.isArray(p.colors)) o.colors.forEach(function(nc){ var c2 = p.colors.find(function(x){ return x.name===nc.name; }); if(c2 && ("stock" in nc)) c2.stock = nc.stock; });
+  } else if(o.op==="set-images"){
+    p = opsFindProduct(o.id); if(!p) return;
+    if(Array.isArray(o.images)) p.images = o.images.slice();
+    if("image" in o) p.image = o.image;
+    if(Array.isArray(o.colors) && Array.isArray(p.colors)) o.colors.forEach(function(nc){ var c3 = p.colors.find(function(x){ return x.name===nc.name; }); if(c3 && nc.image) c3.image = nc.image; });
   } else if(o.op==="upsert"){
     p = opsFindProduct(o.product.id);
     if(p) Object.assign(p, JSON.parse(JSON.stringify(o.product)));
@@ -2695,6 +2700,7 @@ function updateCatalogSyncStatus(state){
   else if(n && catalogOpsState==="offline"){ txt = "⚠️ "+t("مستني النت")+" ("+fmt(n)+")"; cls = "is-err"; }
   else if(n){ txt = "⏳ "+t("بيحفظ...")+" ("+fmt(n)+")"; cls = "is-saving"; }
   else if(catalogOpsState==="saved"){ txt = "✅ "+t("اتحفظ"); cls = "is-ok"; }
+  if(imgMigrateText && !(n && (catalogOpsState==="auth" || catalogOpsState==="offline"))){ txt = imgMigrateText; cls = "is-saving"; }
   document.querySelectorAll(".adm-sync").forEach(function(el){
     el.textContent = txt; el.className = "adm-sync "+cls; el.hidden = !txt;
   });
@@ -3495,6 +3501,9 @@ var I18N_EN = {
   "رجوع لحسابي": "Back to my account",
   "🗑️ حذف حسابي نهائيًا": "🗑️ Delete my account permanently",
   "سجّل دخول الأول": "Log in first",
+  "بيسرّع الموقع: بينقل الصور": "Speeding up the site: moving photos",
+  "✅ الموقع بقى أسرع: صور المنتجات اتنقلت": "✅ The site is faster now: product photos were moved",
+  "⏳ بيرفع الصور...": "⏳ Uploading photos...",
 };
 
 /* ---------- اللغة (عربي/English) ----------
@@ -3990,6 +3999,96 @@ function reconcileCartStock(){
 /* التسجيل بقى اختياري - العميل يقدر يكمل طلبه كضيف بعد ما يكتب بياناته
    كاملة (اسم/موبايل/عنوان) في خطوة البيانات، من غير ما يعمل حساب. لو
    حابب يرجع يشوف طلباته وفواتيره بعدين، وقتها لازم يسجّل حساب. */
+/* ---------- صور المنتجات كلينكات منفصلة (/api/img) ----------
+   الصور كانت متخزنة جوه قائمة المنتجات نفسها (data:) فالقائمة كانت تقيلة
+   جدًا وأول فتحة للموقع/التطبيق بطيئة. دلوقتي كل صورة بتترفع لوحدها
+   على /api/img والمنتج بيحتفظ بلينك قصير بس، فالقائمة بتنزل في ثانية
+   والصور بتحمّل واحدة واحدة (والموبايل بيحتفظ بيها). الصور القديمة بتتنقل
+   أوتوماتيك أول ما صاحب المتجر يفتح لوحة التحكم (migrateCatalogImages). */
+var imgEndpointMissing = false, imgMigrateRunning = false, imgMigrateText = "";
+function isDataImage(s){ return typeof s==="string" && s.indexOf("data:image/")===0; }
+function productDataImages(p){
+  var list = [];
+  (p.images||[]).forEach(function(s){ if(isDataImage(s) && list.indexOf(s)===-1) list.push(s); });
+  if(isDataImage(p.image) && list.indexOf(p.image)===-1) list.push(p.image);
+  (p.colors||[]).forEach(function(c){ if(c && isDataImage(c.image) && list.indexOf(c.image)===-1) list.push(c.image); });
+  return list;
+}
+function uploadImageData(dataUrl, cb){
+  if(imgEndpointMissing || !isAdminAuthed()){ cb(null, "missing"); return; }
+  fetch("/api/img", {
+    method: "POST",
+    headers: Object.assign({ "content-type":"application/json" }, adminAuthHeaders()),
+    body: JSON.stringify({ data: dataUrl })
+  }).then(function(r){ return r.text().then(function(tx){ var j = null; try{ j = JSON.parse(tx); }catch(e){} return { status:r.status, body:j }; }); })
+    .then(function(res){
+      if(res.body && res.body.ok && res.body.url){ cb(res.body.url); return; }
+      if(res.status===404 || res.status===405 || (res.status===200 && !res.body)){ imgEndpointMissing = true; cb(null, "missing"); return; }
+      if(res.status===401){ cb(null, "offline"); return; }
+      cb(null, res.status>=500 ? "offline" : "bad");
+    })
+    .catch(function(){ cb(null, "offline"); });
+}
+/* بترفع صور data: اللي جوه منتج (صوره + صور ألوانه) وتبدّلها بلينكات.
+   done(status, map): "ok" كله اترفع، "partial" صورة أو أكتر اترفضت،
+   "offline" النت/السيرفر وقف (الباقي بيفضل data: زي ما هو). */
+function uploadProductImages(prod, done, onProgress){
+  var list = productDataImages(prod);
+  var map = {}, i = 0, status = "ok";
+  function apply(){
+    var sw = function(s){ return (isDataImage(s) && map[s]) ? map[s] : s; };
+    if(Array.isArray(prod.images)) prod.images = prod.images.map(sw);
+    if(prod.image) prod.image = sw(prod.image);
+    if(Array.isArray(prod.colors)) prod.colors = prod.colors.map(function(c){ return c ? Object.assign({}, c, { image: sw(c.image) }) : c; });
+    done(status, map);
+  }
+  function next(){
+    if(i >= list.length){ apply(); return; }
+    var d = list[i++];
+    uploadImageData(d, function(url, err){
+      if(onProgress) onProgress(i, list.length);
+      if(url){ map[d] = url; next(); return; }
+      if(err==="offline" || err==="missing"){ status = err==="missing" ? "missing" : "offline"; apply(); return; }
+      status = "partial"; next();
+    });
+  }
+  next();
+}
+function migrateCatalogImages(){
+  if(imgMigrateRunning || imgEndpointMissing || !isAdminAuthed() || !CATALOG_READY) return;
+  var todo = PRODUCTS.filter(function(p){ return productDataImages(p).length > 0; });
+  if(!todo.length) return;
+  imgMigrateRunning = true;
+  var total = todo.reduce(function(s, p){ return s + productDataImages(p).length; }, 0);
+  var doneCount = 0, idx = 0;
+  function show(k){ imgMigrateText = "🖼️ "+t("بيسرّع الموقع: بينقل الصور")+" "+fmt(Math.min(total, doneCount + (k||0)))+"/"+fmt(total); updateCatalogSyncStatus(); }
+  function stop(complete){
+    imgMigrateRunning = false; imgMigrateText = ""; updateCatalogSyncStatus();
+    if(complete) showToast(t("✅ الموقع بقى أسرع: صور المنتجات اتنقلت"));
+    else if(!imgEndpointMissing) setTimeout(migrateCatalogImages, 60000);
+  }
+  function step(){
+    if(!isAdminAuthed()){ stop(false); return; }
+    if(idx >= todo.length){ stop(true); return; }
+    var p = todo[idx++];
+    var cnt = productDataImages(p).length;
+    var copy = { images: (p.images||[]).slice(), image: p.image || null, colors: (p.colors||[]).map(function(c){ return { name:c.name, image:c.image }; }) };
+    uploadProductImages(copy, function(status, map){
+      if(Object.keys(map).length){
+        var op = { op:"set-images", id:p.id, images: copy.images, image: copy.image };
+        var cols = copy.colors.filter(function(c){ return c.image && !isDataImage(c.image); });
+        if(cols.length) op.colors = cols;
+        queueCatalogOps([op]);
+      }
+      doneCount += cnt; show(0);
+      if(status==="offline" || status==="missing"){ stop(false); return; }
+      setTimeout(step, 50);
+    }, function(k){ show(k); });
+  }
+  show(0);
+  step();
+}
+
 /* قبل ما نكمّل الطلب بنجيب آخر كمية حقيقية من السيرفر (مش النسخة المحفوظة
    على الجهاز)، عشان لو حد تاني اشترى نفس المنتج من شوية، العميل ميطلبش
    أكتر من المتاح فعلاً. */
@@ -5268,6 +5367,7 @@ function showAdmin(){
     renderAdminAll();
     if(ADM) ADM.onShow();
     sendCatalogOps();
+    setTimeout(migrateCatalogImages, 2500);
     return;
   }
   if(ADM) ADM.onLogout();
@@ -6948,11 +7048,25 @@ document.getElementById("productForm").addEventListener("submit", function(e){
   } else {
     data.id = Date.now();
   }
-  queueCatalogOps([{ op:"upsert", product:data }]);
-  resetProductForm();
-  showToast(wasEdit ? t("✅ اتحدث المنتج") : t("✅ اتضاف المنتج"));
-  if(ADM) ADM.afterSave(wasEdit, data.cat);
+  if(pfSaving) return;
+  function finishSave(){
+    pfSaving = false;
+    ["productFormSubmit","admSaveAnother"].forEach(function(bid){ var b = document.getElementById(bid); if(b) b.disabled = false; });
+    queueCatalogOps([{ op:"upsert", product:data }]);
+    resetProductForm();
+    showToast(wasEdit ? t("✅ اتحدث المنتج") : t("✅ اتضاف المنتج"));
+    if(ADM) ADM.afterSave(wasEdit, data.cat);
+  }
+  /* الصور الجديدة بتترفع الأول كلينكات منفصلة (/api/img)، ولو النت وقف
+     بتتحفظ جوه المنتج زي الأول ومفيش حاجة بتضيع. */
+  if(productDataImages(data).length && !imgEndpointMissing){
+    pfSaving = true;
+    ["productFormSubmit","admSaveAnother"].forEach(function(bid){ var b = document.getElementById(bid); if(b) b.disabled = true; });
+    showToast(t("⏳ بيرفع الصور..."));
+    uploadProductImages(data, function(){ data.image = (data.images && data.images[0]) || null; finishSave(); });
+  } else finishSave();
 });
+var pfSaving = false;
 function resetProductForm(){
   document.getElementById("productForm").reset();
   document.getElementById("pfId").value = "";

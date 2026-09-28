@@ -17,6 +17,8 @@ import { json, requireAdmin } from "../_lib.js";
      {op:"delete", id}
      {op:"cat-upsert", category}    add/update a category (merge by id)
      {op:"cat-delete", id}          refused if products still use it
+     {op:"settings", lowStock}      store settings (low-stock alert level)
+   "set" also takes lowAt (per-product low-stock alert level, null = use the store default).
    Returns { ok, rev, changed:[{id, price, old, stock, sizes, colors}], deleted:[ids] }
    (only stock/price fields, no photos, so the response stays tiny).
    (ASCII-only comments on purpose, same as _lib.js.) */
@@ -34,6 +36,7 @@ function summary(p){
     price: p.price,
     old: p.old == null ? null : p.old,
     stock: p.stock == null ? null : p.stock,
+    lowAt: p.lowAt == null ? null : p.lowAt,
     sizes: Array.isArray(p.sizes) ? p.sizes.map(function(s){ return { label: s.label, price: s.price, stock: s.stock == null ? null : s.stock }; }) : [],
     colors: Array.isArray(p.colors) ? p.colors.map(function(c){ return { name: c.name, stock: c.stock == null ? null : c.stock }; }) : []
   };
@@ -84,6 +87,7 @@ export async function onRequestPost({ request, env }){
       if(has(o, "price")) p.price = money(o.price);
       if(has(o, "old")) p.old = (o.old === null || o.old === "" ) ? null : money(o.old);
       if(has(o, "stock")) p.stock = numOrNull(o.stock);
+      if(has(o, "lowAt")) p.lowAt = numOrNull(o.lowAt);
       if(Array.isArray(o.sizes) && Array.isArray(p.sizes)){
         o.sizes.forEach(function(ns){
           var s2 = p.sizes.find(function(x){ return x.label === ns.label; });
@@ -138,6 +142,13 @@ export async function onRequestPost({ request, env }){
       if(inUse){ skipped.push(i); return; }
       catalog.categories = catalog.categories.filter(function(x){ return x.id !== o.id; });
     }
+    else if(o.op === "settings"){
+      if(!catalog.settings || typeof catalog.settings !== "object") catalog.settings = {};
+      if(has(o, "lowStock")){
+        var ls = numOrNull(o.lowStock);
+        catalog.settings.lowStock = ls == null ? 3 : Math.min(ls, 100000);
+      }
+    }
     else skipped.push(i);
   });
 
@@ -146,5 +157,5 @@ export async function onRequestPost({ request, env }){
   await env.STORE_KV.put("products", JSON.stringify(catalog));
 
   var changed = Object.keys(changedIds).map(function(id){ var x = findP(id); return x ? summary(x) : null; }).filter(Boolean);
-  return json({ ok:true, rev: catalog.rev, changed: changed, deleted: deleted, skipped: skipped, categories: catalog.categories });
+  return json({ ok:true, rev: catalog.rev, changed: changed, deleted: deleted, skipped: skipped, categories: catalog.categories, settings: catalog.settings || {} });
 }

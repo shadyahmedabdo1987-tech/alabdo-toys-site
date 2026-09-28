@@ -23,6 +23,13 @@ export async function onRequestPost({ request, env }){
   if(!body || !Array.isArray(body.categories) || !Array.isArray(body.products)){
     return json({ ok:false, error:"bad_request" }, 400);
   }
-  await env.STORE_KV.put("products", JSON.stringify({ categories: body.categories, products: body.products }));
+  var out = { categories: body.categories, products: body.products };
+  /* keep the store settings (low-stock alert level...) - take them from the
+     body if sent, otherwise keep the ones already saved */
+  if(body.settings && typeof body.settings === "object") out.settings = body.settings;
+  else {
+    try{ var prev = JSON.parse(await env.STORE_KV.get("products") || "null"); if(prev && prev.settings) out.settings = prev.settings; }catch(e){}
+  }
+  await env.STORE_KV.put("products", JSON.stringify(out));
   return json({ ok:true });
 }

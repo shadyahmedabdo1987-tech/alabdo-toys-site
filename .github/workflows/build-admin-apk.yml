@@ -1,12 +1,10 @@
-# متجر آل عبده - تطبيق "آل عبده - الإدارة" (لوحة التحكم بس، لصاحب المتجر).
-# ده تطبيق منفصل تمامًا عن تطبيق العملاء: اسم مختلف (com.alabdotoys.admin)،
-# أيقونة عليها ترس، وبيفتح على شاشة دخول لوحة التحكم على طول.
-# مش هيترفع على جوجل بلاي ولا له لينك على الموقع - بيتنزل على موبايلك إنت بس.
-#
-# الملف ده بيعمل لوحده أول ما يترفع:
-#   1) بيضيف التطبيق الجديد لملف .well-known/assetlinks.json (عشان يفتح من غير شريط عنوان)
-#   2) بيبني ملف APK من غير توقيع ويحطه في فرع admin-apk-build
-#      (التوقيع بيحصل برّه بمفتاح المتجر عشان المفتاح ميترفعش على الإنترنت)
+# آل عبده - الإدارة: بناء تطبيق لوحة التحكم أوتوماتيك على سيرفرات GitHub.
+# التطبيق بيفتح لوحة تحكم المتجر جوه متصفح داخلي خاص بيه (WebView) - من غير
+# جوجل كروم خالص، فمفيش أي رسالة من كروم أول مرة. تطبيق منفصل عن تطبيق
+# العملاء (com.alabdotoys.admin)، أيقونته عليها ترس، ولموبايلك إنت بس
+# (مش بيترفع على جوجل بلاي).
+# بيبني ملف APK من غير توقيع ويحطه في فرع admin-apk-build - التوقيع بيحصل
+# برّه بمفتاح المتجر عشان المفتاح ميترفعش على الإنترنت أبدًا.
 # وتقدر تشغّله تاني يدوي من Actions ← Build Admin APK ← Run workflow.
 
 name: Build Admin APK
@@ -33,45 +31,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Add the admin app to assetlinks.json
-        run: |
-          set -e
-          mkdir -p .well-known
-          python3 - <<'EOF'
-          import json, os
-          p = ".well-known/assetlinks.json"
-          fp = "1B:5C:20:B0:FD:63:22:72:FB:99:E8:82:DB:98:41:43:C5:61:79:2C:2E:9E:2A:33:B2:46:80:CF:67:D6:5F:66"
-          data = json.load(open(p, encoding="utf-8")) if os.path.exists(p) else []
-          def has(pkg):
-              return any(e.get("target", {}).get("package_name") == pkg for e in data)
-          changed = False
-          for pkg in ("com.alabdotoys.app", "com.alabdotoys.admin"):
-              if not has(pkg):
-                  data.append({
-                      "relation": ["delegate_permission/common.handle_all_urls"],
-                      "target": {"namespace": "android_app", "package_name": pkg,
-                                 "sha256_cert_fingerprints": [fp]}
-                  })
-                  changed = True
-          if changed:
-              open(p, "w", encoding="utf-8").write(json.dumps(data, indent=2) + "\n")
-              print("assetlinks.json updated")
-          else:
-              print("assetlinks.json: nothing to do")
-          EOF
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .well-known/assetlinks.json
-          if git diff --cached --quiet; then
-            echo "assetlinks already has the admin app"
-          else
-            git commit -m "Admin app: add com.alabdotoys.admin to assetlinks.json"
-            git pull --rebase origin main
-            git push origin HEAD:main
-          fi
 
       - name: Set up Java 17
         uses: actions/setup-java@v4
@@ -94,7 +53,7 @@ jobs:
           set -e
           P="$RUNNER_TEMP/android-admin"
           echo "P=$P" >> "$GITHUB_ENV"
-          mkdir -p $P/app/src/main/res/values $P/app/src/main/res/xml $P/app/src/main/res/drawable $P/app/src/main/res/mipmap-anydpi-v26
+          mkdir -p $P/app/src/main/java/com/alabdotoys/admin $P/app/src/main/res/values $P/app/src/main/res/values-v31 $P/app/src/main/res/xml $P/app/src/main/res/drawable $P/app/src/main/res/drawable-xxxhdpi $P/app/src/main/res/mipmap-anydpi-v26
 
           cat > $P/settings.gradle <<'EOF'
           pluginManagement {
@@ -131,10 +90,10 @@ jobs:
 
               defaultConfig {
                   applicationId 'com.alabdotoys.admin'
-                  minSdk 21
+                  minSdk 23
                   targetSdk 36
                   versionCode Integer.parseInt(System.getenv('APP_VERSION_CODE') ?: '1')
-                  versionName '1.0.' + (System.getenv('APP_VERSION_CODE') ?: '1')
+                  versionName '2.0.' + (System.getenv('APP_VERSION_CODE') ?: '1')
               }
 
               buildTypes {
@@ -154,25 +113,21 @@ jobs:
               }
           }
 
+          tasks.withType(JavaCompile).configureEach {
+              options.encoding = 'UTF-8'
+          }
+
           dependencies {
-              implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
+              implementation 'androidx.core:core:1.13.1'
           }
           EOF
 
-          # ملحوظة: مفيش intent-filter لروابط alabdo-toys.com هنا عن قصد - عشان
-          # لينكات الموقع (من واتساب أو فيسبوك) تفضل تفتح في تطبيق العملاء أو
-          # المتصفح، مش في تطبيق الإدارة.
           cat > $P/app/src/main/AndroidManifest.xml <<'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
               <uses-permission android:name="android.permission.INTERNET" />
-
-              <queries>
-                  <intent>
-                      <action android:name="android.support.customtabs.action.CustomTabsService" />
-                  </intent>
-              </queries>
+              <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
               <application
                   android:allowBackup="false"
@@ -180,54 +135,34 @@ jobs:
                   android:roundIcon="@mipmap/ic_launcher"
                   android:label="@string/app_name"
                   android:supportsRtl="true"
-                  android:theme="@android:style/Theme.Translucent.NoTitleBar">
-
-                  <meta-data
-                      android:name="asset_statements"
-                      android:resource="@string/asset_statements" />
+                  android:usesCleartextTraffic="false"
+                  android:enableOnBackInvokedCallback="true"
+                  android:theme="@style/AppTheme">
 
                   <activity
-                      android:name="com.google.androidbrowserhelper.trusted.LauncherActivity"
+                      android:name=".MainActivity"
                       android:exported="true"
-                      android:label="@string/app_name">
-                      <meta-data android:name="android.support.customtabs.trusted.DEFAULT_URL" android:value="https://alabdo-toys.com/?source=admin#ld2Hmke8ryGU7G5QRI56vgwE58fe" />
-                      <meta-data android:name="android.support.customtabs.trusted.STATUS_BAR_COLOR" android:resource="@color/colorPrimary" />
-                      <meta-data android:name="android.support.customtabs.trusted.NAVIGATION_BAR_COLOR" android:resource="@color/navigationColor" />
-                      <meta-data android:name="android.support.customtabs.trusted.SPLASH_IMAGE_DRAWABLE" android:resource="@drawable/splash" />
-                      <meta-data android:name="android.support.customtabs.trusted.SPLASH_SCREEN_BACKGROUND_COLOR" android:resource="@color/backgroundColor" />
-                      <meta-data android:name="android.support.customtabs.trusted.SPLASH_SCREEN_FADE_OUT_DURATION" android:value="300" />
-                      <meta-data android:name="android.support.customtabs.trusted.FILE_PROVIDER_AUTHORITY" android:value="com.alabdotoys.admin.fileprovider" />
-                      <meta-data android:name="android.support.customtabs.trusted.FALLBACK_STRATEGY" android:value="webview" />
+                      android:launchMode="singleTask"
+                      android:screenOrientation="portrait"
+                      android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|navigation|uiMode|density"
+                      android:windowSoftInputMode="adjustResize">
 
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN" />
                           <category android:name="android.intent.category.LAUNCHER" />
                       </intent-filter>
-                  </activity>
 
-                  <activity
-                      android:name="com.google.androidbrowserhelper.trusted.WebViewFallbackActivity"
-                      android:configChanges="orientation|screenSize" />
+                  </activity>
 
                   <provider
                       android:name="androidx.core.content.FileProvider"
-                      android:authorities="com.alabdotoys.admin.fileprovider"
+                      android:authorities="${applicationId}.fileprovider"
                       android:exported="false"
                       android:grantUriPermissions="true">
                       <meta-data
                           android:name="android.support.FILE_PROVIDER_PATHS"
-                          android:resource="@xml/filepaths" />
+                          android:resource="@xml/file_paths" />
                   </provider>
-
-                  <service
-                      android:name="com.google.androidbrowserhelper.trusted.DelegationService"
-                      android:enabled="true"
-                      android:exported="true">
-                      <intent-filter>
-                          <action android:name="android.support.customtabs.trusted.TRUSTED_WEB_ACTIVITY_SERVICE" />
-                          <category android:name="android.intent.category.DEFAULT" />
-                      </intent-filter>
-                  </service>
               </application>
           </manifest>
           EOF
@@ -236,24 +171,58 @@ jobs:
           <?xml version="1.0" encoding="utf-8"?>
           <resources>
               <string name="app_name">آل عبده - الإدارة</string>
-              <string name="asset_statements" translatable="false">[{\"relation\": [\"delegate_permission/common.handle_all_urls\"], \"target\": {\"namespace\": \"web\", \"site\": \"https://alabdo-toys.com\"}}]</string>
           </resources>
           EOF
 
           cat > $P/app/src/main/res/values/colors.xml <<'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <resources>
-              <color name="colorPrimary">#1F2A44</color>
-              <color name="navigationColor">#FFFFFF</color>
-              <color name="backgroundColor">#1F2A44</color>
+              <color name="brandPink">#1B2440</color>
+              <color name="splashBg">#1B2440</color>
               <color name="iconBackground">#FFF8EF</color>
           </resources>
           EOF
 
-          cat > $P/app/src/main/res/xml/filepaths.xml <<'EOF'
+          cat > $P/app/src/main/res/values/themes.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <style name="AppTheme" parent="@android:style/Theme.Material.Light.NoActionBar">
+                  <item name="android:windowBackground">@drawable/splash_bg</item>
+                  <item name="android:statusBarColor">@color/brandPink</item>
+                  <item name="android:colorPrimary">@color/brandPink</item>
+                  <item name="android:colorAccent">@color/brandPink</item>
+              </style>
+          </resources>
+          EOF
+
+          cat > $P/app/src/main/res/values-v31/themes.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <style name="AppTheme" parent="@android:style/Theme.Material.Light.NoActionBar">
+                  <item name="android:windowBackground">@color/splashBg</item>
+                  <item name="android:statusBarColor">@color/brandPink</item>
+                  <item name="android:colorPrimary">@color/brandPink</item>
+                  <item name="android:colorAccent">@color/brandPink</item>
+                  <item name="android:windowSplashScreenBackground">@color/splashBg</item>
+              </style>
+          </resources>
+          EOF
+
+          cat > $P/app/src/main/res/drawable/splash_bg.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+              <item android:drawable="@color/splashBg" />
+              <item>
+                  <bitmap android:gravity="center" android:src="@drawable/splash_logo" />
+              </item>
+          </layer-list>
+          EOF
+
+          cat > $P/app/src/main/res/xml/file_paths.xml <<'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <paths>
-              <files-path name="twa_splash" path="twa_splash/" />
+              <cache-path name="camera" path="camera/" />
+              <cache-path name="exports" path="exports/" />
           </paths>
           EOF
 
@@ -263,6 +232,408 @@ jobs:
               <background android:drawable="@color/iconBackground" />
               <foreground android:drawable="@mipmap/ic_launcher_foreground" />
           </adaptive-icon>
+          EOF
+
+          cat > $P/app/src/main/java/com/alabdotoys/admin/MainActivity.java <<'EOF'
+          package com.alabdotoys.admin;
+
+          import android.app.Activity;
+          import android.content.ActivityNotFoundException;
+          import android.content.Intent;
+          import android.content.res.Configuration;
+          import android.graphics.Color;
+          import android.graphics.Insets;
+          import android.net.Uri;
+          import android.os.Build;
+          import android.os.Bundle;
+          import android.os.Handler;
+          import android.os.Looper;
+          import android.provider.MediaStore;
+          import android.view.Gravity;
+          import android.view.View;
+          import android.view.ViewGroup;
+          import android.view.Window;
+          import android.view.WindowInsets;
+          import android.view.WindowInsetsController;
+          import android.webkit.CookieManager;
+          import android.webkit.ValueCallback;
+          import android.webkit.WebChromeClient;
+          import android.webkit.WebResourceError;
+          import android.webkit.WebResourceRequest;
+          import android.webkit.WebSettings;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
+          import android.widget.FrameLayout;
+          import android.widget.ImageView;
+          import android.widget.LinearLayout;
+          import android.window.OnBackInvokedDispatcher;
+
+          import androidx.core.content.FileProvider;
+
+          import java.io.File;
+          import java.util.ArrayList;
+
+          /* آل عبده - الإدارة: لوحة تحكم المتجر جوه متصفح داخلي خاص بيها (WebView)
+             من غير جوجل كروم خالص، فمفيش أي رسالة من كروم بتظهر أول مرة.
+             - زرار "نسخة احتياطية" بيحفظ الملف في فولدر Downloads على الموبايل
+               (عن طريق AlAbdoNative.saveFile).
+             - لينكات الموقع بتفتح جوه التطبيق، وأي لينك برّه (واتساب، تليفون،
+               فيسبوك...) بيفتح في التطبيق المناسب على الموبايل.
+             - رفع الصور (زي سكرين شوت التحويل) من المعرض أو الكاميرا.
+             - زرار الرجوع بيرجع خطوة جوه الموقع قبل ما يقفل التطبيق. */
+          public class MainActivity extends Activity {
+              private static final String HOST = "alabdo-toys.com";
+              private static final String HOME = "https://alabdo-toys.com/?source=admin#ld2Hmke8ryGU7G5QRI56vgwE58fe";
+              private static final int REQ_FILE = 1001;
+
+              private WebView web;
+              private View topBar, bottomBar, splash;
+              private ValueCallback<Uri[]> fileCallback;
+              private Uri cameraUri;
+              private boolean splashHidden = false;
+
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  Window w = getWindow();
+                  boolean night = (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+                  int bottomColor = night ? 0xFF181E33 : 0xFFFFFFFF;
+
+                  LinearLayout root = new LinearLayout(this);
+                  root.setOrientation(LinearLayout.VERTICAL);
+                  root.setBackgroundColor(0xFF1B2440);
+                  topBar = new View(this);
+                  topBar.setBackgroundColor(night ? 0xFF121829 : 0xFF1B2440);
+                  bottomBar = new View(this);
+                  bottomBar.setBackgroundColor(bottomColor);
+                  FrameLayout content = new FrameLayout(this);
+                  web = new WebView(this);
+                  web.setBackgroundColor(night ? 0xFF0E1220 : 0xFFF3F4F9);
+                  content.addView(web, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                  splash = buildSplash();
+                  content.addView(splash, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                  root.addView(topBar, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0));
+                  root.addView(content, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+                  root.addView(bottomBar, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0));
+                  setContentView(root);
+
+                  if (Build.VERSION.SDK_INT >= 30) {
+                      w.setDecorFitsSystemWindows(false);
+                      root.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
+                          @Override
+                          public WindowInsets onApplyWindowInsets(View v, WindowInsets insets) {
+                              Insets sys = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
+                              Insets ime = insets.getInsets(WindowInsets.Type.ime());
+                              setHeight(topBar, sys.top);
+                              setHeight(bottomBar, Math.max(sys.bottom, ime.bottom));
+                              v.setPadding(sys.left, 0, sys.right, 0);
+                              return WindowInsets.CONSUMED;
+                          }
+                      });
+                      WindowInsetsController c = w.getInsetsController();
+                      if (c != null) {
+                          int mask = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS | WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
+                          c.setSystemBarsAppearance(night ? 0 : WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS, mask);
+                      }
+                  } else {
+                      w.setStatusBarColor(night ? 0xFF121829 : 0xFF1B2440);
+                      if (Build.VERSION.SDK_INT >= 26) {
+                          w.setNavigationBarColor(bottomColor);
+                          if (!night) w.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+                      } else {
+                          w.setNavigationBarColor(Color.BLACK);
+                      }
+                  }
+
+                  setupWebView();
+
+                  if (Build.VERSION.SDK_INT >= 33) {
+                      getOnBackInvokedDispatcher().registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT, new android.window.OnBackInvokedCallback() {
+                          @Override
+                          public void onBackInvoked() { goBackOrClose(); }
+                      });
+                  }
+
+                  if (savedInstanceState != null) {
+                      web.restoreState(savedInstanceState);
+                  } else {
+                      web.loadUrl(startUrl(getIntent()));
+                  }
+                  new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                      @Override public void run() { hideSplash(); }
+                  }, 8000);
+              }
+
+              private View buildSplash() {
+                  FrameLayout f = new FrameLayout(this);
+                  f.setBackgroundColor(0xFF1B2440);
+                  ImageView logo = new ImageView(this);
+                  logo.setImageResource(R.drawable.splash_logo);
+                  int size = (int) (140 * getResources().getDisplayMetrics().density);
+                  f.addView(logo, new FrameLayout.LayoutParams(size, size, Gravity.CENTER));
+                  f.setClickable(true);
+                  return f;
+              }
+
+              private void hideSplash() {
+                  if (splashHidden || splash == null) return;
+                  splashHidden = true;
+                  splash.animate().alpha(0f).setDuration(250).withEndAction(new Runnable() {
+                      @Override public void run() { splash.setVisibility(View.GONE); }
+                  }).start();
+              }
+
+              private static void setHeight(View v, int h) {
+                  ViewGroup.LayoutParams lp = v.getLayoutParams();
+                  if (lp != null && lp.height != h) { lp.height = h; v.setLayoutParams(lp); }
+              }
+
+              private String startUrl(Intent intent) {
+                  return HOME;
+              }
+
+              private static boolean isOwnSite(Uri u) {
+                  String scheme = u.getScheme();
+                  String host = u.getHost();
+                  return ("https".equalsIgnoreCase(scheme) || "http".equalsIgnoreCase(scheme))
+                      && host != null && (host.equalsIgnoreCase(HOST) || host.toLowerCase().endsWith("." + HOST));
+              }
+
+              private void setupWebView() {
+                  WebSettings s = web.getSettings();
+                  s.setJavaScriptEnabled(true);
+                  s.setDomStorageEnabled(true);
+                  s.setLoadWithOverviewMode(true);
+                  s.setUseWideViewPort(true);
+                  s.setTextZoom(100);
+                  s.setSupportZoom(false);
+                  s.setAllowFileAccess(false);
+                  s.setSupportMultipleWindows(false);
+                  s.setJavaScriptCanOpenWindowsAutomatically(false);
+                  s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
+                  s.setUserAgentString(s.getUserAgentString() + " AlAbdoAdmin/2");
+                  CookieManager.getInstance().setAcceptCookie(true);
+                  web.setOverScrollMode(View.OVER_SCROLL_NEVER);
+
+                  web.setWebViewClient(new WebViewClient() {
+                      @Override
+                      public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                          return handleUrl(request.getUrl());
+                      }
+                      @Override
+                      public void onPageCommitVisible(WebView view, String url) { hideSplash(); }
+                      @Override
+                      public void onPageFinished(WebView view, String url) { hideSplash(); }
+                      @Override
+                      public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                          if (request.isForMainFrame()) showOffline();
+                      }
+                  });
+
+                  web.setWebChromeClient(new WebChromeClient() {
+                      @Override
+                      public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
+                          return openFileChooser(callback, params);
+                      }
+                  });
+
+                  web.setDownloadListener((url, userAgent, contentDisposition, mimeType, contentLength) -> openExternal(Uri.parse(url)));
+                  web.addJavascriptInterface(new Object() {
+                      @android.webkit.JavascriptInterface
+                      public void saveFile(final String name, final String mime, final String content) {
+                          runOnUiThread(new Runnable() { @Override public void run() { saveToDownloads(name, mime, content); } });
+                      }
+                  }, "AlAbdoNative");
+              }
+
+              /* حفظ ملف النسخة الاحتياطية: في Downloads على أندرويد 10 وأحدث،
+                 ولأقدم من كده بيفتح قايمة المشاركة (تحفظه في Drive أو تبعته لنفسك). */
+              private void saveToDownloads(String name, String mime, String content) {
+                  String safeName = (name == null || name.isEmpty()) ? "alabdo-backup.json" : name.replaceAll("[\\/:*?\"<>|]", "_");
+                  String type = (mime == null || mime.isEmpty()) ? "application/json" : mime;
+                  byte[] data = content == null ? new byte[0] : content.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                  try {
+                      if (Build.VERSION.SDK_INT >= 29) {
+                          android.content.ContentValues v = new android.content.ContentValues();
+                          v.put(MediaStore.MediaColumns.DISPLAY_NAME, safeName);
+                          v.put(MediaStore.MediaColumns.MIME_TYPE, type);
+                          v.put(MediaStore.MediaColumns.RELATIVE_PATH, android.os.Environment.DIRECTORY_DOWNLOADS);
+                          Uri uri = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, v);
+                          if (uri == null) throw new java.io.IOException("insert failed");
+                          java.io.OutputStream os = getContentResolver().openOutputStream(uri);
+                          if (os == null) throw new java.io.IOException("open failed");
+                          try { os.write(data); } finally { os.close(); }
+                          android.widget.Toast.makeText(this, "✅ اتحفظت النسخة الاحتياطية في فولدر Downloads: " + safeName, android.widget.Toast.LENGTH_LONG).show();
+                      } else {
+                          File dir = new File(getCacheDir(), "exports");
+                          if (!dir.exists()) dir.mkdirs();
+                          File f = new File(dir, safeName);
+                          java.io.FileOutputStream fos = new java.io.FileOutputStream(f);
+                          try { fos.write(data); } finally { fos.close(); }
+                          Uri uri = FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", f);
+                          Intent send = new Intent(Intent.ACTION_SEND);
+                          send.setType(type);
+                          send.putExtra(Intent.EXTRA_STREAM, uri);
+                          send.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                          startActivity(Intent.createChooser(send, "احفظ النسخة الاحتياطية"));
+                      }
+                  } catch (Exception e) {
+                      android.widget.Toast.makeText(this, "⚠️ معرفناش نحفظ الملف، جرّب تاني", android.widget.Toast.LENGTH_LONG).show();
+                  }
+              }
+
+              /* لينكات الموقع بتفضل جوه التطبيق، وأي حاجة تانية بتفتح برّه */
+              private boolean handleUrl(Uri u) {
+                  if (u == null) return false;
+                  if (isOwnSite(u)) return false;
+                  String scheme = u.getScheme() == null ? "" : u.getScheme().toLowerCase();
+                  if (scheme.equals("intent")) {
+                      try {
+                          Intent i = Intent.parseUri(u.toString(), Intent.URI_INTENT_SCHEME);
+                          try { startActivity(i); }
+                          catch (ActivityNotFoundException e) {
+                              String fb = i.getStringExtra("browser_fallback_url");
+                              if (fb != null) openExternal(Uri.parse(fb));
+                          }
+                      } catch (Exception e) { /* ignore */ }
+                      return true;
+                  }
+                  openExternal(u);
+                  return true;
+              }
+
+              private void openExternal(Uri u) {
+                  try {
+                      Intent i = new Intent(Intent.ACTION_VIEW, u);
+                      i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                      startActivity(i);
+                  } catch (Exception e) { /* no app for this link */ }
+              }
+
+              private void showOffline() {
+                  String html = "<!doctype html><html dir='rtl'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
+                      + "<style>body{margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;"
+                      + "font-family:sans-serif;background:#fff8ef;color:#2a1f3d;text-align:center;padding:24px;box-sizing:border-box}"
+                      + "b{font-size:20px}p{margin:0;color:#6b6080}button{border:0;border-radius:999px;background:#ee1f6c;color:#fff;font-size:16px;font-weight:700;padding:12px 28px}</style></head>"
+                      + "<body><div style='font-size:52px'>📶</div><b>مفيش اتصال بالإنترنت</b><p>اتأكد إن النت شغال وجرّب تاني</p>"
+                      + "<button onclick=\"location.href='" + HOME + "'\">حاول تاني</button></body></html>";
+                  web.loadDataWithBaseURL(null, html, "text/html", "utf-8", null);
+                  hideSplash();
+              }
+
+              /* اختيار صورة (سكرين شوت التحويل مثلاً) من المعرض أو تصويرها بالكاميرا */
+              private boolean openFileChooser(ValueCallback<Uri[]> callback, WebChromeClient.FileChooserParams params) {
+                  if (fileCallback != null) fileCallback.onReceiveValue(null);
+                  fileCallback = callback;
+                  boolean imagesOnly = true;
+                  String[] types = params.getAcceptTypes();
+                  if (types != null) {
+                      for (String t : types) {
+                          if (t != null && t.length() > 0 && !t.startsWith("image")) { imagesOnly = false; break; }
+                      }
+                  }
+                  Intent pick = new Intent(Intent.ACTION_GET_CONTENT);
+                  pick.addCategory(Intent.CATEGORY_OPENABLE);
+                  pick.setType(imagesOnly ? "image/*" : "*/*");
+                  if (params.getMode() == WebChromeClient.FileChooserParams.MODE_OPEN_MULTIPLE) {
+                      pick.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+                  }
+                  Intent camera = null;
+                  cameraUri = null;
+                  if (imagesOnly) {
+                      try {
+                          File dir = new File(getCacheDir(), "camera");
+                          if (!dir.exists()) dir.mkdirs();
+                          File photo = File.createTempFile("photo_", ".jpg", dir);
+                          cameraUri = FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", photo);
+                          camera = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                          camera.putExtra(MediaStore.EXTRA_OUTPUT, cameraUri);
+                          camera.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                      } catch (Exception e) { camera = null; cameraUri = null; }
+                  }
+                  Intent launch;
+                  if (params.isCaptureEnabled() && camera != null) {
+                      launch = camera;
+                  } else {
+                      launch = Intent.createChooser(pick, "اختار صورة");
+                      if (camera != null) {
+                          ArrayList<Intent> extra = new ArrayList<>();
+                          extra.add(camera);
+                          launch.putExtra(Intent.EXTRA_INITIAL_INTENTS, extra.toArray(new Intent[0]));
+                      }
+                  }
+                  try {
+                      startActivityForResult(launch, REQ_FILE);
+                  } catch (ActivityNotFoundException e) {
+                      fileCallback = null;
+                      return false;
+                  }
+                  return true;
+              }
+
+              @Override
+              protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+                  if (requestCode == REQ_FILE) {
+                      if (fileCallback == null) return;
+                      Uri[] result = null;
+                      if (resultCode == RESULT_OK) {
+                          if (data != null && data.getClipData() != null && data.getClipData().getItemCount() > 0) {
+                              int n = data.getClipData().getItemCount();
+                              result = new Uri[n];
+                              for (int i = 0; i < n; i++) result[i] = data.getClipData().getItemAt(i).getUri();
+                          } else if (data != null && data.getData() != null) {
+                              result = new Uri[]{ data.getData() };
+                          } else if (cameraUri != null) {
+                              result = new Uri[]{ cameraUri };
+                          }
+                      }
+                      fileCallback.onReceiveValue(result);
+                      fileCallback = null;
+                      return;
+                  }
+                  super.onActivityResult(requestCode, resultCode, data);
+              }
+
+              private void goBackOrClose() {
+                  if (web != null && web.canGoBack()) web.goBack();
+                  else finish();
+              }
+
+              @Override
+              @SuppressWarnings("deprecation")
+              public void onBackPressed() {
+                  if (web != null && web.canGoBack()) web.goBack();
+                  else super.onBackPressed();
+              }
+
+              @Override
+              protected void onNewIntent(Intent intent) {
+                  super.onNewIntent(intent);
+                  /* تطبيق الإدارة مش بيستقبل لينكات من برّه */
+              }
+
+              @Override
+              protected void onSaveInstanceState(Bundle outState) {
+                  super.onSaveInstanceState(outState);
+                  web.saveState(outState);
+              }
+
+              @Override
+              protected void onResume() { super.onResume(); web.onResume(); }
+
+              @Override
+              protected void onPause() {
+                  web.onPause();
+                  CookieManager.getInstance().flush();
+                  super.onPause();
+              }
+
+              @Override
+              protected void onDestroy() {
+                  if (web != null) { web.stopLoading(); web.destroy(); }
+                  super.onDestroy();
+              }
+          }
           EOF
 
       - name: Generate admin icons (store icon + gear badge)
@@ -308,7 +679,8 @@ jobs:
                   dd=os.path.join(res,"mipmap-"+name); os.makedirs(dd,exist_ok=True)
                   legacy.resize((round(48*f),)*2, Image.LANCZOS).save(os.path.join(dd,"ic_launcher.png"))
                   mask.resize((round(108*f),)*2, Image.LANCZOS).save(os.path.join(dd,"ic_launcher_foreground.png"))
-              legacy.resize((288,288), Image.LANCZOS).save(os.path.join(res,"drawable","splash.png"))
+              os.makedirs(os.path.join(res,"drawable-xxxhdpi"), exist_ok=True)
+              legacy.resize((480,480), Image.LANCZOS).save(os.path.join(res,"drawable-xxxhdpi","splash_logo.png"))
               print("icons ok")
           EOF
 
@@ -346,5 +718,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           if [ -f "$RUNNER_TEMP/build.log" ]; then tail -n 400 "$RUNNER_TEMP/build.log" > build.log; else echo "failed before the Gradle build step" > build.log; fi
           echo "FAILED run ${{ github.run_number }} at $(date -u)" > info.txt
-          git add . && git commit -q -m "admin build log for run ${{ github.run_number }}"
+          git add . && git commit -q -m "build log for run ${{ github.run_number }}"
           git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:refs/heads/admin-apk-build

@@ -3818,7 +3818,7 @@ var I18N_EN = {
   "💾 حفظ التعديلات": "💾 Save Changes",
   "📊 تحليل الزوار": "📊 Visitor Analytics",
   "📦 المنتجات الحالية": "📦 Current Products",
-  "📧 إشعار الإيميل (ضيف)": "📧 Email notice (guest)",
+  "📧 إشعار الإيميل": "📧 Email notice",
   "📨 استفسارات العملاء": "📨 Customer Inquiries",
   "🔄 تحديث": "🔄 Refresh",
   "🔔 طلبات التوفر": "🔔 Restock Requests",
@@ -7120,7 +7120,7 @@ function orderEmailDebugHtml(order){
     : (t("❌ فشل الإرسال") + (d.status ? (" — HTTP " + d.status) : "") + (d.error ? (" — " + d.error) : ""));
   var bodyLine = d.body ? ('<div style="margin-top:4px; opacity:.75; word-break:break-word;">' + String(d.body).replace(/</g,"&lt;") + '</div>') : "";
   return '<div style="background:var(--surface-3); border-radius:10px; padding:8px 10px; font-size:11.5px; color:var(--ink-soft);">'
-    + '<strong style="color:var(--ink);">'+t("📧 إشعار الإيميل (ضيف)")+': </strong>' + statusLine
+    + '<strong style="color:var(--ink);">'+t("📧 إشعار الإيميل")+': </strong>' + statusLine
     + bodyLine
   + '</div>';
 }

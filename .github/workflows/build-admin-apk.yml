@@ -134,6 +134,8 @@ jobs:
               <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
               <uses-permission android:name="android.permission.WAKE_LOCK" />
               <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+              <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+              <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32" />
 
               <application
                   android:allowBackup="false"
@@ -517,7 +519,7 @@ jobs:
                   s.setSupportMultipleWindows(false);
                   s.setJavaScriptCanOpenWindowsAutomatically(false);
                   s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-                  s.setUserAgentString(s.getUserAgentString() + " AlAbdoAdmin/6");
+                  s.setUserAgentString(s.getUserAgentString() + " AlAbdoAdmin/7");
                   CookieManager.getInstance().setAcceptCookie(true);
                   web.setOverScrollMode(View.OVER_SCROLL_NEVER);
 
@@ -573,6 +575,20 @@ jobs:
                       public void saveFile(final String name, final String mime, final String content) {
                           runOnUiThread(new Runnable() { @Override public void run() { saveToDownloads(name, mime, content); } });
                       }
+                      /* تنزيل صورة (سكرين شوت تحويل العميل) - بتيجي base64 من الموقع
+                         وبتتحفظ في Downloads وبتظهر في المعرض. */
+                      @android.webkit.JavascriptInterface
+                      public void saveBase64(final String name, final String mime, final String b64) {
+                          final byte[] bytes;
+                          try { bytes = android.util.Base64.decode(b64 == null ? "" : b64, android.util.Base64.DEFAULT); }
+                          catch (Exception e) {
+                              runOnUiThread(new Runnable() { @Override public void run() {
+                                  android.widget.Toast.makeText(MainActivity.this, "⚠️ الصورة مش سليمة، جرّب تاني", android.widget.Toast.LENGTH_LONG).show();
+                              } });
+                              return;
+                          }
+                          runOnUiThread(new Runnable() { @Override public void run() { saveBytes(name, mime, bytes, "✅ اتحفظ الإيصال في Downloads وفي المعرض: ", "احفظ الإيصال"); } });
+                      }
                       /* مفتاح إشعارات الطلبات (بيتحفظ على الموبايل بس) */
                       @android.webkit.JavascriptInterface
                       public void setNotifyToken(String token) {
@@ -595,9 +611,15 @@ jobs:
               /* حفظ ملف النسخة الاحتياطية: في Downloads على أندرويد 10 وأحدث،
                  ولأقدم من كده بيفتح قايمة المشاركة (تحفظه في Drive أو تبعته لنفسك). */
               private void saveToDownloads(String name, String mime, String content) {
-                  String safeName = (name == null || name.isEmpty()) ? "alabdo-backup.json" : name.replaceAll("[\\/:*?\"<>|]", "_");
                   String type = (mime == null || mime.isEmpty()) ? "application/json" : mime;
                   byte[] data = content == null ? new byte[0] : content.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                  saveBytes((name == null || name.isEmpty()) ? "alabdo-backup.json" : name, type, data, "✅ اتحفظت النسخة الاحتياطية في فولدر Downloads: ", "احفظ النسخة الاحتياطية");
+              }
+
+              private void saveBytes(String name, String mime, byte[] data, String okMsg, String shareTitle) {
+                  String safeName = (name == null || name.isEmpty()) ? "alabdo-file" : name.replaceAll("[\\/:*?\"<>|]", "_");
+                  String type = (mime == null || mime.isEmpty()) ? "application/octet-stream" : mime;
+                  if (data == null) data = new byte[0];
                   try {
                       if (Build.VERSION.SDK_INT >= 29) {
                           android.content.ContentValues v = new android.content.ContentValues();
@@ -609,7 +631,7 @@ jobs:
                           java.io.OutputStream os = getContentResolver().openOutputStream(uri);
                           if (os == null) throw new java.io.IOException("open failed");
                           try { os.write(data); } finally { os.close(); }
-                          android.widget.Toast.makeText(this, "✅ اتحفظت النسخة الاحتياطية في فولدر Downloads: " + safeName, android.widget.Toast.LENGTH_LONG).show();
+                          android.widget.Toast.makeText(this, okMsg + safeName, android.widget.Toast.LENGTH_LONG).show();
                       } else {
                           File dir = new File(getCacheDir(), "exports");
                           if (!dir.exists()) dir.mkdirs();
@@ -621,7 +643,7 @@ jobs:
                           send.setType(type);
                           send.putExtra(Intent.EXTRA_STREAM, uri);
                           send.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                          startActivity(Intent.createChooser(send, "احفظ النسخة الاحتياطية"));
+                          startActivity(Intent.createChooser(send, shareTitle));
                       }
                   } catch (Exception e) {
                       android.widget.Toast.makeText(this, "⚠️ معرفناش نحفظ الملف، جرّب تاني", android.widget.Toast.LENGTH_LONG).show();
@@ -797,8 +819,13 @@ jobs:
           import android.app.Service;
           import android.content.Context;
           import android.content.Intent;
+          import android.content.BroadcastReceiver;
+          import android.content.IntentFilter;
           import android.os.Build;
+          import android.os.Handler;
+          import android.os.HandlerThread;
           import android.os.IBinder;
+          import android.os.PowerManager;
 
           /* خدمة شغالة في الخلفية طول الوقت (حتى لو التطبيق مقفول) بتتابع الطلبات
              والاستفسارات وطلبات التوفر والعملاء الجداد والمخزون، وتطلع إشعار أول بأول.
@@ -839,10 +866,48 @@ jobs:
                   return b.build();
               }
 
+              /* والموبايل صاحي (الشاشة شغالة): بنشيك كل 30 ثانية.
+                 وأول ما تفتح الشاشة: بنشيك على طول، فتلاقي الإشعار أول ما تمسك الموبايل. */
+              private HandlerThread thread;
+              private Handler handler;
+              private BroadcastReceiver screenOn;
+              private final Runnable loop = new Runnable() {
+                  @Override public void run() {
+                      try {
+                          PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+                          if (pm == null || pm.isInteractive()) StockWatchJob.runAll(getApplicationContext());
+                      } catch (Throwable t) { /* ignore */ }
+                      if (handler != null) handler.postDelayed(this, 30000L);
+                  }
+              };
+
               @Override
               public void onCreate() {
                   super.onCreate();
-                  try { startForeground(ID, buildNotif()); } catch (Exception e) { stopSelf(); }
+                  try { startForeground(ID, buildNotif()); } catch (Exception e) { stopSelf(); return; }
+                  thread = new HandlerThread("alabdo-watch");
+                  thread.start();
+                  handler = new Handler(thread.getLooper());
+                  handler.postDelayed(loop, 3000L);
+                  screenOn = new BroadcastReceiver() {
+                      @Override public void onReceive(Context c, Intent i) {
+                          if (handler != null) handler.post(new Runnable() {
+                              @Override public void run() {
+                                  try { StockWatchJob.runAll(getApplicationContext()); } catch (Throwable t) { /* ignore */ }
+                              }
+                          });
+                      }
+                  };
+                  try { registerReceiver(screenOn, new IntentFilter(Intent.ACTION_SCREEN_ON)); } catch (Exception e) { /* ignore */ }
+              }
+
+              @Override
+              public void onDestroy() {
+                  try { if (screenOn != null) unregisterReceiver(screenOn); } catch (Exception e) { /* ignore */ }
+                  if (handler != null) handler.removeCallbacksAndMessages(null);
+                  if (thread != null) thread.quitSafely();
+                  handler = null;
+                  super.onDestroy();
               }
 
               @Override
@@ -872,7 +937,7 @@ jobs:
              أندرويد بيسمح بيه كل 9-15 دقيقة بس.) */
           public class WatchTick extends BroadcastReceiver {
               static final String ACTION = "com.alabdotoys.admin.WATCH_TICK";
-              static final long EVERY = 2L * 60L * 1000L;
+              static final long EVERY = 60L * 1000L;
 
               static void scheduleNext(Context c, long delayMs) {
                   AlarmManager am = (AlarmManager) c.getSystemService(Context.ALARM_SERVICE);
@@ -880,8 +945,19 @@ jobs:
                   Intent i = new Intent(c, WatchTick.class).setAction(ACTION);
                   PendingIntent pi = PendingIntent.getBroadcast(c, 9, i, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
                   long at = System.currentTimeMillis() + delayMs;
-                  if (Build.VERSION.SDK_INT >= 23) am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi);
-                  else am.set(AlarmManager.RTC_WAKEUP, at, pi);
+                  /* منبّه "بالظبط" كل دقيقة (حتى والموبايل مقفول الشاشة). لو أندرويد
+                     مش سامح بالمنبّه الدقيق نستخدم العادي. */
+                  boolean exact = Build.VERSION.SDK_INT < 31 || am.canScheduleExactAlarms();
+                  try {
+                      if (Build.VERSION.SDK_INT >= 23) {
+                          if (exact) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi);
+                          else am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi);
+                      } else {
+                          am.setExact(AlarmManager.RTC_WAKEUP, at, pi);
+                      }
+                  } catch (SecurityException e) {
+                      am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi);
+                  }
               }
 
               @Override
@@ -1020,9 +1096,15 @@ jobs:
 
               /* المخزون + الطلبات/الاستفسارات/طلبات التوفر/العملاء - واحدة ورا التانية
                  (مش مع بعض، عشان الإشعار ما يطلعش مرتين) */
+              /* الطلبات/الاستفسارات كل مرة (كل دقيقة تقريبًا)، والمخزون كل 3 دقايق بس
+                 (عشان النت والبطارية) */
+              static long lastStockAt = 0;
               static synchronized boolean runAll(Context c) {
                   boolean ok = true;
-                  try { check(c); } catch (Exception e) { ok = false; }
+                  long now = System.currentTimeMillis();
+                  if (now - lastStockAt > 3L * 60L * 1000L) {
+                      try { check(c); lastStockAt = now; } catch (Exception e) { ok = false; }
+                  }
                   try { checkFeed(c); } catch (Exception e) { ok = false; }
                   return ok;
               }

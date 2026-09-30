@@ -307,7 +307,6 @@ jobs:
               private ValueCallback<Uri[]> fileCallback;
               private Uri cameraUri;
               private boolean splashHidden = false;
-              private ObjectAnimator splashSpin;
               /* التطبيق ظاهر قدام العميل دلوقتي؟ (تذكير السلة مش بيطلع وهو فاتح التطبيق) */
               static volatile boolean foreground = false;
 
@@ -383,35 +382,251 @@ jobs:
                   }, 15000);
               }
 
-              /* شاشة الافتتاح: اللوجو بيلف حوالين نفسه (زي لوجو الموقع) وبتفضل
-                 ظاهرة لحد ما الصفحة تبلغنا إن المنتجات حملت (appReady)،
-                 وبحد أقصى 15 ثانية لو النت بطيء جدًا. */
+              /* شاشة الافتتاح (موشن): اللوجو بيظهر بنطّة وبيلف لفة 3D، حواليه
+                 موجات وردي بتتسع ونقط ملونة بتطير وتلف في مدار، وتحته اسم المتجر
+                 والشعار بيطلعوا واحدة واحدة، ونقط تحميل بتتنطط. بتفضل ظاهرة لحد
+                 ما الصفحة تبلغنا إن المنتجات حملت (appReady) - بس مش أقل من مدة
+                 الحركة الأساسية - وبحد أقصى 15 ثانية لو النت بطيء جدًا. */
+              private static final long SPLASH_MIN_MS = 1900;
+              private long splashStart = 0;
+              private View splashLogo;
+              private final ArrayList<android.animation.Animator> splashAnims = new ArrayList<>();
+
+              private android.graphics.drawable.GradientDrawable oval(int fill, int strokeColor, int strokeW) {
+                  android.graphics.drawable.GradientDrawable g = new android.graphics.drawable.GradientDrawable();
+                  g.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+                  g.setColor(fill);
+                  if (strokeW > 0) g.setStroke(strokeW, strokeColor);
+                  return g;
+              }
+
+              private void play(android.animation.Animator a) { splashAnims.add(a); a.start(); }
+
+              private boolean animsOn() {
+                  return Build.VERSION.SDK_INT < 26 || ValueAnimator.areAnimatorsEnabled();
+              }
+
               private View buildSplash() {
+                  final float d = getResources().getDisplayMetrics().density;
+                  final boolean loops = animsOn();
+                  splashStart = android.os.SystemClock.uptimeMillis();
+
                   FrameLayout f = new FrameLayout(this);
                   f.setBackgroundColor(0xFFFFF8EF);
-                  ImageView logo = new ImageView(this);
-                  logo.setImageResource(R.drawable.splash_logo);
-                  float density = getResources().getDisplayMetrics().density;
-                  int size = (int) (140 * density);
-                  f.addView(logo, new FrameLayout.LayoutParams(size, size, Gravity.CENTER));
                   f.setClickable(true);
-                  logo.setCameraDistance(9000 * density);
-                  splashSpin = ObjectAnimator.ofFloat(logo, "rotationY", 0f, 360f);
-                  splashSpin.setDuration(2000);
-                  splashSpin.setInterpolator(new LinearInterpolator());
-                  splashSpin.setRepeatCount(ValueAnimator.INFINITE);
-                  splashSpin.setRepeatMode(ValueAnimator.RESTART);
-                  splashSpin.start();
+
+                  LinearLayout col = new LinearLayout(this);
+                  col.setOrientation(LinearLayout.VERTICAL);
+                  col.setGravity(Gravity.CENTER_HORIZONTAL);
+                  f.addView(col, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER));
+
+                  int stageSize = (int) (290 * d);
+                  FrameLayout stage = new FrameLayout(this);
+                  stage.setClipChildren(false);
+                  col.setClipChildren(false);
+                  f.setClipChildren(false);
+                  col.addView(stage, new LinearLayout.LayoutParams(stageSize, stageSize));
+
+                  /* هالة ناعمة ورا اللوجو */
+                  View glow = new View(this);
+                  android.graphics.drawable.GradientDrawable gd = new android.graphics.drawable.GradientDrawable();
+                  gd.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+                  gd.setGradientType(android.graphics.drawable.GradientDrawable.RADIAL_GRADIENT);
+                  gd.setColors(new int[]{0x55EE1F6C, 0x33FFB703, 0x00FFF8EF});
+                  gd.setGradientRadius(stageSize / 2f);
+                  glow.setBackground(gd);
+                  glow.setAlpha(0f);
+                  stage.addView(glow, new FrameLayout.LayoutParams(stageSize, stageSize, Gravity.CENTER));
+
+                  /* موجتين وردي بيتسعوا من اللوجو */
+                  int logoSize = (int) (138 * d);
+                  for (int i = 0; i < 2; i++) {
+                      View ring = new View(this);
+                      ring.setBackground(oval(0x00000000, i == 0 ? 0xFFEE1F6C : 0xFFFFB703, (int) (2.5f * d)));
+                      ring.setAlpha(0f);
+                      stage.addView(ring, new FrameLayout.LayoutParams(logoSize, logoSize, Gravity.CENTER));
+                      android.animation.PropertyValuesHolder sx = android.animation.PropertyValuesHolder.ofFloat("scaleX", 1f, 2.05f);
+                      android.animation.PropertyValuesHolder sy = android.animation.PropertyValuesHolder.ofFloat("scaleY", 1f, 2.05f);
+                      android.animation.PropertyValuesHolder al = android.animation.PropertyValuesHolder.ofFloat("alpha", 0.55f, 0f);
+                      ObjectAnimator r = ObjectAnimator.ofPropertyValuesHolder(ring, sx, sy, al);
+                      r.setDuration(1700);
+                      r.setStartDelay(350 + i * 850);
+                      r.setInterpolator(new android.view.animation.DecelerateInterpolator());
+                      if (loops) r.setRepeatCount(ValueAnimator.INFINITE);
+                      play(r);
+                  }
+
+                  /* نقط ملونة بتطير من ورا اللوجو وتفضل تلف حواليه */
+                  FrameLayout orbit = new FrameLayout(this);
+                  orbit.setClipChildren(false);
+                  stage.addView(orbit, new FrameLayout.LayoutParams(stageSize, stageSize, Gravity.CENTER));
+                  int[] colors = {0xFFEE1F6C, 0xFFFFB703, 0xFF1FA9DD, 0xFF1FB87F, 0xFF8E24AA, 0xFFFF7A45, 0xFFEE1F6C, 0xFF1FA9DD};
+                  float[] sizes = {12, 9, 11, 8, 10, 7, 8, 9};
+                  float[] radii = {118, 104, 124, 110, 120, 100, 126, 112};
+                  for (int i = 0; i < colors.length; i++) {
+                      View dot = new View(this);
+                      dot.setBackground(oval(colors[i], 0, 0));
+                      int s = (int) (sizes[i] * d);
+                      orbit.addView(dot, new FrameLayout.LayoutParams(s, s, Gravity.CENTER));
+                      double ang = Math.toRadians(i * 45 + 20);
+                      float tx = (float) (Math.cos(ang) * radii[i] * d), ty = (float) (Math.sin(ang) * radii[i] * d);
+                      dot.setAlpha(0f); dot.setScaleX(0.3f); dot.setScaleY(0.3f);
+                      android.animation.PropertyValuesHolder px = android.animation.PropertyValuesHolder.ofFloat("translationX", 0f, tx);
+                      android.animation.PropertyValuesHolder py = android.animation.PropertyValuesHolder.ofFloat("translationY", 0f, ty);
+                      android.animation.PropertyValuesHolder pa = android.animation.PropertyValuesHolder.ofFloat("alpha", 0f, 1f);
+                      android.animation.PropertyValuesHolder ps = android.animation.PropertyValuesHolder.ofFloat("scaleX", 0.3f, 1f);
+                      android.animation.PropertyValuesHolder pt = android.animation.PropertyValuesHolder.ofFloat("scaleY", 0.3f, 1f);
+                      ObjectAnimator b = ObjectAnimator.ofPropertyValuesHolder(dot, px, py, pa, ps, pt);
+                      b.setDuration(700);
+                      b.setStartDelay(320 + i * 40);
+                      b.setInterpolator(new android.view.animation.OvershootInterpolator(1.6f));
+                      play(b);
+                  }
+                  if (loops) {
+                      ObjectAnimator spin = ObjectAnimator.ofFloat(orbit, "rotation", 0f, 360f);
+                      spin.setDuration(9000);
+                      spin.setInterpolator(new LinearInterpolator());
+                      spin.setRepeatCount(ValueAnimator.INFINITE);
+                      play(spin);
+                  }
+
+                  /* اللوجو: بيظهر بنطّة، يلف لفة 3D، وبعدين بيطفو بهدوء */
+                  ImageView logo = new ImageView(this);
+                  logo.setImageResource(R.drawable.intro_logo);
+                  logo.setCameraDistance(9000 * d);
+                  logo.setElevation(8 * d);
+                  logo.setAlpha(0f); logo.setScaleX(0.45f); logo.setScaleY(0.45f);
+                  stage.addView(logo, new FrameLayout.LayoutParams(logoSize, logoSize, Gravity.CENTER));
+                  splashLogo = logo;
+                  logo.setOutlineProvider(new android.view.ViewOutlineProvider() {
+                      @Override public void getOutline(View v, android.graphics.Outline o) { o.setOval(0, 0, v.getWidth(), v.getHeight()); }
+                  });
+
+                  ObjectAnimator glowIn = ObjectAnimator.ofFloat(glow, "alpha", 0f, 1f);
+                  glowIn.setDuration(600);
+                  play(glowIn);
+                  ObjectAnimator pop = ObjectAnimator.ofPropertyValuesHolder(logo,
+                      android.animation.PropertyValuesHolder.ofFloat("alpha", 0f, 1f),
+                      android.animation.PropertyValuesHolder.ofFloat("scaleX", 0.45f, 1f),
+                      android.animation.PropertyValuesHolder.ofFloat("scaleY", 0.45f, 1f));
+                  pop.setDuration(620);
+                  pop.setStartDelay(80);
+                  pop.setInterpolator(new android.view.animation.OvershootInterpolator(2.2f));
+                  play(pop);
+                  ObjectAnimator flip = ObjectAnimator.ofFloat(logo, "rotationY", 0f, 360f);
+                  flip.setDuration(2400);
+                  flip.setStartDelay(700);
+                  /* لفة ناعمة في أول 45% من الوقت وبعدين وقفة قبل اللفة الجاية */
+                  flip.setInterpolator(new android.animation.TimeInterpolator() {
+                      @Override public float getInterpolation(float t) {
+                          if (t >= 0.45f) return 1f;
+                          float x = t / 0.45f;
+                          return (float) ((1 - Math.cos(x * Math.PI)) / 2);
+                      }
+                  });
+                  if (loops) {
+                      /* بعد كده لفة كل شوية طول ما الصفحة بتحمل */
+                      flip.setRepeatCount(ValueAnimator.INFINITE);
+                      flip.setRepeatMode(ValueAnimator.RESTART);
+                  }
+                  play(flip);
+                  if (loops) {
+                      ObjectAnimator fl = ObjectAnimator.ofFloat(glow, "scaleX", 0.92f, 1.08f);
+                      ObjectAnimator fl2 = ObjectAnimator.ofFloat(glow, "scaleY", 0.92f, 1.08f);
+                      for (ObjectAnimator a : new ObjectAnimator[]{fl, fl2}) {
+                          a.setDuration(1500);
+                          a.setStartDelay(600);
+                          a.setRepeatCount(ValueAnimator.INFINITE);
+                          a.setRepeatMode(ValueAnimator.REVERSE);
+                          a.setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator());
+                          play(a);
+                      }
+                  }
+
+                  /* اسم المتجر والشعار */
+                  android.widget.TextView name = new android.widget.TextView(this);
+                  name.setText("متجر آل عبده");
+                  name.setTextColor(0xFFB6135A);
+                  name.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 27);
+                  name.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+                  name.setGravity(Gravity.CENTER);
+                  LinearLayout.LayoutParams nlp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                  nlp.topMargin = (int) (4 * d);
+                  col.addView(name, nlp);
+
+                  android.widget.TextView tag = new android.widget.TextView(this);
+                  tag.setText("متعة أكبر .. طفولة أجمل");
+                  tag.setTextColor(0xFF6B6080);
+                  tag.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 15);
+                  tag.setGravity(Gravity.CENTER);
+                  LinearLayout.LayoutParams tlp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                  tlp.topMargin = (int) (4 * d);
+                  col.addView(tag, tlp);
+
+                  View[] texts = {name, tag};
+                  for (int i = 0; i < texts.length; i++) {
+                      texts[i].setAlpha(0f);
+                      texts[i].setTranslationY(18 * d);
+                      ObjectAnimator a = ObjectAnimator.ofPropertyValuesHolder(texts[i],
+                          android.animation.PropertyValuesHolder.ofFloat("alpha", 0f, 1f),
+                          android.animation.PropertyValuesHolder.ofFloat("translationY", 18 * d, 0f));
+                      a.setDuration(520);
+                      a.setStartDelay(620 + i * 180);
+                      a.setInterpolator(new android.view.animation.DecelerateInterpolator(1.6f));
+                      play(a);
+                  }
+
+                  /* نقط التحميل */
+                  LinearLayout loader = new LinearLayout(this);
+                  loader.setOrientation(LinearLayout.HORIZONTAL);
+                  loader.setGravity(Gravity.CENTER);
+                  LinearLayout.LayoutParams llp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, (int) (26 * d));
+                  llp.topMargin = (int) (22 * d);
+                  col.addView(loader, llp);
+                  loader.setAlpha(0f);
+                  int[] lc = {0xFFEE1F6C, 0xFFFFB703, 0xFF1FA9DD};
+                  for (int i = 0; i < 3; i++) {
+                      View dt = new View(this);
+                      dt.setBackground(oval(lc[i], 0, 0));
+                      int s = (int) (9 * d);
+                      LinearLayout.LayoutParams dlp = new LinearLayout.LayoutParams(s, s);
+                      dlp.leftMargin = dlp.rightMargin = (int) (4 * d);
+                      loader.addView(dt, dlp);
+                      if (loops) {
+                          ObjectAnimator bo = ObjectAnimator.ofFloat(dt, "translationY", 0f, -9 * d);
+                          bo.setDuration(360);
+                          bo.setStartDelay(1100 + i * 120);
+                          bo.setRepeatCount(ValueAnimator.INFINITE);
+                          bo.setRepeatMode(ValueAnimator.REVERSE);
+                          bo.setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator());
+                          play(bo);
+                      }
+                  }
+                  ObjectAnimator lIn = ObjectAnimator.ofFloat(loader, "alpha", 0f, 1f);
+                  lIn.setDuration(400);
+                  lIn.setStartDelay(1100);
+                  play(lIn);
                   return f;
               }
 
               private void hideSplash() {
                   if (splashHidden || splash == null) return;
+                  long left = SPLASH_MIN_MS - (android.os.SystemClock.uptimeMillis() - splashStart);
+                  if (left > 0) {
+                      new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                          @Override public void run() { hideSplash(); }
+                      }, left);
+                      return;
+                  }
                   splashHidden = true;
-                  splash.animate().alpha(0f).setDuration(300).withEndAction(new Runnable() {
+                  if (splashLogo != null) splashLogo.animate().scaleX(1.18f).scaleY(1.18f).setDuration(380).start();
+                  splash.animate().alpha(0f).scaleX(1.05f).scaleY(1.05f).setDuration(380)
+                      .setInterpolator(new android.view.animation.AccelerateInterpolator())
+                      .withEndAction(new Runnable() {
                       @Override public void run() {
                           splash.setVisibility(View.GONE);
-                          if (splashSpin != null) splashSpin.cancel();
+                          for (android.animation.Animator a : splashAnims) a.cancel();
+                          splashAnims.clear();
                       }
                   }).start();
               }
@@ -833,6 +1048,21 @@ jobs:
               legacy.resize((round(48 * f), round(48 * f)), Image.LANCZOS).save(os.path.join(d, "ic_launcher.png"))
               maskable.resize((round(108 * f), round(108 * f)), Image.LANCZOS).save(os.path.join(d, "ic_launcher_foreground.png"))
           legacy.resize((480, 480), Image.LANCZOS).save(os.path.join(res, "drawable-xxxhdpi", "splash_logo.png"))
+          # intro logo: the round store logo on a white disc (transparent outside) for the motion splash
+          from PIL import ImageDraw
+          lg = Image.open("logo.png").convert("RGBA")
+          bb = lg.getchannel("A").point(lambda v: 255 if v > 20 else 0).getbbox()
+          if bb: lg = lg.crop(bb)
+          S = 552
+          badge = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+          m = Image.new("L", (S * 4, S * 4), 0)
+          ImageDraw.Draw(m).ellipse((0, 0, S * 4 - 1, S * 4 - 1), fill=255)
+          badge.paste(Image.new("RGBA", (S, S), (255, 255, 255, 255)), (0, 0), m.resize((S, S), Image.LANCZOS))
+          r = int(S * 0.92) / max(lg.size)
+          l2 = lg.resize((round(lg.width * r), round(lg.height * r)), Image.LANCZOS)
+          badge.alpha_composite(l2, ((S - l2.width) // 2, (S - l2.height) // 2))
+          badge.save(os.path.join(res, "drawable-xxxhdpi", "intro_logo.png"))
+          print("intro logo ok")
           import base64, io
           # notification icons: small (white shield with the letter from the logo) + large (the store logo in color)
           ICON_B64 = "iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADimHc4AAAMAUlEQVR4nO2da6xcVRXHf2vuXAqKUiFQkRDlZXl9oIItakVU0BgTTZSIIWgVNUAqMTEhogQtYkhqSqKJwYovGiImlvhJiYKEGiFWVGoICZRXMQoUtOVRatv7+vthr9Wze+7M3DP3zovO/JOTMzNnn332WWvvtdZee+01MMIIwwzrdwPagaTK7TUzdbMtncJAM8AJXvOvM+0QVdIY6f2mB5kZA8sASWNmNl36bbF/bNbuIPSu/F5nRlsM7BUGjgEhZsxMkg4BPgJ8HDgDOKViNc8BjwK/Ae40s+e97pqZzXS+1QcJvKfG58skPayFY7ukNZKOKD9jhAySan5+i6TfZQSckjTp55mKx7SXn8rq2SrpPf6MERNyZMRfLulZJ9ikE3KhmPG6os4v+bMGggl91wFOfAHHAA/5eQqol4rO+FEFBpQJPE2yqAz4kJndrQaKvtcYBAaMkRjwe+ACZhNfJMK322PlRy37bYb0zi8AZ/mZfirmvjIgeqCkzwIbaEz8aONW4M/AP+eodjHwbuCd/n2GA5kQz9hgZp8bhFHQF0gyPw6T9GimPHPZLUk7JH1e0qI2679A0oNeR7neaUl7JZ3mZWtz1XfQIZSgpI86YaYaEOm/kpbn90iqVzhCqb9J0gMNmBBKeZ2XK+ubgx8ZA24tWSo5M1Z5mUVqww/k94z7+RRJe1SYqDkzHpV0SLt1HxRQEj/1BmIizk844cfmS6Do2ZJuL/X8YMZuSW/1Mn0RQ315qCRzv8wbgRP85yByWCSbzGwfLMyz6cy7s/QMIyn41wEnl671FP1WPmFiNsKTTryFEEbOvG3+vVFdfbWA+s0AY/aEK3BMJ7yXzsSj42uDIn1VwHM+3GVjpxllkgAmgf+QRFHY/PGs9/q5tgArpW5meyWd799zBpg//wWvv9YFZayBn2NI2lBSkKGIpySd14H636DkEW1kBT3RiXdYCJr2LLnv3HvP+cyeUS4UNa/z+Ox7jjHgZkl3UCjNdmBe/9nAEhq33yStycp2agTEs7aZ2YbM6GjYyIaQVDezKUnfBa7uUMP6hdyl0Uv83czOUYuFoCqy9VWS/6SRh7ITaKVj2vGANkMjz2hAdMcKmvZnvjhXwSoErWXlem0xdMMAyNHKCltovWNU8OD22wwdeowY0GeMGNBnjBjQZ4wY0GeMGNBnjBjQZ4wY0GeMGHAgYmZcnn13Lah3+BajmyMcaDF7nabwH9XovDNyf8UjFAFcO4A/Ac+SGJG7QrpCqxEDCjf0/cBZZnYesBS4khQM9giwEvi1l++o827YGRBu6leBj5nZvyWdS1rJWm9mp5rZ6WZ2P8kb3HEMow4oK1QBhwLXSzoSuAR4WtLtwCbgKOArwLletqNR1cPIgPLCTKxDfzn77W3AN/wIdEUJDyMDXqGwcCI2aBFJxBgwAeyh0A1jpKCBkRJeAELszAAfBk4iKdqTgJ/4tSkSsdeSgrXO9PMlFGZoxzGMI2Cnmb2YBR3sKV3f7dcjdP7lbjZmWEZAjnGP/4nzrGiM0vWudtJhZECEK6pJqEj5elf3FvdLBJVjQi07hgq9ZkBYH7nPZajRSwbkG+22A08De0mToGNJEXJDJxKrMKATMjAmMfcCNwH3mdl+60LSoaRg3N9mbToYxNGctKvCgEMW2IiIEvuOmV0XP/oWoiDyBMnxFZOfgUuqMQ+ICrRrNeSDCH+sULYZgvg/N7PrfLtRHcDMJs1swo8Z0uzzYEE4+Tb596ajuekI8ElIzczukrQJeB8FQas2ogbsAq7N9mBNu8j5DPAOkg7YDuzOGlpV/JTj/QcBoeueBNb5XKLpLHouERQvdT1Jfs+nIZvN7DlngDwNzY+BS9usr4x2OkMvER3vSjN7WXNsBG8pVnwUjJnZJmAj6YWrLkhE73zKe8GYT/2PAT7p9UxSRF63s9ARzN0FPA/8r417u4noFBur5qKoIteDkNeSlGW7SrIsVo6gWOqrZ0fV3hwW1S+A00hJnH7g17qyaFIRIfcnSCK3Ep3mZID32jEzexxYR3XPYBD8ZJ/SR0/YTlqBMoqeXz6aNTyIf4OZXWpmz5jZLgZjBETb1jmtKmXnqmrZzLgMv4lEwJaKJatbwHJJx7o4qzvBvkkSP+MUcfT50Uyhxu+/VJFnotUGjF4hzOftwE1Oq0ru60ozYVecNTPbKeka4FbmltnmZQ4Hvi3pCkC+X+pmSfcCy0gLIsruAfgayRffbBXqjd6mGT/3e94QS5XXOI3GqqbAqeyKCIUM3EayYC6guiXyAVIamZ2wfwPgI6SIg1mQ9AUSA5oRtidbPytuFA8a/AG4rYrizdHu5ErO2dUkZQOt5fUYsJmUv2dnq2eqyHCyCjiHA31HvUTNO1rddde+FmXj3SeA1U6btkZjWwxwhVw3s8dICnmMxrIuLIIdwEWeNjLSUU57PYdLWuzHUcARvi/4h6SR2arnlUfuLqq9+ATJAGhV1x5v425JxwE3tqg7Osk6M3vMadPW0uV8vKHT3lvXAhcDJzJbVk973T8ys2fc7zPl8voi0gh6O3CYlw+TLUzUZttK44WPLpl5f8vqaLTfN9Z7/wU8W5qdvjlrA8AZkt5PSm+wlhQh0UgXxW9PAmudJr3ZFa8i18+FvuM8T7akbEf6SrdWDvHyKzU3Zlpci930N3h9dUk1P99boe7Ls/tMyTe11a81y9DY7Pd45wtzmvQMKnLxbCw1KAi4T9KJXiYYsM6v71XznJ+tEMTY6kQc04HZsb4n6XGlPECR7uAlpaxZka5yf+4JSec1IHKed3Qu4m/MadFrBtSUetGJkl7RgYlV5UQ+wctG9qqf+kvleSHaRbz81cFcZcmW/Pvxkk6XdKqkJdm16PXBtPtKdVbBjJd/RendTf3KOadCFK0uvUgw4Wy/vsjPX/ff9yoxIu/5rXpcmQDBxIuzttSVMmzNIkaja5LWe33tJoeNd1yd06AvUNGjyqnHood/0cuM+3mJpMfafOFGyEfaOknHttHmcyXdUyJmVUT5B1WIwAW5wRfsQ1cR4LQM+AuFFVMH7jezlUoycsbLLQG+CnwQOI4UFrgHeMLvXUm15Br57HkncBdpzrGNZGrG9TopwPY0UtaXSIHTrjs7LKwZYIWZbdGgZGNXodTWeA/J8z5f5tfGVRquSrl8FqvIbP6JefTMdnvxfO+JUb0mf+eBgApRNK5CFAUT9irZ/lF2TEke17N74/6750mgSHsZWdanS0eegX0+yEXPuDogejoOFQp5maQJzVaqN0ta2uL+75dedlAQBsKEkpjtqOLtKBdVJHlaA3yLImN5PGuCpCf+SpqV7iaFfi8HPkWXYvAXiMiTdL2ZrYl37FTlnWZARL3VSIReRqHs5lJ6/cpq1QrR5i3AClwJd/K/aDr+wirCunOrKPL2hyWRWzBB+H4vqpTRyOrpeKb1jg/3bOVrC8mTmC/kB6HzdeB21oN7iej9Nzrx691IQdmVIV8SRQ+Q/ixhUMNIGiHa+g+Sfuq46Al0ReFl8fWTwCqSsoXXRshhtHE3sMrfodleggWjaxZHFk3xEHAV7cUU9RPR+68ys4fUxvruQELFhOtnblcvxBPabcQc5Fd527uJrpt9KvTBoaRg1VjvHTR7P1bSniLJ/Zfpwd8fdp0ImT7YTZps7WDwQtDzpczLzWwn9OYfWXvSC7PF/G3ApylihgaFCbGGfYWZ3aMumZx9h2Z7TSd6L+ZnIdqw3tv2WjGV5wcVTrtb/MX7qZTj2bd4m+oaNC9np6FsDVX9ZUKZ+IPnYu4WnAnlkdBLcRTPGj7iB5owISIruoXw7Q838QMlJqxvQKROImfufoU7tMQPlJhwuQrZ3KnRkDN0UkV03Ij4OTImrJC0OSPg5DwZUf57xM2SVuTPGqGEjAnjkq5SCivMGTHXqIjenhP+Ja9rPH/GCE2gA6PXlio58faVCB3BX/lRjnDb5/cubVT3oGBgZaCy5T9JZwIXkYK2lgFHNrltJ2n99j7gDjN7uFzXoGFgGQD7e6zlxFNKLbkMeBfwetJGv5dI/7a9JRxpXnaMYlfPQGKgGRBQ8XeKM3MRs52yg4DXBANy6MD15jy6omvrtt3E/wGJupSzeW728QAAAABJRU5ErkJggg=="

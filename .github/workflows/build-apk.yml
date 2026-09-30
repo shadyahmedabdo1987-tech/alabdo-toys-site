@@ -91,7 +91,7 @@ jobs:
 
               defaultConfig {
                   applicationId 'com.alabdotoys.app'
-                  minSdk 23
+                  minSdk 24
                   targetSdk 36
                   versionCode Integer.parseInt(System.getenv('APP_VERSION_CODE') ?: '1')
                   versionName '2.0.' + (System.getenv('APP_VERSION_CODE') ?: '1')

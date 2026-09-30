@@ -781,6 +781,57 @@ html[dir="ltr"] .mobile-nav.show{transform:translateX(0);}
   .topbar .wrap{gap:16px; font-size:11.5px;}
 }
 
+/* ---------- من نحن: موشن حوالين اللوجو ----------
+   اللوجو في النص، حواليه مدارين بيلفوا بأيقونات أقسام الألعاب، وتحت
+   كارت بيقلب بين نقط قوة المتجر (الإسكندرية، الجودة، التوصيل، المتابعين،
+   التقييم) مع شريط تقدّم. */
+.ab-stage{position:relative; overflow:hidden; container-type:inline-size; aspect-ratio:1/0.9 !important; display:block !important; isolation:isolate;}
+.ab-stage::before{content:""; position:absolute; inset:0; background:radial-gradient(60% 50% at 50% 40%, color-mix(in srgb, var(--surface) 70%, transparent), transparent 70%); z-index:-1;}
+.ab-center{position:absolute; left:50%; top:38%; width:0; height:0;}
+.ab-halo{position:absolute; width:44cqw; height:44cqw; left:-22cqw; top:-22cqw; border-radius:50%; background:radial-gradient(circle, color-mix(in srgb, var(--pink) 30%, transparent) 0%, color-mix(in srgb, var(--sunshine) 18%, transparent) 45%, transparent 70%); animation:abPulse 3.6s ease-in-out infinite;}
+.ab-ring{position:absolute; border-radius:50%; border:2px dashed color-mix(in srgb, var(--pink) 32%, transparent);}
+.ab-ring-1{width:38cqw; height:38cqw; left:-19cqw; top:-19cqw; animation:abSpin 26s linear infinite reverse;}
+.ab-ring-2{width:52cqw; height:52cqw; left:-26cqw; top:-26cqw; border-style:dotted; border-color:color-mix(in srgb, var(--sunshine-deep) 40%, transparent); animation:abSpin 40s linear infinite;}
+.ab-orbit{position:absolute; left:0; top:0; width:0; height:0; animation:abSpin 30s linear infinite;}
+.ab-bub{position:absolute; left:-5.8cqw; top:-5.8cqw; width:11.6cqw; height:11.6cqw; transform:rotate(var(--a)) translateX(26cqw) rotate(calc(-1 * var(--a)));}
+.ab-bub-in{width:100%; height:100%; border-radius:50%; background:var(--surface); display:flex; align-items:center; justify-content:center; font-size:7.2cqw; box-shadow:0 6px 16px hsl(var(--shadow)/.18), inset 0 0 0 1.5px var(--pink-line); animation:abSpin 30s linear infinite reverse;}
+.ab-bub-in > svg{width:62%; height:62%;}
+.ab-logo{position:absolute; max-width:none !important; width:27cqw !important; height:27cqw !important; left:-13.5cqw; top:-13.5cqw; border:4px solid var(--surface); box-shadow:0 10px 30px color-mix(in srgb, var(--pink) 30%, transparent); animation:abLogo 4.5s ease-in-out infinite !important; filter:none;}
+.ab-spark{position:absolute; border-radius:50%; opacity:.75; animation:abFloat 5s ease-in-out infinite;}
+.ab-spark:nth-of-type(1){width:10px; height:10px; background:var(--pink); left:10%; top:14%;}
+.ab-spark:nth-of-type(2){width:7px; height:7px; background:var(--sunshine); right:12%; top:10%; animation-delay:-1.2s;}
+.ab-spark:nth-of-type(3){width:8px; height:8px; background:#1fa9dd; left:16%; top:58%; animation-delay:-2.4s;}
+.ab-spark:nth-of-type(4){width:6px; height:6px; background:#1fb87f; right:14%; top:52%; animation-delay:-3.1s;}
+.ab-spark:nth-of-type(5){width:5px; height:5px; background:#8e24aa; left:48%; top:6%; animation-delay:-.6s;}
+.ab-cap{position:absolute; left:4.5%; right:4.5%; bottom:4.5%; height:clamp(58px, 17cqw, 76px); border-radius:18px; background:color-mix(in srgb, var(--surface) 88%, transparent); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); box-shadow:0 10px 26px hsl(var(--shadow)/.16), inset 0 0 0 1px var(--pink-line); overflow:hidden; cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:pan-y;}
+.ab-slide{position:absolute; inset:0 0 3px; display:flex; align-items:center; gap:12px; padding-block:0; padding-inline:14px 58px; opacity:0; transform:translateX(calc(var(--abdir, -1) * 26px)); transition:opacity .45s ease, transform .55s cubic-bezier(.2,.8,.2,1); pointer-events:none;}
+.ab-slide.on{opacity:1; transform:none;}
+.ab-slide.out{opacity:0; transform:translateX(calc(var(--abdir, -1) * -26px));}
+html[dir="ltr"] .ab-stage{--abdir:1;}
+.ab-ic{flex:none; width:clamp(36px, 10.5cqw, 46px); height:clamp(36px, 10.5cqw, 46px); border-radius:14px; display:flex; align-items:center; justify-content:center; color:#fff; background:linear-gradient(135deg, var(--pink), var(--pink-deep)); box-shadow:0 5px 14px color-mix(in srgb, var(--pink) 35%, transparent);}
+.ab-slide:nth-child(2n) .ab-ic{background:linear-gradient(135deg, var(--sunshine), var(--sunshine-deep));}
+.ab-ic svg{width:56%; height:56%;}
+.ab-tx{min-width:0; display:flex; flex-direction:column; gap:2px; text-align:start;}
+.ab-tx strong{font-family:"Baloo Bhaijaan 2","Almarai",sans-serif; font-size:clamp(14px, 4.3cqw, 18px); line-height:1.25; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.ab-tx span{font-size:clamp(11.5px, 3.3cqw, 13.5px); line-height:1.4; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.ab-bar{position:absolute; left:0; right:0; bottom:0; height:3px; background:color-mix(in srgb, var(--pink) 12%, transparent);}
+.ab-bar i{display:block; height:100%; width:100%; background:linear-gradient(90deg, var(--pink), var(--sunshine)); transform-origin:right center; transform:scaleX(0); animation:abProg 3.8s linear forwards;}
+html[dir="ltr"] .ab-bar i{transform-origin:left center;}
+.ab-dots{position:absolute; top:50%; inset-inline-end:14px; transform:translateY(-50%); display:flex; flex-direction:column; align-items:center; gap:5px; z-index:2;}
+.ab-dots button{width:6px; height:6px; padding:0; border:0; border-radius:99px; background:color-mix(in srgb, var(--pink-deep) 25%, transparent); transition:height .3s ease, background .3s ease; cursor:pointer;}
+.ab-dots button.on{height:16px; background:var(--pink);}
+.ab-dots button:focus-visible, .ab-cap:focus-visible{outline:2.5px solid var(--pink); outline-offset:2px;}
+.ab-stage.paused .ab-bar i{animation-play-state:paused;}
+@keyframes abSpin{ to{ transform:rotate(360deg); } }
+@keyframes abLogo{ 0%,100%{ transform:translateY(0) scale(1); } 50%{ transform:translateY(-1.6cqw) scale(1.04); } }
+@keyframes abPulse{ 0%,100%{ transform:scale(.92); opacity:.8; } 50%{ transform:scale(1.08); opacity:1; } }
+@keyframes abFloat{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-12px); } }
+@keyframes abProg{ to{ transform:scaleX(1); } }
+@media (prefers-reduced-motion: reduce){
+  .ab-halo, .ab-ring, .ab-orbit, .ab-bub-in, .ab-spark, .ab-logo{animation:none !important;}
+  .ab-slide{transition:none;}
+  .ab-bar{display:none;}
+}
 /* ---------- سكرين شوت التحويل (إيصال فودافون كاش / إنستاباي) ---------- */
 .order-card-proof{font-size:12px; font-weight:700; color:#0f7a55; background:color-mix(in srgb, #1fb87f 13%, var(--surface)); border-radius:8px; padding:4px 9px; align-self:flex-start;}
 .proof-box{display:flex; flex-direction:column; gap:8px; border:1.5px dashed var(--border); border-radius:12px; padding:10px;}
@@ -1602,7 +1653,17 @@ setTimeout(appSplashHide, 15000);
           <p style="color:var(--ink-soft); margin-top:14px; line-height:1.9;" data-i18n>متجر آل عبده متجر متخصص في الألعاب بمدينة الإسكندرية، بنينا اسمنا على الثقة وجودة المنتج وخدمة العملاء. نتابع يوميًا آلاف الأمهات والآباء عبر صفحتنا على فيسبوك، ونحرص إن كل لعبة تدخل بيتكم تكون أصلية، آمنة، ومناسبة لعمر طفلكم.</p>
           <p style="color:var(--ink-soft); margin-top:10px; line-height:1.9;" data-i18n>هدفنا مش بس بيع لعبة .. هدفنا نبني لحظة سعادة تفضل في ذاكرة كل طفل.</p>
         </div>
-        <div class="art"><img class="brand-logo" src="logo.png" alt="شعار متجر آل عبده" style="width:min(62%,240px); height:min(62%,240px); aspect-ratio:1/1;"></div>
+        <div class="art ab-stage" id="aboutStage">
+          <span class="ab-spark" aria-hidden="true"></span><span class="ab-spark" aria-hidden="true"></span><span class="ab-spark" aria-hidden="true"></span><span class="ab-spark" aria-hidden="true"></span><span class="ab-spark" aria-hidden="true"></span>
+          <div class="ab-center" aria-hidden="true">
+            <div class="ab-halo"></div>
+            <div class="ab-ring ab-ring-2"></div>
+            <div class="ab-ring ab-ring-1"></div>
+            <div class="ab-orbit" id="aboutOrbit"></div>
+          </div>
+          <div class="ab-center"><img class="brand-logo ab-logo" src="logo.png" alt="شعار متجر آل عبده"></div>
+          <div class="ab-cap" id="aboutCap" role="button" tabindex="0" aria-label="اللي بعده" data-i18n-aria><div class="ab-dots" id="aboutDots" role="tablist" aria-label="حكاية آل عبده" data-i18n-aria></div><div class="ab-slide on" aria-hidden="false"><span class="ab-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.6"/></svg></span><span class="ab-tx"><strong data-i18n>من قلب الإسكندرية</strong><span data-i18n>متجر متخصص في ألعاب الأطفال</span></span></div><div class="ab-slide" aria-hidden="true"><span class="ab-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.2 7.5 9.5 4.3-1.3 7.5-4.9 7.5-9.5V6Z"/><path d="m8.8 12.2 2.3 2.3 4.3-4.6"/></svg></span><span class="ab-tx"><strong data-i18n>ألعاب أصلية وآمنة</strong><span data-i18n>مطابقة لمعايير سلامة الأطفال</span></span></div><div class="ab-slide" aria-hidden="true"><span class="ab-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.5h11v9h-11z"/><path d="M13.5 9.5h4l3 3.2v2.8h-7z"/><circle cx="6.5" cy="17.5" r="1.9"/><circle cx="17" cy="17.5" r="1.9"/></svg></span><span class="ab-tx"><strong data-i18n>توصيل لـ 27 محافظة</strong><span data-i18n>والدفع عند الاستلام</span></span></div><div class="ab-slide" aria-hidden="true"><span class="ab-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 19.5c.6-3.3 3-5.2 6-5.2s5.4 1.9 6 5.2"/><circle cx="17" cy="9.5" r="2.5"/><path d="M16.2 14.4c2.5.2 4.2 1.9 4.8 4.6"/></svg></span><span class="ab-tx"><strong data-i18n>أكتر من 33 ألف متابع</strong><span data-i18n>عيلة كبيرة بتثق فينا</span></span></div><div class="ab-slide" aria-hidden="true"><span class="ab-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3.5 2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.8l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8Z"/></svg></span><span class="ab-tx"><strong data-i18n>تقييم 4.8 من 5</strong><span data-i18n>رضاكم هو حكايتنا</span></span></div><div class="ab-bar" aria-hidden="true"><i></i></div></div>
+        </div>
       </div>
 
       <div class="stat-row">
@@ -2512,6 +2573,61 @@ function categoryIcon(catId){
   if(CAT_ICON_SVG[catId]){ _catIconUid++; return CAT_ICON_SVG[catId]("ci"+_catIconUid); }
   return (CAT_MAP[catId] && CAT_MAP[catId].icon) || "🧸";
 }
+/* ---------- من نحن: موشن حوالين اللوجو ----------
+   أيقونات الأقسام بتلف في مدار حوالين اللوجو، والكارت اللي تحت بيقلب
+   لوحده بين نقط قوة المتجر (شريط التقدم هو اللي بيحدد التوقيت، فلما
+   الصفحة مستخبية أو العميل حاطط صباعه عليها كل حاجة بتقف). دوسة على
+   الكارت أو سحبه يمين/شمال بيقلب يدوي. */
+(function(){
+  var stage = document.getElementById("aboutStage");
+  if(!stage) return;
+  var orbit = document.getElementById("aboutOrbit");
+  var keys = Object.keys(CAT_ICON_SVG);
+  orbit.innerHTML = keys.map(function(k, i){
+    return '<div class="ab-bub" style="--a:'+(i * 360 / keys.length - 90)+'deg"><div class="ab-bub-in">'+categoryIcon(k)+'</div></div>';
+  }).join("");
+  var cap = document.getElementById("aboutCap");
+  var slides = Array.prototype.slice.call(cap.querySelectorAll(".ab-slide"));
+  var dotsBox = document.getElementById("aboutDots");
+  var bar = cap.querySelector(".ab-bar i");
+  var cur = 0;
+  dotsBox.innerHTML = slides.map(function(_, i){ return '<button type="button" role="tab" aria-label="'+(i+1)+'"'+(i===0?' class="on" aria-selected="true"':' aria-selected="false"')+'></button>'; }).join("");
+  var dots = Array.prototype.slice.call(dotsBox.children);
+  function restartBar(){ bar.style.animation = "none"; void bar.offsetWidth; bar.style.animation = ""; }
+  function go(n){
+    n = (n + slides.length) % slides.length;
+    if(n === cur){ restartBar(); return; }
+    var prev = slides[cur];
+    prev.classList.remove("on"); prev.classList.add("out"); prev.setAttribute("aria-hidden", "true");
+    setTimeout(function(){ prev.classList.remove("out"); }, 560);
+    slides[n].classList.add("on"); slides[n].setAttribute("aria-hidden", "false");
+    dots[cur].classList.remove("on"); dots[cur].setAttribute("aria-selected", "false");
+    dots[n].classList.add("on"); dots[n].setAttribute("aria-selected", "true");
+    cur = n;
+    restartBar();
+  }
+  bar.addEventListener("animationend", function(){ go(cur + 1); });
+  dots.forEach(function(d, i){ d.addEventListener("click", function(e){ e.stopPropagation(); go(i); }); });
+  var sx = null, swiped = false;
+  cap.addEventListener("pointerdown", function(e){ sx = e.clientX; swiped = false; stage.classList.add("paused"); });
+  cap.addEventListener("pointerup", function(e){
+    stage.classList.remove("paused");
+    if(sx != null && Math.abs(e.clientX - sx) > 36){
+      swiped = true;
+      var rtl = document.documentElement.getAttribute("dir") !== "ltr";
+      var towardNext = rtl ? (e.clientX > sx) : (e.clientX < sx);
+      go(cur + (towardNext ? 1 : -1));
+    }
+    sx = null;
+  });
+  cap.addEventListener("pointercancel", function(){ sx = null; stage.classList.remove("paused"); });
+  cap.addEventListener("click", function(){ if(!swiped) go(cur + 1); swiped = false; });
+  cap.addEventListener("keydown", function(e){ if(e.key === "Enter" || e.key === " "){ e.preventDefault(); go(cur + 1); } });
+  stage.addEventListener("mouseenter", function(){ stage.classList.add("paused"); });
+  stage.addEventListener("mouseleave", function(){ stage.classList.remove("paused"); });
+  /* تقليل الحركة: مفيش تقليب تلقائي، التقليب بالدوس بس */
+  try{ if(window.matchMedia("(prefers-reduced-motion: reduce)").matches) bar.style.animationPlayState = "paused"; }catch(e){}
+})();
 function fmt(n){ return n.toLocaleString(LANG==="en" ? "en-US" : "ar-EG"); }
 function stars(r){ var full=Math.round(r); return "★★★★★".slice(0,full)+"☆☆☆☆☆".slice(0,5-full); }
 /* ---------- سكرين شوت التحويل (إيصال فودافون كاش / إنستاباي) ----------
@@ -3337,6 +3453,18 @@ var I18N_EN = {
   "المفضلة ❤️": "Favorites ❤️",
   "المفضلة": "Favorites",
   "من نحن": "About Us",
+  "من قلب الإسكندرية": "From the heart of Alexandria",
+  "متجر متخصص في ألعاب الأطفال": "A store dedicated to kids' toys",
+  "ألعاب أصلية وآمنة": "Genuine, safe toys",
+  "مطابقة لمعايير سلامة الأطفال": "Meeting child-safety standards",
+  "توصيل لـ 27 محافظة": "Delivery to 27 governorates",
+  "والدفع عند الاستلام": "with cash on delivery",
+  "أكتر من 33 ألف متابع": "33K+ followers",
+  "عيلة كبيرة بتثق فينا": "A big family that trusts us",
+  "تقييم 4.8 من 5": "Rated 4.8 out of 5",
+  "رضاكم هو حكايتنا": "Your happiness is our story",
+  "حكاية آل عبده": "The Al Abdo story",
+  "اللي بعده": "Next",
   "تواصل معنا": "Contact Us",
   "القائمة": "Menu",
   "إغلاق": "Close",

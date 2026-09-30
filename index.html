@@ -781,6 +781,47 @@ html[dir="ltr"] .mobile-nav.show{transform:translateX(0);}
   .topbar .wrap{gap:16px; font-size:11.5px;}
 }
 
+/* ---------- سكرين شوت التحويل (إيصال فودافون كاش / إنستاباي) ---------- */
+.order-card-proof{font-size:12px; font-weight:700; color:#0f7a55; background:color-mix(in srgb, #1fb87f 13%, var(--surface)); border-radius:8px; padding:4px 9px; align-self:flex-start;}
+.proof-box{display:flex; flex-direction:column; gap:8px; border:1.5px dashed var(--border); border-radius:12px; padding:10px;}
+.proof-box-head{display:flex; justify-content:space-between; align-items:baseline; gap:8px; flex-wrap:wrap; font-size:12.5px; font-weight:800; color:var(--ink);}
+.proof-box-meta{font-size:11.5px; font-weight:400; color:var(--ink-soft);}
+.proof-thumb{position:relative; display:flex; align-items:center; justify-content:center; min-height:120px; max-height:260px; overflow:hidden; border:0; padding:0; border-radius:10px; background:var(--surface-3); color:var(--ink-soft); font-size:12.5px;}
+.proof-thumb img{display:block; max-width:100%; max-height:260px; object-fit:contain;}
+.proof-thumb-zoom{position:absolute; bottom:8px; inset-inline-start:8px; background:rgba(20,12,34,.72); color:#fff; border-radius:999px; padding:3px 10px; font-size:12px; font-weight:700;}
+.proof-thumb:focus-visible{outline:2.5px solid var(--pink); outline-offset:2px;}
+.proof-actions{display:flex; gap:8px;}
+.proof-actions .btn{flex:1; justify-content:center; white-space:nowrap;}
+.pv{position:fixed; inset:0; z-index:150000; display:grid; grid-template-rows:auto 1fr auto auto; background:#0d0a14; color:#f4f0fb; font-family:"Almarai","Segoe UI",Tahoma,sans-serif; opacity:0; transition:opacity .18s ease;}
+.pv.show{opacity:1;}
+.pv button{font-family:inherit; color:inherit;}
+.pv-top{display:flex; align-items:center; gap:10px; padding:calc(env(safe-area-inset-top, 0px) + 10px) 16px 10px; background:#17111f; border-bottom:1px solid #2a2236;}
+.pv-title{flex:1; min-width:0; display:flex; flex-direction:column; line-height:1.4;}
+.pv-title strong{font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.pv-title span{font-size:12px; color:#b9aed0;}
+.pv-ib{flex:none; height:40px; min-width:40px; padding:0 12px; border-radius:12px; border:1px solid #33293f; background:#221a2d; font-size:13px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; gap:6px;}
+.pv-ib:focus-visible, .pv-bar button:focus-visible{outline:2.5px solid #ff5a9c; outline-offset:2px;}
+.pv-ib[aria-pressed="true"]{background:#3a2440; border-color:#ff5a9c;}
+.pv-stage{position:relative; overflow:hidden; touch-action:none; display:flex; align-items:center; justify-content:center; cursor:zoom-in; min-height:0;}
+.pv-stage.zoomed{cursor:grab;}
+.pv-stage.dragging{cursor:grabbing;}
+.pv-img{max-width:100%; max-height:100%; object-fit:contain; transform-origin:center center; user-select:none; -webkit-user-drag:none; will-change:transform;}
+.pv-msg{font-size:14px; color:#b9aed0; text-align:center; padding:20px;}
+.pv-info{background:#17111f; border-top:1px solid #2a2236; padding:10px 16px; max-height:32vh; overflow:auto;}
+.pv-info[hidden]{display:none;}
+.pv-info dl{margin:0; display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:6px 16px;}
+.pv-info dl > div{display:flex; flex-direction:column; min-width:0;}
+.pv-info dt{font-size:10.5px; color:#9d91b6; letter-spacing:.02em; line-height:1.4;}
+.pv-info dd{margin:0; font-size:13px; line-height:1.45; font-weight:700; overflow-wrap:anywhere; font-variant-numeric:tabular-nums;}
+.pv-info dd.pv-amount{color:#7fe0b4; font-size:15px;}
+.pv-info a{color:#ff8bb8;}
+.pv-bar{display:flex; align-items:center; gap:8px; padding:10px 16px calc(env(safe-area-inset-bottom, 0px) + 10px); background:#17111f; border-top:1px solid #2a2236;}
+.pv-bar .pv-zbtn{width:42px; height:42px; border-radius:12px; border:1px solid #33293f; background:#221a2d; font-size:20px; font-weight:700;}
+.pv-zoomval{min-width:48px; text-align:center; font-size:13px; color:#b9aed0; font-variant-numeric:tabular-nums;}
+.pv-bar .pv-dl{margin-inline-start:auto; height:42px; padding:0 16px; border-radius:12px; border:0; background:#ee1f6c; color:#fff; font-size:14px; font-weight:800;}
+.pv-bar .pv-dl:disabled{opacity:.6;}
+@media (max-width:420px){ .pv-bar .pv-fit{display:none;} .pv-info dl{grid-template-columns:1fr 1fr;} }
+@media (prefers-reduced-motion:reduce){ .pv{transition:none;} }
 /* =====================================================================
    APP MODE - شكل التطبيق (جوه تطبيق الأندرويد أو لما الموقع متثبت كتطبيق)
    كل القواعد هنا متربطة بـ html.app-mode، فالموقع العادي مبيتأثرش خالص.
@@ -2466,6 +2507,330 @@ function categoryIcon(catId){
 }
 function fmt(n){ return n.toLocaleString(LANG==="en" ? "en-US" : "ar-EG"); }
 function stars(r){ var full=Math.round(r); return "★★★★★".slice(0,full)+"☆☆☆☆☆".slice(0,5-full); }
+/* ---------- سكرين شوت التحويل (إيصال فودافون كاش / إنستاباي) ----------
+   الطلبات الجديدة: الصورة متخزنة لوحدها على السيرفر بجودتها الكاملة
+   (proofStored) وبتتجاب من /api/proof?id=<رقم الطلب> بصلاحيات الأدمن
+   (أو صاحب الطلب نفسه). الطلبات القديمة: الصورة جوه الطلب (paymentProof).
+   الأدمن يقدر يفتحها بالحجم الكامل (تكبير وتحريك بالصوابع) مع كل بيانات
+   الطلب، وينزّلها على الموبايل أو الكمبيوتر. */
+/* عارض الإيصال بيحتاج يمسك زرار الرجوع قبل أي حد تاني (عشان يقفل نفسه بس
+   ويسيب الفاتورة مفتوحة) - فالمستمع ده متسجّل هنا بدري قبل مستمعات
+   الشاشات التانية، وبيوقفهم لو العارض هو اللي استخدم الحدث. */
+var PROOF_POP_GUARD = null;
+window.addEventListener("popstate", function(e){
+  if(PROOF_POP_GUARD && PROOF_POP_GUARD(e) === true) e.stopImmediatePropagation();
+});
+function orderHasProof(o){ return !!(o && (o.proofStored || o.paymentProof)); }
+function escHtml(v){ return String(v==null?"":v).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+function fmtBytes(n){
+  n = +n || 0;
+  if(n >= 1024*1024) return (n/1024/1024).toFixed(2).replace(/\.?0+$/,"") + " MB";
+  return Math.max(1, Math.round(n/1024)) + " KB";
+}
+function proofFileName(o, type){
+  var d = new Date(o.createdAt || Date.now()), pad = function(n){ return (n<10?"0":"")+n; };
+  var ext = /png/.test(type||"") ? "png" : (/webp/.test(type||"") ? "webp" : "jpg");
+  return "alabdo-receipt-" + String(o.id||"").slice(-6).replace(/[^a-z0-9]/gi,"") + "-" + d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()) + "." + ext;
+}
+var PROOF_CACHE = {};
+function loadProof(o, admin){
+  var key = String(o.id) + (admin ? ":a" : ":c");
+  if(PROOF_CACHE[key]) return PROOF_CACHE[key];
+  var p;
+  if(typeof o.paymentProof === "string" && o.paymentProof.indexOf("data:") === 0){
+    p = fetch(o.paymentProof).then(function(r){ return r.blob(); });
+  } else {
+    p = fetch("/api/proof?id=" + encodeURIComponent(o.id), { headers: admin ? adminAuthHeaders() : customerAuthHeaders(), cache:"no-store" })
+      .then(function(r){ if(!r.ok) throw new Error("HTTP " + r.status); return r.blob(); });
+  }
+  p = p.then(function(blob){
+    var url = URL.createObjectURL(blob);
+    return new Promise(function(resolve){
+      var im = new Image();
+      im.onload = function(){ resolve({ blob:blob, url:url, w:im.naturalWidth, h:im.naturalHeight }); };
+      im.onerror = function(){ resolve({ blob:blob, url:url, w:0, h:0 }); };
+      im.src = url;
+    });
+  });
+  PROOF_CACHE[key] = p;
+  p.catch(function(){ delete PROOF_CACHE[key]; });
+  return p;
+}
+function proofBoxHtml(o){
+  return '<div class="proof-box" data-proof-box="'+escHtml(o.id)+'">'
+    + '<div class="proof-box-head"><span>🧾 '+t("سكرين شوت التحويل")+'</span><bdi dir="ltr" class="proof-box-meta" data-proof-meta></bdi></div>'
+    + '<button type="button" class="proof-thumb" data-proof-open aria-label="'+t("عرض سكرين التحويل بالحجم الكامل")+'">'
+      + '<span data-proof-loading>'+t("جاري تحميل الصورة...")+'</span>'
+      + '<img alt="'+t("سكرين شوت التحويل")+'" hidden>'
+      + '<span class="proof-thumb-zoom" hidden>🔍 '+t("اضغط للتكبير")+'</span>'
+    + '</button>'
+    + '<div class="proof-actions">'
+      + '<button type="button" class="btn btn-outline btn-sm" data-proof-open>🔍 '+t("عرض كامل")+'</button>'
+      + '<button type="button" class="btn btn-primary btn-sm" data-proof-dl>⬇️ '+t("تنزيل")+'</button>'
+    + '</div>'
+  + '</div>';
+}
+function canDownloadProof(admin){
+  if(window.AlAbdoNative){
+    if(typeof window.AlAbdoNative.saveBase64 === "function") return true;
+    return !!admin; /* تطبيق الإدارة القديم: بنقوله يحدّث */
+  }
+  return true;
+}
+function hydrateProofBoxes(root, o, admin){
+  var box = root && root.querySelector("[data-proof-box]");
+  if(!box) return;
+  var img = box.querySelector(".proof-thumb img"), loading = box.querySelector("[data-proof-loading]");
+  var zoomTag = box.querySelector(".proof-thumb-zoom"), meta = box.querySelector("[data-proof-meta]");
+  var dl = box.querySelector("[data-proof-dl]");
+  if(!canDownloadProof(admin)) dl.hidden = true;
+  function load(){
+    loading.textContent = t("جاري تحميل الصورة...");
+    loadProof(o, admin).then(function(p){
+      img.src = p.url; img.hidden = false; zoomTag.hidden = false; loading.hidden = true;
+      meta.textContent = (p.w ? (p.w + "×" + p.h + " · ") : "") + fmtBytes(p.blob.size);
+    }).catch(function(){
+      loading.hidden = false;
+      loading.textContent = t("تعذر تحميل الصورة — اضغط هنا للمحاولة تاني");
+    });
+  }
+  load();
+  box.querySelectorAll("[data-proof-open]").forEach(function(b){
+    b.addEventListener("click", function(){
+      if(img.hidden && !loading.hidden && /تعذر|Couldn/.test(loading.textContent)){ load(); return; }
+      openProofViewer(o, admin);
+    });
+  });
+  dl.addEventListener("click", function(){ downloadProof(o, admin, dl); });
+}
+function downloadProof(o, admin, btn){
+  var orig = btn ? btn.innerHTML : "";
+  function done(msg){ if(!btn) return; btn.innerHTML = msg; btn.disabled = false; setTimeout(function(){ btn.innerHTML = orig; }, 2600); }
+  if(window.AlAbdoNative && typeof window.AlAbdoNative.saveBase64 !== "function"){
+    appAlert({ icon:"📲", title:t("حدّث تطبيق الإدارة"), message:t("النسخة دي من التطبيق مش بتدعم تنزيل الصور. نزّل آخر نسخة من تطبيق الإدارة وبعدها هتقدر تنزّل الإيصال على الموبايل. لحد كده تقدر تفتحه بالحجم الكامل وتاخد له سكرين شوت.") });
+    return;
+  }
+  if(btn){ btn.disabled = true; btn.innerHTML = "⏳ " + t("جاري التنزيل..."); }
+  loadProof(o, admin).then(function(p){
+    var type = p.blob.type || "image/jpeg";
+    var name = proofFileName(o, type);
+    if(window.AlAbdoNative && typeof window.AlAbdoNative.saveBase64 === "function"){
+      var fr = new FileReader();
+      fr.onload = function(){
+        var b64 = String(fr.result || "").split(",")[1] || "";
+        window.AlAbdoNative.saveBase64(name, type, b64);
+        done("✅ " + t("اتنزّل"));
+      };
+      fr.onerror = function(){ done("⚠️ " + t("فشل التنزيل")); };
+      fr.readAsDataURL(p.blob);
+      return;
+    }
+    var a = document.createElement("a");
+    a.href = p.url; a.download = name;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    done("✅ " + t("اتنزّل"));
+  }).catch(function(){ done("⚠️ " + t("فشل التنزيل")); });
+}
+function openProofViewer(o, admin){
+  var old = document.getElementById("proofViewer");
+  if(old) old.remove();
+  var d = new Date(o.createdAt || Date.now());
+  var loc = LANG==="en" ? "en-US" : "ar-EG";
+  var qty = 0; (o.items||[]).forEach(function(it){ qty += (+it.qty||0); });
+  var cur = t("ج.م");
+  var phone = o.phone || "";
+  function row(label, value, cls){ return '<div><dt>'+label+'</dt><dd'+(cls?' class="'+cls+'"':'')+'>'+value+'</dd></div>'; }
+  var info = ''
+    + row(t("رقم الطلب"), '<bdi dir="ltr">#' + escHtml(String(o.id||"").slice(-6)) + '</bdi>')
+    + row(t("المبلغ المطلوب"), escHtml(fmt(+o.total||0)) + " " + cur, "pv-amount")
+    + row(t("وسيلة الدفع"), escHtml(paymentMethodLabel(o.paymentMethod)))
+    + row(t("تاريخ ووقت الطلب"), escHtml(d.toLocaleDateString(loc) + " — " + d.toLocaleTimeString(loc, {hour:"numeric", minute:"2-digit"})))
+    + row(t("اسم العميل"), escHtml(o.name || o.customerName || "-"))
+    + row(t("الموبايل"), phone ? '<a href="tel:'+escHtml(phone.replace(/[^0-9+]/g,""))+'" dir="ltr">'+escHtml(phone)+'</a>' : "-")
+    + (o.governorate ? row(t("المحافظة"), escHtml(t(o.governorate))) : "")
+    + row(t("العنوان"), escHtml(o.address || "-"))
+    + row(t("عدد القطع"), escHtml(fmt(qty)))
+    + (o.shipping ? row(t("منها الشحن"), escHtml(fmt(+o.shipping||0)) + " " + cur) : "")
+    + row(t("الصورة"), '<bdi dir="ltr" data-pv-dims>—</bdi>');
+  var el = document.createElement("div");
+  el.className = "pv"; el.id = "proofViewer";
+  el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true");
+  el.setAttribute("aria-label", t("سكرين شوت التحويل"));
+  el.setAttribute("dir", LANG==="en" ? "ltr" : "rtl");
+  el.innerHTML = ''
+    + '<div class="pv-top">'
+      + '<button type="button" class="pv-ib" data-pv-close aria-label="'+t("إغلاق")+'"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
+      + '<div class="pv-title"><strong>🧾 '+t("إيصال طلب")+' <bdi dir="ltr">#'+escHtml(String(o.id||"").slice(-6))+'</bdi></strong>'
+        + '<span>'+escHtml(paymentMethodLabel(o.paymentMethod))+' · '+escHtml(fmt(+o.total||0))+' '+cur+' · '+escHtml(o.name || o.customerName || "")+'</span></div>'
+      + '<button type="button" class="pv-ib" data-pv-info aria-pressed="true">ℹ️ '+t("البيانات")+'</button>'
+    + '</div>'
+    + '<div class="pv-stage" data-pv-stage><div class="pv-msg" data-pv-msg>'+t("جاري تحميل الصورة...")+'</div><img class="pv-img" alt="'+t("سكرين شوت التحويل")+'" hidden draggable="false"></div>'
+    + '<div class="pv-info" data-pv-infobox><dl>'+info+'</dl></div>'
+    + '<div class="pv-bar">'
+      + '<button type="button" class="pv-zbtn" data-pv-z="out" aria-label="'+t("تصغير")+'">−</button>'
+      + '<span class="pv-zoomval" data-pv-zv>100%</span>'
+      + '<button type="button" class="pv-zbtn" data-pv-z="in" aria-label="'+t("تكبير")+'">+</button>'
+      + '<button type="button" class="pv-ib pv-fit" data-pv-z="fit">'+t("مقاس الشاشة")+'</button>'
+      + (canDownloadProof(admin) ? '<button type="button" class="pv-dl" data-pv-dl>⬇️ '+t("تنزيل الإيصال")+'</button>' : '')
+    + '</div>';
+  document.body.appendChild(el);
+  requestAnimationFrame(function(){ el.classList.add("show"); });
+  var prevOverflow = document.body.style.overflow;
+  document.body.style.overflow = "hidden";
+
+  var stage = el.querySelector("[data-pv-stage]"), img = el.querySelector(".pv-img"), msg = el.querySelector("[data-pv-msg]");
+  var zv = el.querySelector("[data-pv-zv]"), infoBox = el.querySelector("[data-pv-infobox]"), infoBtn = el.querySelector("[data-pv-info]");
+  var S = { s:1, x:0, y:0 };
+  function clampPan(){
+    var sw = stage.clientWidth, sh = stage.clientHeight;
+    var iw = img.offsetWidth * S.s, ih = img.offsetHeight * S.s;
+    var mx = Math.max(0, (iw - sw) / 2), my = Math.max(0, (ih - sh) / 2);
+    S.x = Math.min(mx, Math.max(-mx, S.x));
+    S.y = Math.min(my, Math.max(-my, S.y));
+  }
+  function apply(){
+    clampPan();
+    img.style.transform = "translate(" + S.x + "px," + S.y + "px) scale(" + S.s + ")";
+    zv.textContent = Math.round(S.s * 100) + "%";
+    stage.classList.toggle("zoomed", S.s > 1.01);
+  }
+  function zoomAt(ns, cx, cy){
+    ns = Math.min(8, Math.max(1, ns));
+    if(cx == null){ cx = 0; cy = 0; }
+    var k = ns / S.s;
+    S.x = cx - (cx - S.x) * k;
+    S.y = cy - (cy - S.y) * k;
+    S.s = ns;
+    if(ns <= 1){ S.x = 0; S.y = 0; }
+    apply();
+  }
+  function rel(e){ var r = stage.getBoundingClientRect(); return { x: e.clientX - r.left - r.width/2, y: e.clientY - r.top - r.height/2 }; }
+
+  loadProof(o, admin).then(function(p){
+    img.src = p.url; img.hidden = false; msg.remove();
+    var dims = el.querySelector("[data-pv-dims]");
+    if(dims) dims.textContent = (p.w ? (p.w + "×" + p.h + " · ") : "") + fmtBytes(p.blob.size);
+    apply();
+  }).catch(function(){ msg.textContent = t("تعذر تحميل الصورة — اقفل وافتح تاني."); });
+
+  /* تكبير وتحريك: صباعين للتكبير، صباع واحد للتحريك، دبل كليك/دبل تاب للتكبير السريع */
+  var ptrs = {}, pinch = null, drag = null, lastTap = 0;
+  stage.addEventListener("pointerdown", function(e){
+    if(img.hidden) return;
+    stage.setPointerCapture && stage.setPointerCapture(e.pointerId);
+    ptrs[e.pointerId] = { x:e.clientX, y:e.clientY };
+    var ids = Object.keys(ptrs);
+    if(ids.length === 2){
+      var a = ptrs[ids[0]], b = ptrs[ids[1]];
+      var r = stage.getBoundingClientRect();
+      pinch = { d: Math.hypot(a.x-b.x, a.y-b.y) || 1, s: S.s, cx:(a.x+b.x)/2 - r.left - r.width/2, cy:(a.y+b.y)/2 - r.top - r.height/2 };
+      drag = null;
+    } else if(ids.length === 1){
+      drag = { x:e.clientX, y:e.clientY, sx:S.x, sy:S.y, moved:false };
+    }
+  });
+  stage.addEventListener("pointermove", function(e){
+    if(!ptrs[e.pointerId]) return;
+    ptrs[e.pointerId] = { x:e.clientX, y:e.clientY };
+    var ids = Object.keys(ptrs);
+    if(pinch && ids.length >= 2){
+      var a = ptrs[ids[0]], b = ptrs[ids[1]];
+      zoomAt(pinch.s * (Math.hypot(a.x-b.x, a.y-b.y) / pinch.d), pinch.cx, pinch.cy);
+      pinch.s = S.s; pinch.d = Math.hypot(a.x-b.x, a.y-b.y) || 1;
+    } else if(drag){
+      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if(Math.abs(dx) + Math.abs(dy) > 4) drag.moved = true;
+      if(S.s > 1){ stage.classList.add("dragging"); S.x = drag.sx + dx; S.y = drag.sy + dy; apply(); }
+    }
+  });
+  function endPtr(e){
+    if(!ptrs[e.pointerId]) return;
+    delete ptrs[e.pointerId];
+    stage.classList.remove("dragging");
+    if(Object.keys(ptrs).length < 2) pinch = null;
+    if(e.type === "pointerup" && drag && !drag.moved && Object.keys(ptrs).length === 0){
+      var now = Date.now();
+      if(now - lastTap < 320){
+        var p = rel(e);
+        zoomAt(S.s > 1.01 ? 1 : 2.5, p.x, p.y);
+        lastTap = 0;
+      } else lastTap = now;
+    }
+    if(Object.keys(ptrs).length === 1){
+      var id = Object.keys(ptrs)[0];
+      drag = { x:ptrs[id].x, y:ptrs[id].y, sx:S.x, sy:S.y, moved:true };
+    } else if(!Object.keys(ptrs).length) drag = null;
+  }
+  stage.addEventListener("pointerup", endPtr);
+  stage.addEventListener("pointercancel", endPtr);
+  stage.addEventListener("wheel", function(e){
+    if(img.hidden) return;
+    e.preventDefault();
+    var p = rel(e);
+    zoomAt(S.s * (e.deltaY < 0 ? 1.2 : 1/1.2), p.x, p.y);
+  }, { passive:false });
+  el.querySelectorAll("[data-pv-z]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var z = b.dataset.pvZ;
+      if(z === "in") zoomAt(S.s * 1.5);
+      else if(z === "out") zoomAt(S.s / 1.5);
+      else zoomAt(1);
+    });
+  });
+  infoBtn.addEventListener("click", function(){
+    var show = infoBox.hidden;
+    infoBox.hidden = !show;
+    infoBtn.setAttribute("aria-pressed", show ? "true" : "false");
+    requestAnimationFrame(apply);
+  });
+  var dlBtn = el.querySelector("[data-pv-dl]");
+  if(dlBtn) dlBtn.addEventListener("click", function(){ downloadProof(o, admin, dlBtn); });
+  var onResize = function(){ apply(); };
+  window.addEventListener("resize", onResize);
+
+  /* زرار الرجوع في الموبايل / Esc بيقفل العارض بس ويرجع للفاتورة */
+  var closed = false, ignorePop = false;
+  try{ history.pushState({ aaProof:1 }, "", location.href); }catch(e){}
+  function onPop(){
+    if(ignorePop){ ignorePop = false; PROOF_POP_GUARD = null; return true; }
+    if(!closed){ PROOF_POP_GUARD = null; close(true); return true; }
+    PROOF_POP_GUARD = null;
+    return false;
+  }
+  function onKey(e){ if(e.key === "Escape"){ e.stopPropagation(); e.preventDefault(); close(false); } }
+  PROOF_POP_GUARD = onPop;
+  document.addEventListener("keydown", onKey, true);
+  function close(fromPop){
+    if(closed) return;
+    closed = true;
+    document.removeEventListener("keydown", onKey, true);
+    window.removeEventListener("resize", onResize);
+    document.body.style.overflow = prevOverflow;
+    el.classList.remove("show");
+    setTimeout(function(){ el.remove(); }, 200);
+    if(!fromPop){
+      if(history.state && history.state.aaProof){ ignorePop = true; try{ history.back(); }catch(e){ PROOF_POP_GUARD = null; } }
+      else PROOF_POP_GUARD = null;
+    }
+    var back = document.querySelector("[data-proof-box] [data-proof-open]");
+    if(back) try{ back.focus({ preventScroll:true }); }catch(e){}
+  }
+  el.querySelector("[data-pv-close]").addEventListener("click", function(){ close(false); });
+  setTimeout(function(){ var c = el.querySelector("[data-pv-close]"); if(c) c.focus(); }, 30);
+}
+/* قراءة سكرين التحويل في السلة: لو الصورة أصلاً صغيرة وبصيغة عادية بتتبعت
+   زي ما هي (أوضح حاجة ممكنة)، ولو كبيرة بتتصغر لحد 2000 بكسل بجودة عالية
+   عشان الأرقام والكلام اللي فيها يفضلوا مقروءين. */
+function readProofImage(file, callback){
+  if(file && file.size <= 2.5*1024*1024 && /^image\/(jpeg|png|webp)$/.test(file.type)){
+    var r = new FileReader();
+    r.onload = function(){ callback(String(r.result)); };
+    r.onerror = function(){ readImageAsCompressedDataURL(file, 2000, 0.9, callback); };
+    r.readAsDataURL(file);
+    return;
+  }
+  readImageAsCompressedDataURL(file, 2000, 0.9, callback);
+}
 /* بيبني كارت فاتورة كامل لطلب واحد (الصنف/الكمية/السعر/الإجمالي وبيانات
    التوصيل) - مستخدم في شاشة تفاصيل الطلب اللي بتتفتح من قائمة "حسابي". */
 function orderInvoiceHtml(o){
@@ -2499,11 +2864,8 @@ function orderInvoiceHtml(o){
     paymentBlock += '<div style="font-size:12.5px; color:var(--ink-soft); display:flex; justify-content:space-between;">'
       + '<span>'+t("وسيلة الدفع")+'</span><strong style="color:var(--ink);">'+paymentMethodLabel(o.paymentMethod)+'</strong>'
     + '</div>';
-    if(o.paymentProof){
-      paymentBlock += '<div style="display:flex; flex-direction:column; gap:6px;">'
-        + '<span style="font-size:12px; color:var(--ink-soft); font-weight:700;">'+t("سكرين شوت التحويل")+'</span>'
-        + '<img src="'+o.paymentProof+'" alt="'+t("سكرين شوت التحويل")+'" style="max-width:100%; max-height:220px; object-fit:contain; border-radius:10px; border:1.5px solid var(--border);">'
-      + '</div>';
+    if(orderHasProof(o)){
+      paymentBlock += proofBoxHtml(o);
     } else if(paymentMethodNeedsProof(o.paymentMethod)){
       paymentBlock += '<div style="font-size:12px; color:var(--ink-soft);">'+t("العميل بيبعت سكرين شوت التحويل في محادثة الواتساب.")+'</div>';
     }
@@ -3330,6 +3692,32 @@ var I18N_EN = {
   "زيارة": "view",
   "زيارة من الموبايل، ": "views from mobile, ",
   "سكرين شوت التحويل": "Transfer screenshot",
+  "عرض سكرين التحويل بالحجم الكامل": "View transfer screenshot full size",
+  "جاري تحميل الصورة...": "Loading image...",
+  "اضغط للتكبير": "Tap to zoom",
+  "عرض بالحجم الكامل": "View full size",
+  "تنزيل الإيصال": "Download receipt",
+  "تعذر تحميل الصورة — اضغط هنا للمحاولة تاني": "Couldn't load the image — tap to retry",
+  "تعذر تحميل الصورة — اقفل وافتح تاني.": "Couldn't load the image — close and open again.",
+  "حدّث تطبيق الإدارة": "Update the admin app",
+  "النسخة دي من التطبيق مش بتدعم تنزيل الصور. نزّل آخر نسخة من تطبيق الإدارة وبعدها هتقدر تنزّل الإيصال على الموبايل. لحد كده تقدر تفتحه بالحجم الكامل وتاخد له سكرين شوت.": "This version of the app can't download images. Install the latest admin app to save receipts to your phone. Meanwhile you can open it full size and take a screenshot.",
+  "جاري التنزيل...": "Downloading...",
+  "اتنزّل": "Downloaded",
+  "فشل التنزيل": "Download failed",
+  "رقم الطلب": "Order no.",
+  "المبلغ المطلوب": "Amount due",
+  "تاريخ ووقت الطلب": "Order date & time",
+  "اسم العميل": "Customer name",
+  "عدد القطع": "Items",
+  "منها الشحن": "Incl. shipping",
+  "الصورة": "Image",
+  "إيصال طلب": "Receipt — order",
+  "عرض كامل": "Full view",
+  "تنزيل": "Download",
+  "تصغير": "Zoom out",
+  "تكبير": "Zoom in",
+  "مقاس الشاشة": "Fit screen",
+  "إيصال تحويل مرفق": "Transfer receipt attached",
   "صور حقيقية للمنتج (ممكن تضيف أكتر من صورة)": "Real photos of the product (you can add more than one image)",
   "طلبات \"أعلمني عند التوفر\" اللي بعتها العملاء عن منتجات خلصت أو مش متوفرة حاليًا. دوس \"تم التعامل معه\" لما توفّر المنتج وتكلّم العميل.": "\"Notify me when available\" requests sent by customers about products that are out of stock or currently unavailable. Press \"Handled\" once the product is back in stock and you've contacted the customer.",
   "طلبات ÷ زوار (آخر 30 يوم)": "Orders ÷ visitors (last 30 days)",
@@ -4096,7 +4484,7 @@ function renderCartPaymentStep(){
     proofInput.addEventListener("change", function(){
       var file = this.files && this.files[0];
       if(!file) return;
-      readImageAsCompressedDataURL(file, 900, 0.75, function(dataUrl){
+      readProofImage(file, function(dataUrl){
         cartCheckout.proofData = dataUrl;
         cartCheckout.proofName = file.name;
         renderCartPaymentStep();
@@ -6397,6 +6785,7 @@ function showOrderDetailModal(order){
   document.getElementById("modalCard").classList.add("acct-card");
   document.getElementById("modalCard").innerHTML = html;
   document.getElementById("modalCloseBtn").addEventListener("click", closeOrderDetailModal);
+  hydrateProofBoxes(document.getElementById("modalCard"), order, false);
   modalBackdrop.classList.add("show"); document.body.style.overflow="hidden";
 }
 
@@ -6703,6 +7092,7 @@ function renderAdminOrdersPage(){
             + '<div class="order-card-date tabular">'+d.toLocaleDateString(LANG==="en"?"en-US":"ar-EG")+'</div>'
           + '</div>'
           + '<div class="order-card-items">'+itemsTxt+'</div>'
+          + (orderHasProof(o) ? '<div class="order-card-proof">🧾 '+t("إيصال تحويل مرفق")+' — '+paymentMethodLabel(o.paymentMethod)+'</div>' : '')
           + '<div class="order-card-bottom">'
             + '<span class="order-card-open">'+t("عرض الفاتورة كاملة ⟵")+'</span>'
             + '<span class="order-card-total tabular">'+fmt(o.total)+' '+t("ج.م")+'</span>'
@@ -6751,6 +7141,7 @@ function showAdminOrderInvoiceModal(order){
   document.getElementById("modalCloseBtn").addEventListener("click", closeAllPanels);
   document.getElementById("aoEditBtn").addEventListener("click", function(){ showAdminOrderEditForm(order); });
   document.getElementById("aoDeleteBtn").addEventListener("click", function(){ deleteAdminOrder(order); });
+  hydrateProofBoxes(document.getElementById("modalCard"), order, true);
   modalBackdrop.classList.add("show"); overlay.classList.add("show"); document.body.style.overflow="hidden";
 }
 /* صف واحد قابل للتعديل بتاع صنف داخل نموذج تعديل الطلب (اسم/كمية/سعر +

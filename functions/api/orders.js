@@ -97,9 +97,37 @@ export async function onRequestPost({ request, env }){
     address: address,
     notes: (body.notes || "").trim(),
     paymentMethod: (body.paymentMethod || "").trim(),
-    paymentProof: body.paymentProof || null,
+    paymentProof: null,
     createdAt: Date.now()
   };
+
+  /* سكرين شوت التحويل (فودافون كاش / إنستاباي) بيتخزن لوحده في KV
+     بمفتاح "proof:<رقم الطلب>" بجودته الكاملة، بدل ما يتحط جوه قائمة
+     الطلبات نفسها (كانت بتكبر وتتقل مع كل طلب). الطلب بيشيل بس علامة
+     proofStored + نوع الصورة وحجمها، والأدمن بيفتحه وينزّله من
+     /api/proof?id=<رقم الطلب>. لو التخزين المنفصل فشل لأي سبب بنرجع
+     للطريقة القديمة (الصورة جوه الطلب) عشان الإيصال ما يضيعش. */
+  var rawProof = typeof body.paymentProof === "string" ? body.paymentProof : "";
+  if(rawProof){
+    var stored = false;
+    var pm = /^data:(image\/(?:jpeg|jpg|png|webp|gif|heic|heif));base64,([A-Za-z0-9+\/=\s]+)$/.exec(rawProof);
+    if(pm){
+      try{
+        var ptype = pm[1] === "image/jpg" ? "image/jpeg" : pm[1];
+        var pbin = atob(pm[2].replace(/\s+/g, ""));
+        if(pbin.length > 0 && pbin.length <= 8 * 1024 * 1024){
+          var pbytes = new Uint8Array(pbin.length);
+          for(var pi = 0; pi < pbin.length; pi++) pbytes[pi] = pbin.charCodeAt(pi);
+          await env.STORE_KV.put("proof:" + order.id, pbytes, { metadata: { type: ptype, size: pbytes.length, at: order.createdAt } });
+          order.proofStored = true;
+          order.proofType = ptype;
+          order.proofSize = pbytes.length;
+          stored = true;
+        }
+      }catch(e){ stored = false; }
+    }
+    if(!stored && rawProof.length <= 3 * 1024 * 1024) order.paymentProof = rawProof;
+  }
 
   /* بنسجّل نتيجة إرسال إيميل الإشعار (نجح/فشل + كود الاستجابة) على الطلب
      نفسه (emailDebug) - مش بس بنحاول ونسكت لو فشل زي الأول. ده عشان لو
@@ -196,6 +224,8 @@ export async function onRequestDelete({ request, env }){
   var next = list.filter(function(o){ return o.id !== id; });
   if(next.length === list.length) return json({ ok:false, error:"not_found" }, 404);
   await saveList(env, "orders", next);
+  /* حذف سكرين التحويل المتخزن لوحده مع الطلب */
+  try{ await env.STORE_KV.delete("proof:" + id); }catch(e){}
   return json({ ok:true });
 }
 
@@ -227,6 +257,7 @@ async function sendGuestOrderEmail(order, env){
   if(order.governorate) lines.push("المحافظة: " + order.governorate);
   lines.push("العنوان: " + (order.address || "-"));
   lines.push("وسيلة الدفع: " + (order.paymentMethod || "-"));
+  if(order.proofStored || order.paymentProof) lines.push("سكرين شوت التحويل: مرفق - افتحه ونزّله من لوحة التحكم ← الطلبات ← فاتورة #" + String(order.id).slice(-6));
   if(order.notes) lines.push("ملاحظات: " + order.notes);
 
   var apiKey = env && env.RESEND_API_KEY;

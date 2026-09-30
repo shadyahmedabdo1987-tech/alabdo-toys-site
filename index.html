@@ -1295,12 +1295,19 @@ html.admin-app #admSheet.show{display:flex;}
 #admSyncPill{position:fixed; top:calc(64px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%); z-index:69; box-shadow:0 6px 18px rgba(0,0,0,.15);}
 html:not(.admin-app) #admSyncPill, html.admin-app:not(.adm-authed) #admSyncPill{display:none !important;}
 
-/* زرار "رجوع لحسابي" - بيظهر جوه التطبيق بس في الصفحة اللي اتفتحت من قائمة حسابي */
+/* زرار "رجوع لحسابي" - بيظهر جوه التطبيق بس، فوق الصفحة اللي اتفتحت من
+   قائمة حسابي (مكان مسار الصفحة "الرئيسية ‹ ..."): سهم في دايرة بلون
+   التطبيق وجنبه "حسابي". */
 .app-back-acct{display:none;}
-html.app-mode .app-back-acct:not([hidden]){display:inline-flex; align-items:center; gap:6px; position:fixed; z-index:65; inset-inline-start:14px; bottom:calc(80px + env(safe-area-inset-bottom));
-  border:0; border-radius:999px; padding:10px 16px; background:var(--ink); color:var(--bg); font-family:inherit; font-weight:800; font-size:13.5px; box-shadow:0 8px 22px rgba(0,0,0,.22); cursor:pointer;}
-html.app-mode .app-back-acct span[aria-hidden]{font-size:18px; line-height:1;}
-html[dir="ltr"] .app-back-acct span[aria-hidden]{transform:scaleX(-1);}
+html.app-mode .app-back-acct:not([hidden]){display:inline-flex; align-items:center; gap:10px; margin:0 0 16px; padding:4px 4px 4px 16px; border:1px solid var(--pink-line); border-radius:999px; background:var(--pink-pale); color:var(--pink-deep); font-family:inherit; font-weight:800; font-size:14px; line-height:1; cursor:pointer; -webkit-tap-highlight-color:transparent; transition:transform .15s ease, box-shadow .15s ease;}
+html[dir="ltr"].app-mode .app-back-acct:not([hidden]){padding:4px 16px 4px 4px;}
+.app-back-acct .aba-ic{width:36px; height:36px; flex:none; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; background:linear-gradient(135deg, var(--pink), var(--pink-deep)); box-shadow:0 4px 12px color-mix(in srgb, var(--pink) 38%, transparent);}
+.app-back-acct .aba-ic svg{width:20px; height:20px; display:block;}
+html[dir="ltr"] .app-back-acct .aba-ic svg{transform:scaleX(-1);}
+.app-back-acct:active{transform:scale(.96);}
+.app-back-acct:focus-visible{outline:2.5px solid var(--pink); outline-offset:3px;}
+html.app-mode.has-acct-back .view.active .breadcrumb{display:none;}
+@media (prefers-reduced-motion:reduce){ .app-back-acct{transition:none;} }
 </style>
 </head>
 <body>
@@ -2202,7 +2209,7 @@ setTimeout(appSplashHide, 15000);
   <button type="button" class="app-tab" data-tab="cart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h2l2.4 12.2a2 2 0 0 0 2 1.8h7.7a2 2 0 0 0 2-1.6L21 8H6"/><circle cx="9" cy="20" r="1.6"/><circle cx="17" cy="20" r="1.6"/></svg><span data-i18n>السلة</span><span class="tab-badge" id="appTabCartCount" data-zero="1">0</span></button>
   <button type="button" class="app-tab" data-tab="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.5-4 4.5-6 7.5-6s6 2 7.5 6"/></svg><span data-i18n>حسابي</span></button>
 </nav>
-<button type="button" class="app-back-acct" id="appBackToAccount" hidden><span aria-hidden="true">‹</span> <span data-i18n>رجوع لحسابي</span></button>
+<button type="button" class="app-back-acct" id="appBackToAccount" hidden><span class="aba-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></span><span data-i18n>رجوع لحسابي</span></button>
 <aside class="app-sheet" id="appSheet" role="dialog" aria-modal="true" aria-label="حسابي" data-i18n-aria></aside>
 
 <!-- ===================== ADMIN APP: تطبيق "آل عبده - الإدارة" =====================
@@ -5660,7 +5667,14 @@ function updateBackToAccount(){
   var b = document.getElementById("appBackToAccount");
   if(!b) return;
   var active = document.querySelector(".view.active");
-  b.hidden = !(isAppMode() && sheetReturn && sheetReturn.type==="view" && active && active.dataset.view===sheetReturn.view && !appAnyPanelOpen());
+  var show = !!(isAppMode() && sheetReturn && sheetReturn.type==="view" && active && active.dataset.view===sheetReturn.view && !appAnyPanelOpen());
+  /* الزرار بيتنقل لأول الصفحة المفتوحة نفسها (مكان المسار) بدل ما يعوم فوق المحتوى */
+  if(show){
+    var host = active.querySelector(".wrap") || active;
+    if(b.parentNode !== host || host.firstElementChild !== b) host.insertBefore(b, host.firstChild);
+  }
+  b.hidden = !show;
+  document.documentElement.classList.toggle("has-acct-back", show);
 }
 function backToAccountSheet(){
   var r = sheetReturn; sheetReturn = null;

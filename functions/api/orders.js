@@ -133,10 +133,9 @@ export async function onRequestPost({ request, env }){
      نفسه (emailDebug) - مش بس بنحاول ونسكت لو فشل زي الأول. ده عشان لو
      الإيميل معاش يوصل نقدر نشوف السبب بالظبط من صفحة تفاصيل الطلب في
      لوحة التحكم من غير ما نحتاج نوصل لداشبورد Resend مباشرة. */
-  if(!customer){
-    try{ order.emailDebug = await sendGuestOrderEmail(order, env); }
-    catch(e){ order.emailDebug = { ok:false, error: String((e && e.message) || e) }; }
-  }
+  /* إيميل الإشعار بيتبعت لكل الطلبات: ضيف أو عميل مسجّل (كان الأول للضيف بس). */
+  try{ order.emailDebug = await sendGuestOrderEmail(order, env); }
+  catch(e){ order.emailDebug = { ok:false, error: String((e && e.message) || e) }; }
 
   var list = await getList(env, "orders");
   list.push(order);
@@ -252,7 +251,8 @@ async function sendGuestOrderEmail(order, env){
   lines.push("الإجمالي الفرعي: " + order.subtotal + " ج.م");
   lines.push("الشحن: " + order.shipping + " ج.م");
   lines.push("الإجمالي الكلي: " + order.total + " ج.م");
-  lines.push("الاسم: " + (order.name || "-"));
+  lines.push("نوع العميل: " + (order.customerId ? ("عميل مسجّل (حساب: " + order.customerId + ")") : "ضيف بدون حساب"));
+  lines.push("الاسم: " + (order.name || order.customerName || "-"));
   lines.push("رقم الموبايل: " + order.phone);
   if(order.governorate) lines.push("المحافظة: " + order.governorate);
   lines.push("العنوان: " + (order.address || "-"));
@@ -274,7 +274,7 @@ async function sendGuestOrderEmail(order, env){
     body: JSON.stringify({
       from: "متجر آل عبده <onboarding@resend.dev>",
       to: ["shady.ahmed.abdo.1987@gmail.com"],
-      subject: "طلب جديد بدون تسجيل - متجر آل عبده",
+      subject: (order.customerId ? "طلب جديد من عميل مسجّل" : "طلب جديد بدون تسجيل") + " #" + String(order.id).slice(-6) + " - " + (+order.total || 0) + " ج.م - متجر آل عبده",
       text: lines.join("\n")
     })
   });

@@ -847,6 +847,10 @@ html[dir="ltr"] .ab-bar i{transform-origin:left center;}
 .cpn-pct input{font-weight:800; font-variant-numeric:tabular-nums;}
 .cpn-pct span{font-weight:800; font-size:18px; color:var(--ink-soft);}
 .cpn-err{margin:0; color:var(--pink-deep); font-size:13px;}
+.cpn-prefix{font-weight:800; letter-spacing:.08em; text-transform:uppercase; text-align:left; max-width:260px;}
+.cpn-preview{margin:0; font-size:12.5px; color:var(--ink-soft); line-height:1.7;}
+.cpn-preview bdi{font-family:ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-weight:800; color:var(--pink-deep); letter-spacing:.05em;}
+.cpn-preview small{display:block; font-size:11.5px; color:var(--ink-faint);}
 .cpn-err[hidden]{display:none;}
 .cpn-new{margin-top:6px; display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center; padding:16px 14px; border-radius:16px; border:2px dashed var(--pink); background:linear-gradient(135deg, var(--pink-pale), var(--sunshine-pale));}
 .cpn-new-label{font-size:13px; font-weight:800; color:var(--pink-deep);}
@@ -866,6 +870,8 @@ html[dir="ltr"] .ab-bar i{transform-origin:left center;}
 .cpn-card.is-exp .cpn-state{color:var(--ink-soft); background:var(--surface-2);}
 .cpn-card.is-exp .cpn-pct-badge, .cpn-card.is-off .cpn-pct-badge{background:var(--ink-faint);}
 .cpn-meta{margin:0; font-size:12.5px; color:var(--ink-soft);}
+.cpn-limit-row{display:flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:var(--ink);}
+.cpn-limit-row select{padding:7px 10px; border-radius:10px; border:1.5px solid var(--border); background:var(--surface-2); color:var(--ink); font-family:inherit; font-size:13px; font-weight:800;}
 .cpn-uses{font-size:12.5px;}
 .cpn-uses summary{cursor:pointer; font-weight:800; color:var(--pink-deep);}
 .cpn-uses ul{list-style:none; margin:8px 0 0; padding:0; display:flex; flex-direction:column; gap:6px;}
@@ -881,6 +887,7 @@ html[dir="ltr"] .ab-bar i{transform-origin:left center;}
 .coupon-toggle{align-self:flex-start; border:0; background:none; padding:2px 0; color:var(--pink-deep); font-weight:800; font-size:13.5px; text-decoration:underline; text-underline-offset:4px; text-decoration-color:var(--pink-line);}
 .coupon-form{display:flex; gap:8px;}
 .coupon-form input{flex:1; min-width:0; padding:10px 12px; border-radius:12px; border:1.5px dashed var(--pink-line); background:var(--surface-3); color:var(--ink); font-family:inherit; font-size:14px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; text-align:left;}
+.coupon-form input::placeholder{text-transform:none; letter-spacing:0; font-weight:400; text-align:right;}
 .coupon-form input:focus{outline:none; border-color:var(--pink); border-style:solid;}
 .coupon-msg{margin:6px 0 0; font-size:12.5px; color:var(--pink-deep); line-height:1.6;}
 .coupon-hint{margin:6px 0 0; font-size:12px; color:var(--ink-soft); line-height:1.6;}
@@ -2312,13 +2319,25 @@ setTimeout(appSplashHide, 15000);
         <div class="admin-card cpn-gen">
           <div class="cpn-gen-head">
             <span class="cpn-gen-ic" aria-hidden="true">🎟️</span>
-            <div><h3 data-i18n>كود خصم جديد</h3><p data-i18n>صالح 30 يوم من النهارده · كل عميل مرة واحدة بس من أي جهاز</p></div>
+            <div><h3 data-i18n>كود خصم جديد</h3><p data-i18n>صالح 30 يوم من النهارده · انت بتحدد العميل الواحد يستخدمه كام مرة</p></div>
           </div>
           <label class="cpn-label" for="cpnPercent" data-i18n>نسبة الخصم</label>
           <div class="cpn-quick" id="cpnQuick">
             <button type="button" data-cpn-p="5">5%</button><button type="button" data-cpn-p="10">10%</button><button type="button" data-cpn-p="15">15%</button><button type="button" data-cpn-p="20">20%</button><button type="button" data-cpn-p="25">25%</button>
           </div>
           <div class="cpn-pct"><input id="cpnPercent" type="number" inputmode="numeric" min="1" max="90" step="1" placeholder="10"><span>%</span></div>
+          <label class="cpn-label" for="cpnPrefix" data-i18n>بداية الكود (للفئة اللي هتبعتله)</label>
+          <div class="cpn-quick" id="cpnPrefixQuick">
+            <button type="button" data-cpn-pre="ABDO" class="on">ABDO</button><button type="button" data-cpn-pre="VIP">VIP</button><button type="button" data-cpn-pre="EID">EID</button><button type="button" data-cpn-pre="FB">FB</button><button type="button" data-cpn-pre="NEW">NEW</button>
+          </div>
+          <input id="cpnPrefix" class="cpn-note cpn-prefix" type="text" dir="ltr" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABDO" value="ABDO">
+          <p class="cpn-preview"><span data-i18n>شكل الكود:</span> <bdi dir="ltr" id="cpnPreview">ABDO-XXXXXX</bdi> <small data-i18n>(حروف إنجليزي وأرقام بس، من 2 لـ 12 حرف)</small></p>
+          <label class="cpn-label" for="cpnLimit" data-i18n>العميل الواحد يستخدمه كام مرة؟</label>
+          <div class="cpn-quick" id="cpnLimitQuick">
+            <button type="button" data-cpn-lim="1" class="on" data-i18n>مرة واحدة</button><button type="button" data-cpn-lim="2" data-i18n>مرتين</button><button type="button" data-cpn-lim="3">3</button><button type="button" data-cpn-lim="5">5</button><button type="button" data-cpn-lim="0" data-i18n>بلا حدود</button>
+          </div>
+          <div class="cpn-pct"><input id="cpnLimit" type="number" inputmode="numeric" min="1" max="100" step="1" value="1" aria-describedby="cpnLimitHint"><span data-i18n>مرة</span></div>
+          <p class="cpn-preview" id="cpnLimitHint"></p>
           <label class="cpn-label" for="cpnNote" data-i18n>ملاحظة لنفسك (اختياري)</label>
           <input id="cpnNote" class="cpn-note" type="text" maxlength="80" placeholder="مثلاً: عرض العيد / عملاء فيسبوك" data-i18n-placeholder>
           <p id="cpnErr" class="cpn-err" hidden></p>
@@ -4507,12 +4526,22 @@ function cartGrandTotal(){ return cartItems().length ? Math.max(0, cartTotal() -
    العميل لازم يكون مسجّل دخول (الكود لمرة واحدة بس لكل عميل، والسيرفر
    بيعرفه من حسابه ورقم موبايله وإيميله على أي جهاز). */
 var couponBoxOpen = false, couponBusy = false, couponMsg = null;
-function couponErrorText(code){
+/* عدد مرات استخدام الكود لكل عميل بالكلام: 0 = بلا حدود */
+function cpnLimitText(n){
+  n = +n;
+  if(n === 0) return t("بلا حدود");
+  if(!(n >= 1) || n === 1) return t("مرة واحدة");
+  if(n === 2) return t("مرتين");
+  if(n <= 10) return fmt(n)+" "+t("مرات");
+  return fmt(n)+" "+t("مرة");
+}
+function couponErrorText(code, limit){
+  if(code === "used" && +limit > 1) return t("انت استخدمت الكود ده العدد المسموح بيه")+" ("+cpnLimitText(limit)+").";
   return ({
     not_found: t("الكود ده مش صحيح، اتأكد منه وجرّب تاني."),
     expired: t("الكود ده انتهت صلاحيته."),
     inactive: t("الكود ده متوقف حاليًا."),
-    used: t("انت استخدمت الكود ده قبل كده — كل كود لمرة واحدة بس لكل عميل."),
+    used: t("انت استخدمت الكود ده قبل كده — الكود ده لمرة واحدة بس لكل عميل."),
     login_required: t("سجّل دخول الأول عشان تقدر تستخدم كود الخصم.")
   })[code] || t("تعذر التأكد من الكود، جرّب تاني.");
 }
@@ -4523,7 +4552,7 @@ function renderCouponBox(hasItems){
   box.hidden = false;
   if(CART_COUPON){
     box.innerHTML = '<div class="coupon-chip"><span class="coupon-chip-ic" aria-hidden="true">🎟️</span>'
-      + '<span class="coupon-chip-tx"><strong dir="ltr">'+escHtml(CART_COUPON.code)+'</strong><span>'+t("خصم")+' '+CART_COUPON.percent+'% '+t("على المنتجات")+'</span></span>'
+      + '<span class="coupon-chip-tx"><strong dir="ltr">'+escHtml(CART_COUPON.code)+'</strong><span>'+t("خصم")+' '+CART_COUPON.percent+'% '+t("على المنتجات")+(+CART_COUPON.left > 1 ? ' · '+t("باقيلك")+' '+fmt(CART_COUPON.left)+' '+t("استخدامات") : '')+'</span></span>'
       + '<button type="button" class="coupon-chip-x" id="couponRemove" aria-label="'+t("إلغاء الكود")+'">✕</button></div>';
     document.getElementById("couponRemove").addEventListener("click", function(){ CART_COUPON = null; couponMsg = null; renderCartFoot(); });
     return;
@@ -4535,11 +4564,11 @@ function renderCouponBox(hasItems){
   }
   var authed = !!getCustomerProfile();
   box.innerHTML = '<div class="coupon-form">'
-      + '<input id="couponInput" type="text" dir="ltr" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABDO-XXXXXX" aria-label="'+t("كود الخصم")+'">'
+      + '<input id="couponInput" type="text" dir="ltr" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="'+t("اكتب كود الخصم هنا")+'" aria-label="'+t("كود الخصم")+'">'
       + '<button type="button" class="btn btn-primary btn-sm" id="couponApply">'+(couponBusy ? "⏳" : t("تطبيق"))+'</button>'
     + '</div>'
     + (couponMsg ? '<p class="coupon-msg">'+escHtml(couponMsg)+'</p>' : '')
-    + (!authed ? '<p class="coupon-hint">'+t("الكود لمرة واحدة لكل عميل، ولازم تكون مسجّل دخول.")+' <button type="button" class="coupon-link" id="couponLogin">'+t("تسجيل الدخول")+'</button></p>' : '');
+    + (!authed ? '<p class="coupon-hint">'+t("لازم تكون مسجّل دخول عشان تستخدم كود الخصم.")+' <button type="button" class="coupon-link" id="couponLogin">'+t("تسجيل الدخول")+'</button></p>' : '');
   var inp = document.getElementById("couponInput");
   if(renderCouponBox.lastVal) inp.value = renderCouponBox.lastVal;
   inp.addEventListener("input", function(){ renderCouponBox.lastVal = inp.value; });
@@ -4564,12 +4593,12 @@ function applyCoupon(){
   }).then(function(r){ return r.json(); }).then(function(res){
     couponBusy = false;
     if(res && res.ok){
-      CART_COUPON = { code: res.code, percent: +res.percent };
+      CART_COUPON = { code: res.code, percent: +res.percent, left: res.left };
       couponMsg = null; couponBoxOpen = false; renderCouponBox.lastVal = "";
       renderCartFoot();
       showToast("🎉 "+t("اتطبق خصم")+" "+res.percent+"%");
     } else {
-      couponMsg = couponErrorText(res && res.error);
+      couponMsg = couponErrorText(res && res.error, res && res.limit);
       renderCouponBox(true);
     }
   }).catch(function(){
@@ -5199,7 +5228,7 @@ function submitOrderNow(e){
     } else if(res && /^coupon_/.test(res.error||"")){
       /* الكود مبقاش صالح (اتستخدم قبل كده / خلص / اتوقف) - بنشيله ونوري
          الإجمالي الجديد من غير خصم قبل ما العميل يأكد تاني. */
-      var cmsg = couponErrorText(res.error.replace(/^coupon_/, ""));
+      var cmsg = couponErrorText(res.error.replace(/^coupon_/, ""), res.limit);
       CART_COUPON = null;
       renderCartPaymentStep();
       var e2 = document.getElementById("paymentStepError");
@@ -7864,6 +7893,7 @@ function closeAdminCouponsPage(){
   document.getElementById("adminDashboard").classList.add("active");
 }
 function cpnDate(ms){ return new Date(ms).toLocaleDateString(LANG==="en"?"en-US":"ar-EG", { day:"numeric", month:"long", year:"numeric" }); }
+function cpnLim(c){ var n = c && c.perCustomer; if(n === 0) return 0; n = Math.round(+n); return n >= 1 ? n : 1; }
 function cpnState(c, now){
   if(c.active === false) return { k:"off", label:t("متوقف") };
   if((now||Date.now()) > c.expiresAt) return { k:"exp", label:t("انتهى") };
@@ -7873,7 +7903,7 @@ function cpnShareText(c){
   return "🎁 " + t("كود خصم") + " " + c.percent + "% " + t("من متجر آل عبده") + "\n"
     + t("الكود") + ": " + c.code + "\n"
     + t("صالح لحد") + " " + cpnDate(c.expiresAt) + "\n"
-    + t("اكتبه في السلة قبل ما تأكد الطلب — لمرة واحدة بس لكل عميل 🧸") + "\n"
+    + t("اكتبه في السلة قبل ما تأكد الطلب") + (cpnLim(c) ? " — " + t("لكل عميل") + " " + cpnLimitText(cpnLim(c)) : "") + " 🧸\n"
     + "https://alabdo-toys.com";
 }
 function copyText(txt){
@@ -7901,7 +7931,7 @@ function couponCardHtml(c, i, now){
   var st = cpnState(c, now);
   var uses = Array.isArray(c.uses) ? c.uses : [];
   var usesHtml = uses.length
-    ? '<details class="cpn-uses"><summary>'+t("استخدمه")+' '+fmt(uses.length)+' '+(uses.length===1?t("عميل"):t("عملاء"))+'</summary><ul>'
+    ? '<details class="cpn-uses"><summary>'+t("اتستخدم")+' '+(uses.length===1 ? t("مرة واحدة") : (uses.length===2 ? t("مرتين") : fmt(uses.length)+' '+(uses.length<=10?t("مرات"):t("مرة"))))+'</summary><ul>'
         + uses.slice().reverse().map(function(u){
             return '<li><strong>'+escHtml(u.name||t("عميل"))+'</strong> <bdi dir="ltr">'+escHtml(u.customerId||u.phone||"")+'</bdi><span>'+t("طلب")+' <bdi dir="ltr">#'+escHtml(String(u.orderId||"").slice(-6))+'</bdi> · '+new Date(u.at).toLocaleDateString(LANG==="en"?"en-US":"ar-EG")+'</span></li>';
           }).join("")
@@ -7913,6 +7943,14 @@ function couponCardHtml(c, i, now){
       + '<span class="cpn-state">'+st.label+'</span>'
     + '</div>'
     + '<p class="cpn-meta">'+(st.k==="exp" ? t("انتهى في") : t("صالح لحد"))+' '+cpnDate(c.expiresAt)+(c.note ? ' · '+escHtml(c.note) : '')+'</p>'
+    + (function(){
+        var lim = cpnLim(c), opts = [1,2,3,5,10,0];
+        if(opts.indexOf(lim) < 0) opts.splice(opts.length-1, 0, lim);
+        return '<label class="cpn-limit-row"><span>🔁 '+t("لكل عميل")+':</span>'
+          + '<select data-cpn-limit="'+i+'"'+(st.k==="exp" ? ' disabled' : '')+'>'
+          + opts.map(function(n){ return '<option value="'+n+'"'+(n===lim?' selected':'')+'>'+cpnLimitText(n)+'</option>'; }).join("")
+          + '</select></label>';
+      })()
     + usesHtml
     + '<div class="cpn-actions">'
       + '<button type="button" class="btn btn-outline btn-sm" data-cpn-copy="'+i+'">📋 '+t("نسخ")+'</button>'
@@ -7945,6 +7983,17 @@ function couponAdminPost(payload){
     body: JSON.stringify(payload)
   }).then(function(r){ return r.json(); });
 }
+document.getElementById("adminCouponsList").addEventListener("change", function(e){
+  var sel = e.target.closest("[data-cpn-limit]"); if(!sel) return;
+  var c = ADMIN_COUPONS_CACHE[+sel.dataset.cpnLimit]; if(!c) return;
+  var n = +sel.value;
+  sel.disabled = true;
+  couponAdminPost({ action:"limit", code:c.code, perCustomer:n }).then(function(res){
+    sel.disabled = false;
+    if(res && res.ok){ c.perCustomer = res.coupon.perCustomer; showToast("✅ "+c.code+": "+t("لكل عميل")+" "+cpnLimitText(cpnLim(c))); }
+    else { showToast(t("⚠️ تعذر تحديث الكود، جرّب تاني.")); renderAdminCouponsPage(); }
+  }).catch(function(){ sel.disabled = false; showToast(t("⚠️ تعذر الاتصال بالسيرفر.")); renderAdminCouponsPage(); });
+});
 document.getElementById("adminCouponsList").addEventListener("click", function(e){
   var b = e.target.closest("button"); if(!b) return;
   var c;
@@ -7976,6 +8025,41 @@ document.getElementById("cpnQuick").addEventListener("click", function(e){
   document.getElementById("cpnPercent").value = b.dataset.cpnP;
   this.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x === b); });
 });
+/* عدد مرات الاستخدام لكل عميل: "بلا حدود" = 0 */
+var cpnLimitVal = 1;
+function cpnSyncLimit(){
+  document.querySelectorAll("#cpnLimitQuick button").forEach(function(x){ x.classList.toggle("on", +x.dataset.cpnLim === cpnLimitVal); });
+  var inp = document.getElementById("cpnLimit");
+  if(cpnLimitVal === 0){ inp.value = ""; inp.placeholder = t("بلا حدود"); }
+  else if(+inp.value !== cpnLimitVal) inp.value = cpnLimitVal;
+  document.getElementById("cpnLimitHint").textContent = cpnLimitVal === 0
+    ? t("أي عميل يقدر يستخدمه أي عدد مرات لحد ما الكود يخلص أو توقفه.")
+    : t("كل عميل يقدر يستخدمه")+" "+cpnLimitText(cpnLimitVal)+" "+t("بس، من أي جهاز.");
+}
+document.getElementById("cpnLimitQuick").addEventListener("click", function(e){
+  var b = e.target.closest("[data-cpn-lim]"); if(!b) return;
+  cpnLimitVal = +b.dataset.cpnLim;
+  cpnSyncLimit();
+});
+document.getElementById("cpnLimit").addEventListener("input", function(){
+  var n = Math.round(+this.value);
+  if(n >= 1){ cpnLimitVal = Math.min(n, 100); cpnSyncLimit(); }
+});
+cpnSyncLimit();
+function cpnCleanPrefix(v){ return String(v||"").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12); }
+function cpnSyncPrefix(){
+  var inp = document.getElementById("cpnPrefix");
+  var c = cpnCleanPrefix(inp.value);
+  if(inp.value !== c) inp.value = c;
+  document.getElementById("cpnPreview").textContent = (c || "ABDO") + "-XXXXXX";
+  document.querySelectorAll("#cpnPrefixQuick button").forEach(function(x){ x.classList.toggle("on", x.dataset.cpnPre === c); });
+}
+document.getElementById("cpnPrefix").addEventListener("input", cpnSyncPrefix);
+document.getElementById("cpnPrefixQuick").addEventListener("click", function(e){
+  var b = e.target.closest("[data-cpn-pre]"); if(!b) return;
+  document.getElementById("cpnPrefix").value = b.dataset.cpnPre;
+  cpnSyncPrefix();
+});
 document.getElementById("cpnPercent").addEventListener("input", function(){
   var v = this.value;
   document.querySelectorAll("#cpnQuick button").forEach(function(x){ x.classList.toggle("on", x.dataset.cpnP === v); });
@@ -7986,7 +8070,9 @@ document.getElementById("cpnCreate").addEventListener("click", function(){
   err.hidden = true;
   if(!(p >= 1 && p <= 90)){ err.textContent = t("اكتب نسبة خصم من 1% لحد 90%."); err.hidden = false; return; }
   btn.disabled = true;
-  couponAdminPost({ action:"create", percent:p, note:document.getElementById("cpnNote").value })
+  var pre = cpnCleanPrefix(document.getElementById("cpnPrefix").value);
+  if(pre.length < 2){ err.textContent = t("اكتب بداية الكود حرفين إنجليزي على الأقل (أو سيبها ABDO)."); err.hidden = false; return; }
+  couponAdminPost({ action:"create", percent:p, prefix:pre, perCustomer:cpnLimitVal, note:document.getElementById("cpnNote").value })
     .then(function(res){
       btn.disabled = false;
       if(!res || !res.ok){ err.textContent = t("⚠️ تعذر توليد الكود، جرّب تاني."); err.hidden = false; return; }
@@ -7996,7 +8082,7 @@ document.getElementById("cpnCreate").addEventListener("click", function(){
       out.innerHTML = '<div class="cpn-new" role="status">'
         + '<span class="cpn-new-label">🎉 '+t("الكود الجديد — خصم")+' '+c.percent+'%</span>'
         + '<strong class="cpn-new-code" dir="ltr">'+escHtml(c.code)+'</strong>'
-        + '<span class="cpn-new-meta">'+t("صالح لحد")+' '+cpnDate(c.expiresAt)+' · '+t("مرة واحدة لكل عميل")+'</span>'
+        + '<span class="cpn-new-meta">'+t("صالح لحد")+' '+cpnDate(c.expiresAt)+' · '+t("لكل عميل")+': '+cpnLimitText(cpnLim(c))+'</span>'
         + '<div class="cpn-new-btns"><button type="button" class="btn btn-primary btn-sm" id="cpnNewCopy">📋 '+t("نسخ الكود")+'</button><button type="button" class="btn btn-outline btn-sm" id="cpnNewShare">💬 '+t("ابعته واتساب")+'</button></div>'
       + '</div>';
       document.getElementById("cpnNewCopy").addEventListener("click", function(){ cpnCopy(c); });

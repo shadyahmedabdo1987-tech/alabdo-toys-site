@@ -1004,6 +1004,23 @@ html[dir="ltr"] .preq-back svg{transform:scaleX(-1);}
 .inq-preq-banner small{font-size:12px; color:var(--ink-soft);}
 .inq-preq-banner .chev{font-size:20px; color:var(--ink-faint);}
 
+.preq-chip.is-info{background:var(--sky-pale); color:var(--sky-deep);}
+.preq-item.is-stock .preq-reply{border-inline-start-color:var(--mint);}
+.preq-item.is-inquiry .preq-reply{border-inline-start-color:var(--sky);}
+.preq-quote{background:var(--surface-2); border-radius:12px; padding:9px 11px;}
+.preq-quote small{font-size:11px; font-weight:800; color:var(--ink-faint);}
+.preq-quote p{margin:2px 0 0; font-size:12.5px; color:var(--ink-soft); white-space:pre-line; overflow-wrap:anywhere; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden;}
+.preq-pend{margin-top:4px; border:1.5px dashed var(--border); border-radius:16px; padding:12px; display:flex; flex-direction:column; gap:8px; font-size:13px;}
+.preq-pend ul{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px;}
+.preq-pend li{display:flex; justify-content:space-between; gap:10px; background:var(--surface-3); border-radius:10px; padding:7px 10px;}
+.preq-pend li span{font-weight:700; overflow-wrap:anywhere;}
+.preq-pend time, .preq-pend small{font-size:11.5px; color:var(--ink-faint); white-space:nowrap;}
+.adm-reply-host:empty{display:none;}
+.adm-reply-form{margin-top:10px; display:flex; flex-direction:column; gap:8px; border:1.5px dashed var(--pink-line); border-radius:14px; padding:10px; background:var(--surface-2);}
+.adm-reply-form label span{display:block; font-size:12.5px; font-weight:800; margin-bottom:5px;}
+.adm-reply-form textarea{width:100%; min-height:76px; padding:10px 12px; border-radius:12px; border:1.5px solid var(--border); background:var(--surface); color:var(--ink); font-family:inherit; font-size:14px; resize:vertical;}
+.adm-reply-acts{display:flex; gap:8px; flex-wrap:wrap;}
+
 .inv-sum{display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; margin-bottom:14px;}
 .inv-tile{display:flex; flex-direction:column; gap:4px; padding:12px 14px; border-radius:16px; background:var(--surface); border:1px solid var(--border); text-align:start; font-family:inherit; color:var(--ink);}
 .inv-tile span{font-size:12px; color:var(--ink-soft); font-weight:700;}
@@ -1766,6 +1783,7 @@ setTimeout(appSplashHide, 15000);
   <a href="#products" data-view-link="products" data-badge="wish" data-i18n>المفضلة ❤️</a>
   <a href="#about" data-view-link="about" data-i18n>من نحن</a>
   <a href="#contact" data-view-link="contact" data-i18n>تواصل معنا</a>
+  <a href="#" data-preq-open="" data-i18n>🧸 اطلب منتج مش موجود</a>
   <a href="/alabdo-toys.apk" class="web-only" download data-i18n>📱 حمّل تطبيق أندرويد</a>
 </div>
 
@@ -3804,6 +3822,22 @@ document.getElementById("themeToggle").addEventListener("click", function(){
    الأقسام السبعة، ومحافظات مصر. الصفحات القانونية ولوحة التحكم وأسماء/أوصاف
    المنتجات هتتضاف في مراحل تالية. */
 var I18N_EN = {
+  "وصلك رد من متجر آل عبده — افتح الجرس اللي فوق": "You got a reply from Al Abdo Toys — open the bell at the top",
+  "طلبت توفير": "You asked for",
+  "رجع متوفر": "Back in stock",
+  "المنتج اللي كنت مستنيه": "The product you were waiting for",
+  "المنتج رجع متوفر عندنا — الحق اطلبه قبل ما يخلص 🎉": "It's back in stock — order it before it sells out 🎉",
+  "رد على استفسارك": "Reply to your message",
+  "ردود متجر آل عبده على طلباتك واستفساراتك": "Replies from Al Abdo Toys to your requests and messages",
+  "مفيش إشعارات دلوقتي.": "No notifications right now.",
+  "سجّل دخولك الأول عشان تطلب منتج": "Please sign in first to request a product",
+  "اكتب اللي محتاجه بالظبط، وهنرد عليك في الإشعارات 🔔": "Tell us exactly what you need and we'll reply in your notifications 🔔",
+  "طلبات لسه بندوّر عليها": "Requests we're still looking for",
+  "أول ما نرد هيوصلك إشعار في الجرس 🔔": "You'll get a notification in the bell 🔔 as soon as we reply",
+  "طلبك وصل! هنرد عليك في الإشعارات 🔔": "Request sent! We'll reply in your notifications 🔔",
+  "الإشعار ده هيتشال من الجرس.": "This notification will be removed from the bell.",
+  "✅ اتمسحت كل الإشعارات": "✅ All notifications cleared",
+  "🧸 اطلب منتج مش موجود": "🧸 Request a product we don't have",
   "الإشعارات": "Notifications",
   "النهارده": "Today",
   "امبارح": "Yesterday",
@@ -5967,7 +6001,7 @@ function openStockNotifyModal(p, colorName, sizeLabel){
     btn.disabled = true;
     fetch("/api/stock-requests", {
       method: "POST",
-      headers: { "content-type":"application/json" },
+      headers: Object.assign({ "content-type":"application/json" }, customerAuthHeaders()),
       body: JSON.stringify({ productId:p.id, productName:p.name, colorName: colorName||null, sizeLabel: sizeLabel||null, name: document.getElementById("snName").value.trim(), phone: phone })
     }).then(function(r){ return r.json(); }).then(function(res){
       btn.disabled = false;
@@ -6383,9 +6417,9 @@ function renderProductsView(){
      زرار، والعميل بيضيف المنتج للسلة من جوه صفحة تفاصيله. */
   document.getElementById("productsGrid").innerHTML = list.map(function(p){ return productCard(p, false); }).join("");
   document.getElementById("emptyState").hidden = list.length>0;
-  if(state.badge==="wish") document.getElementById("emptyState").textContent = t("🤍 لسه مفيش منتجات في المفضلة — دوس على أيقونة القلب في أي منتج عشان تضيفه هنا.");
-  else document.getElementById("emptyState").innerHTML = escHtml(t("😕 لا توجد منتجات مطابقة لبحثك، جرّب كلمة أخرى."))
-    + '<br><button type="button" class="btn btn-primary btn-sm preq-ask" data-preq-open="'+escHtml(state.q||"")+'">🧸 '+t("مش لاقيه؟ اطلبه وإحنا نوفّرهولك")+'</button>';
+  document.getElementById("emptyState").textContent = (state.badge==="wish")
+    ? t("🤍 لسه مفيش منتجات في المفضلة — دوس على أيقونة القلب في أي منتج عشان تضيفه هنا.")
+    : t("😕 لا توجد منتجات مطابقة لبحثك، جرّب كلمة أخرى.");
   document.getElementById("resultsCount").textContent = LANG==="en"
     ? "Showing "+list.length+" of "+PRODUCTS.length+" products"
     : "عرض "+list.length+" من "+PRODUCTS.length+" منتج";
@@ -6462,6 +6496,7 @@ function updateAppTabbar(){
 }
 function appEsc(v){ return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 var APP_ICONS = {
+  box:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5Z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>',
   bell:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>',
   user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.5-4 4.5-6 7.5-6s6 2 7.5 6"/><path d="m16.5 3.5 1.8 1.8"/></svg>',
   orders:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2Z"/><path d="M9 8h6M9 12h6"/></svg>',
@@ -6523,7 +6558,7 @@ function renderAppSheet(){
       + (c ? appSheetRow("account","orders",t("طلباتي")) : "")
       + (c ? appSheetRow("profile","user",t("بياناتي والعنوان")) : "")
       + appSheetRow("wish","heart",t("المفضلة"))
-      + appSheetRow("preq","bell",t("اطلب منتج مش موجود"), (c && PREQ.unread) ? '<b class="notif-dot" style="position:static; box-shadow:none;">'+fmt(PREQ.unread)+'</b>' : "")
+      + appSheetRow("preq","box",t("اطلب منتج مش موجود"))
       + appSheetRow("contact","chat",t("تواصل معنا"))
     + '</div><div class="app-sheet-sep"></div><div class="app-sheet-list">'
       + appSheetRow("lang","globe",t("اللغة"), LANG==="en" ? "English" : "العربية")
@@ -6560,7 +6595,7 @@ if(appSheet){
       });
     }
     else if(a==="account"){ closeAllPanels(); openAcctDrawer(); }
-    else if(a==="preq"){ closeAllPanels(); if(isCustomerAuthed() && !PREQ.unread) openProductRequestForm(""); else openNotifPanel(); }
+    else if(a==="preq"){ closeAllPanels(); openProductRequestForm(""); }
     else if(a==="wish"){ state.badge="wish"; state.cat="all"; state.q=""; goToView("products"); renderProductsView(); }
     else if(a==="lang"){ closeAllPanels(); document.getElementById("langToggle").click(); }
     else if(a==="theme"){ document.getElementById("themeToggle").click(); renderAppSheet(); }
@@ -6622,7 +6657,7 @@ document.getElementById("contactSubmit").addEventListener("click", function(){
   btn.disabled = true;
   fetch("/api/inquiries", {
     method: "POST",
-    headers: { "content-type":"application/json" },
+    headers: Object.assign({ "content-type":"application/json" }, customerAuthHeaders()),
     body: JSON.stringify({ name:name, phone:phone, message:msg })
   }).then(function(r){ return r.json(); }).then(function(res){
     btn.disabled = false;
@@ -7541,6 +7576,7 @@ function renderAcctDrawerBody(){
     + '<div style="color:var(--ink-soft); font-size:12.5px; margin-top:2px;">'+t("مسجّل برقم الموبايل")+': '+customer.identifier+'</div>'
     + (customer.address ? '<div style="color:var(--ink-soft); font-size:12.5px; margin-top:2px;">📍 '+(customer.governorate?t(customer.governorate)+' - ':'')+customer.address+'</div>' : '')
     + '<button type="button" class="btn btn-primary btn-block" id="acctDrawerProfile" style="margin-top:12px;">✏️ '+t("تعديل بياناتي والعنوان")+'</button>'
+    + '<button type="button" class="btn btn-outline btn-block" data-preq-open="" style="margin-top:8px;">🧸 '+t("اطلب منتج مش موجود")+'</button>'
     + '<button type="button" class="btn btn-outline btn-block" id="acctDrawerLogout" style="margin-top:8px;">'+t("تسجيل خروج")+'</button>'
     + '<button type="button" id="acctDrawerDelete" style="margin-top:8px; width:100%; background:none; border:0; color:var(--pink-deep); font-family:inherit; font-size:12.5px; font-weight:700; text-decoration:underline; cursor:pointer; padding:6px;">🗑️ '+t("حذف حسابي نهائيًا")+'</button>'
   + '</div>'
@@ -8135,6 +8171,36 @@ function closeAdminStockPage(){
   document.getElementById("adminStockPage").classList.remove("active");
   document.getElementById("adminDashboard").classList.add("active");
 }
+/* فورم رد صغير جوه كارت (استفسار / طلب توفر) - الرد بيروح لجرس العميل */
+function adminNotifyForm(host, o){
+  if(!host) return;
+  if(host.innerHTML){ host.innerHTML = ""; return; }
+  host.innerHTML = '<form class="adm-reply-form"><label><span>'+escHtml(o.label)+'</span><textarea rows="3" maxlength="1000" placeholder="'+escHtml(o.placeholder||"")+'">'+escHtml(o.text||"")+'</textarea></label>'
+    + '<div class="adm-reply-acts"><button type="submit" class="btn btn-primary btn-sm">📨 '+t("ابعت للعميل")+'</button><button type="button" class="btn btn-outline btn-sm" data-x>'+t("إلغاء")+'</button></div></form>';
+  var f = host.querySelector("form"), ta = f.querySelector("textarea");
+  f.querySelector("[data-x]").addEventListener("click", function(){ host.innerHTML = ""; });
+  setTimeout(function(){ ta.focus(); }, 50);
+  f.addEventListener("submit", function(e){
+    e.preventDefault();
+    var msg = ta.value.trim();
+    if(o.required && !msg){ ta.focus(); showToast(t("⚠️ اكتب الرد الأول")); return; }
+    var b = f.querySelector("[type=submit]"); b.disabled = true; b.textContent = "⏳ "+t("جاري الإرسال...");
+    fetch(o.url, { method:"PUT", headers: Object.assign({ "content-type":"application/json" }, adminAuthHeaders()), body: JSON.stringify({ id:o.id, message:msg }) })
+      .then(function(r){ return r.json().then(function(j){ return { status:r.status, body:j }; }); })
+      .then(function(res){
+        if(res.body && res.body.ok){
+          if(res.body.hasAccount === false) appAlert({ icon:"ℹ️", title:t("الرد اتبعت"), message:t("رقم العميل ده مش مسجّل بحساب في التطبيق لسه، فالرد هيظهر له أول ما يسجّل بنفس الرقم. لو مستعجل كلّمه واتساب.") });
+          else showToast("✅ "+t("الرد اتبعت — هيظهر للعميل في الجرس 🔔"));
+          if(o.done) o.done();
+          if(ADM && ADM.refreshStats) ADM.refreshStats();
+        } else {
+          showToast(res.status === 405 || res.status === 404 && !res.body ? t("⚠️ ارفع ملفات التحديث الجديدة الأول") : t("⚠️ تعذر إرسال الرد، جرّب تاني."));
+          b.disabled = false; b.textContent = "📨 "+t("ابعت للعميل");
+        }
+      })
+      .catch(function(){ showToast(t("⚠️ تعذر إرسال الرد، جرّب تاني.")); b.disabled = false; b.textContent = "📨 "+t("ابعت للعميل"); });
+  });
+}
 function renderAdminStockPage(){
   var box = document.getElementById("adminStockList");
   if(!box) return;
@@ -8155,10 +8221,22 @@ function renderAdminStockPage(){
             + '<div class="order-card-date tabular">'+d.toLocaleDateString(LANG==="en"?"en-US":"ar-EG")+'</div>'
           + '</div>'
           + '<div class="order-card-bottom">'
+            + '<button type="button" class="btn btn-primary btn-sm" data-stock-notify="'+i+'">📣 '+t("بلّغه إنه رجع")+'</button>'
             + '<button type="button" class="btn btn-outline btn-sm" data-stock-done="'+i+'">'+t("✅ تم التعامل معه")+'</button>'
           + '</div>'
+          + '<div class="adm-reply-host"></div>'
         + '</div>';
       }).join("");
+      box.querySelectorAll("[data-stock-notify]").forEach(function(btn){
+        btn.addEventListener("click", function(){
+          var r = ADMIN_STOCK_CACHE[+btn.dataset.stockNotify];
+          adminNotifyForm(btn.closest(".order-card").querySelector(".adm-reply-host"), {
+            url:"/api/stock-requests", id:r.id, required:false,
+            label:t("رسالة للعميل (هتظهر له في الجرس 🔔 مع صورة المنتج)"), text:t("المنتج رجع متوفر عندنا 🎉 الحق اطلبه قبل ما يخلص."),
+            done: renderAdminStockPage
+          });
+        });
+      });
       box.querySelectorAll("[data-stock-done]").forEach(function(btn){
         btn.addEventListener("click", function(){ deleteAdminStockRequest(ADMIN_STOCK_CACHE[+btn.dataset.stockDone]); });
       });
@@ -8303,10 +8381,22 @@ function renderAdminInquiriesPage(){
             + '<div class="order-card-date tabular">'+d.toLocaleDateString(LANG==="en"?"en-US":"ar-EG")+'</div>'
           + '</div>'
           + '<div class="order-card-bottom">'
+            + '<button type="button" class="btn btn-primary btn-sm" data-inquiry-reply="'+i+'">💬 '+t("رد في التطبيق")+'</button>'
             + '<button type="button" class="btn btn-outline btn-sm" data-inquiry-done="'+i+'">'+t("✅ تم الرد")+'</button>'
           + '</div>'
+          + '<div class="adm-reply-host"></div>'
         + '</div>';
       }).join("");
+      box.querySelectorAll("[data-inquiry-reply]").forEach(function(btn){
+        btn.addEventListener("click", function(){
+          var r = ADMIN_INQUIRIES_CACHE[+btn.dataset.inquiryReply];
+          adminNotifyForm(btn.closest(".order-card").querySelector(".adm-reply-host"), {
+            url:"/api/inquiries", id:r.id, required:true,
+            label:t("ردك على العميل (هيظهر له في الجرس 🔔)"), text:"", placeholder:t("اكتب ردك هنا…"),
+            done: renderAdminInquiriesPage
+          });
+        });
+      });
       box.querySelectorAll("[data-inquiry-done]").forEach(function(btn){
         btn.addEventListener("click", function(){ deleteAdminInquiry(ADMIN_INQUIRIES_CACHE[+btn.dataset.inquiryDone]); });
       });
@@ -8669,11 +8759,11 @@ function invPdf(){
 }
 document.getElementById("invPdf").addEventListener("click", invPdf);
 
-/* ---------- "اطلب منتج مش موجود" (العميل) + الجرس 🔔 ----------
-   العميل بيكتب اسم اللعبة ومواصفاتها ويرفع صورتها، الطلب بيوصل لتطبيق
-   الإدارة كإشعار، وصاحب المتجر بيرد (متوفر بصورته وسعره / مش متوفر حاليًا)،
-   والرد بيظهر للعميل في الجرس اللي فوق في التطبيق والموقع. */
-var PREQ = { who:null, list:null, unread:0, toasted:0, loading:false, view:"list", img:null, prefill:"" };
+/* ---------- الجرس 🔔 = ردود المتجر على العميل ----------
+   الجرس بيظهر بس لما يكون فيه رد من الإدارة: رد على طلب توفير منتج، رد على
+   استفسار "تواصل معنا"، أو "المنتج اللي كنت مستنيه رجع". طلب منتج جديد
+   بيتعمل من القائمة الجانبية بس (حسابي في التطبيق / القائمة في الموقع). */
+var PREQ = { who:null, items:null, unread:0, toasted:0, loading:false, img:null };
 function preqProdImg(p){ return p ? ((Array.isArray(p.images) && p.images[0]) || p.image || "") : ""; }
 function preqFindProduct(id){ if(!id) return null; for(var i = 0; i < PRODUCTS.length; i++){ if(String(PRODUCTS[i].id)===String(id)) return PRODUCTS[i]; } return null; }
 function preqWhen(ts){
@@ -8688,8 +8778,8 @@ function preqWhen(ts){
 function preqPanelOpen(){ return !!document.getElementById("preqWrap") && modalBackdrop.classList.contains("show"); }
 function preqUpdateBell(){
   var b = document.getElementById("notifBell"); if(!b) return;
-  var show = !isAdminApp() && !isAdminAuthed() && (isAppMode() || isCustomerAuthed());
-  b.hidden = !show;
+  var has = !!(PREQ.items && PREQ.items.length);
+  b.hidden = !(has && isCustomerAuthed() && !isAdminApp() && !isAdminAuthed());
   var n = isCustomerAuthed() ? PREQ.unread : 0;
   var c = document.getElementById("notifBellCount");
   if(c){ c.hidden = !n; c.textContent = n > 9 ? "9+" : fmt(n); }
@@ -8697,20 +8787,20 @@ function preqUpdateBell(){
   b.setAttribute("aria-label", n ? t("الإشعارات")+" ("+fmt(n)+" "+t("جديد")+")" : t("الإشعارات"));
 }
 function preqFetch(cb){
-  if(!isCustomerAuthed() || isAdminApp()){ PREQ.list = null; PREQ.unread = 0; preqUpdateBell(); if(cb) cb(); return; }
+  if(!isCustomerAuthed() || isAdminApp()){ PREQ.items = null; PREQ.unread = 0; preqUpdateBell(); if(cb) cb(); return; }
   if(PREQ.loading){ if(cb) cb(); return; }
   PREQ.loading = true;
-  fetch("/api/product-requests", { headers: customerAuthHeaders(), cache:"no-store" })
+  fetch("/api/notifications", { headers: customerAuthHeaders(), cache:"no-store" })
     .then(function(r){ return r.json(); })
     .then(function(j){
       PREQ.loading = false;
-      if(j && j.ok){ PREQ.list = j.requests || []; PREQ.unread = +j.unread || 0; }
+      if(j && j.ok){ PREQ.items = j.items || []; PREQ.unread = +j.unread || 0; }
       preqUpdateBell();
       if(PREQ.unread > PREQ.toasted){
         PREQ.toasted = PREQ.unread;
-        if(!preqPanelOpen()) showToast("🔔 "+t("وصلك رد على طلب توفير منتج — افتح الجرس اللي فوق"));
+        if(!preqPanelOpen()) showToast("🔔 "+t("وصلك رد من متجر آل عبده — افتح الجرس اللي فوق"));
       }
-      if(preqPanelOpen() && PREQ.view === "list") preqRenderList();
+      if(preqPanelOpen()) preqRenderList();
       if(cb) cb();
     })
     .catch(function(){ PREQ.loading = false; if(cb) cb(); });
@@ -8719,93 +8809,95 @@ function preqCheckAuth(){
   var c = getCustomerProfile(), who = c ? String(c.identifier||"") : "";
   if(who !== PREQ.who){ PREQ.who = who; preqOnAuthChange(); } else preqUpdateBell();
 }
-function preqOnAuthChange(){ PREQ.toasted = 0; PREQ.list = null; PREQ.unread = 0; preqUpdateBell(); preqFetch(); }
+function preqOnAuthChange(){ PREQ.toasted = 0; PREQ.items = null; PREQ.unread = 0; preqUpdateBell(); preqFetch(); }
 function preqMarkSeen(){
   if(!PREQ.unread || !isCustomerAuthed()) return;
   PREQ.unread = 0; PREQ.toasted = 0; preqUpdateBell();
-  fetch("/api/product-requests", { method:"POST", headers: Object.assign({ "content-type":"application/json" }, customerAuthHeaders()), body: JSON.stringify({ action:"seen" }) }).catch(function(){});
-}
-
-function preqShell(inner){
-  return '<button class="modal-close" id="modalCloseBtn" aria-label="'+t("إغلاق")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
-    + '<div class="preq-wrap" id="preqWrap">'+inner+'</div>';
+  fetch("/api/notifications", { method:"POST", headers: Object.assign({ "content-type":"application/json" }, customerAuthHeaders()), body: JSON.stringify({ action:"seen" }) }).catch(function(){});
 }
 function preqMount(html){
   var card = document.getElementById("modalCard");
   card.classList.add("acct-card");
-  card.innerHTML = preqShell(html);
+  card.innerHTML = '<button class="modal-close" id="modalCloseBtn" aria-label="'+t("إغلاق")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
+    + '<div class="preq-wrap" id="preqWrap">'+html+'</div>';
   card.scrollTop = 0;
   if(!modalBackdrop.classList.contains("show")){ modalBackdrop.classList.add("show"); overlay.classList.add("show"); document.body.style.overflow = "hidden"; }
   document.getElementById("modalCloseBtn").addEventListener("click", closeAllPanels);
 }
 function openNotifPanel(){
+  if(!isCustomerAuthed()) return;
   closeAllPanels();
-  PREQ.view = "list";
-  if(!isCustomerAuthed()){
-    preqMount('<div class="preq-head"><span class="preq-bell-ic" aria-hidden="true">🔔</span><div><h3>'+t("الإشعارات")+'</h3><p>'+t("ردودنا على طلباتك بتوصلك هنا")+'</p></div></div>'
-      + '<div class="preq-login"><span class="emo" aria-hidden="true">🧸</span><strong>'+t("مش لاقي لعبة معيّنة؟")+'</strong>'
-      + '<p>'+t("سجّل دخولك وابعتلنا اسمها وصورتها، وإحنا ندوّرلك عليها ونرد عليك هنا في الجرس.")+'</p>'
-      + '<button type="button" class="btn btn-primary btn-block" id="preqLoginBtn">'+t("تسجيل الدخول / حساب جديد")+'</button></div>');
-    document.getElementById("preqLoginBtn").addEventListener("click", function(){ closeAllPanels(); openAccountModal(); });
-    return;
-  }
   preqMount('<div id="preqListHost"></div>');
   preqRenderList();
-  preqFetch(function(){ if(preqPanelOpen() && PREQ.view === "list"){ preqRenderList(); preqMarkSeen(); } });
+  preqFetch(function(){ if(preqPanelOpen()) preqMarkSeen(); });
+  if(PREQ.items) preqMarkSeen();
 }
 function preqStatusChip(r){
   if(r.status === "available") return '<span class="preq-chip is-ok">✅ '+t("متوفر")+'</span>';
   if(r.status === "unavailable") return '<span class="preq-chip is-no">'+t("مش متوفر حاليًا")+'</span>';
   return '<span class="preq-chip is-wait">⏳ '+t("بنراجع طلبك")+'</span>';
 }
-function preqItemHtml(r){
-  var rep = r.reply, prod = rep ? preqFindProduct(rep.productId) : null;
-  var repImg = rep ? (rep.image || preqProdImg(prod)) : "";
-  var isNew = rep && r.seen === false;
-  var h = '<article class="preq-item is-'+escHtml(r.status||"pending")+(isNew ? ' is-new' : '')+'">'
-    + '<div class="preq-top">'+preqStatusChip(r)+(isNew ? '<span class="preq-new">'+t("جديد")+'</span>' : '')+'<time>'+escHtml(preqWhen(rep ? rep.at : r.createdAt))+'</time></div>'
-    + '<div class="preq-req">'
-      + (r.image ? '<button type="button" class="preq-thumb" data-preq-zoom="'+escHtml(r.image)+'" aria-label="'+t("كبّر الصورة")+'"><img src="'+escHtml(r.image)+'" alt="" loading="lazy"></button>' : '<span class="preq-thumb is-empty" aria-hidden="true">🧸</span>')
-      + '<div class="preq-req-txt"><small>'+t("طلبت")+'</small><strong>'+escHtml(r.productName)+'</strong>'
-        + (r.specs ? '<p>'+escHtml(r.specs)+'</p>' : '')
-        + (r.qty > 1 ? '<span class="preq-qty">'+t("الكمية")+': '+fmt(r.qty)+'</span>' : '')
-      + '</div></div>';
-  if(rep){
-    h += '<div class="preq-reply"><div class="preq-who"><img src="'+BRAND_LOGO_URL+'" alt="" width="22" height="22">'+t("رد متجر آل عبده")+'</div>'
-      + (repImg ? '<button type="button" class="preq-reply-img" data-preq-zoom="'+escHtml(repImg)+'"><img src="'+escHtml(repImg)+'" alt="'+escHtml(prod ? pName(prod) : r.productName)+'" loading="lazy"></button>' : '')
-      + (rep.message ? '<p class="preq-msg">'+escHtml(rep.message)+'</p>' : '')
-      + (rep.price ? '<div class="preq-price">'+t("السعر")+': <b class="tabular">'+fmt(rep.price)+'</b> '+t("ج.م")+'</div>' : '');
-    if(r.status === "available"){
-      h += '<div class="preq-acts">'
-        + (prod ? '<button type="button" class="btn btn-primary btn-sm" data-preq-view="'+escHtml(prod.id)+'">🛍️ '+t("شوف المنتج واطلبه")+'</button>' : '')
-        + '<a class="btn btn-outline btn-sm" href="https://wa.me/'+STORE.phone+'?text='+encodeURIComponent(t("أهلاً، بخصوص طلب توفير")+": "+r.productName)+'" target="_blank" rel="noopener">💬 '+t("كلّمنا واتساب")+'</a>'
+function preqReplyHead(){ return '<div class="preq-who"><img src="'+BRAND_LOGO_URL+'" alt="" width="22" height="22">'+t("رد متجر آل عبده")+'</div>'; }
+function preqViewBtn(prod){ return prod ? '<div class="preq-acts"><button type="button" class="btn btn-primary btn-sm" data-preq-view="'+escHtml(prod.id)+'">🛍️ '+t("شوف المنتج واطلبه")+'</button></div>' : ''; }
+function notifItemHtml(it){
+  var isNew = !it.seen, h, prod;
+  var top = function(chip){ return '<div class="preq-top">'+chip+(isNew ? '<span class="preq-new">'+t("جديد")+'</span>' : '')+'<time>'+escHtml(preqWhen(it.at))+'</time></div>'; };
+  if(it.kind === "preq"){
+    var rep = it.reply || {}; prod = preqFindProduct(rep.productId);
+    var repImg = rep.image || preqProdImg(prod);
+    h = top(preqStatusChip(it))
+      + '<div class="preq-req">'
+        + (it.image ? '<button type="button" class="preq-thumb" data-preq-zoom="'+escHtml(it.image)+'" aria-label="'+t("كبّر الصورة")+'"><img src="'+escHtml(it.image)+'" alt="" loading="lazy"></button>' : '<span class="preq-thumb is-empty" aria-hidden="true">🧸</span>')
+        + '<div class="preq-req-txt"><small>'+t("طلبت توفير")+'</small><strong>'+escHtml(it.productName)+'</strong>'
+          + (it.specs ? '<p>'+escHtml(it.specs)+'</p>' : '')
+          + (it.qty > 1 ? '<span class="preq-qty">'+t("الكمية")+': '+fmt(it.qty)+'</span>' : '')
+        + '</div></div>'
+      + '<div class="preq-reply">'+preqReplyHead()
+        + (repImg ? '<button type="button" class="preq-reply-img" data-preq-zoom="'+escHtml(repImg)+'"><img src="'+escHtml(repImg)+'" alt="" loading="lazy"></button>' : '')
+        + (rep.message ? '<p class="preq-msg">'+escHtml(rep.message)+'</p>' : '')
+        + (rep.price ? '<div class="preq-price">'+t("السعر")+': <b class="tabular">'+fmt(rep.price)+'</b> '+t("ج.م")+'</div>' : '')
+        + (it.status === "available" ? preqViewBtn(prod) : '')
       + '</div>';
-    }
-    h += '</div>';
+  } else if(it.kind === "stock"){
+    prod = preqFindProduct(it.productId);
+    var img = preqProdImg(prod);
+    h = top('<span class="preq-chip is-ok">🎉 '+t("رجع متوفر")+'</span>')
+      + '<div class="preq-req">'
+        + (img ? '<button type="button" class="preq-thumb" data-preq-zoom="'+escHtml(img)+'"><img src="'+escHtml(img)+'" alt="" loading="lazy"></button>' : '<span class="preq-thumb is-empty" aria-hidden="true">🔔</span>')
+        + '<div class="preq-req-txt"><small>'+t("المنتج اللي كنت مستنيه")+'</small><strong>'+escHtml(prod ? pName(prod) : it.title)+'</strong>'
+          + (prod ? '<span class="preq-qty">'+fmt(+prod.price||0)+' '+t("ج.م")+'</span>' : '')
+        + '</div></div>'
+      + '<div class="preq-reply">'+preqReplyHead()
+        + '<p class="preq-msg">'+escHtml(it.message || t("المنتج رجع متوفر عندنا — الحق اطلبه قبل ما يخلص 🎉"))+'</p>'
+        + preqViewBtn(prod)
+      + '</div>';
   } else {
-    h += '<p class="preq-wait">'+t("وصلنا طلبك وبندوّر عليه — هنرد عليك هنا أول ما نعرف.")+'</p>';
+    h = top('<span class="preq-chip is-info">💬 '+t("رد على استفسارك")+'</span>')
+      + (it.quote ? '<div class="preq-quote"><small>'+t("رسالتك")+'</small><p>'+escHtml(it.quote)+'</p></div>' : '')
+      + '<div class="preq-reply">'+preqReplyHead()+'<p class="preq-msg">'+escHtml(it.message)+'</p></div>';
   }
-  h += '<button type="button" class="preq-del" data-preq-del="'+escHtml(r.id)+'">'+t("حذف من القائمة")+'</button></article>';
-  return h;
+  return '<article class="preq-item is-'+escHtml(it.kind === "preq" ? (it.status||"pending") : it.kind)+(isNew ? ' is-new' : '')+'">'+h
+    + '<button type="button" class="preq-del" data-preq-del="'+escHtml(it.id)+'">'+t("حذف الإشعار")+'</button></article>';
 }
 function preqRenderList(){
   var host = document.getElementById("preqListHost");
   if(!host) return;
-  var list = PREQ.list;
-  var h = '<div class="preq-head"><span class="preq-bell-ic" aria-hidden="true">🔔</span><div><h3>'+t("الإشعارات")+'</h3><p>'+t("ردودنا على طلبات توفير المنتجات")+'</p></div></div>'
-    + '<button type="button" class="preq-cta" data-preq-new><span class="emo" aria-hidden="true">🧸</span><span class="t"><strong>'+t("مش لاقي لعبة معيّنة؟")+'</strong><small>'+t("ابعتلنا اسمها وصورتها وإحنا ندوّرلك عليها")+'</small></span><span class="go">'+t("اطلب منتج")+'</span></button>';
-  if(list === null) h += '<div class="preq-skel"></div><div class="preq-skel"></div>';
-  else if(!list.length) h += '<p class="preq-empty">'+t("لسه مفيش إشعارات. أول ما ترد علينا بطلب، الرد هيظهر هنا.")+'</p>';
-  else h += '<div class="preq-list">'+list.map(preqItemHtml).join("")+'</div>';
+  var items = PREQ.items;
+  var h = '<div class="preq-head"><span class="preq-bell-ic" aria-hidden="true">🔔</span><div><h3>'+t("الإشعارات")+'</h3><p>'+t("ردود متجر آل عبده على طلباتك واستفساراتك")+'</p></div></div>';
+  if(items === null) h += '<div class="preq-skel"></div><div class="preq-skel"></div>';
+  else if(!items.length) h += '<p class="preq-empty">'+t("مفيش إشعارات دلوقتي.")+'</p>';
+  else h += '<div class="preq-list">'+items.map(notifItemHtml).join("")+'</div>';
   host.innerHTML = h;
 }
+
+/* ---------- "اطلب منتج مش موجود" (من القائمة الجانبية) ---------- */
 function openProductRequestForm(prefill){
-  if(!isCustomerAuthed()){ openNotifPanel(); return; }
-  if(!preqPanelOpen()){ closeAllPanels(); }
-  PREQ.view = "form"; PREQ.img = null;
+  if(!isCustomerAuthed()){ closeAllPanels(); openAccountModal(); showToast(t("سجّل دخولك الأول عشان تطلب منتج")); return; }
+  closeAllPanels();
+  PREQ.img = null;
   preqMount(
-    '<div class="preq-head"><button type="button" class="preq-back" id="preqBack" aria-label="'+t("رجوع")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>'
-    + '<div><h3>🧸 '+t("اطلب منتج مش موجود")+'</h3><p>'+t("اكتب اللي محتاجه بالظبط، وهنرد عليك في الجرس 🔔")+'</p></div></div>'
+    '<div class="preq-head"><span class="preq-bell-ic" aria-hidden="true">🧸</span>'
+    + '<div><h3>'+t("اطلب منتج مش موجود")+'</h3><p>'+t("اكتب اللي محتاجه بالظبط، وهنرد عليك في الإشعارات 🔔")+'</p></div></div>'
     + '<form id="preqForm" class="preq-form" novalidate>'
       + '<div class="field"><label for="preqName">'+t("اسم اللعبة / المنتج")+' <span class="req">*</span></label><input id="preqName" maxlength="90" required placeholder="'+t("مثلاً: عربية ريموت كنترول بالشاحن")+'" value="'+escHtml(prefill||"")+'"></div>'
       + '<div class="field"><label for="preqSpecs">'+t("المواصفات")+'</label><textarea id="preqSpecs" rows="3" maxlength="600" placeholder="'+t("السن، اللون، المقاس، الماركة، أي تفاصيل تساعدنا نلاقيه")+'"></textarea></div>'
@@ -8816,10 +8908,20 @@ function openProductRequestForm(prefill){
         + '<button type="button" class="preq-rm" id="preqRmImg" hidden>'+t("شيل الصورة")+'</button></div>'
       + '<p class="preq-err" id="preqErr" role="alert" hidden></p>'
       + '<button type="submit" class="btn btn-primary btn-block" id="preqSend">📨 '+t("ابعت الطلب")+'</button>'
-    + '</form>');
+    + '</form>'
+    + '<div id="preqPending"></div>');
   var form = document.getElementById("preqForm"), file = document.getElementById("preqFile");
   var prev = document.getElementById("preqPreview"), rm = document.getElementById("preqRmImg"), drop = document.getElementById("preqDrop");
-  document.getElementById("preqBack").addEventListener("click", function(){ openNotifPanel(); });
+  /* الطلبات اللي لسه مستنية رد (عشان العميل يعرف إنها وصلت) */
+  fetch("/api/product-requests", { headers: customerAuthHeaders(), cache:"no-store" }).then(function(r){ return r.json(); })
+    .then(function(j){
+      var box = document.getElementById("preqPending"); if(!box || !j || !j.ok) return;
+      var pend = (j.requests||[]).filter(function(r){ return r.status === "pending"; });
+      if(!pend.length) return;
+      box.innerHTML = '<div class="preq-pend"><b>⏳ '+t("طلبات لسه بندوّر عليها")+' ('+fmt(pend.length)+')</b><ul>'
+        + pend.map(function(r){ return '<li><span>'+escHtml(r.productName)+'</span><time>'+escHtml(preqWhen(r.createdAt))+'</time></li>'; }).join("")
+        + '</ul><small>'+t("أول ما نرد هيوصلك إشعار في الجرس 🔔")+'</small></div>';
+    }).catch(function(){});
   form.addEventListener("click", function(e){
     var s = e.target.closest("[data-preq-step]"); if(!s) return;
     var q = document.getElementById("preqQty"); q.value = Math.max(1, Math.min(99, (+q.value||1) + (+s.dataset.preqStep)));
@@ -8849,10 +8951,10 @@ function openProductRequestForm(prefill){
     }).then(function(r){ return r.json().then(function(j){ return { status:r.status, body:j }; }); })
       .then(function(res){
         if(res.body && res.body.ok){
-          if(PREQ.list) PREQ.list.unshift(res.body.request);
           PREQ.img = null;
-          openNotifPanel();
-          showToast("✅ "+t("طلبك وصل! هنرد عليك هنا في الجرس 🔔"));
+          sheetReturn = null;
+          closeAllPanels();
+          showToast("✅ "+t("طلبك وصل! هنرد عليك في الإشعارات 🔔"));
           return;
         }
         var code = res.body && res.body.error;
@@ -8880,20 +8982,24 @@ function preqZoom(src){
 }
 document.addEventListener("click", function(e){
   var o = e.target.closest("[data-preq-open]");
-  if(o){ e.preventDefault(); if(isCustomerAuthed()) openProductRequestForm(o.dataset.preqOpen || ""); else openNotifPanel(); return; }
+  if(o){ e.preventDefault(); openProductRequestForm(o.dataset.preqOpen || ""); return; }
   if(!e.target.closest("#preqWrap")) return;
-  if(e.target.closest("[data-preq-new]")){ openProductRequestForm(""); return; }
   var z = e.target.closest("[data-preq-zoom]"); if(z){ preqZoom(z.dataset.preqZoom); return; }
   var v = e.target.closest("[data-preq-view]"); if(v){ closeAllPanels(); openProductModal(v.dataset.preqView); return; }
   var d = e.target.closest("[data-preq-del]");
   if(d){
     var id = d.dataset.preqDel;
-    appConfirm({ icon:"🗑️", title:t("حذف الإشعار"), message:t("هيتشال الطلب ده ورده من القائمة."), ok:t("حذف") }).then(function(ok){
+    appConfirm({ icon:"🗑️", title:t("حذف الإشعار"), message:t("الإشعار ده هيتشال من الجرس."), ok:t("حذف") }).then(function(ok){
       if(!ok) return;
-      fetch("/api/product-requests", { method:"POST", headers: Object.assign({ "content-type":"application/json" }, customerAuthHeaders()), body: JSON.stringify({ action:"remove", id:id }) })
+      fetch("/api/notifications", { method:"POST", headers: Object.assign({ "content-type":"application/json" }, customerAuthHeaders()), body: JSON.stringify({ action:"remove", id:id }) })
         .then(function(r){ return r.json(); })
         .then(function(j){
-          if(j && j.ok){ PREQ.list = (PREQ.list||[]).filter(function(x){ return x.id !== id; }); if(!preqPanelOpen()) openNotifPanel(); else preqRenderList(); }
+          if(j && j.ok){
+            PREQ.items = (PREQ.items||[]).filter(function(x){ return x.id !== id; });
+            preqUpdateBell();
+            if(!PREQ.items.length){ closeAllPanels(); showToast(t("✅ اتمسحت كل الإشعارات")); }
+            else if(!preqPanelOpen()) openNotifPanel(); else preqRenderList();
+          }
           else showToast(t("⚠️ تعذر الحذف، جرّب تاني."));
         }).catch(function(){ showToast(t("⚠️ تعذر الحذف، جرّب تاني.")); });
     });

@@ -2,7 +2,8 @@
    and api/orders.js (applies the code when the order is placed).
    KV key "coupons" = [{ code, percent, note, createdAt, expiresAt, active,
                          uses:[{ customerId, phone, email, name, orderId, at }] }]
-   Rule: a code can be used by many customers, but ONLY ONCE per customer.
+   perCustomer = how many times ONE customer may use the code (set by the
+   admin; 0 = no limit; codes made before this setting existed = 1).
    "Same customer" = same account, same phone number or same email, so a
    second device / logging in again / a new account on the same phone
    number can't reuse it.
@@ -36,8 +37,14 @@ export function couponState(c, now){
   if((now || Date.now()) > (+c.expiresAt || 0)) return "expired";
   return "ok";
 }
-/* has this customer (account / phone / email) already used the code? */
-export function usedBy(c, customer, phone){
+export function perCustomerLimit(c){
+  var n = c && c.perCustomer;
+  if(n === 0 || n === "0") return 0;
+  n = Math.round(+n);
+  return n >= 1 ? n : 1;
+}
+/* how many times did this customer (account / phone / email) use the code? */
+export function useCount(c, customer, phone){
   var ids = [];
   if(customer){
     ids.push({ k:"customerId", v:String(customer.identifier || "").toLowerCase() });
@@ -47,7 +54,12 @@ export function usedBy(c, customer, phone){
   }
   var op = normPhone(phone);
   if(op.length >= 10) ids.push({ k:"phone", v:op });
-  return (c.uses || []).some(function(u){
+  return (c.uses || []).filter(function(u){
     return ids.some(function(x){ return x.v && String(u[x.k] || "").toLowerCase() === x.v; });
-  });
+  }).length;
+}
+/* true when this customer already reached the per-customer limit */
+export function usedBy(c, customer, phone){
+  var lim = perCustomerLimit(c);
+  return lim > 0 && useCount(c, customer, phone) >= lim;
 }

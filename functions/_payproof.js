@@ -17,10 +17,18 @@
 
 export var STORE_NUMBERS = ["01099952333"];
 var MAX_AGE_DAYS = 3;
-var MODELS = [
-  { model: "@cf/meta/llama-4-scout-17b-16e-instruct", style: "messages" },
-  { model: "@cf/meta/llama-4-scout-17b-16e-instruct", style: "prompt" },
-  { model: "@cf/google/gemma-3-12b-it", style: "messages" }
+/* Several ways of sending the image, because the Workers AI vision models
+   don't all take the same input shape. The first one that answers is
+   remembered in KV ("ai:variant") and tried first next time. */
+var L4 = "@cf/meta/llama-4-scout-17b-16e-instruct";
+var G3 = "@cf/google/gemma-3-12b-it";
+var L32 = "@cf/meta/llama-3.2-11b-vision-instruct";
+export var VARIANTS = [
+  { id: "l4-msg-url", model: L4, build: function(p, img){ return { messages: [{ role: "user", content: [{ type: "text", text: p }, { type: "image_url", image_url: { url: "data:" + img.type + ";base64," + img.b64 } }] }], max_tokens: 500, temperature: 0 }; } },
+  { id: "l4-msg-img", model: L4, build: function(p, img){ return { messages: [{ role: "user", content: p }], image: img.b64, max_tokens: 500, temperature: 0 }; } },
+  { id: "l4-prompt-img", model: L4, build: function(p, img){ return { prompt: p, image: img.b64, max_tokens: 500, temperature: 0 }; } },
+  { id: "g3-msg-url", model: G3, build: function(p, img){ return { messages: [{ role: "user", content: [{ type: "text", text: p }, { type: "image_url", image_url: { url: "data:" + img.type + ";base64," + img.b64 } }] }], max_tokens: 500, temperature: 0 }; } },
+  { id: "l32-msg-bytes", model: L32, needsAgree: true, build: function(p, img){ return { messages: [{ role: "user", content: p }], image: Array.from(img.bytes), max_tokens: 500, temperature: 0 }; } }
 ];
 
 export function storeNumbers(env){
@@ -104,22 +112,44 @@ function extractJson(out){
   try{ return JSON.parse(s.slice(a, b + 1)); }catch(e){ return null; }
 }
 
-/* ask the AI; returns the parsed JSON or null (null = AI not available) */
-export async function readReceipt(env, img){
-  if(!env || !env.AI || typeof env.AI.run !== "function") return null;
-  var dataUrl = "data:" + img.type + ";base64," + img.b64;
-  for(var i = 0; i < MODELS.length; i++){
-    var m = MODELS[i];
-    try{
-      var input = m.style === "messages"
-        ? { messages: [{ role: "user", content: [{ type: "text", text: PROMPT }, { type: "image_url", image_url: { url: dataUrl } }] }], max_tokens: 400, temperature: 0 }
-        : { prompt: PROMPT, image: img.b64, max_tokens: 400, temperature: 0 };
-      var out = await env.AI.run(m.model, input);
-      var j = extractJson(out);
-      if(j) { j._model = m.model; return j; }
-    }catch(e){ /* try the next model / format */ }
+async function runVariant(env, v, img){
+  var t0 = Date.now();
+  try{
+    if(v.needsAgree){ try{ await env.AI.run(v.model, { prompt: "agree" }); }catch(e){} }
+    var out = await env.AI.run(v.model, v.build(PROMPT, img));
+    var j = extractJson(out);
+    var raw = typeof out === "string" ? out : JSON.stringify(out);
+    return { id: v.id, ok: !!j, json: j, ms: Date.now() - t0, raw: String(raw || "").slice(0, 400), error: j ? null : "no_json" };
+  }catch(e){
+    return { id: v.id, ok: false, json: null, ms: Date.now() - t0, raw: "", error: String((e && e.message) || e).slice(0, 300) };
   }
-  return null;
+}
+
+/* ask the AI; returns {json, variant, errors} - json null = AI not available */
+export async function readReceipt(env, img){
+  if(!env || !env.AI || typeof env.AI.run !== "function") return { json: null, errors: ["no_ai_binding"] };
+  var first = null;
+  try{ first = await env.STORE_KV.get("ai:variant"); }catch(e){}
+  var order = VARIANTS.slice().sort(function(a, b){ return (a.id === first ? -1 : 0) - (b.id === first ? -1 : 0); });
+  var errors = [];
+  for(var i = 0; i < order.length; i++){
+    var r = await runVariant(env, order[i], img);
+    if(r.ok){
+      if(order[i].id !== first){ try{ await env.STORE_KV.put("ai:variant", order[i].id); }catch(e){} }
+      r.json._model = order[i].model;
+      return { json: r.json, variant: order[i].id, errors: errors };
+    }
+    errors.push(order[i].id + ": " + r.error);
+  }
+  return { json: null, errors: errors };
+}
+
+/* admin test: run EVERY variant on one image and report each result */
+export async function diagnose(env, img){
+  var out = { hasAI: !!(env && env.AI && typeof env.AI.run === "function"), results: [] };
+  if(!out.hasAI) return out;
+  for(var i = 0; i < VARIANTS.length; i++) out.results.push(await runVariant(env, VARIANTS[i], img));
+  return out;
 }
 
 function num(v){
@@ -135,8 +165,9 @@ export async function checkReceipt(env, img, expectedTotal){
   var usedImg = await env.STORE_KV.get("pimg:" + hash);
   if(usedImg) return { status:"fail", reason:"reused", hash: hash };
 
-  var r = await readReceipt(env, img);
-  if(!r) return { status:"manual", reason:"ai_unavailable", hash: hash };
+  var rr = await readReceipt(env, img);
+  if(!rr.json) return { status:"manual", reason:"ai_unavailable", hash: hash, aiErrors: rr.errors };
+  var r = rr.json;
 
   var res = {
     hash: hash,
@@ -146,7 +177,8 @@ export async function checkReceipt(env, img, expectedTotal){
     recipientName: String(r.recipient_name || "").slice(0, 60),
     reference: String(toLatinDigits(r.reference || "")).slice(0, 60),
     date: String(r.date || "").slice(0, 10),
-    model: r._model
+    model: r._model,
+    variant: rr.variant
   };
   function fail(reason){ res.status = "fail"; res.reason = reason; return res; }
 

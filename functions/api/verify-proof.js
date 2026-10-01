@@ -1,5 +1,5 @@
-import { json } from "../_lib.js";
-import { dataUrlToBytes, checkReceipt } from "../_payproof.js";
+import { json, requireAdmin } from "../_lib.js";
+import { dataUrlToBytes, checkReceipt, diagnose, recipientMatches } from "../_payproof.js";
 
 /* POST /api/verify-proof  {image: "data:image/...;base64,...", total}
    Checks the transfer screenshot BEFORE the customer can place the order
@@ -9,7 +9,23 @@ import { dataUrlToBytes, checkReceipt } from "../_payproof.js";
    Simple abuse limit: 25 checks per hour per IP.
    (ASCII-only comments on purpose, same as _lib.js.) */
 
-export async function onRequestPost({ request, env }){
+export async function onRequestPost(context){
+  var request = context.request, env = context.env;
+  /* admin test of the AI reader: {action:"diag", image} -> every model/format */
+  if(request.headers.get("X-Admin-User")){
+    var admin = await requireAdmin(request, env);
+    if(!admin) return json({ ok:false, error:"unauthorized" }, 401);
+    var b0; try{ b0 = await request.json(); }catch(e){ return json({ ok:false, error:"bad_json" }, 400); }
+    var im0 = dataUrlToBytes(b0 && b0.image);
+    if(!im0) return json({ ok:false, error:"bad_image" }, 400);
+    var d = await diagnose(env, im0);
+    d.results.forEach(function(r){ if(r.json && r.json.recipient != null) r.recipientOk = recipientMatches(r.json.recipient, env); });
+    return json({ ok:true, diag: d });
+  }
+  return verify(request, env);
+}
+
+async function verify(request, env){
   var ip = request.headers.get("CF-Connecting-IP") || "x";
   var rk = "rl:vp:" + ip + ":" + Math.floor(Date.now() / 3600000);
   var n = +(await env.STORE_KV.get(rk)) || 0;
@@ -35,6 +51,7 @@ export async function onRequestPost({ request, env }){
     recipient: res.recipient || "",
     reference: res.reference || "",
     provider: res.provider || "",
-    date: res.date || ""
+    date: res.date || "",
+    debug: res.aiErrors ? res.aiErrors.slice(0, 5) : undefined
   });
 }

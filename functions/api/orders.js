@@ -1,4 +1,5 @@
 import { json, getList, saveList, requireAdmin, requireCustomer, getCatalog, saveCatalog } from "../_lib.js";
+import { getCoupons, saveCoupons, findCoupon, couponState, usedBy, normPhone } from "../_coupons.js";
 
 /* GET /api/orders - admin headers return every order (for the admin
    dashboard's order list); customer headers return only that customer's
@@ -83,6 +84,21 @@ export async function onRequestPost({ request, env }){
     }
   }catch(e){ /* لو الكتالوج مش متاح لأي سبب، الطلب بيكمّل زي الأول */ }
 
+  /* كود الخصم: لازم العميل يكون مسجّل دخول، والكود فعّال ولسه ما خلصش،
+     وما اتستخدمش قبل كده من نفس الحساب أو نفس رقم الموبايل أو نفس
+     الإيميل. الخصم بيتحسب هنا على السيرفر (مش بنصدّق الرقم اللي جاي من
+     الموبايل). */
+  var coupon = null, couponList = null;
+  var itemsSubtotal = body.items.reduce(function(sum, it){ return sum + (+it.price || 0) * Math.max(0, +it.qty || 0); }, 0);
+  if(body.couponCode){
+    if(!customer) return json({ ok:false, error:"coupon_login_required" }, 401);
+    couponList = await getCoupons(env);
+    coupon = findCoupon(couponList, body.couponCode);
+    var cst = couponState(coupon);
+    if(cst !== "ok") return json({ ok:false, error:"coupon_" + cst }, 409);
+    if(usedBy(coupon, customer, phone)) return json({ ok:false, error:"coupon_used" }, 409);
+  }
+
   var order = {
     id: "ord_" + Date.now().toString(36) + Math.floor(Math.random() * 999),
     customerId: customer ? customer.identifier : null,
@@ -100,6 +116,14 @@ export async function onRequestPost({ request, env }){
     paymentProof: null,
     createdAt: Date.now()
   };
+
+  if(coupon){
+    order.subtotal = itemsSubtotal;
+    order.coupon = coupon.code;
+    order.couponPercent = +coupon.percent || 0;
+    order.discount = Math.round(itemsSubtotal * order.couponPercent / 100);
+    order.total = Math.max(0, itemsSubtotal - order.discount) + order.shipping;
+  }
 
   /* سكرين شوت التحويل (فودافون كاش / إنستاباي) بيتخزن لوحده في KV
      بمفتاح "proof:<رقم الطلب>" بجودته الكاملة، بدل ما يتحط جوه قائمة
@@ -141,6 +165,18 @@ export async function onRequestPost({ request, env }){
   list.push(order);
   await saveList(env, "orders", list);
 
+  if(coupon){
+    try{
+      var fresh = await getCoupons(env);
+      var fc = findCoupon(fresh, coupon.code);
+      if(fc){
+        fc.uses = Array.isArray(fc.uses) ? fc.uses : [];
+        fc.uses.push({ customerId: customer.identifier, phone: normPhone(phone || customer.identifier), email: String(customer.email || "").toLowerCase(), name: order.name || customer.name || "", orderId: order.id, at: order.createdAt });
+        await saveCoupons(env, fresh);
+      }
+    }catch(e){ /* الطلب نفسه اتسجل خلاص */ }
+  }
+
   /* خصم الكمية المتاحة تلقائيًا لكل صنف فيه تتبع كمية مفعّل (منتج أو لون
      له رقم كمية محدد - مش null). بيحصل لكل الطلبات اللي بتوصل هنا سواء
      من عميل مسجّل أو ضيف. أي خطأ هنا (مثلاً الكتالوج مش موجود) ما يمنعش
@@ -171,7 +207,7 @@ export async function onRequestPost({ request, env }){
     }
   }catch(e){ /* الخصم مش أساسي لنجاح الطلب */ }
 
-  return json({ ok:true, orderId: order.id });
+  return json({ ok:true, orderId: order.id, total: order.total, discount: order.discount || 0 });
 }
 
 /* PUT /api/orders - admin only. Body: {id, items, total, name, phone,
@@ -198,6 +234,13 @@ export async function onRequestPut({ request, env }){
   var o = list[idx];
   o.items = body.items;
   o.total = +body.total || 0;
+  /* الطلب اللي عليه كود خصم: الخصم بيتحسب تاني على الأصناف بعد التعديل */
+  var editSub = body.items.reduce(function(sum, it){ return sum + (+it.price || 0) * Math.max(0, +it.qty || 0); }, 0);
+  o.subtotal = editSub;
+  if(o.coupon){
+    o.discount = Math.round(editSub * (+o.couponPercent || 0) / 100);
+    o.total = Math.max(0, editSub - o.discount) + (+o.shipping || 0);
+  }
   o.name = (body.name || "").trim();
   o.phone = (body.phone || "").trim();
   o.governorate = (body.governorate || "").trim();
@@ -220,9 +263,21 @@ export async function onRequestDelete({ request, env }){
   if(!id) return json({ ok:false, error:"missing_id" }, 400);
 
   var list = await getList(env, "orders");
+  var gone = list.find(function(o){ return o.id === id; });
   var next = list.filter(function(o){ return o.id !== id; });
   if(next.length === list.length) return json({ ok:false, error:"not_found" }, 404);
   await saveList(env, "orders", next);
+  /* لو الطلب المحذوف كان عليه كود خصم، العميل يقدر يستخدم الكود تاني */
+  if(gone && gone.coupon){
+    try{
+      var cl = await getCoupons(env);
+      var cc = findCoupon(cl, gone.coupon);
+      if(cc && Array.isArray(cc.uses)){
+        cc.uses = cc.uses.filter(function(u){ return u.orderId !== id; });
+        await saveCoupons(env, cl);
+      }
+    }catch(e){}
+  }
   /* حذف سكرين التحويل المتخزن لوحده مع الطلب */
   try{ await env.STORE_KV.delete("proof:" + id); }catch(e){}
   return json({ ok:true });
@@ -249,6 +304,7 @@ async function sendGuestOrderEmail(order, env){
     return (i + 1) + ") " + it.name + " ×" + it.qty + " - " + (it.price * it.qty) + " ج.م";
   });
   lines.push("الإجمالي الفرعي: " + order.subtotal + " ج.م");
+  if(order.coupon) lines.push("كود الخصم: " + order.coupon + " (" + order.couponPercent + "%) - خصم " + order.discount + " ج.م");
   lines.push("الشحن: " + order.shipping + " ج.م");
   lines.push("الإجمالي الكلي: " + order.total + " ج.م");
   lines.push("نوع العميل: " + (order.customerId ? ("عميل مسجّل (حساب: " + order.customerId + ")") : "ضيف بدون حساب"));

@@ -16,6 +16,8 @@
    (ASCII-only comments on purpose, same as _lib.js.) */
 
 export var STORE_NUMBERS = ["01099952333"];
+/* the store's InstaPay address (IPA) - customers can pay to it instead of the number */
+export var STORE_IPAS = ["shady1088@instapay"];
 var MAX_AGE_DAYS = 3;
 /* Several ways of sending the image, because the Workers AI vision models
    don't all take the same input shape. The first one that answers is
@@ -61,7 +63,7 @@ export function normRef(r){
 export function recipientMatches(raw, env){
   var r = toLatinDigits(raw).trim();
   if(!r) return false;
-  var ipas = String((env && env.STORE_IPA) || "").toLowerCase().split(/[,\s]+/).filter(Boolean);
+  var ipas = STORE_IPAS.concat(String((env && env.STORE_IPA) || "").split(/[,\s]+/)).map(function(x){ return String(x).toLowerCase().trim(); }).filter(Boolean);
   if(r.indexOf("@") > 0) return ipas.indexOf(r.toLowerCase().replace(/\s+/g, "")) >= 0;
   var nums = storeNumbers(env).map(function(n){ return toLatinDigits(n).replace(/\D/g, "").slice(-10); });
   var masked = /[*xX•.…#]/.test(r.replace(/[\s-]/g, "").replace(/^\+/, ""));
@@ -92,8 +94,8 @@ var PROMPT = [
   ' "provider": "vodafone_cash" | "instapay" | "bank" | "other",',
   ' "amount": number or null (the amount TRANSFERRED in EGP, not the fees, not the balance),',
   ' "recipient": string (the RECEIVER (To / إلى / المستلم) phone number. If the full number is written anywhere in the receiver section, give the FULL number, not a masked one. Keep * only if it is masked everywhere; "" if not shown),',
-  ' "recipient_numbers": array of strings (EVERY phone number / account number / InstaPay address shown in the receiver (To) section, full or masked, exactly as written),',
-  ' "sender": string (the SENDER (From / من) phone / address, "" if not shown),',
+  ' "recipient_numbers": array of strings (EVERY phone number / account number / InstaPay address (like name@instapay) shown in the receiver (To) section ONLY, full or masked, exactly as written - never include anything from the sender (From) section),',
+  ' "sender": string (the SENDER (From / من) phone or InstaPay address, "" if not shown),',
   ' "recipient_name": string ("" if not shown),',
   ' "reference": string (transaction ID / reference number; "" if not shown),',
   ' "date": "YYYY-MM-DD" or "" }'
@@ -161,6 +163,41 @@ function num(v){
   return m ? +m[0] : null;
 }
 
+/* decides if the receipt was sent to the store (see comment inside) */
+export function pickRecipient(env, r)
+{
+  /* receiver candidates (the AI may write the receiver twice: masked + full).
+     Anything equal to the SENDER is dropped (e.g. the owner paying from his
+     own shady1088@instapay to someone else). A full phone number or an
+     InstaPay address in the receiver section decides; masked numbers are
+     only used when nothing full is shown. */
+  function key(x){ var t = toLatinDigits(x).toLowerCase().replace(/\s+/g, ""); return t.indexOf("@") > 0 ? t : t.replace(/\D/g, "").slice(-10); }
+  var sender = toLatinDigits(r.sender || "");
+  var senderKey = sender ? key(sender) : "";
+  var cands = [toLatinDigits(r.recipient || "").slice(0, 60)].concat(Array.isArray(r.recipient_numbers) ? r.recipient_numbers.map(function(x){ return toLatinDigits(x).slice(0, 60); }) : [])
+    .filter(Boolean).filter(function(x){ return !senderKey || key(x) !== senderKey; });
+  if(!cands.length) return { ok:false, reason:"no_recipient", recipient:"" };
+  var isMasked = function(x){ return /[*xX\u2022\u2026#]/.test(x); };
+  var fullPhones = cands.filter(function(x){ return x.indexOf("@") < 0 && !isMasked(x) && x.replace(/\D/g, "").length >= 10; });
+  var ipaCands = cands.filter(function(x){ return x.indexOf("@") > 0; });
+  var match = function(x){ return recipientMatches(x, env); };
+  if(fullPhones.length || ipaCands.length){
+    var hit = fullPhones.concat(ipaCands).filter(match)[0];
+    var otherPhone = fullPhones.filter(function(x){ return !match(x); })[0];
+    var shown = hit || otherPhone || ipaCands[0] || cands[0];
+    if(!hit) return { ok:false, reason:"wrong_recipient", recipient: shown };
+    return { ok:true, reason:null, recipient: shown };
+  } else {
+    var shown2 = cands.filter(match)[0] || cands[0];
+    if(!cands.some(match)) return { ok:false, reason:"wrong_recipient", recipient: shown2 };
+    return { ok:true, reason:null, recipient: shown2 };
+  }
+}
+/* admin diagnostics: same decision from an already-read receipt */
+export async function checkReceiptFromJson(env, r){
+  return pickRecipient(env, r || {});
+}
+
 /* full check -> { status:"ok"|"fail"|"manual", reason, amount, recipient, reference, provider, date } */
 export async function checkReceipt(env, img, expectedTotal){
   var hash = await sha256Bytes(img.bytes);
@@ -186,15 +223,9 @@ export async function checkReceipt(env, img, expectedTotal){
 
   if(r.is_receipt === false) return fail("not_receipt");
   if(r.success === false) return fail("not_success");
-  /* the receiver may be written twice (masked + full): a FULL number wins */
-  var cands = [res.recipient].concat(Array.isArray(r.recipient_numbers) ? r.recipient_numbers.map(function(x){ return toLatinDigits(x).slice(0, 60); }) : []).filter(Boolean);
-  var full = cands.filter(function(x){ return !/[*xX\u2022\u2026#]/.test(x) && (x.replace(/\D/g, "").length >= 10 || x.indexOf("@") > 0); });
-  if(!cands.length) return fail("no_recipient");
-  if(full.length){
-    res.recipient = full[0];
-    if(!full.some(function(x){ return recipientMatches(x, env); })) return fail("wrong_recipient");
-    res.recipient = full.filter(function(x){ return recipientMatches(x, env); })[0];
-  } else if(!cands.some(function(x){ return recipientMatches(x, env); })) return fail("wrong_recipient");
+  var pick = pickRecipient(env, r);
+  res.recipient = pick.recipient || res.recipient;
+  if(!pick.ok) return fail(pick.reason);
   if(res.amount == null) return fail("no_amount");
   if(res.amount + 1 < (+expectedTotal || 0)) return fail("low_amount");
   if(/^\d{4}-\d{2}-\d{2}$/.test(res.date)){

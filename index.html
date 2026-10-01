@@ -845,6 +845,12 @@ html[dir="ltr"] .ab-bar i{transform-origin:left center;}
   #adminCustomersPage .admin-table td:last-child{grid-column:1 / -1; display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; padding-top:10px; border-top:1px solid var(--border); white-space:normal !important;}
   #adminCustomersPage .admin-table td[colspan]{grid-column:1 / -1; border:0; margin:0; padding:0;}
 }
+.pd-out{width:100%; display:flex; flex-direction:column; gap:10px; margin-top:6px; text-align:start;}
+.pd-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px;}
+.pd-list li{display:flex; flex-direction:column; gap:3px; padding:9px 11px; border-radius:12px; background:var(--surface-3); font-size:12px; color:var(--ink-soft); overflow-wrap:anywhere;}
+.pd-list li b{font-size:12.5px; color:var(--ink);}
+.pd-list li.ok{border:1.5px solid color-mix(in srgb, #1fb87f 45%, var(--border));}
+.pd-list li.bad{border:1.5px solid var(--border);}
 /* ---------- رابط الباسورد الجديد ---------- */
 .rst-modal{padding:30px 24px 24px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px;}
 .rst-ic{width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:30px; background:linear-gradient(135deg, var(--pink-pale), var(--sunshine-pale));}
@@ -3115,14 +3121,16 @@ function openProofViewer(o, admin){
    زي ما هي (أوضح حاجة ممكنة)، ولو كبيرة بتتصغر لحد 2000 بكسل بجودة عالية
    عشان الأرقام والكلام اللي فيها يفضلوا مقروءين. */
 function readProofImage(file, callback){
-  if(file && file.size <= 2.5*1024*1024 && /^image\/(jpeg|png|webp)$/.test(file.type)){
+  /* الصورة بتتصغر دايمًا لحد 1600 بكسل JPEG: الكلام والأرقام بيفضلوا واضحين،
+     والمراجعة الآلية بتبقى أسرع وأضمن من صورة PNG تقيلة */
+  if(file && file.size <= 350*1024 && file.type === "image/jpeg"){
     var r = new FileReader();
     r.onload = function(){ callback(String(r.result)); };
-    r.onerror = function(){ readImageAsCompressedDataURL(file, 2000, 0.9, callback); };
+    r.onerror = function(){ readImageAsCompressedDataURL(file, 1600, 0.88, callback); };
     r.readAsDataURL(file);
     return;
   }
-  readImageAsCompressedDataURL(file, 2000, 0.9, callback);
+  readImageAsCompressedDataURL(file, 1600, 0.88, callback);
 }
 /* بيبني كارت فاتورة كامل لطلب واحد (الصنف/الكمية/السعر/الإجمالي وبيانات
    التوصيل) - مستخدم في شاشة تفاصيل الطلب اللي بتتفتح من قائمة "حسابي". */
@@ -8398,6 +8406,69 @@ function customerResetFromLink(){
 }
 setTimeout(customerResetFromLink, 700);
 
+/* ---------- (الإدارة) فحص مراجعة الإيصالات الآلية ----------
+   بيبعت إيصال تجريبي (أو إيصال من عند الأدمن) للسيرفر ويوري كل موديل
+   ذكاء اصطناعي قرا إيه بالظبط - عشان نعرف المراجعة شغالة ولا لأ ولو لأ ليه. */
+function makeTestReceipt(){
+  var c = document.createElement("canvas"); c.width = 720; c.height = 1100;
+  var g = c.getContext("2d");
+  g.fillStyle = "#ffffff"; g.fillRect(0, 0, c.width, c.height);
+  g.fillStyle = "#e60000"; g.fillRect(0, 0, c.width, 120);
+  g.fillStyle = "#ffffff"; g.font = "bold 44px sans-serif"; g.textAlign = "center"; g.fillText("Vodafone Cash", 360, 78);
+  g.fillStyle = "#1a7f37"; g.font = "bold 40px sans-serif"; g.fillText("Transaction Successful", 360, 220);
+  g.fillStyle = "#222"; g.font = "bold 72px sans-serif"; g.fillText("440.00 EGP", 360, 340);
+  g.font = "30px sans-serif"; g.textAlign = "left";
+  var d = new Date(), pad = function(n){ return (n<10?"0":"")+n; };
+  var rows = [["Transfer to", "01099952333"], ["Receiver name", "Al Abdo Toys"], ["Amount", "440.00 EGP"], ["Fees", "1.00 EGP"], ["Transaction ID", "845512903317"], ["Date", d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())+"  "+pad(d.getHours())+":"+pad(d.getMinutes())]];
+  rows.forEach(function(r, i){ var y = 460 + i * 90; g.fillStyle = "#777"; g.fillText(r[0], 60, y); g.fillStyle = "#111"; g.textAlign = "right"; g.fillText(r[1], 660, y); g.textAlign = "left"; g.fillStyle = "#eee"; g.fillRect(60, y + 30, 600, 2); });
+  return c.toDataURL("image/jpeg", 0.9);
+}
+function openProofDiag(){
+  var card = document.getElementById("modalCard");
+  card.classList.add("acct-card");
+  card.innerHTML = '<button class="modal-close" id="modalCloseBtn" aria-label="'+t("إغلاق")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
+    + '<div class="modal-info rst-modal">'
+      + '<div class="rst-ic" aria-hidden="true">🧪</div>'
+      + '<h3>'+t("فحص مراجعة الإيصالات")+'</h3>'
+      + '<p class="rst-sub">'+t("بنبعت إيصال للذكاء الاصطناعي ونشوف كل موديل قرا إيه. استخدمه لو العملاء بيظهرلهم \"المراجعة الآلية مش متاحة\".")+'</p>'
+      + '<div class="rst-btns">'
+        + '<button type="button" class="btn btn-primary" id="pdTest">🧾 '+t("اختبار بإيصال تجريبي")+'</button>'
+        + '<label class="btn btn-outline" for="pdFile" style="justify-content:center;">📷 '+t("اختبار بإيصال من عندك")+'</label>'
+        + '<input type="file" id="pdFile" accept="image/*" hidden>'
+      + '</div>'
+      + '<div id="pdOut" class="pd-out"></div>'
+    + '</div>';
+  document.getElementById("modalCloseBtn").addEventListener("click", closeAllPanels);
+  function run(dataUrl){
+    var out = document.getElementById("pdOut");
+    out.innerHTML = '<div class="pv-box is-checking"><span class="pv-spin" aria-hidden="true"></span><div><strong>'+t("جارٍ الفحص...")+'</strong><span>'+t("ممكن ياخد لحد دقيقة")+'</span></div></div>';
+    fetch("/api/verify-proof", { method:"POST", headers: Object.assign({ "content-type":"application/json" }, adminAuthHeaders()), body: JSON.stringify({ action:"diag", image: dataUrl }) })
+      .then(function(r){ return r.json(); }).then(function(res){
+        if(!res || !res.ok){ out.innerHTML = '<p class="rst-err">'+t("تعذر الفحص")+': '+escHtml((res && res.error) || "")+'</p>'; return; }
+        var d = res.diag;
+        if(!d.hasAI){ out.innerHTML = '<div class="pv-box is-fail"><span class="pv-ic">✕</span><div><strong>'+t("ربط الذكاء الاصطناعي (AI) مش موجود")+'</strong><span>'+t("لازم تضيف Workers AI باسم AI في Cloudflare ← Workers & Pages ← alabdo-toys-site ← Settings ← Bindings، وبعدها ترفع أي ملف عشان يتعمل نشر جديد.")+'</span></div></div>'; return; }
+        var anyOk = d.results.some(function(r){ return r.ok; });
+        out.innerHTML = (anyOk
+            ? '<div class="pv-box is-ok"><span class="pv-ic">✓</span><div><strong>'+t("المراجعة الآلية شغالة")+'</strong><span>'+t("على الأقل موديل واحد قرا الإيصال.")+'</span></div></div>'
+            : '<div class="pv-box is-fail"><span class="pv-ic">✕</span><div><strong>'+t("ولا موديل قرا الإيصال")+'</strong><span>'+t("ابعت السكرين ده للمطوّر.")+'</span></div></div>')
+          + '<ul class="pd-list">' + d.results.map(function(r){
+              var j = r.json || {};
+              return '<li class="'+(r.ok?'ok':'bad')+'"><b dir="ltr">'+(r.ok?'✅':'❌')+' '+escHtml(r.id)+' · '+Math.round(r.ms/100)/10+'s</b>'
+                + (r.ok
+                  ? '<span>'+t("المبلغ")+': '+escHtml(j.amount==null?"-":j.amount)+' · '+t("المستلم")+': <bdi dir="ltr">'+escHtml(j.recipient||"-")+'</bdi> '+(r.recipientOk?'✓':'✗')+' · '+t("رقم العملية")+': <bdi dir="ltr">'+escHtml(j.reference||"-")+'</bdi> · '+t("ناجح")+': '+escHtml(String(j.success))+'</span>'
+                  : '<span dir="ltr">'+escHtml(r.error||"")+(r.raw ? ' — '+escHtml(r.raw.slice(0,160)) : '')+'</span>')
+              + '</li>';
+            }).join("") + '</ul>';
+      }).catch(function(){ out.innerHTML = '<p class="rst-err">'+t("تعذر الاتصال بالسيرفر.")+'</p>'; });
+  }
+  document.getElementById("pdTest").addEventListener("click", function(){ run(makeTestReceipt()); });
+  document.getElementById("pdFile").addEventListener("change", function(){
+    var f = this.files && this.files[0]; if(!f) return;
+    readProofImage(f, run);
+  });
+  modalBackdrop.classList.add("show"); overlay.classList.add("show"); document.body.style.overflow="hidden";
+}
+
 function deleteAdminCustomer(c){
   if(!c) return;
   fetch("/api/admin/customers", {
@@ -9630,6 +9701,7 @@ var ADM = null;
       + li("inquiries", "📨", t("استفسارات العملاء"), t("رسايل صفحة تواصل معنا"), stats.inquiries)
       + li("customers", "👥", t("بيانات العملاء"), "")
       + li("coupons", "🎟️", t("أكواد الخصم"), t("اعمل كود خصم بالنسبة اللي تختارها"))
+      + li("pvdiag", "🧪", t("فحص مراجعة الإيصالات"), t("اتأكد إن مراجعة فودافون كاش وإنستاباي شغالة"))
       + li("analytics", "📊", t("تحليل الزوار"), "")
     + '</div>'
     + '<div class="adm-group-title">'+t("المخزون")+'</div><div class="adm-list">'
@@ -9659,6 +9731,7 @@ var ADM = null;
     var a = b.dataset.admMore;
     if(a==="cats" || a==="settings" || SUB_PAGES[a]){ go(a, { parent:"more" }); return; }
     if(a==="lowstock"){ openLowDefault(); return; }
+    if(a==="pvdiag"){ openProofDiag(); return; }
     if(a==="speed"){ if(imgMigrateRunning) showToast(t("⏳ النقل شغال، استنى لحد ما يخلص")); else if(imgEndpointMissing) showToast(t("⚠️ ملف img.js مش موجود على السيرفر")); else { migrateCatalogImages(); if(!imgMigrateRunning) showToast(t("كل الصور اتنقلت ✅ الموقع بيفتح بسرعة")); } return; }
     if(a==="export") document.getElementById("adminExportBtn").click();
     if(a==="import") document.getElementById("adminImportBtn").click();

@@ -832,6 +832,33 @@ html[dir="ltr"] .ab-bar i{transform-origin:left center;}
   .ab-slide{transition:none;}
   .ab-bar{display:none;}
 }
+/* بيانات العملاء على الموبايل: كل عميل كارت بدل جدول بيتسحب يمين وشمال */
+@media (max-width:720px){
+  #adminCustomersPage .admin-card{overflow:visible !important; padding:0; background:none; border:0; box-shadow:none;}
+  #adminCustomersPage .admin-table thead{display:none;}
+  #adminCustomersPage .admin-table, #adminCustomersPage .admin-table tbody{display:flex; flex-direction:column; gap:10px; width:100%;}
+  #adminCustomersPage .admin-table tr{display:grid; grid-template-columns:1fr auto; gap:2px 10px; padding:14px; border-radius:16px; background:var(--surface); border:1px solid var(--border);}
+  #adminCustomersPage .admin-table td{display:block; padding:0; border:0; font-size:13px; color:var(--ink-soft); text-align:start !important;}
+  #adminCustomersPage .admin-table td:nth-child(1){grid-column:1; font-size:15px; font-weight:800; color:var(--ink);}
+  #adminCustomersPage .admin-table td:nth-child(2){grid-column:2; grid-row:1; font-weight:700; color:var(--ink);}
+  #adminCustomersPage .admin-table td:nth-child(3), #adminCustomersPage .admin-table td:nth-child(4), #adminCustomersPage .admin-table td:nth-child(5){grid-column:1 / -1;}
+  #adminCustomersPage .admin-table td:last-child{grid-column:1 / -1; display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; padding-top:10px; border-top:1px solid var(--border); white-space:normal !important;}
+  #adminCustomersPage .admin-table td[colspan]{grid-column:1 / -1; border:0; margin:0; padding:0;}
+}
+/* ---------- رابط الباسورد الجديد ---------- */
+.rst-modal{padding:30px 24px 24px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px;}
+.rst-ic{width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:30px; background:linear-gradient(135deg, var(--pink-pale), var(--sunshine-pale));}
+.rst-modal h3{margin:4px 0 0; font-size:19px;}
+.rst-sub{margin:0; font-size:14px; color:var(--ink-soft); line-height:1.7;}
+.rst-link{width:100%; padding:10px 12px; border-radius:12px; border:1.5px dashed var(--pink-line); background:var(--surface-3); font-family:ui-monospace, Menlo, Consolas, monospace; font-size:12px; color:var(--ink); overflow-wrap:anywhere; text-align:left;}
+.rst-note{margin:0; font-size:12px; color:var(--ink-faint);}
+.rst-fields{width:100%; display:flex; flex-direction:column; gap:10px; margin-top:4px;}
+.rst-fields input[type="password"], .rst-fields input[type="text"]{width:100%; padding:12px 14px; border-radius:12px; border:1.5px solid var(--border); background:var(--surface-3); color:var(--ink); font-family:inherit; font-size:15px; text-align:center;}
+.rst-show{display:flex; align-items:center; justify-content:center; gap:6px; font-size:13px; color:var(--ink-soft);}
+.rst-err{margin:0; font-size:13px; color:var(--pink-deep);}
+.rst-err[hidden]{display:none;}
+.rst-btns{width:100%; display:flex; flex-direction:column; gap:8px; margin-top:6px;}
+.rst-btns .btn{justify-content:center;}
 /* ---------- أكواد الخصم (الإدارة) ---------- */
 .cpn-gen{display:flex; flex-direction:column; gap:10px; margin-bottom:18px;}
 .cpn-gen-head{display:flex; align-items:center; gap:12px; margin-bottom:4px;}
@@ -8125,9 +8152,12 @@ function renderAdminCustomersPage(){
           + '<td>'+String(c.email||"-")+'</td>'
           + '<td>'+(c.governorate?t(c.governorate):"-")+'</td>'
           + '<td>'+String(c.address||"-")+'</td>'
-          + '<td style="white-space:nowrap;"><button type="button" class="btn btn-outline btn-sm" data-cust-edit="'+i+'">'+t("✏️ تعديل")+'</button> <button type="button" class="btn btn-outline btn-sm" data-cust-del="'+i+'" style="color:var(--pink-deep);">🗑️</button></td>'
+          + '<td style="white-space:nowrap;"><button type="button" class="btn btn-outline btn-sm" data-cust-edit="'+i+'">'+t("✏️ تعديل")+'</button> <button type="button" class="btn btn-outline btn-sm" data-cust-reset="'+i+'" title="'+t("رابط باسورد جديد")+'">🔑 '+t("باسورد")+'</button> <button type="button" class="btn btn-outline btn-sm" data-cust-del="'+i+'" style="color:var(--pink-deep);">🗑️</button></td>'
         + '</tr>';
       }).join("");
+      body.querySelectorAll("[data-cust-reset]").forEach(function(btn){
+        btn.addEventListener("click", function(){ adminCustomerResetLink(ADMIN_CUSTOMERS_CACHE[+btn.dataset.custReset]); });
+      });
       body.querySelectorAll("[data-cust-edit]").forEach(function(btn){
         btn.addEventListener("click", function(){ showAdminCustomerEditForm(ADMIN_CUSTOMERS_CACHE[+btn.dataset.custEdit]); });
       });
@@ -8142,6 +8172,126 @@ function renderAdminCustomersPage(){
     })
     .catch(function(){ body.innerHTML = '<tr><td colspan="6" style="color:var(--pink-deep);">'+t("تعذر تحميل بيانات العملاء.")+'</td></tr>'; });
 }
+/* ---------- إعادة تعيين باسورد العميل من الإدارة ----------
+   الأدمن بيعمل رابط لمرة واحدة (صالح 24 ساعة) ويبعته للعميل على
+   واتساب، والعميل بيفتحه ويكتب الباسورد الجديد بنفسه. */
+function waPhone(p){
+  var d = String(p || "").replace(/[^0-9]/g, "");
+  if(d.indexOf("00") === 0) d = d.slice(2);
+  if(d.charAt(0) === "0") d = "20" + d.slice(1);
+  return d;
+}
+function adminCustomerResetLink(c){
+  if(!c) return;
+  appConfirm({ icon:"🔑", title:t("رابط باسورد جديد"),
+    message:t("هنعمل رابط للعميل")+' "'+(c.name||c.identifier)+'" '+t("يفتحه ويكتب باسورد جديد بنفسه. الرابط صالح 24 ساعة ولمرة واحدة، والباسورد القديم بيفضل شغال لحد ما يغيّره."),
+    ok:t("اعمل الرابط") })
+  .then(function(ok){
+    if(!ok) return;
+    fetch("/api/admin/customer-reset", {
+      method:"POST",
+      headers: Object.assign({ "content-type":"application/json" }, adminAuthHeaders()),
+      body: JSON.stringify({ id: c.id })
+    }).then(function(r){ return r.json(); }).then(function(res){
+      if(!res || !res.ok){ showToast(t("⚠️ تعذر عمل الرابط، جرّب تاني.")); return; }
+      showCustomerResetLinkModal(res);
+    }).catch(function(){ showToast(t("⚠️ تعذر الاتصال بالسيرفر.")); });
+  });
+}
+function showCustomerResetLinkModal(r){
+  var first = String(r.name||"").split(" ")[0];
+  var msg = t("أهلاً")+" "+(first||"")+" 👋\n"
+    + t("ده رابط تعمل منه باسورد جديد لحسابك في متجر آل عبده")+":\n"
+    + r.link + "\n"
+    + t("الرابط صالح 24 ساعة ولمرة واحدة بس 🔒");
+  var html = '<button class="modal-close" id="modalCloseBtn" aria-label="'+t("إغلاق")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
+    + '<div class="modal-info rst-modal">'
+      + '<div class="rst-ic" aria-hidden="true">🔑</div>'
+      + '<h3>'+t("رابط الباسورد الجديد جاهز")+'</h3>'
+      + '<p class="rst-sub">'+t("ابعته للعميل")+' <strong>'+escHtml(r.name||"")+'</strong> <bdi dir="ltr">'+escHtml(r.phone||"")+'</bdi></p>'
+      + '<div class="rst-link" dir="ltr">'+escHtml(r.link)+'</div>'
+      + '<p class="rst-note">'+t("صالح لحد")+' '+new Date(r.expiresAt).toLocaleString(LANG==="en"?"en-US":"ar-EG", { weekday:"long", hour:"numeric", minute:"2-digit" })+' · '+t("لمرة واحدة بس")+'</p>'
+      + '<div class="rst-btns">'
+        + '<button type="button" class="btn btn-primary" id="rstWa">💬 '+t("ابعته واتساب للعميل")+'</button>'
+        + '<button type="button" class="btn btn-outline" id="rstCopy">📋 '+t("نسخ الرسالة")+'</button>'
+      + '</div>'
+    + '</div>';
+  var card = document.getElementById("modalCard");
+  card.classList.add("acct-card");
+  card.innerHTML = html;
+  document.getElementById("modalCloseBtn").addEventListener("click", closeAllPanels);
+  document.getElementById("rstWa").addEventListener("click", function(){
+    var url = "https://wa.me/" + waPhone(r.phone) + "?text=" + encodeURIComponent(msg);
+    if(window.AlAbdoNative) location.href = url; else window.open(url, "_blank", "noopener");
+  });
+  document.getElementById("rstCopy").addEventListener("click", function(){
+    copyText(msg).then(function(ok){ showToast(ok ? t("📋 اتنسخت الرسالة بالرابط") : t("⚠️ معرفناش ننسخ، انسخ الرابط يدوي")); });
+  });
+  modalBackdrop.classList.add("show"); overlay.classList.add("show"); document.body.style.overflow="hidden";
+}
+
+/* العميل فاتح رابط ?reset=... → شاشة "باسورد جديد" */
+function customerResetFromLink(){
+  var m = /[?&]reset=([a-f0-9]{40})\b/.exec(location.search);
+  if(!m) return;
+  var token = m[1];
+  try{
+    var u = new URL(location.href); u.searchParams.delete("reset");
+    history.replaceState(history.state, "", u.pathname + (u.search ? u.search : "") + u.hash);
+  }catch(e){}
+  var card = document.getElementById("modalCard");
+  function open(inner){
+    card.classList.add("acct-card");
+    card.innerHTML = '<button class="modal-close" id="modalCloseBtn" aria-label="'+t("إغلاق")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
+      + '<div class="modal-info rst-modal">'+inner+'</div>';
+    document.getElementById("modalCloseBtn").addEventListener("click", closeAllPanels);
+    modalBackdrop.classList.add("show"); document.body.style.overflow="hidden";
+  }
+  function bad(reason){
+    open('<div class="rst-ic" aria-hidden="true">⏳</div><h3>'+(reason==="expired" ? t("الرابط ده انتهى") : t("الرابط ده مش شغال"))+'</h3>'
+      + '<p class="rst-sub">'+(reason==="expired" ? t("روابط الباسورد صالحة 24 ساعة بس.") : t("ممكن يكون اتستخدم قبل كده."))+' '+t("كلّم المتجر على واتساب يبعتلك رابط جديد.")+'</p>'
+      + '<div class="rst-btns"><button type="button" class="btn btn-primary" id="rstOk">'+t("تمام")+'</button></div>');
+    document.getElementById("rstOk").addEventListener("click", closeAllPanels);
+  }
+  fetch("/api/customers/reset-confirm?token=" + token, { cache:"no-store" }).then(function(r){ return r.json(); }).then(function(info){
+    if(!info || !info.ok){ bad(info && info.reason); return; }
+    open('<div class="rst-ic" aria-hidden="true">🔑</div>'
+      + '<h3>'+t("اعمل باسورد جديد")+'</h3>'
+      + '<p class="rst-sub">'+t("أهلاً")+' '+escHtml(info.name||"")+' — '+t("حسابك")+' <span dir="ltr" style="display:inline-block; direction:ltr; unicode-bidi:isolate;">'+escHtml(info.phone||"")+'</span></p>'
+      + '<div class="rst-fields">'
+        + '<input type="password" id="rstPw1" autocomplete="new-password" placeholder="'+t("الباسورد الجديد (6 حروف/أرقام على الأقل)")+'">'
+        + '<input type="password" id="rstPw2" autocomplete="new-password" placeholder="'+t("اكتبه تاني للتأكيد")+'">'
+        + '<label class="rst-show"><input type="checkbox" id="rstShow"> '+t("إظهار الباسورد")+'</label>'
+      + '</div>'
+      + '<p class="rst-err" id="rstErr" hidden></p>'
+      + '<div class="rst-btns"><button type="button" class="btn btn-primary" id="rstSave">'+t("حفظ الباسورد الجديد")+'</button></div>');
+    document.getElementById("rstShow").addEventListener("change", function(){
+      var ty = this.checked ? "text" : "password";
+      document.getElementById("rstPw1").type = ty; document.getElementById("rstPw2").type = ty;
+    });
+    document.getElementById("rstSave").addEventListener("click", function(){
+      var btn = this, err = document.getElementById("rstErr");
+      var p1 = document.getElementById("rstPw1").value, p2 = document.getElementById("rstPw2").value;
+      err.hidden = true;
+      if(p1.length < 6){ err.textContent = t("الباسورد لازم يكون 6 حروف أو أرقام على الأقل."); err.hidden = false; return; }
+      if(p1 !== p2){ err.textContent = t("الباسوردين مش زي بعض، اكتبهم تاني."); err.hidden = false; return; }
+      btn.disabled = true;
+      fetch("/api/customers/reset-confirm", { method:"POST", headers:{ "content-type":"application/json" }, body: JSON.stringify({ token: token, password: p1 }) })
+        .then(function(r){ return r.json(); }).then(function(res){
+          btn.disabled = false;
+          if(res && res.ok){
+            setCustomerSession(res.phone, p1, res.name, res.email, res.governorate, res.address);
+            if(typeof updateAccountLabel === "function") updateAccountLabel();
+            closeAllPanels();
+            showToast("✅ "+t("اتغير الباسورد واتسجل دخولك"));
+          } else if(res && (res.reason==="expired" || res.reason==="bad_link")){ bad(res.reason); }
+          else { err.textContent = t("حصلت مشكلة، جرّب تاني."); err.hidden = false; }
+        }).catch(function(){ btn.disabled = false; err.textContent = t("تعذر الاتصال بالإنترنت، جرّب تاني."); err.hidden = false; });
+    });
+  }).catch(function(){});
+}
+setTimeout(customerResetFromLink, 700);
+
 function deleteAdminCustomer(c){
   if(!c) return;
   fetch("/api/admin/customers", {

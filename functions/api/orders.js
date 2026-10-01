@@ -1,5 +1,6 @@
 import { json, getList, saveList, requireAdmin, requireCustomer, getCatalog, saveCatalog } from "../_lib.js";
 import { getCoupons, saveCoupons, findCoupon, couponState, usedBy, perCustomerLimit, normPhone } from "../_coupons.js";
+import { dataUrlToBytes, sha256Bytes, checkReceipt, normRef } from "../_payproof.js";
 
 /* GET /api/orders - admin headers return every order (for the admin
    dashboard's order list); customer headers return only that customer's
@@ -125,6 +126,35 @@ export async function onRequestPost({ request, env }){
     order.total = Math.max(0, itemsSubtotal - order.discount) + order.shipping;
   }
 
+  /* فودافون كاش / إنستاباي: الإيصال لازم يكون اتراجع آليًا قبل كده من
+     /api/verify-proof (الرقم المحوّل له هو رقم المتجر، والمبلغ يغطي
+     الإجمالي، ومش مستخدم قبل كده). لو مش متراجع (مثلاً نسخة قديمة من
+     الصفحة) بنراجعه هنا. "manual" = المراجعة الآلية مش متاحة دلوقتي،
+     فالطلب بيتسجل وبيتعلّم إنه محتاج مراجعة يدوية من الأدمن. */
+  var proofHash = null, proofRef = "";
+  if(order.paymentMethod === "vodafone" || order.paymentMethod === "instapay"){
+    var pimg = dataUrlToBytes(body.paymentProof);
+    if(!pimg) return json({ ok:false, error:"proof_missing" }, 400);
+    proofHash = await sha256Bytes(pimg.bytes);
+    if(await env.STORE_KV.get("pimg:" + proofHash)) return json({ ok:false, error:"proof_reused" }, 409);
+    var pv = null;
+    try{ var pvRaw = await env.STORE_KV.get("pv:" + proofHash); pv = pvRaw ? JSON.parse(pvRaw) : null; }catch(e){ pv = null; }
+    if(!pv) pv = await checkReceipt(env, pimg, order.total);
+    if(pv.status === "fail") return json({ ok:false, error:"proof_" + (pv.reason || "invalid"), amount: pv.amount, total: order.total }, 409);
+    if(pv.status === "ok" && (+pv.amount || 0) + 1 < order.total) return json({ ok:false, error:"proof_low_amount", amount: pv.amount, total: order.total }, 409);
+    proofRef = normRef(pv.reference || "");
+    if(proofRef.length >= 6 && await env.STORE_KV.get("pref:" + proofRef)) return json({ ok:false, error:"proof_reused" }, 409);
+    order.proofCheck = {
+      status: pv.status,
+      amount: pv.amount != null ? pv.amount : null,
+      recipient: pv.recipient || "",
+      recipientName: pv.recipientName || "",
+      reference: pv.reference || "",
+      provider: pv.provider || "",
+      date: pv.date || ""
+    };
+  }
+
   /* سكرين شوت التحويل (فودافون كاش / إنستاباي) بيتخزن لوحده في KV
      بمفتاح "proof:<رقم الطلب>" بجودته الكاملة، بدل ما يتحط جوه قائمة
      الطلبات نفسها (كانت بتكبر وتتقل مع كل طلب). الطلب بيشيل بس علامة
@@ -164,6 +194,14 @@ export async function onRequestPost({ request, env }){
   var list = await getList(env, "orders");
   list.push(order);
   await saveList(env, "orders", list);
+
+  /* الإيصال اتستخدم خلاص: نفس الصورة أو نفس رقم العملية مش هينفعوا لطلب تاني */
+  if(proofHash){
+    try{
+      await env.STORE_KV.put("pimg:" + proofHash, order.id);
+      if(proofRef.length >= 6) await env.STORE_KV.put("pref:" + proofRef, order.id);
+    }catch(e){}
+  }
 
   if(coupon){
     try{
@@ -313,6 +351,7 @@ async function sendGuestOrderEmail(order, env){
   if(order.governorate) lines.push("المحافظة: " + order.governorate);
   lines.push("العنوان: " + (order.address || "-"));
   lines.push("وسيلة الدفع: " + (order.paymentMethod || "-"));
+  if(order.proofCheck) lines.push("مراجعة الإيصال: " + (order.proofCheck.status === "ok" ? "✅ اتراجع آليًا" : "⚠️ محتاج مراجعة يدوية") + (order.proofCheck.amount != null ? " - المبلغ " + order.proofCheck.amount + " ج.م" : "") + (order.proofCheck.reference ? " - رقم العملية " + order.proofCheck.reference : ""));
   if(order.proofStored || order.paymentProof) lines.push("سكرين شوت التحويل: مرفق - افتحه ونزّله من لوحة التحكم ← الطلبات ← فاتورة #" + String(order.id).slice(-6));
   if(order.notes) lines.push("ملاحظات: " + order.notes);
 

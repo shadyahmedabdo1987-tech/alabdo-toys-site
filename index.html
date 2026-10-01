@@ -508,6 +508,9 @@ html[dir="ltr"] .drawer.show{transform:translateX(0);}
 .cart-empty{text-align:center; color:var(--ink-soft); padding:50px 10px; display:flex; flex-direction:column; align-items:center; gap:10px;}
 .cart-empty .emoji{font-size:52px;}
 .drawer-foot{border-top:1px solid var(--border); padding:16px 20px calc(16px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:0;}
+/* خطوات البيانات والدفع ممكن تبقى أطول من الشاشة (إنستاباي + QR + الإيصال):
+   الجزء ده بقى بيتسحب لتحت لوحده بدل ما يتقص */
+.drawer-foot{flex:0 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch;}
 .cart-foot-step{display:flex; flex-direction:column; gap:12px;}
 .cart-total-row{display:flex; justify-content:space-between; font-weight:800; font-size:16px;}
 .cart-total-row.sub{font-weight:700; font-size:13.5px; color:var(--ink-soft);}

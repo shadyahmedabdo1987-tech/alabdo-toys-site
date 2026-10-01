@@ -91,7 +91,9 @@ var PROMPT = [
   ' "success": true/false/null (does it say the transfer succeeded?),',
   ' "provider": "vodafone_cash" | "instapay" | "bank" | "other",',
   ' "amount": number or null (the amount TRANSFERRED in EGP, not the fees, not the balance),',
-  ' "recipient": string (the receiver phone number / account / InstaPay address exactly as shown, keep * if masked; "" if not shown),',
+  ' "recipient": string (the RECEIVER (To / إلى / المستلم) phone number. If the full number is written anywhere in the receiver section, give the FULL number, not a masked one. Keep * only if it is masked everywhere; "" if not shown),',
+  ' "recipient_numbers": array of strings (EVERY phone number / account number / InstaPay address shown in the receiver (To) section, full or masked, exactly as written),',
+  ' "sender": string (the SENDER (From / من) phone / address, "" if not shown),',
   ' "recipient_name": string ("" if not shown),',
   ' "reference": string (transaction ID / reference number; "" if not shown),',
   ' "date": "YYYY-MM-DD" or "" }'
@@ -184,8 +186,15 @@ export async function checkReceipt(env, img, expectedTotal){
 
   if(r.is_receipt === false) return fail("not_receipt");
   if(r.success === false) return fail("not_success");
-  if(!res.recipient) return fail("no_recipient");
-  if(!recipientMatches(res.recipient, env)) return fail("wrong_recipient");
+  /* the receiver may be written twice (masked + full): a FULL number wins */
+  var cands = [res.recipient].concat(Array.isArray(r.recipient_numbers) ? r.recipient_numbers.map(function(x){ return toLatinDigits(x).slice(0, 60); }) : []).filter(Boolean);
+  var full = cands.filter(function(x){ return !/[*xX\u2022\u2026#]/.test(x) && (x.replace(/\D/g, "").length >= 10 || x.indexOf("@") > 0); });
+  if(!cands.length) return fail("no_recipient");
+  if(full.length){
+    res.recipient = full[0];
+    if(!full.some(function(x){ return recipientMatches(x, env); })) return fail("wrong_recipient");
+    res.recipient = full.filter(function(x){ return recipientMatches(x, env); })[0];
+  } else if(!cands.some(function(x){ return recipientMatches(x, env); })) return fail("wrong_recipient");
   if(res.amount == null) return fail("no_amount");
   if(res.amount + 1 < (+expectedTotal || 0)) return fail("low_amount");
   if(/^\d{4}-\d{2}-\d{2}$/.test(res.date)){

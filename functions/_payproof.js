@@ -21,14 +21,13 @@ var MAX_AGE_DAYS = 3;
    don't all take the same input shape. The first one that answers is
    remembered in KV ("ai:variant") and tried first next time. */
 var L4 = "@cf/meta/llama-4-scout-17b-16e-instruct";
-var G3 = "@cf/google/gemma-3-12b-it";
-var L32 = "@cf/meta/llama-3.2-11b-vision-instruct";
+/* Tested on the live site (Oct 2026): only Llama 4 Scout with the image
+   inside the message (image_url data URL) really reads the receipt. The
+   other shapes either fail or answer WITHOUT looking at the image (made-up
+   numbers), so they are not used - if this one fails the order is marked
+   for manual review instead of trusting a guess. */
 export var VARIANTS = [
-  { id: "l4-msg-url", model: L4, build: function(p, img){ return { messages: [{ role: "user", content: [{ type: "text", text: p }, { type: "image_url", image_url: { url: "data:" + img.type + ";base64," + img.b64 } }] }], max_tokens: 500, temperature: 0 }; } },
-  { id: "l4-msg-img", model: L4, build: function(p, img){ return { messages: [{ role: "user", content: p }], image: img.b64, max_tokens: 500, temperature: 0 }; } },
-  { id: "l4-prompt-img", model: L4, build: function(p, img){ return { prompt: p, image: img.b64, max_tokens: 500, temperature: 0 }; } },
-  { id: "g3-msg-url", model: G3, build: function(p, img){ return { messages: [{ role: "user", content: [{ type: "text", text: p }, { type: "image_url", image_url: { url: "data:" + img.type + ";base64," + img.b64 } }] }], max_tokens: 500, temperature: 0 }; } },
-  { id: "l32-msg-bytes", model: L32, needsAgree: true, build: function(p, img){ return { messages: [{ role: "user", content: p }], image: Array.from(img.bytes), max_tokens: 500, temperature: 0 }; } }
+  { id: "l4-msg-url", model: L4, build: function(p, img){ return { messages: [{ role: "user", content: [{ type: "text", text: p }, { type: "image_url", image_url: { url: "data:" + img.type + ";base64," + img.b64 } }] }], max_tokens: 500, temperature: 0 }; } }
 ];
 
 export function storeNumbers(env){
@@ -104,6 +103,7 @@ function extractJson(out){
     if(out.response != null) return extractJson(out.response);
     if("is_receipt" in out || "amount" in out) return out;
     if(out.choices && out.choices[0] && out.choices[0].message) return extractJson(out.choices[0].message.content);
+    if(out.choices && out.choices[0] && out.choices[0].text != null) return extractJson(out.choices[0].text);
     return null;
   }
   var s = String(out);

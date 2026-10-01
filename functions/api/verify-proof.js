@@ -1,5 +1,5 @@
 import { json, requireAdmin } from "../_lib.js";
-import { dataUrlToBytes, checkReceipt, diagnose, recipientMatches } from "../_payproof.js";
+import { dataUrlToBytes, checkReceipt, diagnose, checkReceiptFromJson } from "../_payproof.js";
 
 /* POST /api/verify-proof  {image: "data:image/...;base64,...", total}
    Checks the transfer screenshot BEFORE the customer can place the order
@@ -23,16 +23,14 @@ export async function onRequestPost(context){
        the "AI" binding reached the live site */
     d.envNames = Object.keys(env || {}).filter(function(k){ return /^[A-Z_][A-Z0-9_]*$/i.test(k); }).sort();
     d.build = "verify-proof v3";
-    /* same rule as the real check: a FULL receiver number (if any) decides */
-    d.results.forEach(function(r){
-      if(!r.json) return;
-      var c = [r.json.recipient].concat(Array.isArray(r.json.recipient_numbers) ? r.json.recipient_numbers : []).filter(Boolean).map(String);
-      var full = c.filter(function(x){ return !/[*xX\u2022\u2026#]/.test(x) && (x.replace(/\D/g, "").length >= 10 || x.indexOf("@") > 0); });
-      var pool = full.length ? full : c;
-      var hit = pool.filter(function(x){ return recipientMatches(x, env); });
-      r.recipientOk = hit.length > 0;
-      r.json.recipient = (hit[0] || pool[0] || r.json.recipient || "");
-    });
+    /* show what the real check decided (same rules, see _payproof.js) */
+    for(var di = 0; di < d.results.length; di++){
+      var rr = d.results[di];
+      if(!rr.json) continue;
+      var c = await checkReceiptFromJson(env, rr.json);
+      rr.recipientOk = c.ok;
+      rr.json.recipient = c.recipient;
+    }
     return json({ ok:true, diag: d });
   }
   return verify(request, env);

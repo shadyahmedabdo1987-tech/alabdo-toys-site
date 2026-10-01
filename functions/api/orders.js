@@ -1,5 +1,5 @@
 import { json, getList, saveList, requireAdmin, requireCustomer, getCatalog, saveCatalog } from "../_lib.js";
-import { getCoupons, saveCoupons, findCoupon, couponState, usedBy, normPhone } from "../_coupons.js";
+import { getCoupons, saveCoupons, findCoupon, couponState, usedBy, perCustomerLimit, normPhone } from "../_coupons.js";
 
 /* GET /api/orders - admin headers return every order (for the admin
    dashboard's order list); customer headers return only that customer's
@@ -96,7 +96,7 @@ export async function onRequestPost({ request, env }){
     coupon = findCoupon(couponList, body.couponCode);
     var cst = couponState(coupon);
     if(cst !== "ok") return json({ ok:false, error:"coupon_" + cst }, 409);
-    if(usedBy(coupon, customer, phone)) return json({ ok:false, error:"coupon_used" }, 409);
+    if(usedBy(coupon, customer, phone)) return json({ ok:false, error:"coupon_used", limit: perCustomerLimit(coupon) }, 409);
   }
 
   var order = {

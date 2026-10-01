@@ -19,6 +19,10 @@ export async function onRequestPost(context){
     var im0 = dataUrlToBytes(b0 && b0.image);
     if(!im0) return json({ ok:false, error:"bad_image" }, 400);
     var d = await diagnose(env, im0);
+    /* names only (never values) of what this deployment can see - shows if
+       the "AI" binding reached the live site */
+    d.envNames = Object.keys(env || {}).filter(function(k){ return /^[A-Z_][A-Z0-9_]*$/i.test(k); }).sort();
+    d.build = "verify-proof v3";
     d.results.forEach(function(r){ if(r.json && r.json.recipient != null) r.recipientOk = recipientMatches(r.json.recipient, env); });
     return json({ ok:true, diag: d });
   }

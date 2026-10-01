@@ -8446,7 +8446,8 @@ function openProofDiag(){
       .then(function(r){ return r.json(); }).then(function(res){
         if(!res || !res.ok){ out.innerHTML = '<p class="rst-err">'+t("تعذر الفحص")+': '+escHtml((res && res.error) || "")+'</p>'; return; }
         var d = res.diag;
-        if(!d.hasAI){ out.innerHTML = '<div class="pv-box is-fail"><span class="pv-ic">✕</span><div><strong>'+t("ربط الذكاء الاصطناعي (AI) مش موجود")+'</strong><span>'+t("لازم تضيف Workers AI باسم AI في Cloudflare ← Workers & Pages ← alabdo-toys-site ← Settings ← Bindings، وبعدها ترفع أي ملف عشان يتعمل نشر جديد.")+'</span></div></div>'; return; }
+        if(!d.hasAI){ out.innerHTML = '<div class="pv-box is-fail"><span class="pv-ic">✕</span><div><strong>'+t("ربط الذكاء الاصطناعي (AI) مش موجود")+'</strong><span>'+t("لازم تضيف Workers AI باسم AI في Cloudflare ← Workers & Pages ← alabdo-toys-site ← Settings ← Bindings، وبعدها ترفع أي ملف عشان يتعمل نشر جديد.")+'</span>'
+          + '<span dir="ltr" style="font-size:11px;">'+escHtml((d.build||"old build")+" · env: "+((d.envNames||[]).join(", ")||"-"))+'</span></div></div>'; return; }
         var anyOk = d.results.some(function(r){ return r.ok; });
         out.innerHTML = (anyOk
             ? '<div class="pv-box is-ok"><span class="pv-ic">✓</span><div><strong>'+t("المراجعة الآلية شغالة")+'</strong><span>'+t("على الأقل موديل واحد قرا الإيصال.")+'</span></div></div>'

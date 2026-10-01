@@ -909,6 +909,31 @@ html[dir="ltr"] .ab-bar i{transform-origin:left center;}
 .cpn-actions .btn{padding-inline:8px; justify-content:center; white-space:nowrap;}
 .cpn-actions .cpn-del{color:var(--pink-deep); border-color:color-mix(in srgb, var(--pink-deep) 45%, var(--border));}
 .order-card-coupon{font-size:12px; font-weight:700; color:var(--pink-deep); background:var(--pink-pale); border-radius:8px; padding:4px 9px; align-self:flex-start;}
+/* ---------- مراجعة إيصال التحويل آليًا (السلة) ---------- */
+.pv-hint{margin:0; font-size:12.5px; color:var(--ink-soft); line-height:1.6;}
+.pv-box{display:flex; align-items:flex-start; gap:12px; padding:12px 14px; border-radius:14px; border:1.5px solid var(--border); background:var(--surface-3); text-align:start;}
+.pv-box > div{display:flex; flex-direction:column; gap:3px; min-width:0;}
+.pv-box strong{font-size:14px; color:var(--ink); line-height:1.4;}
+.pv-box span{font-size:12.5px; color:var(--ink-soft); line-height:1.6; overflow-wrap:anywhere;}
+.pv-ic{flex:none; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:900; font-size:18px;}
+.pv-ic svg{width:20px; height:20px;}
+.pv-box.is-ok{border-color:color-mix(in srgb, #1fb87f 55%, var(--border)); background:color-mix(in srgb, #1fb87f 10%, var(--surface));}
+.pv-box.is-ok .pv-ic{background:#1fb87f; box-shadow:0 4px 12px color-mix(in srgb, #1fb87f 40%, transparent); animation:pvPop .45s cubic-bezier(.3,1.8,.5,1);}
+.pv-box.is-ok strong{color:color-mix(in srgb, #1fb87f 70%, var(--ink));}
+.pv-box.is-fail{border-color:color-mix(in srgb, #e0364f 55%, var(--border)); background:color-mix(in srgb, #e0364f 9%, var(--surface));}
+.pv-box.is-fail .pv-ic{background:#e0364f;}
+.pv-box.is-fail strong{color:color-mix(in srgb, #e0364f 75%, var(--ink));}
+.pv-box.is-manual{border-color:color-mix(in srgb, #ffb703 60%, var(--border)); background:color-mix(in srgb, #ffb703 12%, var(--surface));}
+.pv-box.is-manual .pv-ic{background:#e09400;}
+.pv-spin{flex:none; width:30px; height:30px; border-radius:50%; border:3px solid color-mix(in srgb, var(--pink) 25%, transparent); border-top-color:var(--pink); animation:pvSpin .8s linear infinite;}
+.pv-retry{align-self:flex-start; margin-top:4px; border:0; background:none; padding:0; color:var(--pink-deep); font-weight:800; font-size:13px; text-decoration:underline;}
+#paymentSubmitBtn:disabled{opacity:.5; cursor:not-allowed; filter:grayscale(.3);}
+.pv-admin{font-size:12.5px; line-height:1.7; padding:8px 10px; border-radius:10px; font-weight:700;}
+.pv-admin.is-ok{color:color-mix(in srgb, #1fb87f 70%, var(--ink)); background:color-mix(in srgb, #1fb87f 10%, var(--surface));}
+.pv-admin.is-manual{color:color-mix(in srgb, #e09400 75%, var(--ink)); background:color-mix(in srgb, #ffb703 14%, var(--surface));}
+@keyframes pvSpin{to{transform:rotate(360deg)}}
+@keyframes pvPop{from{transform:scale(.3)}to{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){ .pv-spin{animation-duration:2s;} .pv-box.is-ok .pv-ic{animation:none;} }
 /* ---------- كود الخصم في السلة ---------- */
 .coupon-box[hidden]{display:none;}
 .coupon-toggle{align-self:flex-start; border:0; background:none; padding:2px 0; color:var(--pink-deep); font-weight:800; font-size:13.5px; text-decoration:underline; text-underline-offset:4px; text-decoration-color:var(--pink-line);}
@@ -2818,8 +2843,14 @@ function loadProof(o, admin){
   p.catch(function(){ delete PROOF_CACHE[key]; });
   return p;
 }
+function proofCheckAdminHtml(o){
+  var c = o.proofCheck;
+  if(!c) return "";
+  if(c.status === "ok") return '<div class="pv-admin is-ok">✅ '+t("اتراجع آليًا")+': '+(c.amount!=null ? t("المبلغ")+' '+fmt(+c.amount)+' '+t("ج.م")+' · ' : '')+t("المستلم")+' <bdi dir="ltr">'+escHtml(c.recipient||"-")+'</bdi>'+(c.reference ? ' · '+t("رقم العملية")+' <bdi dir="ltr">'+escHtml(c.reference)+'</bdi>' : '')+(c.date ? ' · '+escHtml(c.date) : '')+'</div>';
+  return '<div class="pv-admin is-manual">⚠️ '+t("محتاج مراجعة يدوية — المراجعة الآلية ما اشتغلتش وقت الطلب. اتأكد إن الفلوس وصلت قبل الشحن.")+'</div>';
+}
 function proofBoxHtml(o){
-  return '<div class="proof-box" data-proof-box="'+escHtml(o.id)+'">'
+  return '<div class="proof-box" data-proof-box="'+escHtml(o.id)+'">'+proofCheckAdminHtml(o)
     + '<div class="proof-box-head"><span>🧾 '+t("سكرين شوت التحويل")+'</span><bdi dir="ltr" class="proof-box-meta" data-proof-meta></bdi></div>'
     + '<button type="button" class="proof-thumb" data-proof-open aria-label="'+t("عرض سكرين التحويل بالحجم الكامل")+'">'
       + '<span data-proof-loading>'+t("جاري تحميل الصورة...")+'</span>'
@@ -4650,9 +4681,65 @@ function paymentMethodNeedsProof(id){ return id === "vodafone" || id === "instap
 
 /* حالة خطوة الدفع في السلة: step بتتنقل بين "cart" (بيانات الشحن)
    و"payment" (اختيار وسيلة الدفع + سكرين شوت التحويل لو مطلوب). */
-var cartCheckout = { step:"cart", method:null, proofData:null, proofName:null };
+var cartCheckout = { step:"cart", method:null, proofData:null, proofName:null, proofCheck:null };
 function resetCartCheckout(){
-  cartCheckout = { step:"cart", method:null, proofData:null, proofName:null };
+  cartCheckout = { step:"cart", method:null, proofData:null, proofName:null, proofCheck:null };
+}
+/* ---------- مراجعة إيصال التحويل آليًا ----------
+   أول ما العميل يرفع السكرين، السيرفر بيقرا الإيصال ويتأكد إن التحويل على
+   رقم المتجر، والمبلغ مش أقل من إجمالي الطلب، والإيصال مش مستخدم قبل كده.
+   زرار "إتمام الطلب" مش بيشتغل غير لما المراجعة تعدّي (والسيرفر بيتأكد
+   تاني وقت تسجيل الطلب). */
+function proofReasonText(reason, amount, total){
+  return ({
+    not_receipt: t("الصورة دي مش إيصال تحويل. ارفع سكرين شوت التحويل نفسه."),
+    not_success: t("الإيصال ده بيقول إن التحويل ما تمّش."),
+    no_recipient: t("مش قادرين نقرا الرقم اللي اتحوّل له. ارفع صورة أوضح يبان فيها رقم المستلم."),
+    wrong_recipient: t("التحويل ده مش على رقم المتجر")+" ("+PAYMENT_TRANSFER_NUMBER+"). "+t("اتأكد إنك حوّلت على الرقم الصح."),
+    no_amount: t("مش قادرين نقرا المبلغ المحوَّل. ارفع صورة أوضح."),
+    low_amount: t("المبلغ المحوَّل")+(amount!=null ? " ("+fmt(+amount)+" "+t("ج.م")+")" : "")+" "+t("أقل من إجمالي الطلب")+(total!=null ? " ("+fmt(+total)+" "+t("ج.م")+")" : "")+".",
+    old: t("الإيصال ده قديم. ارفع إيصال التحويل الخاص بالطلب ده."),
+    reused: t("الإيصال ده اتستخدم قبل كده في طلب تاني."),
+    too_many: t("محاولات كتير، استنى شوية وجرّب تاني."),
+    too_big: t("الصورة كبيرة جدًا، جرّب سكرين شوت عادي."),
+    bad_image: t("الصورة مش واضحة، جرّب صورة تانية."),
+    missing: t("ارفع سكرين شوت التحويل الأول."),
+    network: t("تعذر مراجعة الإيصال، اتأكد من النت وجرّب تاني.")
+  })[reason] || t("الإيصال مش مطابق، اتأكد من البيانات وارفع صورة تانية.");
+}
+var proofCheckSeq = 0;
+function verifyProofNow(){
+  if(!cartCheckout.proofData) return;
+  var total = cartGrandTotal(), seq = ++proofCheckSeq;
+  cartCheckout.proofCheck = { state:"checking", total: total };
+  fetch("/api/verify-proof", {
+    method: "POST",
+    headers: { "content-type":"application/json" },
+    body: JSON.stringify({ image: cartCheckout.proofData, total: total })
+  }).then(function(r){ return r.json(); }).then(function(res){
+    if(seq !== proofCheckSeq) return;
+    var st = res && res.status;
+    cartCheckout.proofCheck = {
+      state: st === "ok" ? "ok" : (st === "manual" ? "manual" : "fail"),
+      reason: res && res.reason, amount: res && res.amount, reference: res && res.reference,
+      recipient: res && res.recipient, total: total
+    };
+    if(cartCheckout.step === "payment") renderCartPaymentStep();
+  }).catch(function(){
+    if(seq !== proofCheckSeq) return;
+    cartCheckout.proofCheck = { state:"fail", reason:"network", total: total, retry:true };
+    if(cartCheckout.step === "payment") renderCartPaymentStep();
+  });
+}
+function proofCheckHtml(){
+  var c = cartCheckout.proofCheck;
+  if(!c) return "";
+  if(c.state === "checking") return '<div class="pv-box is-checking" role="status"><span class="pv-spin" aria-hidden="true"></span><div><strong>'+t("جارٍ مراجعة الإيصال...")+'</strong><span>'+t("بنتأكد من رقم المتجر والمبلغ")+'</span></div></div>';
+  if(c.state === "ok") return '<div class="pv-box is-ok" role="status"><span class="pv-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><div><strong>'+t("تم مراجعة البيانات والتأكد من صحتها")+'</strong>'
+    + '<span>'+(c.amount!=null ? t("المبلغ")+": "+fmt(+c.amount)+" "+t("ج.م")+" · " : "")+t("محوَّل لرقم المتجر")+' ✓'+(c.reference ? ' · '+t("رقم العملية")+': <bdi dir="ltr">'+escHtml(c.reference)+'</bdi>' : '')+'</span></div></div>';
+  if(c.state === "manual") return '<div class="pv-box is-manual" role="status"><span class="pv-ic" aria-hidden="true">!</span><div><strong>'+t("استلمنا الإيصال")+'</strong><span>'+t("المراجعة الآلية مش متاحة دلوقتي، وهنراجعه بنفسنا قبل الشحن. تقدر تكمّل الطلب.")+'</span></div></div>';
+  return '<div class="pv-box is-fail" role="alert"><span class="pv-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M7 7l10 10M17 7 7 17"/></svg></span><div><strong>'+t("الإيصال مش مطابق")+'</strong><span>'+proofReasonText(c.reason, c.amount, c.total)+'</span>'
+    + (c.retry ? '<button type="button" class="pv-retry" id="pvRetry">'+t("حاول تاني")+'</button>' : '')+'</div></div>';
 }
 
 /* colorName/sizeLabel اختياريين - لو المنتج معاه ألوان أو أحجام علب،
@@ -4844,13 +4931,18 @@ function renderCartPaymentStep(){
       + '<div class="payment-transfer-number tabular">'+PAYMENT_TRANSFER_NUMBER+'</div>'
     + '</div>';
     if(cartCheckout.proofData){
+      /* الإجمالي اتغير بعد المراجعة (مثلاً كود خصم) → نراجع تاني */
+      if(!cartCheckout.proofCheck || (cartCheckout.proofCheck.state !== "checking" && cartCheckout.proofCheck.total !== grand && !cartCheckout.proofCheck.retry)) verifyProofNow();
+      proofSection += proofCheckHtml();
       proofSection += '<div class="payment-proof-preview"><img src="'+cartCheckout.proofData+'" alt="سكرين شوت التحويل"><button type="button" id="paymentProofRemove" class="payment-proof-remove">'+t("إزالة الصورة واختيار غيرها")+'</button></div>';
     } else {
+      proofSection += '<p class="pv-hint">🔍 '+t("هنراجع الإيصال آليًا: لازم يبان فيه رقم المتجر والمبلغ المحوَّل.")+'</p>';
       proofSection += '<div class="field" style="margin-bottom:0;"><label for="paymentProofInput">'+t("إرفاق سكرين شوت التحويل")+' *</label><input type="file" id="paymentProofInput" accept="image/*"></div>';
     }
   }
 
-  var submitBtnHtml = '<button type="button" class="btn btn-primary" style="flex:1;" id="paymentSubmitBtn">'+t("إتمام الطلب")+'</button>';
+  var pvBlocked = paymentMethodNeedsProof(cartCheckout.method) && (!cartCheckout.proofData || !cartCheckout.proofCheck || (cartCheckout.proofCheck.state !== "ok" && cartCheckout.proofCheck.state !== "manual"));
+  var submitBtnHtml = '<button type="button" class="btn btn-primary" style="flex:1;" id="paymentSubmitBtn"'+(pvBlocked ? ' disabled aria-disabled="true"' : '')+'>'+t("إتمام الطلب")+'</button>';
 
   container.innerHTML = (couponDiscount() ? '<div class="cart-total-row sub is-discount"><span>🎟️ '+t("خصم الكود")+' '+escHtml(CART_COUPON.code)+' ('+CART_COUPON.percent+'%)</span><span class="tabular">− '+fmt(couponDiscount())+' '+t('ج.م')+'</span></div>' : '')
     + '<div class="cart-total-row grand"><span>'+t("الإجمالي الكلي")+'</span><span class="tabular">'+fmt(grand)+' '+t('ج.م')+'</span></div>'
@@ -4881,6 +4973,8 @@ function renderCartPaymentStep(){
       readProofImage(file, function(dataUrl){
         cartCheckout.proofData = dataUrl;
         cartCheckout.proofName = file.name;
+        cartCheckout.proofCheck = null;
+        verifyProofNow();
         renderCartPaymentStep();
       });
     });
@@ -4890,9 +4984,13 @@ function renderCartPaymentStep(){
     proofRemove.addEventListener("click", function(){
       cartCheckout.proofData = null;
       cartCheckout.proofName = null;
+      cartCheckout.proofCheck = null;
+      proofCheckSeq++;
       renderCartPaymentStep();
     });
   }
+  var pvRetry = document.getElementById("pvRetry");
+  if(pvRetry) pvRetry.addEventListener("click", function(){ cartCheckout.proofCheck = null; verifyProofNow(); renderCartPaymentStep(); });
   document.getElementById("paymentSubmitBtn").addEventListener("click", handlePaymentSubmit);
 }
 
@@ -4907,6 +5005,11 @@ function validatePaymentStep(){
     errEl.textContent = t("من فضلك ارفق سكرين شوت التحويل عشان نقدر نأكد الطلب.");
     errEl.style.display = "block";
     return false;
+  }
+  if(paymentMethodNeedsProof(cartCheckout.method)){
+    var pc = cartCheckout.proofCheck;
+    if(!pc || pc.state === "checking"){ errEl.textContent = t("استنى لحد ما مراجعة الإيصال تخلص."); errEl.style.display = "block"; return false; }
+    if(pc.state === "fail"){ errEl.textContent = proofReasonText(pc.reason, pc.amount, pc.total); errEl.style.display = "block"; return false; }
   }
   errEl.style.display = "none";
   return true;
@@ -5252,6 +5355,9 @@ function submitOrderNow(e){
       resetCartCheckout();
       CART_COUPON = null;
       showOrderSuccessModal(f.phone);
+    } else if(res && /^proof_/.test(res.error||"")){
+      cartCheckout.proofCheck = { state:"fail", reason: res.error.replace(/^proof_/, ""), amount: res.amount, total: res.total != null ? res.total : grand };
+      renderCartPaymentStep();
     } else if(res && /^coupon_/.test(res.error||"")){
       /* الكود مبقاش صالح (اتستخدم قبل كده / خلص / اتوقف) - بنشيله ونوري
          الإجمالي الجديد من غير خصم قبل ما العميل يأكد تاني. */

@@ -10,7 +10,8 @@ import { json, requireAdmin, getAdminAccount, sha256Hex, getList } from "../../_
    POST /api/admin/feed  (X-Admin-User / X-Admin-Pass)
         {action:"token"}          -> {ok, token}
         {action:"revoke", token}  -> {ok}
-   GET  /api/admin/feed  (X-Notify-Token) -> latest 15 of each list, only
+   GET  /api/admin/feed  (X-Notify-Token) -> latest 15 of each list (product
+        requests are merged into inquiries), only
         the fields a notification needs.
    (ASCII-only comments on purpose, same as _lib.js.) */
 
@@ -63,6 +64,13 @@ export async function onRequestGet({ request, env }){
   var inquiries = (await getList(env, "inquiries")).slice(-15).map(function(q){
     return { id: q.id, name: q.name || "", message: String(q.message || "").slice(0, 120), createdAt: q.createdAt || 0 };
   });
+  /* "request a product" submissions ride along with the inquiries list, so
+     the admin app (which already notifies for new inquiries) shows them
+     without needing an app update. */
+  var productRequests = (await getList(env, "productRequests")).slice(-15).map(function(r){
+    return { id: r.id, name: r.name || "", message: ("\uD83E\uDDF8 " + "\u0637\u0644\u0628 \u062A\u0648\u0641\u064A\u0631 \u0645\u0646\u062A\u062C: " + (r.productName || "") + (r.specs ? " - " + r.specs : "")).slice(0, 120), createdAt: r.createdAt || 0 };
+  });
+  inquiries = inquiries.concat(productRequests).sort(function(a, b){ return (a.createdAt || 0) - (b.createdAt || 0); }).slice(-15);
   var stockRequests = (await getList(env, "stockRequests")).slice(-15).map(function(r){
     return { id: r.id, productName: r.productName || "", colorName: r.colorName || null, sizeLabel: r.sizeLabel || null, name: r.name || "", createdAt: r.createdAt || 0 };
   });

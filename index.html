@@ -832,6 +832,67 @@ html[dir="ltr"] .ab-bar i{transform-origin:left center;}
   .ab-slide{transition:none;}
   .ab-bar{display:none;}
 }
+/* ---------- أكواد الخصم (الإدارة) ---------- */
+.cpn-gen{display:flex; flex-direction:column; gap:10px; margin-bottom:18px;}
+.cpn-gen-head{display:flex; align-items:center; gap:12px; margin-bottom:4px;}
+.cpn-gen-ic{width:46px; height:46px; flex:none; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:24px; background:linear-gradient(135deg, var(--pink-pale), var(--sunshine-pale));}
+.cpn-gen-head h3{font-size:17px; margin:0;}
+.cpn-gen-head p{font-size:12.5px; color:var(--ink-soft); margin:2px 0 0;}
+.cpn-label{font-size:13px; font-weight:800; color:var(--ink);}
+.cpn-quick{display:flex; flex-wrap:wrap; gap:8px;}
+.cpn-quick button{min-width:56px; height:40px; padding:0 12px; border-radius:12px; border:1.5px solid var(--border); background:var(--surface-2); color:var(--ink); font-weight:800; font-size:14px; font-variant-numeric:tabular-nums;}
+.cpn-quick button.on{border-color:var(--pink); background:var(--pink-pale); color:var(--pink-deep);}
+.cpn-pct{display:flex; align-items:center; gap:8px; max-width:200px;}
+.cpn-pct input, .cpn-note{width:100%; padding:11px 14px; border-radius:12px; border:1.5px solid var(--border); background:var(--surface-3); color:var(--ink); font-family:inherit; font-size:15px;}
+.cpn-pct input{font-weight:800; font-variant-numeric:tabular-nums;}
+.cpn-pct span{font-weight:800; font-size:18px; color:var(--ink-soft);}
+.cpn-err{margin:0; color:var(--pink-deep); font-size:13px;}
+.cpn-err[hidden]{display:none;}
+.cpn-new{margin-top:6px; display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center; padding:16px 14px; border-radius:16px; border:2px dashed var(--pink); background:linear-gradient(135deg, var(--pink-pale), var(--sunshine-pale));}
+.cpn-new-label{font-size:13px; font-weight:800; color:var(--pink-deep);}
+.cpn-new-code{font-family:ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size:clamp(22px, 7vw, 30px); letter-spacing:.08em; color:var(--ink);}
+.cpn-new-meta{font-size:12px; color:var(--ink-soft);}
+.cpn-new-btns{display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:4px;}
+.cpn-list-title{margin:6px 0 10px;}
+.cpn-empty{font-size:13px; color:var(--ink-soft); text-align:center; padding:18px; border:1.5px dashed var(--border); border-radius:14px;}
+.cpn-card{background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:14px; display:flex; flex-direction:column; gap:8px;}
+.cpn-card-top{display:flex; justify-content:space-between; align-items:center; gap:10px;}
+.cpn-ticket{display:flex; align-items:center; gap:10px; min-width:0;}
+.cpn-ticket strong{font-family:ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size:17px; letter-spacing:.06em; overflow-wrap:anywhere;}
+.cpn-pct-badge{flex:none; min-width:48px; height:34px; padding:0 8px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:15px; color:#fff; background:linear-gradient(135deg, var(--pink), var(--pink-deep)); font-variant-numeric:tabular-nums;}
+.cpn-state{flex:none; font-size:12px; font-weight:800; padding:4px 10px; border-radius:999px;}
+.cpn-card.is-on .cpn-state{color:color-mix(in srgb, #1fb87f 70%, var(--ink)); background:color-mix(in srgb, #1fb87f 14%, var(--surface));}
+.cpn-card.is-off .cpn-state{color:color-mix(in srgb, #e09400 75%, var(--ink)); background:color-mix(in srgb, #ffb703 18%, var(--surface));}
+.cpn-card.is-exp .cpn-state{color:var(--ink-soft); background:var(--surface-2);}
+.cpn-card.is-exp .cpn-pct-badge, .cpn-card.is-off .cpn-pct-badge{background:var(--ink-faint);}
+.cpn-meta{margin:0; font-size:12.5px; color:var(--ink-soft);}
+.cpn-uses{font-size:12.5px;}
+.cpn-uses summary{cursor:pointer; font-weight:800; color:var(--pink-deep);}
+.cpn-uses ul{list-style:none; margin:8px 0 0; padding:0; display:flex; flex-direction:column; gap:6px;}
+.cpn-uses li{display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 8px; padding:6px 10px; border-radius:10px; background:var(--surface-2);}
+.cpn-uses li span{color:var(--ink-soft); font-size:11.5px; margin-inline-start:auto;}
+.cpn-uses-none{margin:0; font-size:12.5px; color:var(--ink-faint);}
+.cpn-actions{display:grid; grid-template-columns:repeat(auto-fit, minmax(72px, 1fr)); gap:8px; border-top:1px solid var(--border); padding-top:10px;}
+.cpn-actions .btn{padding-inline:8px; justify-content:center; white-space:nowrap;}
+.cpn-actions .cpn-del{color:var(--pink-deep); border-color:color-mix(in srgb, var(--pink-deep) 45%, var(--border));}
+.order-card-coupon{font-size:12px; font-weight:700; color:var(--pink-deep); background:var(--pink-pale); border-radius:8px; padding:4px 9px; align-self:flex-start;}
+/* ---------- كود الخصم في السلة ---------- */
+.coupon-box[hidden]{display:none;}
+.coupon-toggle{align-self:flex-start; border:0; background:none; padding:2px 0; color:var(--pink-deep); font-weight:800; font-size:13.5px; text-decoration:underline; text-underline-offset:4px; text-decoration-color:var(--pink-line);}
+.coupon-form{display:flex; gap:8px;}
+.coupon-form input{flex:1; min-width:0; padding:10px 12px; border-radius:12px; border:1.5px dashed var(--pink-line); background:var(--surface-3); color:var(--ink); font-family:inherit; font-size:14px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; text-align:left;}
+.coupon-form input:focus{outline:none; border-color:var(--pink); border-style:solid;}
+.coupon-msg{margin:6px 0 0; font-size:12.5px; color:var(--pink-deep); line-height:1.6;}
+.coupon-hint{margin:6px 0 0; font-size:12px; color:var(--ink-soft); line-height:1.6;}
+.coupon-link{border:0; background:none; padding:0; color:var(--pink-deep); font-weight:800; font-size:12px; text-decoration:underline;}
+.coupon-chip{display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:14px; border:1.5px dashed #1fb87f; background:color-mix(in srgb, #1fb87f 10%, var(--surface));}
+.coupon-chip-ic{font-size:20px;}
+.coupon-chip-tx{flex:1; min-width:0; display:flex; flex-direction:column; line-height:1.35;}
+.coupon-chip-tx strong{font-size:14px; letter-spacing:.06em; color:var(--ink); text-align:start;}
+.coupon-chip-tx span{font-size:12px; color:color-mix(in srgb, #1fb87f 70%, var(--ink)); font-weight:700;}
+.coupon-chip-x{width:30px; height:30px; flex:none; border:0; border-radius:50%; background:var(--surface-2); color:var(--ink-soft); font-size:13px;}
+.cart-total-row[hidden]{display:none;}
+.cart-total-row.is-discount{color:color-mix(in srgb, #1fb87f 70%, var(--ink));}
 /* ---------- سكرين شوت التحويل (إيصال فودافون كاش / إنستاباي) ---------- */
 .order-card-proof{font-size:12px; font-weight:700; color:#0f7a55; background:color-mix(in srgb, #1fb87f 13%, var(--surface)); border-radius:8px; padding:4px 9px; align-self:flex-start;}
 .proof-box{display:flex; flex-direction:column; gap:8px; border:1.5px dashed var(--border); border-radius:12px; padding:10px;}
@@ -2055,6 +2116,7 @@ setTimeout(appSplashHide, 15000);
             <button class="btn btn-primary btn-sm" id="adminAnalyticsBtn" type="button" data-i18n>📊 تحليل الزوار</button>
             <button class="btn btn-primary btn-sm" id="adminInquiriesBtn" type="button"><span data-i18n>📨 استفسارات العملاء</span><span id="adminInquiriesBadge" class="admin-badge" hidden>0</span></button>
             <button class="btn btn-primary btn-sm" id="adminCustomersBtn" type="button" data-i18n>👥 بيانات العملاء</button>
+            <button class="btn btn-primary btn-sm" id="adminCouponsBtn" type="button" data-i18n>🎟️ أكواد الخصم</button>
             <button class="btn btn-primary btn-sm" id="adminOrdersBtn" type="button" data-i18n>🧾 طلبات العملاء</button>
             <button class="btn btn-primary btn-sm" id="adminStockBtn" type="button" data-i18n>🔔 طلبات التوفر</button>
             <button class="btn btn-outline btn-sm" id="adminImportBtn" type="button" data-i18n>استيراد ملف بيانات</button>
@@ -2240,6 +2302,35 @@ setTimeout(appSplashHide, 15000);
         </div>
       </div>
 
+      <div id="adminCouponsPage" class="admin-wrap">
+        <div class="admin-bar">
+          <div><h1 style="font-size:22px;"><span data-i18n>🎟️ أكواد الخصم</span> (<span id="adminCouponsCount">0</span>)</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;" data-i18n>اعمل كود خصم بالنسبة اللي تختارها وابعته للعملاء — الكود صالح لمدة شهر، وكل عميل يستخدمه مرة واحدة بس.</p></div>
+          <div class="admin-actions">
+            <button class="btn btn-outline btn-sm" id="adminCouponsBackBtn" type="button" data-i18n>رجوع للوحة التحكم</button>
+          </div>
+        </div>
+        <div class="admin-card cpn-gen">
+          <div class="cpn-gen-head">
+            <span class="cpn-gen-ic" aria-hidden="true">🎟️</span>
+            <div><h3 data-i18n>كود خصم جديد</h3><p data-i18n>صالح 30 يوم من النهارده · كل عميل مرة واحدة بس من أي جهاز</p></div>
+          </div>
+          <label class="cpn-label" for="cpnPercent" data-i18n>نسبة الخصم</label>
+          <div class="cpn-quick" id="cpnQuick">
+            <button type="button" data-cpn-p="5">5%</button><button type="button" data-cpn-p="10">10%</button><button type="button" data-cpn-p="15">15%</button><button type="button" data-cpn-p="20">20%</button><button type="button" data-cpn-p="25">25%</button>
+          </div>
+          <div class="cpn-pct"><input id="cpnPercent" type="number" inputmode="numeric" min="1" max="90" step="1" placeholder="10"><span>%</span></div>
+          <label class="cpn-label" for="cpnNote" data-i18n>ملاحظة لنفسك (اختياري)</label>
+          <input id="cpnNote" class="cpn-note" type="text" maxlength="80" placeholder="مثلاً: عرض العيد / عملاء فيسبوك" data-i18n-placeholder>
+          <p id="cpnErr" class="cpn-err" hidden></p>
+          <button type="button" class="btn btn-primary btn-block" id="cpnCreate" data-i18n>✨ توليد كود الخصم</button>
+          <div id="cpnResult"></div>
+        </div>
+        <div class="adm-group-title cpn-list-title" data-i18n>الأكواد اللي عملتها</div>
+        <div id="adminCouponsList" style="display:flex; flex-direction:column; gap:12px;">
+          <p style="color:var(--ink-soft); font-size:13px;" data-i18n>جاري التحميل...</p>
+        </div>
+      </div>
+
       <div id="adminCustomersPage" class="admin-wrap">
         <div class="admin-bar">
           <div><h1 style="font-size:22px;"><span data-i18n>👥 بيانات العملاء</span> (<span id="adminCustomersCount">0</span>)</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;" data-i18n>كل العملاء اللي سجّلوا حساب على الموقع ببياناتهم، ومعاك صلاحية كاملة تعدّل أو تمسح أي حساب.</p></div>
@@ -2303,7 +2394,9 @@ setTimeout(appSplashHide, 15000);
   <div class="drawer-body" id="cartBody"></div>
   <div class="drawer-foot" id="cartFoot">
     <div class="cart-foot-step" id="cartFootStepCart">
+      <div class="coupon-box" id="couponBox"></div>
       <div class="cart-total-row sub"><span data-i18n>الإجمالي الفرعي</span><span class="tabular" id="cartSubtotal">0 ج.م</span></div>
+      <div class="cart-total-row sub is-discount" id="cartDiscountRow" hidden><span id="cartDiscountLabel">الخصم</span><span class="tabular" id="cartDiscount">0 ج.م</span></div>
       <div class="cart-total-row sub"><span data-i18n>الشحن</span><span class="tabular" id="cartShipping">0 ج.م</span></div>
       <div class="cart-total-row grand"><span data-i18n>الإجمالي الكلي</span><span class="tabular" id="cartTotal">0 ج.م</span></div>
       <button type="button" class="btn btn-primary btn-block" id="cartContinueBtn" data-i18n>استمرار</button>
@@ -2967,12 +3060,14 @@ function orderInvoiceHtml(o){
       + '<td class="tabular" style="text-align:left; padding:3px 0;">'+fmt(line)+'</td>'
     + '</tr>';
   }).join("");
-  var hasShipping = o.shipping != null && +o.shipping > 0;
-  var subtotal = o.subtotal != null ? o.subtotal : (o.total - (+o.shipping||0));
+  var hasDiscount = +o.discount > 0;
+  var hasShipping = (o.shipping != null && +o.shipping > 0) || hasDiscount;
+  var subtotal = o.subtotal != null ? o.subtotal : (o.total - (+o.shipping||0) + (+o.discount||0));
   var cur = t("ج.م");
   var totalsBlock = hasShipping
     ? '<div style="display:flex; flex-direction:column; gap:3px; font-size:12.5px; border-top:1.5px solid var(--border); padding-top:8px;">'
         + '<div style="display:flex; justify-content:space-between; color:var(--ink-soft);"><span>'+t("الإجمالي الفرعي")+'</span><span class="tabular">'+fmt(subtotal)+' '+cur+'</span></div>'
+        + (hasDiscount ? '<div class="is-discount" style="display:flex; justify-content:space-between; gap:8px; color:color-mix(in srgb, #1fb87f 70%, var(--ink)); font-weight:700;"><span>🎟️ '+t("خصم الكود")+' <bdi dir="ltr">'+escHtml(o.coupon||"")+'</bdi> ('+(+o.couponPercent||0)+'%)</span><span class="tabular">− '+fmt(+o.discount)+' '+cur+'</span></div>' : '')
         + '<div style="display:flex; justify-content:space-between; color:var(--ink-soft);"><span>'+t("الشحن")+'</span><span class="tabular">'+fmt(o.shipping)+' '+cur+'</span></div>'
         + '<div style="display:flex; justify-content:space-between; font-weight:800; font-size:13.5px; padding-top:4px;"><span>'+t("الإجمالي الكلي")+'</span><span class="tabular">'+fmt(o.total)+' '+cur+'</span></div>'
       + '</div>'
@@ -3453,6 +3548,23 @@ var I18N_EN = {
   "المفضلة ❤️": "Favorites ❤️",
   "المفضلة": "Favorites",
   "من نحن": "About Us",
+  "عندك كود خصم؟": "Have a discount code?",
+  "تطبيق": "Apply",
+  "كود الخصم": "Discount code",
+  "خصم الكود": "Code discount",
+  "خصم": "Discount",
+  "على المنتجات": "on products",
+  "إلغاء الكود": "Remove code",
+  "الكود ده مش صحيح، اتأكد منه وجرّب تاني.": "That code isn't valid. Check it and try again.",
+  "الكود ده انتهت صلاحيته.": "This code has expired.",
+  "الكود ده متوقف حاليًا.": "This code is currently paused.",
+  "انت استخدمت الكود ده قبل كده — كل كود لمرة واحدة بس لكل عميل.": "You've already used this code — each code works once per customer.",
+  "سجّل دخول الأول عشان تقدر تستخدم كود الخصم.": "Log in first to use a discount code.",
+  "تعذر التأكد من الكود، جرّب تاني.": "Couldn't check the code, try again.",
+  "الكود لمرة واحدة لكل عميل، ولازم تكون مسجّل دخول.": "One use per customer — you need to be logged in.",
+  "اكتب كود الخصم الأول.": "Enter the discount code first.",
+  "اتطبق خصم": "Discount applied:",
+  "الإجمالي اتحدث من غير الخصم، راجعه وأكد تاني.": "The total was updated without the discount — review it and confirm again.",
   "من قلب الإسكندرية": "From the heart of Alexandria",
   "متجر متخصص في ألعاب الأطفال": "A store dedicated to kids' toys",
   "ألعاب أصلية وآمنة": "Genuine, safe toys",
@@ -4385,7 +4497,87 @@ function cartTotal(){ return cartItems().reduce(function(s,it){ return s + price
 /* مصاريف شحن ثابتة على كل طلب (١٠٠ جنيه) - بتتضاف على إجمالي المنتجات
    وبتظهر كبند منفصل في السلة والفاتورة، وبتتحسب بس لو السلة فيها أصناف. */
 var SHIPPING_COST = 100;
-function cartGrandTotal(){ return cartItems().length ? cartTotal() + SHIPPING_COST : cartTotal(); }
+/* كود الخصم المتطبّق على السلة دلوقتي ({code, percent}) - بيتأكد منه السيرفر
+   تاني وقت تسجيل الطلب، والخصم على المنتجات بس (مش على الشحن). */
+var CART_COUPON = null;
+function couponDiscount(){ return (CART_COUPON && cartItems().length) ? Math.round(cartTotal() * CART_COUPON.percent / 100) : 0; }
+function cartGrandTotal(){ return cartItems().length ? Math.max(0, cartTotal() - couponDiscount()) + SHIPPING_COST : cartTotal(); }
+
+/* ---------- كود الخصم في السلة ----------
+   العميل لازم يكون مسجّل دخول (الكود لمرة واحدة بس لكل عميل، والسيرفر
+   بيعرفه من حسابه ورقم موبايله وإيميله على أي جهاز). */
+var couponBoxOpen = false, couponBusy = false, couponMsg = null;
+function couponErrorText(code){
+  return ({
+    not_found: t("الكود ده مش صحيح، اتأكد منه وجرّب تاني."),
+    expired: t("الكود ده انتهت صلاحيته."),
+    inactive: t("الكود ده متوقف حاليًا."),
+    used: t("انت استخدمت الكود ده قبل كده — كل كود لمرة واحدة بس لكل عميل."),
+    login_required: t("سجّل دخول الأول عشان تقدر تستخدم كود الخصم.")
+  })[code] || t("تعذر التأكد من الكود، جرّب تاني.");
+}
+function renderCouponBox(hasItems){
+  var box = document.getElementById("couponBox");
+  if(!box) return;
+  if(!hasItems){ box.innerHTML = ""; box.hidden = true; return; }
+  box.hidden = false;
+  if(CART_COUPON){
+    box.innerHTML = '<div class="coupon-chip"><span class="coupon-chip-ic" aria-hidden="true">🎟️</span>'
+      + '<span class="coupon-chip-tx"><strong dir="ltr">'+escHtml(CART_COUPON.code)+'</strong><span>'+t("خصم")+' '+CART_COUPON.percent+'% '+t("على المنتجات")+'</span></span>'
+      + '<button type="button" class="coupon-chip-x" id="couponRemove" aria-label="'+t("إلغاء الكود")+'">✕</button></div>';
+    document.getElementById("couponRemove").addEventListener("click", function(){ CART_COUPON = null; couponMsg = null; renderCartFoot(); });
+    return;
+  }
+  if(!couponBoxOpen){
+    box.innerHTML = '<button type="button" class="coupon-toggle" id="couponToggle">🎟️ '+t("عندك كود خصم؟")+'</button>';
+    document.getElementById("couponToggle").addEventListener("click", function(){ couponBoxOpen = true; renderCouponBox(true); var i = document.getElementById("couponInput"); if(i) i.focus(); });
+    return;
+  }
+  var authed = !!getCustomerProfile();
+  box.innerHTML = '<div class="coupon-form">'
+      + '<input id="couponInput" type="text" dir="ltr" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABDO-XXXXXX" aria-label="'+t("كود الخصم")+'">'
+      + '<button type="button" class="btn btn-primary btn-sm" id="couponApply">'+(couponBusy ? "⏳" : t("تطبيق"))+'</button>'
+    + '</div>'
+    + (couponMsg ? '<p class="coupon-msg">'+escHtml(couponMsg)+'</p>' : '')
+    + (!authed ? '<p class="coupon-hint">'+t("الكود لمرة واحدة لكل عميل، ولازم تكون مسجّل دخول.")+' <button type="button" class="coupon-link" id="couponLogin">'+t("تسجيل الدخول")+'</button></p>' : '');
+  var inp = document.getElementById("couponInput");
+  if(renderCouponBox.lastVal) inp.value = renderCouponBox.lastVal;
+  inp.addEventListener("input", function(){ renderCouponBox.lastVal = inp.value; });
+  inp.addEventListener("keydown", function(e){ if(e.key === "Enter"){ e.preventDefault(); applyCoupon(); } });
+  document.getElementById("couponApply").addEventListener("click", applyCoupon);
+  var lg = document.getElementById("couponLogin");
+  if(lg) lg.addEventListener("click", function(){ closeAllPanels(); openAccountModal(); });
+}
+function applyCoupon(){
+  if(couponBusy) return;
+  var inp = document.getElementById("couponInput");
+  var code = String(inp && inp.value || "").trim();
+  renderCouponBox.lastVal = code;
+  if(!code){ couponMsg = t("اكتب كود الخصم الأول."); renderCouponBox(true); return; }
+  if(!getCustomerProfile()){ couponMsg = couponErrorText("login_required"); renderCouponBox(true); return; }
+  couponBusy = true; couponMsg = null; renderCouponBox(true);
+  var phoneEl = document.getElementById("checkoutPhone");
+  fetch("/api/coupons", {
+    method: "POST",
+    headers: Object.assign({ "content-type":"application/json" }, customerAuthHeaders()),
+    body: JSON.stringify({ action:"check", code: code, phone: phoneEl ? phoneEl.value : "" })
+  }).then(function(r){ return r.json(); }).then(function(res){
+    couponBusy = false;
+    if(res && res.ok){
+      CART_COUPON = { code: res.code, percent: +res.percent };
+      couponMsg = null; couponBoxOpen = false; renderCouponBox.lastVal = "";
+      renderCartFoot();
+      showToast("🎉 "+t("اتطبق خصم")+" "+res.percent+"%");
+    } else {
+      couponMsg = couponErrorText(res && res.error);
+      renderCouponBox(true);
+    }
+  }).catch(function(){
+    couponBusy = false;
+    couponMsg = t("تعذر الاتصال بالسيرفر، جرّب تاني.");
+    renderCouponBox(true);
+  });
+}
 
 /* وسائل الدفع المتاحة + رقم التحويل لفودافون كاش/إنستاباي. */
 var PAYMENT_METHODS = [
@@ -4559,6 +4751,16 @@ function renderCartFoot(){
   stepInfoData.style.display = "none";
   stepPayment.style.display = "none";
   document.getElementById("cartSubtotal").textContent = fmt(cartTotal())+" "+t("ج.م");
+  var dRow = document.getElementById("cartDiscountRow");
+  if(dRow){
+    var dv = couponDiscount();
+    dRow.hidden = !dv;
+    if(dv){
+      document.getElementById("cartDiscountLabel").textContent = t("خصم الكود")+" ("+CART_COUPON.percent+"%)";
+      document.getElementById("cartDiscount").textContent = "− "+fmt(dv)+" "+t("ج.م");
+    }
+  }
+  renderCouponBox(items.length);
   document.getElementById("cartShipping").textContent = (items.length ? fmt(SHIPPING_COST) : "0")+" "+t("ج.م");
   document.getElementById("cartTotal").textContent = fmt(cartGrandTotal())+" "+t("ج.م");
   document.getElementById("cartContinueBtn").style.display = items.length ? "flex" : "none";
@@ -4594,7 +4796,8 @@ function renderCartPaymentStep(){
 
   var submitBtnHtml = '<button type="button" class="btn btn-primary" style="flex:1;" id="paymentSubmitBtn">'+t("إتمام الطلب")+'</button>';
 
-  container.innerHTML = '<div class="cart-total-row grand"><span>'+t("الإجمالي الكلي")+'</span><span class="tabular">'+fmt(grand)+' '+t('ج.م')+'</span></div>'
+  container.innerHTML = (couponDiscount() ? '<div class="cart-total-row sub is-discount"><span>🎟️ '+t("خصم الكود")+' '+escHtml(CART_COUPON.code)+' ('+CART_COUPON.percent+'%)</span><span class="tabular">− '+fmt(couponDiscount())+' '+t('ج.م')+'</span></div>' : '')
+    + '<div class="cart-total-row grand"><span>'+t("الإجمالي الكلي")+'</span><span class="tabular">'+fmt(grand)+' '+t('ج.م')+'</span></div>'
     + '<p class="payment-step-label">'+t("اختر وسيلة الدفع")+'</p>'
     + '<div class="payment-methods">'+methodsHtml+'</div>'
     + proofSection
@@ -4965,7 +5168,8 @@ function submitOrderNow(e){
       total: grand,
       name: f.name, phone: f.phone, governorate: f.governorate, address: f.address, notes: f.notes,
       paymentMethod: cartCheckout.method,
-      paymentProof: cartCheckout.proofData || null
+      paymentProof: cartCheckout.proofData || null,
+      couponCode: CART_COUPON ? CART_COUPON.code : null
     })
   }).then(function(r){ return r.json(); }).then(function(res){
     btn.disabled = false;
@@ -4990,7 +5194,16 @@ function submitOrderNow(e){
       clearCart();
       resetCheckoutFields();
       resetCartCheckout();
+      CART_COUPON = null;
       showOrderSuccessModal(f.phone);
+    } else if(res && /^coupon_/.test(res.error||"")){
+      /* الكود مبقاش صالح (اتستخدم قبل كده / خلص / اتوقف) - بنشيله ونوري
+         الإجمالي الجديد من غير خصم قبل ما العميل يأكد تاني. */
+      var cmsg = couponErrorText(res.error.replace(/^coupon_/, ""));
+      CART_COUPON = null;
+      renderCartPaymentStep();
+      var e2 = document.getElementById("paymentStepError");
+      if(e2){ e2.textContent = cmsg + " " + t("الإجمالي اتحدث من غير الخصم، راجعه وأكد تاني."); e2.style.display = "block"; }
     } else if(res && res.error==="insufficient_stock"){
       /* السيرفر رفض الطلب لأن الكمية المطلوبة أكتر من المتاح (حد تاني سبقه) -
          بنحدّث الكميات ونرجّع العميل للسلة بعد ما نظبطها. */
@@ -7234,6 +7447,7 @@ function renderAdminOrdersPage(){
             + '<div class="order-card-date tabular">'+d.toLocaleDateString(LANG==="en"?"en-US":"ar-EG")+'</div>'
           + '</div>'
           + '<div class="order-card-items">'+itemsTxt+'</div>'
+          + (o.coupon ? '<div class="order-card-coupon">🎟️ '+t("كود خصم")+' <bdi dir="ltr">'+escHtml(o.coupon)+'</bdi> — '+(+o.couponPercent||0)+'%</div>' : '')
           + (orderHasProof(o) ? '<div class="order-card-proof">🧾 '+t("إيصال تحويل مرفق")+' — '+paymentMethodLabel(o.paymentMethod)+'</div>' : '')
           + '<div class="order-card-bottom">'
             + '<span class="order-card-open">'+t("عرض الفاتورة كاملة ⟵")+'</span>'
@@ -7336,7 +7550,8 @@ function showAdminOrderEditForm(order){
   if(!items.length) items = [{ name:"", qty:1, price:0 }];
 
   function updateTotal(){
-    var total = items.reduce(function(sum, it){ return sum + (+it.qty||0)*(+it.price||0); }, 0) + (+order.shipping||0);
+    var sub = items.reduce(function(sum, it){ return sum + (+it.qty||0)*(+it.price||0); }, 0);
+    var total = sub - (order.coupon ? Math.round(sub * (+order.couponPercent||0) / 100) : 0) + (+order.shipping||0);
     document.getElementById("aoeTotal").textContent = fmt(total)+" "+t("ج.م");
   }
   function renderItemRows(){
@@ -7370,7 +7585,8 @@ function showAdminOrderEditForm(order){
       return { name:String(it.name||"").trim(), qty:Math.max(1, Math.round(+it.qty||1)), price:Math.max(0, +it.price||0) };
     });
     if(!cleanItems.length){ errEl.textContent = t("لازم يكون فيه صنف واحد على الأقل بالاسم."); errEl.style.display = "block"; return; }
-    var total = cleanItems.reduce(function(sum, it){ return sum + it.qty*it.price; }, 0) + (+order.shipping||0);
+    var sub2 = cleanItems.reduce(function(sum, it){ return sum + it.qty*it.price; }, 0);
+    var total = sub2 - (order.coupon ? Math.round(sub2 * (+order.couponPercent||0) / 100) : 0) + (+order.shipping||0);
     var btn = this;
     btn.disabled = true;
     fetch("/api/orders", {
@@ -7632,6 +7848,165 @@ function deleteAdminInquiry(r){
 }
 document.getElementById("adminInquiriesBtn").addEventListener("click", openAdminInquiriesPage);
 document.getElementById("adminInquiriesBackBtn").addEventListener("click", closeAdminInquiriesPage);
+
+/* ---------- صفحة "أكواد الخصم" (الإدارة) ----------
+   توليد كود بالنسبة اللي الأدمن يختارها (صالح 30 يوم)، ونسخه أو بعته
+   واتساب، ومتابعة مين استخدمه، وإيقافه أو حذفه. */
+var ADMIN_COUPONS_CACHE = [];
+function openAdminCouponsPage(){
+  document.getElementById("adminDashboard").classList.remove("active");
+  document.getElementById("adminCouponsPage").classList.add("active");
+  window.scrollTo({top:0, behavior:"instant" in document.documentElement.style ? "instant" : "auto"});
+  renderAdminCouponsPage();
+}
+function closeAdminCouponsPage(){
+  document.getElementById("adminCouponsPage").classList.remove("active");
+  document.getElementById("adminDashboard").classList.add("active");
+}
+function cpnDate(ms){ return new Date(ms).toLocaleDateString(LANG==="en"?"en-US":"ar-EG", { day:"numeric", month:"long", year:"numeric" }); }
+function cpnState(c, now){
+  if(c.active === false) return { k:"off", label:t("متوقف") };
+  if((now||Date.now()) > c.expiresAt) return { k:"exp", label:t("انتهى") };
+  return { k:"on", label:t("فعّال") };
+}
+function cpnShareText(c){
+  return "🎁 " + t("كود خصم") + " " + c.percent + "% " + t("من متجر آل عبده") + "\n"
+    + t("الكود") + ": " + c.code + "\n"
+    + t("صالح لحد") + " " + cpnDate(c.expiresAt) + "\n"
+    + t("اكتبه في السلة قبل ما تأكد الطلب — لمرة واحدة بس لكل عميل 🧸") + "\n"
+    + "https://alabdo-toys.com";
+}
+function copyText(txt){
+  function fallback(){
+    var ta = document.createElement("textarea");
+    ta.value = txt; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    var ok = false; try{ ok = document.execCommand("copy"); }catch(e){}
+    document.body.removeChild(ta);
+    return ok;
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    return navigator.clipboard.writeText(txt).then(function(){ return true; }, function(){ return fallback(); });
+  }
+  return Promise.resolve(fallback());
+}
+function cpnShare(c){
+  var url = "https://wa.me/?text=" + encodeURIComponent(cpnShareText(c));
+  if(window.AlAbdoNative) location.href = url; else window.open(url, "_blank", "noopener");
+}
+function cpnCopy(c){
+  copyText(c.code).then(function(ok){ showToast(ok ? ("📋 " + t("اتنسخ الكود") + " " + c.code) : t("⚠️ معرفناش ننسخ، انسخه يدوي")); });
+}
+function couponCardHtml(c, i, now){
+  var st = cpnState(c, now);
+  var uses = Array.isArray(c.uses) ? c.uses : [];
+  var usesHtml = uses.length
+    ? '<details class="cpn-uses"><summary>'+t("استخدمه")+' '+fmt(uses.length)+' '+(uses.length===1?t("عميل"):t("عملاء"))+'</summary><ul>'
+        + uses.slice().reverse().map(function(u){
+            return '<li><strong>'+escHtml(u.name||t("عميل"))+'</strong> <bdi dir="ltr">'+escHtml(u.customerId||u.phone||"")+'</bdi><span>'+t("طلب")+' <bdi dir="ltr">#'+escHtml(String(u.orderId||"").slice(-6))+'</bdi> · '+new Date(u.at).toLocaleDateString(LANG==="en"?"en-US":"ar-EG")+'</span></li>';
+          }).join("")
+      + '</ul></details>'
+    : '<p class="cpn-uses-none">'+t("لسه محدش استخدمه")+'</p>';
+  return '<div class="cpn-card is-'+st.k+'">'
+    + '<div class="cpn-card-top">'
+      + '<div class="cpn-ticket"><span class="cpn-pct-badge">'+c.percent+'%</span><strong dir="ltr">'+escHtml(c.code)+'</strong></div>'
+      + '<span class="cpn-state">'+st.label+'</span>'
+    + '</div>'
+    + '<p class="cpn-meta">'+(st.k==="exp" ? t("انتهى في") : t("صالح لحد"))+' '+cpnDate(c.expiresAt)+(c.note ? ' · '+escHtml(c.note) : '')+'</p>'
+    + usesHtml
+    + '<div class="cpn-actions">'
+      + '<button type="button" class="btn btn-outline btn-sm" data-cpn-copy="'+i+'">📋 '+t("نسخ")+'</button>'
+      + (st.k==="on" ? '<button type="button" class="btn btn-outline btn-sm" data-cpn-share="'+i+'">💬 '+t("واتساب")+'</button>' : '')
+      + (st.k!=="exp" ? '<button type="button" class="btn btn-outline btn-sm" data-cpn-toggle="'+i+'">'+(st.k==="off" ? "▶️ "+t("تفعيل") : "⏸️ "+t("إيقاف"))+'</button>' : '')
+      + '<button type="button" class="btn btn-outline btn-sm cpn-del" data-cpn-del="'+i+'">🗑️ '+t("حذف")+'</button>'
+    + '</div>'
+  + '</div>';
+}
+function renderAdminCouponsPage(){
+  var box = document.getElementById("adminCouponsList");
+  if(!box) return;
+  box.innerHTML = '<p style="color:var(--ink-soft); font-size:13px;">'+t("جاري التحميل...")+'</p>';
+  fetch("/api/coupons", { headers: adminAuthHeaders(), cache:"no-store" }).then(function(r){ return r.json(); })
+    .then(function(res){
+      if(!res || !res.ok){ box.innerHTML = '<p style="color:var(--pink-deep); font-size:13px;">'+t("تعذر تحميل الأكواد.")+'</p>'; return; }
+      var now = res.now || Date.now();
+      ADMIN_COUPONS_CACHE = (res.coupons||[]).slice().sort(function(a, b){ return b.createdAt - a.createdAt; });
+      var countEl = document.getElementById("adminCouponsCount");
+      if(countEl) countEl.textContent = ADMIN_COUPONS_CACHE.length;
+      if(!ADMIN_COUPONS_CACHE.length){ box.innerHTML = '<p class="cpn-empty">'+t("لسه ما عملتش أكواد خصم. اختار النسبة فوق ودوس توليد.")+'</p>'; return; }
+      box.innerHTML = ADMIN_COUPONS_CACHE.map(function(c, i){ return couponCardHtml(c, i, now); }).join("");
+    })
+    .catch(function(){ box.innerHTML = '<p style="color:var(--pink-deep); font-size:13px;">'+t("تعذر الاتصال بالسيرفر.")+'</p>'; });
+}
+function couponAdminPost(payload){
+  return fetch("/api/coupons", {
+    method: "POST",
+    headers: Object.assign({ "content-type":"application/json" }, adminAuthHeaders()),
+    body: JSON.stringify(payload)
+  }).then(function(r){ return r.json(); });
+}
+document.getElementById("adminCouponsList").addEventListener("click", function(e){
+  var b = e.target.closest("button"); if(!b) return;
+  var c;
+  if(b.dataset.cpnCopy != null){ c = ADMIN_COUPONS_CACHE[+b.dataset.cpnCopy]; if(c) cpnCopy(c); return; }
+  if(b.dataset.cpnShare != null){ c = ADMIN_COUPONS_CACHE[+b.dataset.cpnShare]; if(c) cpnShare(c); return; }
+  if(b.dataset.cpnToggle != null){
+    c = ADMIN_COUPONS_CACHE[+b.dataset.cpnToggle]; if(!c) return;
+    b.disabled = true;
+    couponAdminPost({ action:"toggle", code:c.code }).then(function(res){
+      if(res && res.ok){ showToast(res.coupon.active===false ? t("⏸️ الكود اتوقف") : t("▶️ الكود اتفعّل")); renderAdminCouponsPage(); }
+      else { b.disabled = false; showToast(t("⚠️ تعذر تحديث الكود، جرّب تاني.")); }
+    }).catch(function(){ b.disabled = false; showToast(t("⚠️ تعذر الاتصال بالسيرفر.")); });
+    return;
+  }
+  if(b.dataset.cpnDel != null){
+    c = ADMIN_COUPONS_CACHE[+b.dataset.cpnDel]; if(!c) return;
+    appConfirm({ icon:"🗑️", title:t("حذف كود الخصم"), message:t("متأكد إنك عايز تحذف الكود")+" "+c.code+"؟ "+t("العملاء مش هيقدروا يستخدموه تاني."), ok:t("حذف"), danger:true })
+      .then(function(ok){
+        if(!ok) return;
+        couponAdminPost({ action:"delete", code:c.code }).then(function(res){
+          if(res && res.ok){ showToast(t("✅ الكود اتحذف")); renderAdminCouponsPage(); }
+          else showToast(t("⚠️ تعذر حذف الكود، جرّب تاني."));
+        }).catch(function(){ showToast(t("⚠️ تعذر الاتصال بالسيرفر.")); });
+      });
+  }
+});
+document.getElementById("cpnQuick").addEventListener("click", function(e){
+  var b = e.target.closest("[data-cpn-p]"); if(!b) return;
+  document.getElementById("cpnPercent").value = b.dataset.cpnP;
+  this.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x === b); });
+});
+document.getElementById("cpnPercent").addEventListener("input", function(){
+  var v = this.value;
+  document.querySelectorAll("#cpnQuick button").forEach(function(x){ x.classList.toggle("on", x.dataset.cpnP === v); });
+});
+document.getElementById("cpnCreate").addEventListener("click", function(){
+  var btn = this, err = document.getElementById("cpnErr");
+  var p = Math.round(+document.getElementById("cpnPercent").value);
+  err.hidden = true;
+  if(!(p >= 1 && p <= 90)){ err.textContent = t("اكتب نسبة خصم من 1% لحد 90%."); err.hidden = false; return; }
+  btn.disabled = true;
+  couponAdminPost({ action:"create", percent:p, note:document.getElementById("cpnNote").value })
+    .then(function(res){
+      btn.disabled = false;
+      if(!res || !res.ok){ err.textContent = t("⚠️ تعذر توليد الكود، جرّب تاني."); err.hidden = false; return; }
+      var c = res.coupon;
+      document.getElementById("cpnNote").value = "";
+      var out = document.getElementById("cpnResult");
+      out.innerHTML = '<div class="cpn-new" role="status">'
+        + '<span class="cpn-new-label">🎉 '+t("الكود الجديد — خصم")+' '+c.percent+'%</span>'
+        + '<strong class="cpn-new-code" dir="ltr">'+escHtml(c.code)+'</strong>'
+        + '<span class="cpn-new-meta">'+t("صالح لحد")+' '+cpnDate(c.expiresAt)+' · '+t("مرة واحدة لكل عميل")+'</span>'
+        + '<div class="cpn-new-btns"><button type="button" class="btn btn-primary btn-sm" id="cpnNewCopy">📋 '+t("نسخ الكود")+'</button><button type="button" class="btn btn-outline btn-sm" id="cpnNewShare">💬 '+t("ابعته واتساب")+'</button></div>'
+      + '</div>';
+      document.getElementById("cpnNewCopy").addEventListener("click", function(){ cpnCopy(c); });
+      document.getElementById("cpnNewShare").addEventListener("click", function(){ cpnShare(c); });
+      renderAdminCouponsPage();
+    })
+    .catch(function(){ btn.disabled = false; err.textContent = t("⚠️ تعذر الاتصال بالسيرفر."); err.hidden = false; });
+});
+document.getElementById("adminCouponsBtn").addEventListener("click", openAdminCouponsPage);
+document.getElementById("adminCouponsBackBtn").addEventListener("click", closeAdminCouponsPage);
 
 /* ---------- صفحة "بيانات العملاء" - كل حسابات العملاء المسجّلين، بصلاحية
    تعديل وحذف كاملة للأدمن ---------- */
@@ -8282,11 +8657,12 @@ var ADM = null;
     stock:     { page:"adminStockPage",     open:openAdminStockPage,     render:renderAdminStockPage,     title:"طلبات التوفر" },
     analytics: { page:"adminAnalyticsPage", open:openAdminAnalyticsPage, render:renderAdminAnalyticsPage, title:"تحليل الزوار" },
     inquiries: { page:"adminInquiriesPage", open:openAdminInquiriesPage, render:renderAdminInquiriesPage, title:"استفسارات العملاء" },
-    customers: { page:"adminCustomersPage", open:openAdminCustomersPage, render:renderAdminCustomersPage, title:"بيانات العملاء" }
+    customers: { page:"adminCustomersPage", open:openAdminCustomersPage, render:renderAdminCustomersPage, title:"بيانات العملاء" },
+    coupons:   { page:"adminCouponsPage",   open:openAdminCouponsPage,   render:renderAdminCouponsPage,   title:"أكواد الخصم" }
   };
   var SCREENS = { home:"admHome", products:"admProducts", form:"admFormScreen", cats:"admCatsScreen", settings:"admSettingsScreen", more:"admMore" };
   var TITLES = { home:"لوحة التحكم", products:"المنتجات", form:"إضافة منتج", more:"المزيد", cats:"الأقسام", settings:"إعدادات الحساب" };
-  var TAB_OF = { home:"home", products:"products", form:"products", orders:"orders", more:"more", cats:"more", settings:"more", stock:"more", analytics:"more", inquiries:"more", customers:"more" };
+  var TAB_OF = { home:"home", products:"products", form:"products", orders:"orders", more:"more", cats:"more", settings:"more", stock:"more", analytics:"more", inquiries:"more", customers:"more", coupons:"more" };
   var cur = null, parentOf = {}, shownOnce = false;
   var pendingDelta = {}, flushTimer = null;
   var list = { filter:"all", q:"" };
@@ -8911,6 +9287,7 @@ var ADM = null;
       + li("stock", "🔔", t("طلبات التوفر"), t("عملاء مستنيين منتجات ترجع"), stats.stock)
       + li("inquiries", "📨", t("استفسارات العملاء"), t("رسايل صفحة تواصل معنا"), stats.inquiries)
       + li("customers", "👥", t("بيانات العملاء"), "")
+      + li("coupons", "🎟️", t("أكواد الخصم"), t("اعمل كود خصم بالنسبة اللي تختارها"))
       + li("analytics", "📊", t("تحليل الزوار"), "")
     + '</div>'
     + '<div class="adm-group-title">'+t("المخزون")+'</div><div class="adm-list">'

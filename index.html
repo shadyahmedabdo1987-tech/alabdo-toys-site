@@ -1021,6 +1021,40 @@ html[dir="ltr"] .preq-back svg{transform:scaleX(-1);}
 .adm-reply-form textarea{width:100%; min-height:76px; padding:10px 12px; border-radius:12px; border:1.5px solid var(--border); background:var(--surface); color:var(--ink); font-family:inherit; font-size:14px; resize:vertical;}
 .adm-reply-acts{display:flex; gap:8px; flex-wrap:wrap;}
 
+/* ===== (الإدارة) تقييمات العملاء ===== */
+.rev-edited{display:inline-block; font-size:11px; color:var(--ink-faint); margin-top:4px; margin-inline-start:6px;}
+.arv-summary:empty{display:none;}
+.arv-summary{display:flex; flex-wrap:wrap; gap:16px; align-items:center; background:var(--surface); border:1.5px solid var(--border); border-radius:18px; padding:14px 16px; margin-bottom:14px;}
+.arv-avg{display:flex; flex-direction:column; align-items:center; gap:2px; min-width:110px;}
+.arv-avg b{font-size:34px; line-height:1; font-family:"Baloo Bhaijaan 2","Almarai",sans-serif; color:var(--ink);}
+.arv-avg .stars{color:var(--sunshine); letter-spacing:1px;}
+.arv-avg small{font-size:11.5px; color:var(--ink-soft); text-align:center;}
+.arv-dist{flex:1 1 200px; display:flex; flex-direction:column; gap:4px;}
+.arv-dist div{display:grid; grid-template-columns:34px 1fr 28px; gap:8px; align-items:center; font-size:12px; color:var(--ink-soft);}
+.arv-dist i{height:8px; border-radius:99px; background:var(--surface-2); overflow:hidden; display:block;}
+.arv-dist em{display:block; height:100%; background:var(--sunshine); border-radius:99px;}
+.arv-dist b{text-align:end; color:var(--ink);}
+.arv-search{width:100%; padding:10px 14px; border-radius:12px; border:1.5px solid var(--border); background:var(--surface); color:var(--ink); font-family:inherit; font-size:14px; margin-bottom:12px;}
+#adminReviewsList{display:flex; flex-direction:column; gap:12px;}
+.arv-card{background:var(--surface); border:1.5px solid var(--border); border-radius:18px; padding:14px; display:flex; flex-direction:column; gap:10px;}
+.arv-card.is-low{border-inline-start:4px solid #e0123f;}
+.arv-card.is-hidden{opacity:.72; background:var(--surface-3);}
+.arv-prod{display:flex; align-items:center; gap:10px;}
+.arv-prod > img, .arv-prod > span{width:48px; height:48px; border-radius:12px; object-fit:cover; flex:none; background:var(--surface-3); display:grid; place-items:center; font-size:24px; border:1px solid var(--border);}
+.arv-prod strong{display:block; font-size:14.5px; overflow-wrap:anywhere;}
+.arv-stars{color:var(--sunshine); letter-spacing:1px; font-size:15px;}
+.arv-text{margin:0; font-size:14px; line-height:1.7; white-space:pre-line; overflow-wrap:anywhere;}
+.arv-text.is-empty{color:var(--ink-faint); font-size:12.5px;}
+.arv-meta{font-size:12px; color:var(--ink-soft); overflow-wrap:anywhere;}
+.arv-meta a{color:var(--pink-deep); font-weight:800;}
+.arv-flag{font-weight:800; color:var(--ink);}
+.arv-orig{font-size:12.5px; background:var(--surface-3); border-radius:12px; padding:8px 10px;}
+.arv-orig summary{cursor:pointer; font-weight:800; color:var(--ink-soft);}
+.arv-orig p{margin:4px 0 0; white-space:pre-line;}
+.arv-pick{display:flex; gap:4px; direction:ltr; justify-content:flex-end;}
+.arv-pick button{background:none; border:0; font-size:30px; line-height:1; color:var(--border); padding:2px;}
+.arv-pick button.on{color:var(--sunshine);}
+
 .inv-sum{display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; margin-bottom:14px;}
 .inv-tile{display:flex; flex-direction:column; gap:4px; padding:12px 14px; border-radius:16px; background:var(--surface); border:1px solid var(--border); text-align:start; font-family:inherit; color:var(--ink);}
 .inv-tile span{font-size:12px; color:var(--ink-soft); font-weight:700;}
@@ -2384,6 +2418,7 @@ setTimeout(appSplashHide, 15000);
           <div class="admin-actions">
             <button class="btn btn-primary btn-sm" id="adminAnalyticsBtn" type="button" data-i18n>📊 تحليل الزوار</button>
             <button class="btn btn-primary btn-sm" id="adminInquiriesBtn" type="button"><span data-i18n>📨 استفسارات العملاء</span><span id="adminInquiriesBadge" class="admin-badge" hidden>0</span></button>
+            <button class="btn btn-primary btn-sm" id="adminReviewsBtn" type="button" data-i18n>⭐ تقييمات العملاء</button>
             <button class="btn btn-primary btn-sm" id="adminProdReqBtn" type="button"><span data-i18n>🧸 طلبات توفير منتجات</span><span id="adminProdReqBadge"></span></button>
             <button class="btn btn-primary btn-sm" id="adminCustomersBtn" type="button" data-i18n>👥 بيانات العملاء</button>
             <button class="btn btn-primary btn-sm" id="adminCouponsBtn" type="button" data-i18n>🎟️ أكواد الخصم</button>
@@ -2572,6 +2607,24 @@ setTimeout(appSplashHide, 15000);
         <div id="adminInquiriesList" style="display:flex; flex-direction:column; gap:12px;">
           <p style="color:var(--ink-soft); font-size:13px;" data-i18n>جاري التحميل...</p>
         </div>
+      </div>
+
+      <div id="adminReviewsPage" class="admin-wrap">
+        <div class="admin-bar">
+          <div><h1 style="font-size:22px;"><span data-i18n>⭐ تقييمات العملاء</span> (<span id="adminReviewsCount">0</span>)</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;" data-i18n>كل التقييمات اللي العملاء كتبوها على المنتجات — تقدر تعدّلها أو تخفيها من الموقع أو تمسحها.</p></div>
+          <div class="admin-actions">
+            <button class="btn btn-outline btn-sm" id="adminReviewsBackBtn" type="button" data-i18n>رجوع للوحة التحكم</button>
+          </div>
+        </div>
+        <div class="arv-summary" id="adminReviewsSummary"></div>
+        <div class="apr-filters" id="adminReviewsFilters">
+          <button type="button" data-arv-f="all" class="on" data-i18n>الكل</button>
+          <button type="button" data-arv-f="low" data-i18n>تقييم ضعيف (٢ أو أقل)</button>
+          <button type="button" data-arv-f="text" data-i18n>فيها تعليق</button>
+          <button type="button" data-arv-f="hidden" data-i18n>مخفية</button>
+        </div>
+        <input type="search" id="adminReviewsSearch" class="arv-search" placeholder="ابحث باسم المنتج أو العميل…" data-i18n-placeholder>
+        <div id="adminReviewsList"><p class="apr-note" data-i18n>جاري التحميل...</p></div>
       </div>
 
       <div id="adminProdReqPage" class="admin-wrap">
@@ -3822,6 +3875,7 @@ document.getElementById("themeToggle").addEventListener("click", function(){
    الأقسام السبعة، ومحافظات مصر. الصفحات القانونية ولوحة التحكم وأسماء/أوصاف
    المنتجات هتتضاف في مراحل تالية. */
 var I18N_EN = {
+  "عدّله المتجر": "Edited by the store",
   "وصلك رد من متجر آل عبده — افتح الجرس اللي فوق": "You got a reply from Al Abdo Toys — open the bell at the top",
   "طلبت توفير": "You asked for",
   "رجع متوفر": "Back in stock",
@@ -6274,8 +6328,9 @@ function renderProductReviewsBox(p, data){
       + '<div style="display:flex; flex-direction:column; gap:10px; margin-bottom:14px;">'
       + data.reviews.slice().reverse().map(function(r){
         return '<div style="border:1.5px solid var(--border); border-radius:12px; padding:10px 12px;">'
-          + '<div style="display:flex; justify-content:space-between; align-items:center; gap:8px;"><strong style="font-size:13px;">'+(r.customerName||"عميل")+'</strong><span class="stars" style="font-size:12px;">'+stars(r.rating)+'</span></div>'
-          + (r.comment ? '<p style="color:var(--ink-soft); font-size:13px; margin-top:4px;">'+r.comment+'</p>' : '')
+          + '<div style="display:flex; justify-content:space-between; align-items:center; gap:8px;"><strong style="font-size:13px;">'+escHtml(r.customerName||"عميل")+'</strong><span class="stars" style="font-size:12px;">'+stars(r.rating)+'</span></div>'
+          + (r.comment ? '<p style="color:var(--ink-soft); font-size:13px; margin-top:4px;">'+escHtml(r.comment)+'</p>' : '')
+          + (r.edited ? '<small class="rev-edited">✏️ '+t("عدّله المتجر")+'</small>' : '')
         + '</div>';
       }).join("")
     + '</div>';
@@ -9014,6 +9069,144 @@ document.addEventListener("click", function(e){
   document.addEventListener("visibilitychange", function(){ if(document.visibilityState === "visible" && isCustomerAuthed()) preqFetch(); });
 })();
 
+/* ---------- (الإدارة) تقييمات العملاء ----------
+   كل تقييمات المنتجات في مكان واحد: تعديل (النجوم أو الكلام)، إخفاء من
+   الموقع، أو مسح نهائي. أي تعديل في الكلام أو النجوم بيظهر جنبه للعملاء
+   "عدّله المتجر" عشان التقييم يفضل صادق. */
+var ADMIN_REV = { list:[], f:"all", q:"" };
+function openAdminReviewsPage(){
+  document.getElementById("adminDashboard").classList.remove("active");
+  document.getElementById("adminReviewsPage").classList.add("active");
+  window.scrollTo({top:0, behavior:"instant" in document.documentElement.style ? "instant" : "auto"});
+  renderAdminReviewsPage();
+}
+function closeAdminReviewsPage(){
+  document.getElementById("adminReviewsPage").classList.remove("active");
+  document.getElementById("adminDashboard").classList.add("active");
+}
+function renderAdminReviewsPage(){
+  var box = document.getElementById("adminReviewsList");
+  if(!box) return;
+  if(!ADMIN_REV.list.length) box.innerHTML = '<p class="apr-note">'+t("جاري التحميل...")+'</p>';
+  fetch("/api/reviews", { headers: adminAuthHeaders(), cache:"no-store" }).then(function(r){ return r.json(); })
+    .then(function(res){
+      if(!res || !res.ok) throw 0;
+      ADMIN_REV.list = (res.reviews || []).slice().sort(function(a, b){ return (b.createdAt||0) - (a.createdAt||0); });
+      adminRevDraw();
+    })
+    .catch(function(){ box.innerHTML = '<p class="apr-note is-err">'+t("تعذر تحميل التقييمات.")+'</p>'; });
+}
+function adminRevStars(n){ var s = ""; for(var i = 1; i <= 5; i++) s += (i <= n ? "★" : "☆"); return s; }
+function adminRevDraw(){
+  var all = ADMIN_REV.list, box = document.getElementById("adminReviewsList");
+  var shown = all.filter(function(r){ return !r.hidden; });
+  var avg = shown.length ? shown.reduce(function(s, r){ return s + (+r.rating||0); }, 0) / shown.length : 0;
+  var dist = [0,0,0,0,0,0]; shown.forEach(function(r){ dist[Math.max(1, Math.min(5, Math.round(+r.rating||0)))]++; });
+  var maxD = Math.max.apply(null, dist.slice(1).concat([1]));
+  document.getElementById("adminReviewsCount").textContent = fmt(all.length);
+  document.getElementById("adminReviewsSummary").innerHTML = all.length
+    ? '<div class="arv-avg"><b class="tabular">'+(avg ? avg.toFixed(1) : "—")+'</b><span class="stars">'+adminRevStars(Math.round(avg))+'</span><small>'+fmt(shown.length)+' '+t("تقييم ظاهر")+(all.length - shown.length ? ' · '+fmt(all.length - shown.length)+' '+t("مخفي") : '')+'</small></div>'
+      + '<div class="arv-dist">'+[5,4,3,2,1].map(function(n){ return '<div><span>'+fmt(n)+' ★</span><i><em style="width:'+Math.round(dist[n]/maxD*100)+'%"></em></i><b class="tabular">'+fmt(dist[n])+'</b></div>'; }).join("")+'</div>'
+    : '';
+  document.querySelectorAll("#adminReviewsFilters [data-arv-f]").forEach(function(b){ b.classList.toggle("on", b.dataset.arvF === ADMIN_REV.f); });
+  var q = ADMIN_REV.q.trim().toLowerCase();
+  var rows = all.filter(function(r){
+    if(ADMIN_REV.f === "low" && !(+r.rating <= 2)) return false;
+    if(ADMIN_REV.f === "text" && !String(r.comment||"").trim()) return false;
+    if(ADMIN_REV.f === "hidden" && !r.hidden) return false;
+    if(q){
+      var p = preqFindProduct(r.productId);
+      var hay = ((p ? pName(p) : "")+" "+(r.customerName||"")+" "+(r.comment||"")+" "+(r.customerId||"")).toLowerCase();
+      if(hay.indexOf(q) < 0) return false;
+    }
+    return true;
+  });
+  if(!all.length){ box.innerHTML = '<p class="apr-note">'+t("لسه مفيش تقييمات من العملاء.")+'</p>'; return; }
+  if(!rows.length){ box.innerHTML = '<p class="apr-note">'+t("مفيش تقييمات بالفلتر ده.")+'</p>'; return; }
+  box.innerHTML = rows.map(function(r){
+    var p = preqFindProduct(r.productId), img = preqProdImg(p);
+    var d = new Date(r.createdAt || Date.now()), loc = LANG==="en" ? "en-US" : "ar-EG";
+    var phone = String(r.customerId || "");
+    return '<article class="arv-card'+(r.hidden ? ' is-hidden' : '')+(+r.rating <= 2 ? ' is-low' : '')+'" data-arv-id="'+escHtml(r.id)+'">'
+      + '<div class="arv-prod">'+(img ? '<img src="'+escHtml(img)+'" alt="" loading="lazy">' : '<span aria-hidden="true">🧸</span>')
+        + '<div><strong>'+escHtml(p ? pName(p) : t("منتج اتمسح من المتجر"))+'</strong><span class="arv-stars" aria-label="'+fmt(+r.rating||0)+' '+t("من 5")+'">'+adminRevStars(+r.rating||0)+'</span></div></div>'
+      + (r.comment ? '<p class="arv-text">'+escHtml(r.comment)+'</p>' : '<p class="arv-text is-empty">'+t("من غير تعليق")+'</p>')
+      + '<div class="arv-meta">👤 '+escHtml(r.customerName || t("عميل"))
+        + (phone ? ' · <a href="tel:'+escHtml(phone.replace(/[^0-9+]/g,""))+'" dir="ltr">'+escHtml(phone)+'</a>' : '')
+        + ' · '+escHtml(d.toLocaleDateString(loc, { day:"numeric", month:"short", year:"numeric" }))
+        + (r.hidden ? ' · <span class="arv-flag">🙈 '+t("مخفي من الموقع")+'</span>' : '')
+        + (r.editedByAdmin ? ' · <span class="arv-flag">✏️ '+t("معدّل")+'</span>' : '')
+      + '</div>'
+      + (r.editedByAdmin && r.original ? '<details class="arv-orig"><summary>'+t("التقييم الأصلي من العميل")+'</summary><span class="arv-stars">'+adminRevStars(+r.original.rating||0)+'</span><p>'+escHtml(r.original.comment || t("من غير تعليق"))+'</p></details>' : '')
+      + '<div class="apr-acts">'
+        + '<button type="button" class="btn btn-outline btn-sm" data-arv-edit>✏️ '+t("تعديل")+'</button>'
+        + '<button type="button" class="btn btn-outline btn-sm" data-arv-hide>'+(r.hidden ? '👁️ '+t("إظهار في الموقع") : '🙈 '+t("إخفاء من الموقع"))+'</button>'
+        + '<button type="button" class="apr-del" data-arv-del>🗑️ '+t("مسح")+'</button>'
+      + '</div><div class="arv-form-host"></div></article>';
+  }).join("");
+}
+function adminRevSave(id, patch, okMsg){
+  return fetch("/api/reviews", { method:"PUT", headers: Object.assign({ "content-type":"application/json" }, adminAuthHeaders()), body: JSON.stringify(Object.assign({ id:id }, patch)) })
+    .then(function(r){ return r.json().then(function(j){ return { status:r.status, body:j }; }); })
+    .then(function(res){
+      if(res.body && res.body.ok){
+        var i = ADMIN_REV.list.findIndex(function(x){ return x.id === id; });
+        if(i > -1) ADMIN_REV.list[i] = res.body.review;
+        adminRevDraw(); showToast(okMsg);
+        return true;
+      }
+      showToast(res.status === 405 ? t("⚠️ ارفع ملف reviews.js الجديد الأول") : t("⚠️ تعذر الحفظ، جرّب تاني."));
+      return false;
+    })
+    .catch(function(){ showToast(t("⚠️ تعذر الحفظ، جرّب تاني.")); return false; });
+}
+document.getElementById("adminReviewsList").addEventListener("click", function(e){
+  var card = e.target.closest("[data-arv-id]"); if(!card) return;
+  var id = card.dataset.arvId, r = ADMIN_REV.list.find(function(x){ return x.id === id; }); if(!r) return;
+  if(e.target.closest("[data-arv-hide]")){
+    adminRevSave(id, { hidden: !r.hidden }, r.hidden ? "✅ "+t("التقييم رجع يظهر في الموقع") : "🙈 "+t("التقييم اتخفى من الموقع"));
+    return;
+  }
+  if(e.target.closest("[data-arv-del]")){
+    appConfirm({ icon:"🗑️", title:t("مسح التقييم"), message:t("التقييم هيتمسح نهائي ومش هيرجع."), ok:t("مسح") }).then(function(ok){
+      if(!ok) return;
+      fetch("/api/reviews", { method:"DELETE", headers: Object.assign({ "content-type":"application/json" }, adminAuthHeaders()), body: JSON.stringify({ id:id }) })
+        .then(function(res){ return res.json(); })
+        .then(function(j){
+          if(j && j.ok){ ADMIN_REV.list = ADMIN_REV.list.filter(function(x){ return x.id !== id; }); adminRevDraw(); showToast("✅ "+t("التقييم اتمسح")); }
+          else showToast(t("⚠️ تعذر المسح، جرّب تاني."));
+        }).catch(function(){ showToast(t("⚠️ تعذر المسح، جرّب تاني.")); });
+    });
+    return;
+  }
+  if(e.target.closest("[data-arv-edit]")){
+    var host = card.querySelector(".arv-form-host");
+    if(host.innerHTML){ host.innerHTML = ""; return; }
+    document.querySelectorAll("#adminReviewsList .arv-form-host").forEach(function(h){ h.innerHTML = ""; });
+    var cur = +r.rating || 5;
+    host.innerHTML = '<form class="adm-reply-form"><div class="arv-pick" role="radiogroup" aria-label="'+t("عدد النجوم")+'">'
+      + [1,2,3,4,5].map(function(n){ return '<button type="button" data-n="'+n+'" class="'+(n <= cur ? 'on' : '')+'" aria-label="'+fmt(n)+'">★</button>'; }).join("")
+      + '</div><label><span>'+t("التعليق")+'</span><textarea rows="3" maxlength="1000">'+escHtml(r.comment||"")+'</textarea></label>'
+      + '<small class="apr-hint">'+t("بعد التعديل هيظهر جنب التقييم في الموقع إنه «عدّله المتجر»، والتقييم الأصلي بيتحفظ عندك.")+'</small>'
+      + '<div class="adm-reply-acts"><button type="submit" class="btn btn-primary btn-sm">💾 '+t("حفظ التعديل")+'</button><button type="button" class="btn btn-outline btn-sm" data-x>'+t("إلغاء")+'</button></div></form>';
+    var f = host.querySelector("form");
+    f.querySelector(".arv-pick").addEventListener("click", function(ev){
+      var b = ev.target.closest("[data-n]"); if(!b) return; cur = +b.dataset.n;
+      f.querySelectorAll(".arv-pick button").forEach(function(x){ x.classList.toggle("on", +x.dataset.n <= cur); });
+    });
+    f.querySelector("[data-x]").addEventListener("click", function(){ host.innerHTML = ""; });
+    f.addEventListener("submit", function(ev){
+      ev.preventDefault();
+      var sb = f.querySelector("[type=submit]"); sb.disabled = true;
+      adminRevSave(id, { rating: cur, comment: f.querySelector("textarea").value }, "✅ "+t("التقييم اتعدّل")).then(function(ok){ if(!ok) sb.disabled = false; });
+    });
+  }
+});
+document.getElementById("adminReviewsFilters").addEventListener("click", function(e){ var b = e.target.closest("[data-arv-f]"); if(!b) return; ADMIN_REV.f = b.dataset.arvF; adminRevDraw(); });
+document.getElementById("adminReviewsSearch").addEventListener("input", function(){ ADMIN_REV.q = this.value; adminRevDraw(); });
+document.getElementById("adminReviewsBtn").addEventListener("click", openAdminReviewsPage);
+document.getElementById("adminReviewsBackBtn").addEventListener("click", closeAdminReviewsPage);
+
 /* ---------- (الإدارة) طلبات توفير المنتجات ---------- */
 var ADMIN_PREQ = { list:[], f:"pending", openReply:null };
 function openAdminProdReqPage(){
@@ -10209,8 +10402,8 @@ function loadHomeReviews(){
         var nm = (r.customerName||"عميل").trim();
         return '<div class="review-card">'
           + '<span class="stars">'+stars(r.rating)+'</span>'
-          + '<p>“'+r.comment+'”</p>'
-          + '<div class="who"><span class="avatar">'+(nm.charAt(0)||"ع")+'</span><span class="name">'+nm+'</span></div>'
+          + '<p>“'+escHtml(r.comment)+'”</p>'
+          + '<div class="who"><span class="avatar">'+escHtml(nm.charAt(0)||"ع")+'</span><span class="name">'+escHtml(nm)+'</span>'+(r.edited ? '<small class="rev-edited">✏️ '+t("عدّله المتجر")+'</small>' : '')+'</div>'
         + '</div>';
       }).join("");
       section.style.display = "";
@@ -10254,11 +10447,12 @@ var ADM = null;
     customers: { page:"adminCustomersPage", open:openAdminCustomersPage, render:renderAdminCustomersPage, title:"بيانات العملاء" },
     coupons:   { page:"adminCouponsPage",   open:openAdminCouponsPage,   render:renderAdminCouponsPage,   title:"أكواد الخصم" },
     inventory: { page:"adminInventoryPage", open:openAdminInventoryPage, render:renderInventoryPage,      title:"تقرير المخزون" },
-    prodreq:   { page:"adminProdReqPage",   open:openAdminProdReqPage,   render:renderAdminProdReqPage,   title:"طلبات توفير منتجات" }
+    prodreq:   { page:"adminProdReqPage",   open:openAdminProdReqPage,   render:renderAdminProdReqPage,   title:"طلبات توفير منتجات" },
+    reviews:   { page:"adminReviewsPage",   open:openAdminReviewsPage,   render:renderAdminReviewsPage,   title:"تقييمات العملاء" }
   };
   var SCREENS = { home:"admHome", products:"admProducts", form:"admFormScreen", cats:"admCatsScreen", settings:"admSettingsScreen", more:"admMore" };
   var TITLES = { home:"لوحة التحكم", products:"المنتجات", form:"إضافة منتج", more:"المزيد", cats:"الأقسام", settings:"إعدادات الحساب" };
-  var TAB_OF = { home:"home", products:"products", form:"products", orders:"orders", more:"more", cats:"more", settings:"more", stock:"more", analytics:"more", inquiries:"more", customers:"more", coupons:"more", inventory:"more", prodreq:"more" };
+  var TAB_OF = { home:"home", products:"products", form:"products", orders:"orders", more:"more", cats:"more", settings:"more", stock:"more", analytics:"more", inquiries:"more", customers:"more", coupons:"more", inventory:"more", prodreq:"more", reviews:"more" };
   var cur = null, parentOf = {}, shownOnce = false;
   var pendingDelta = {}, flushTimer = null;
   var list = { filter:"all", q:"" };
@@ -10886,6 +11080,7 @@ var ADM = null;
       + li("stock", "🔔", t("طلبات التوفر"), t("عملاء مستنيين منتجات ترجع"), stats.stock)
       + li("inquiries", "📨", t("استفسارات العملاء"), t("رسايل صفحة تواصل معنا"), stats.inquiries)
       + li("customers", "👥", t("بيانات العملاء"), "")
+      + li("reviews", "⭐", t("تقييمات العملاء"), t("عدّل أو اخفي أو امسح تقييمات المنتجات"))
       + li("coupons", "🎟️", t("أكواد الخصم"), t("اعمل كود خصم بالنسبة اللي تختارها"))
       + li("pvdiag", "🧪", t("فحص مراجعة الإيصالات"), t("اتأكد إن مراجعة فودافون كاش وإنستاباي شغالة"))
       + li("analytics", "📊", t("تحليل الزوار"), "")

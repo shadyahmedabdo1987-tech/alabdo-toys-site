@@ -1055,6 +1055,8 @@ html[dir="ltr"] .preq-back svg{transform:scaleX(-1);}
 .arv-pick button{background:none; border:0; font-size:30px; line-height:1; color:var(--border); padding:2px;}
 .arv-pick button.on{color:var(--sunshine);}
 
+.rev-locked{font-size:12.5px; color:var(--ink-soft); background:var(--surface-3); border:1.5px dashed var(--border); border-radius:12px; padding:10px 12px; margin:0;}
+
 .inv-sum{display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; margin-bottom:14px;}
 .inv-tile{display:flex; flex-direction:column; gap:4px; padding:12px 14px; border-radius:16px; background:var(--surface); border:1px solid var(--border); text-align:start; font-family:inherit; color:var(--ink);}
 .inv-tile span{font-size:12px; color:var(--ink-soft); font-weight:700;}
@@ -3875,6 +3877,9 @@ document.getElementById("themeToggle").addEventListener("click", function(){
    الأقسام السبعة، ومحافظات مصر. الصفحات القانونية ولوحة التحكم وأسماء/أوصاف
    المنتجات هتتضاف في مراحل تالية. */
 var I18N_EN = {
+  "تقييمك للمنتج ده (تقدر تعدّله)": "Your review of this product (you can edit it)",
+  "التقييم متاح بس للعملاء اللي اشتروا المنتج ده من المتجر. أول ما تطلبه هتقدر تقيّمه.": "Only customers who bought this product from the store can review it. Order it and you'll be able to review it.",
+  "التقييم متاح بس للعملاء اللي اشتروا المنتج ده — سجّل دخولك بالحساب اللي طلبت بيه (من «حسابي»).": "Only customers who bought this product can review it — sign in with the account you ordered with (from «My account»).",
   "عدّله المتجر": "Edited by the store",
   "وصلك رد من متجر آل عبده — افتح الجرس اللي فوق": "You got a reply from Al Abdo Toys — open the bell at the top",
   "طلبت توفير": "You asked for",
@@ -6309,7 +6314,7 @@ modalBackdrop.addEventListener("click", function(e){
 function loadProductReviews(p){
   var box = document.getElementById("modalReviews");
   if(!box) return;
-  fetch("/api/reviews?productId="+encodeURIComponent(p.id), {cache:"no-store"}).then(function(r){ return r.json(); })
+  fetch("/api/reviews?productId="+encodeURIComponent(p.id), {cache:"no-store", headers: customerAuthHeaders()}).then(function(r){ return r.json(); })
     .then(function(res){
       if(!document.getElementById("modalReviews")) return;
       renderProductReviewsBox(p, res && res.ok ? res : {reviews:[], avg:0, count:0});
@@ -6340,9 +6345,12 @@ function renderProductReviewsBox(p, data){
     html += '<p style="color:var(--ink-soft); font-size:13px; margin-bottom:14px;">تعذر تحميل التقييمات، تأكد من الإنترنت.</p>';
   }
 
-  if(isCustomerAuthed()){
+  /* التقييم للي اشترى المنتج بس: السيرفر بيقول canReview لو العميل ده عنده
+     طلب فيه المنتج ده (وبيرفض أي تقييم من غير شراء حتى لو حد حاول يبعته). */
+  var canReview = isCustomerAuthed() && data.canReview === true;
+  if(canReview){
     html += '<form id="reviewForm" style="display:flex; flex-direction:column; gap:10px;">'
-      + '<label style="font-size:13px;">قيّم المنتج ده</label>'
+      + '<label style="font-size:13px;">'+(data.mine ? t("تقييمك للمنتج ده (تقدر تعدّله)") : t("قيّم المنتج ده"))+'</label>'
       + '<div id="reviewStars" style="display:flex; gap:4px;">'
         + [1,2,3,4,5].map(function(n){ return '<button type="button" data-star="'+n+'" style="font-size:20px; background:none; border:none; cursor:pointer; color:var(--sunshine); padding:0;">☆</button>'; }).join("")
       + '</div>'
@@ -6350,14 +6358,17 @@ function renderProductReviewsBox(p, data){
       + '<p id="reviewMsg" style="font-size:12.5px; display:none;"></p>'
       + '<button type="submit" class="btn btn-primary btn-sm" style="align-self:flex-start;">إرسال التقييم</button>'
     + '</form>';
-  } else {
-    html += '<p style="color:var(--ink-soft); font-size:12.5px;">لازم تسجّل دخول بحساب اشتريت بيه المنتج ده عشان تقدر تقيّمه (من زرار «حسابي» فوق).</p>';
+  } else if(isCustomerAuthed() && !data.offline){
+    html += '<p class="rev-locked">🛍️ '+t("التقييم متاح بس للعملاء اللي اشتروا المنتج ده من المتجر. أول ما تطلبه هتقدر تقيّمه.")+'</p>';
+  } else if(!isCustomerAuthed()){
+    html += '<p style="color:var(--ink-soft); font-size:12.5px;">'+t("التقييم متاح بس للعملاء اللي اشتروا المنتج ده — سجّل دخولك بالحساب اللي طلبت بيه (من «حسابي»).")+'</p>';
   }
 
   box.innerHTML = html;
 
-  if(isCustomerAuthed()){
-    var ratingVal = 0;
+  if(canReview){
+    var ratingVal = data.mine ? (+data.mine.rating || 0) : 0;
+    if(data.mine && data.mine.comment) document.getElementById("reviewComment").value = data.mine.comment;
     var starBtns = document.querySelectorAll("#reviewStars [data-star]");
     function paintStars(){
       starBtns.forEach(function(b){ b.textContent = (+b.dataset.star <= ratingVal) ? "★" : "☆"; });
@@ -6368,6 +6379,7 @@ function renderProductReviewsBox(p, data){
         paintStars();
       });
     });
+    paintStars();
     document.getElementById("reviewForm").addEventListener("submit", function(e){
       e.preventDefault();
       var msgEl = document.getElementById("reviewMsg");
@@ -6391,7 +6403,7 @@ function renderProductReviewsBox(p, data){
             loadProductReviews(p);
           } else if(res.status===403){
             msgEl.style.color = "var(--pink-deep)"; msgEl.style.display = "block";
-            msgEl.textContent = "التقييم متاح بس للعملاء اللي اشتروا المنتج ده وهما مسجّلين دخول وقت الطلب.";
+            msgEl.textContent = t("التقييم متاح بس للعملاء اللي اشتروا المنتج ده من المتجر. أول ما تطلبه هتقدر تقيّمه.");
           } else {
             msgEl.style.color = "var(--pink-deep)"; msgEl.style.display = "block";
             msgEl.textContent = "حصل خطأ، جرّب تاني.";

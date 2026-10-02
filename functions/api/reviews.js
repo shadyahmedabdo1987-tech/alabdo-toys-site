@@ -4,6 +4,21 @@ import { json, getList, saveList, requireCustomer, requireAdmin } from "../_lib.
    product plus a computed average and count, so the client can show real
    customer ratings instead of the admin-set seed numbers once any real
    reviews exist. */
+/* "Did this customer really buy it?" - only an order saved on the server
+   counts (orders.js; cancelled orders are deleted there). Orders placed while
+   logged in carry customerId; older guest orders are matched by the last 10
+   digits of the phone number, the same number the account uses. */
+function tail10(v){ return String(v || "").replace(/\D/g, "").slice(-10); }
+async function hasPurchased(env, customer, productId){
+  var orders = await getList(env, "orders");
+  var id = String(customer.identifier || "").toLowerCase(), tail = tail10(customer.identifier);
+  return orders.some(function(o){
+    var mine = (o.customerId && String(o.customerId).toLowerCase() === id) || (!o.customerId && tail.length >= 9 && tail10(o.phone) === tail);
+    if(!mine) return false;
+    return (o.items || []).some(function(it){ return String(it.id) === String(productId); });
+  });
+}
+
 export async function onRequestGet({ request, env }){
   var url = new URL(request.url);
   var productId = url.searchParams.get("productId") || "";
@@ -19,7 +34,18 @@ export async function onRequestGet({ request, env }){
     .map(function(r){ return { id: r.id, productId: r.productId, customerName: r.customerName, rating: r.rating, comment: r.comment, createdAt: r.createdAt, edited: !!r.editedByAdmin }; });
   var count = list.length;
   var avg = count ? (list.reduce(function(s, r){ return s + (+r.rating || 0); }, 0) / count) : 0;
-  return json({ ok:true, reviews: list, avg: avg, count: count });
+  var out = { ok:true, reviews: list, avg: avg, count: count };
+  /* a logged-in customer asking about one product also learns whether they
+     may review it (bought it) and gets their own earlier review to edit */
+  if(productId && request.headers.get("X-Customer-Id")){
+    var customer = await requireCustomer(request, env);
+    if(customer){
+      out.canReview = await hasPurchased(env, customer, productId);
+      var mine = all.find(function(r){ return r.customerId === customer.identifier && String(r.productId) === String(productId); });
+      if(mine) out.mine = { rating: mine.rating, comment: mine.comment || "" };
+    }
+  }
+  return json(out);
 }
 
 /* POST /api/reviews - customer only. Body: {productId, rating, comment}.
@@ -35,17 +61,12 @@ export async function onRequestPost({ request, env }){
   try{ body = await request.json(); }catch(e){ return json({ ok:false, error:"bad_json" }, 400); }
   var productId = body && body.productId;
   var rating = +(body && body.rating);
-  var comment = ((body && body.comment) || "").trim();
+  var comment = String((body && body.comment) || "").trim().slice(0, 1000);
   if(!productId || !(rating >= 1 && rating <= 5)){
     return json({ ok:false, error:"bad_request" }, 400);
   }
 
-  var orders = await getList(env, "orders");
-  var purchased = orders.some(function(o){
-    if(o.customerId !== customer.identifier) return false;
-    return (o.items || []).some(function(it){ return String(it.id) === String(productId); });
-  });
-  if(!purchased){ return json({ ok:false, error:"not_purchased" }, 403); }
+  if(!(await hasPurchased(env, customer, productId))){ return json({ ok:false, error:"not_purchased" }, 403); }
 
   var reviews = await getList(env, "reviews");
   var idx = reviews.findIndex(function(r){
@@ -60,6 +81,8 @@ export async function onRequestPost({ request, env }){
     comment: comment,
     createdAt: Date.now()
   };
+  /* a review the store hid stays hidden even if the customer rewrites it */
+  if(idx > -1 && reviews[idx].hidden) entry.hidden = true;
   if(idx > -1){ reviews[idx] = entry; } else { reviews.push(entry); }
   await saveList(env, "reviews", reviews);
   return json({ ok:true });

@@ -1134,6 +1134,11 @@ html[dir="rtl"] .fsp-bar i{margin-inline-start:0;}
 .aoe-link{background:none; border:0; padding:4px; color:var(--pink-deep); font-weight:700; font-size:12.5px; text-decoration:underline; text-underline-offset:3px;}
 .aoe-note{margin:0; font-size:12px; color:var(--ink-soft);}
 
+.pv-admin.is-fail{color:color-mix(in srgb, #e0123f 75%, var(--ink)); background:color-mix(in srgb, #e0123f 9%, var(--surface));}
+.pv-admin .pv-by{display:block; margin-top:4px; font-size:11.5px; font-weight:700; opacity:.85;}
+.aoe-ai{display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin-top:8px;}
+.aoe-ai .pv-spin{width:16px; height:16px;}
+
 .inv-sum{display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; margin-bottom:14px;}
 .inv-tile{display:flex; flex-direction:column; gap:4px; padding:12px 14px; border-radius:16px; background:var(--surface); border:1px solid var(--border); text-align:start; font-family:inherit; color:var(--ink);}
 .inv-tile span{font-size:12px; color:var(--ink-soft); font-weight:700;}
@@ -3265,10 +3270,24 @@ function loadProof(o, admin){
   p.catch(function(){ delete PROOF_CACHE[key]; });
   return p;
 }
+/* سبب رفض الإيصال بكلام مناسب للأدمن */
+function adminProofReason(c){
+  var r = c && c.reason;
+  if(r === "wrong_recipient") return t("التحويل مش على رقم المتجر")+" ("+PAYMENT_TRANSFER_NUMBER+" "+t("أو")+" "+PAYMENT_INSTAPAY_IPA+")";
+  if(r === "low_amount") return t("المبلغ المحوَّل أقل من إجمالي الطلب")+(c.total ? " ("+fmt(+c.total)+" "+t("ج.م")+")" : "");
+  if(r === "reused") return t("الإيصال ده اتستخدم قبل كده في طلب تاني");
+  if(r === "network") return t("تعذر الاتصال بالسيرفر");
+  return proofReasonText(r, c.amount, c.total);
+}
 function proofCheckAdminHtml(o){
   var c = o.proofCheck;
   if(!c) return "";
-  if(c.status === "admin") return '<div class="pv-admin is-ok">📎 '+t("الإيصال ده اتضاف من الإدارة")+(c.at ? ' · '+escHtml(new Date(c.at).toLocaleDateString(LANG==="en"?"en-US":"ar-EG")) : '')+'</div>';
+  var byAdmin = c.by === "admin" || c.status === "admin";
+  var adminTag = byAdmin ? '<small class="pv-by">📎 '+t("الإيصال ده اتضاف من الإدارة")+(c.at ? ' · '+escHtml(new Date(c.at).toLocaleDateString(LANG==="en"?"en-US":"ar-EG")) : '')+'</small>' : '';
+  if(c.status === "admin") return '<div class="pv-admin is-ok">'+adminTag+'</div>';
+  if(c.status === "fail") return '<div class="pv-admin is-fail">❌ '+t("المراجعة بالذكاء الاصطناعي رفضت الإيصال")+': '+escHtml(adminProofReason(c))+(c.amount!=null ? ' · '+t("المبلغ في الإيصال")+' '+fmt(+c.amount)+' '+t("ج.م") : '')+adminTag+'</div>';
+  if(c.status === "ok" && byAdmin) return '<div class="pv-admin is-ok">✅ '+t("اتراجع بالذكاء الاصطناعي")+': '+(c.amount!=null ? t("المبلغ")+' '+fmt(+c.amount)+' '+t("ج.م")+' · ' : '')+t("المستلم")+' <bdi dir="ltr">'+escHtml(c.recipient||"-")+'</bdi>'+(c.reference ? ' · '+t("رقم العملية")+' <bdi dir="ltr">'+escHtml(c.reference)+'</bdi>' : '')+(c.date ? ' · '+escHtml(c.date) : '')+adminTag+'</div>';
+  if(c.status === "manual" && byAdmin) return '<div class="pv-admin is-manual">⚠️ '+t("المراجعة الآلية ما اشتغلتش وقت الحفظ — اتأكد بنفسك إن الفلوس وصلت.")+adminTag+'</div>';
   if(c.status === "ok") return '<div class="pv-admin is-ok">✅ '+t("اتراجع آليًا")+': '+(c.amount!=null ? t("المبلغ")+' '+fmt(+c.amount)+' '+t("ج.م")+' · ' : '')+t("المستلم")+' <bdi dir="ltr">'+escHtml(c.recipient||"-")+'</bdi>'+(c.reference ? ' · '+t("رقم العملية")+' <bdi dir="ltr">'+escHtml(c.reference)+'</bdi>' : '')+(c.date ? ' · '+escHtml(c.date) : '')+'</div>';
   return '<div class="pv-admin is-manual">⚠️ '+t("محتاج مراجعة يدوية — المراجعة الآلية ما اشتغلتش وقت الطلب. اتأكد إن الفلوس وصلت قبل الشحن.")+'</div>';
 }
@@ -8362,7 +8381,34 @@ function showAdminOrderEditForm(order){
   updateTotal();
 
   /* طريقة الدفع + إيصال التحويل (فودافون كاش / إنستاباي) */
-  var pay = { method: order.paymentMethod || "cash", img: null, remove: false };
+  var pay = { method: order.paymentMethod || "cash", img: null, remove: false, check: null, seq: 0 };
+  function currentEditTotal(){
+    var sub = items.reduce(function(sum, it){ return sum + (+it.qty||0)*(+it.price||0); }, 0);
+    return sub - (order.coupon ? Math.round(sub * (+order.couponPercent||0) / 100) : 0) + (+order.shipping||0);
+  }
+  /* مراجعة الإيصال بالذكاء الاصطناعي (نفس مراجعة إيصال العميل) */
+  function aiCheckProof(){
+    if(!pay.img) return;
+    var seq = ++pay.seq, total = currentEditTotal();
+    pay.check = { state:"checking", total: total };
+    renderProofBox();
+    fetch("/api/verify-proof", { method:"POST", headers:{ "content-type":"application/json" }, body: JSON.stringify({ image: pay.img, total: total }) })
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        if(seq !== pay.seq) return;
+        var st = res && res.status;
+        pay.check = { state: st === "ok" ? "ok" : (st === "manual" ? "manual" : "fail"), reason: res && res.reason, amount: res && res.amount, reference: res && res.reference, recipient: res && res.recipient, total: total };
+        renderProofBox();
+      })
+      .catch(function(){ if(seq !== pay.seq) return; pay.check = { state:"fail", reason:"network", total: total }; renderProofBox(); });
+  }
+  function aiCheckHtml(){
+    var c = pay.check; if(!c || !pay.img) return "";
+    if(c.state === "checking") return '<div class="pv-admin is-manual aoe-ai"><span class="pv-spin" aria-hidden="true"></span> '+t("جارٍ مراجعة الإيصال بالذكاء الاصطناعي...")+'</div>';
+    if(c.state === "ok") return '<div class="pv-admin is-ok aoe-ai">✅ '+t("الإيصال سليم")+': '+(c.amount!=null ? t("المبلغ")+' '+fmt(+c.amount)+' '+t("ج.م")+' · ' : '')+t("محوَّل لحساب المتجر")+(c.reference ? ' · '+t("رقم العملية")+' <bdi dir="ltr">'+escHtml(c.reference)+'</bdi>' : '')+'</div>';
+    if(c.state === "manual") return '<div class="pv-admin is-manual aoe-ai">⚠️ '+t("المراجعة الآلية مش متاحة دلوقتي — اتأكد بنفسك إن الفلوس وصلت.")+'</div>';
+    return '<div class="pv-admin is-fail aoe-ai">❌ '+escHtml(adminProofReason(c))+(c.amount!=null ? ' · '+t("المبلغ في الإيصال")+' '+fmt(+c.amount)+' '+t("ج.م") : '')+' <button type="button" class="aoe-link" data-aoe-recheck>'+t("راجع تاني")+'</button></div>';
+  }
   var hadProof = orderHasProof(order);
   function renderProofBox(){
     var box = document.getElementById("aoeProof");
@@ -8379,7 +8425,7 @@ function showAdminOrderEditForm(order){
         + (hadProof && !pay.img && !pay.remove ? '<button type="button" class="btn btn-outline btn-sm" data-aoe-view>👁️ '+t("عرض")+'</button>' : '')
         + '<label class="btn btn-primary btn-sm">'+(has ? '🔄 '+t("تغيير") : '📎 '+t("إرفاق"))+'<input type="file" accept="image/*" id="aoeProofFile" hidden></label>'
         + (has ? '<button type="button" class="aoe-link" data-aoe-rm>'+t("شيل")+'</button>' : '')
-      + '</div></div>';
+      + '</div></div>' + aiCheckHtml();
   }
   renderProofBox();
   document.getElementById("aoePm").addEventListener("click", function(e){
@@ -8389,14 +8435,15 @@ function showAdminOrderEditForm(order){
     renderProofBox();
   });
   document.getElementById("aoeProof").addEventListener("click", function(e){
-    if(e.target.closest("[data-aoe-rm]")){ if(pay.img) pay.img = null; else pay.remove = true; renderProofBox(); return; }
+    if(e.target.closest("[data-aoe-rm]")){ if(pay.img){ pay.img = null; pay.check = null; pay.seq++; } else pay.remove = true; renderProofBox(); return; }
+    if(e.target.closest("[data-aoe-recheck]")){ aiCheckProof(); return; }
     if(e.target.closest("[data-aoe-view]")) openProofViewer(order, true);
   });
   document.getElementById("aoeProof").addEventListener("change", function(e){
     var f = e.target.files && e.target.files[0]; if(!f) return;
     readProofImage(f, function(data){
       if(!data){ showToast(t("⚠️ تعذر قراءة الصورة، جرّب صورة تانية")); return; }
-      pay.img = data; pay.remove = false; renderProofBox();
+      pay.img = data; pay.remove = false; renderProofBox(); aiCheckProof();
     });
   });
 
@@ -8417,6 +8464,16 @@ function showAdminOrderEditForm(order){
       return o2;
     });
     if(!cleanItems.length){ errEl.textContent = t("لازم يكون فيه صنف واحد على الأقل بالاسم."); errEl.style.display = "block"; return; }
+    var btn0 = this;
+    if(pay.img && paymentMethodNeedsProof(pay.method) && !btn0.dataset.aiOk){
+      if(pay.check && pay.check.state === "checking"){ showToast(t("⏳ استنى لحد ما مراجعة الإيصال تخلص")); return; }
+      if(pay.check && pay.check.state === "fail"){
+        appConfirm({ icon:"⚠️", title:t("الإيصال مش مطابق"), message:t("المراجعة بالذكاء الاصطناعي رفضت الإيصال")+": "+adminProofReason(pay.check)+"\n"+t("تحفظه برضه؟"), ok:t("احفظ برضه") }).then(function(ok){
+          if(!ok) return; btn0.dataset.aiOk = "1"; btn0.click(); delete btn0.dataset.aiOk;
+        });
+        return;
+      }
+    }
     var sub2 = cleanItems.reduce(function(sum, it){ return sum + it.qty*it.price; }, 0);
     var total = sub2 - (order.coupon ? Math.round(sub2 * (+order.couponPercent||0) / 100) : 0) + (+order.shipping||0);
     var btn = this;

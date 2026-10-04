@@ -85,6 +85,24 @@ export async function onRequestPost({ request, env }){
     }
   }catch(e){ /* لو الكتالوج مش متاح لأي سبب، الطلب بيكمّل زي الأول */ }
 
+  /* Free shipping (set per product from the admin app): the order ships free
+     only when EVERY product in it has freeShipping; otherwise the normal
+     shipping fee applies. Decided here, not taken from the phone.
+     (keep SHIPPING_FEE equal to SHIPPING_COST in index.html) */
+  var SHIPPING_FEE = 100;
+  var shipping = +body.shipping || 0;
+  try{
+    var shipCatalog = (typeof stockCatalog !== "undefined" && stockCatalog) ? stockCatalog : await getCatalog(env);
+    if(shipCatalog && Array.isArray(shipCatalog.products)){
+      var allFree = body.items.every(function(it){
+        var p = shipCatalog.products.find(function(x){ return String(x.id) === String(it.id); });
+        return !!(p && p.freeShipping);
+      });
+      shipping = allFree ? 0 : SHIPPING_FEE;
+    }
+  }catch(e){}
+  var clientShipping = +body.shipping || 0;
+
   /* كود الخصم: لازم العميل يكون مسجّل دخول، والكود فعّال ولسه ما خلصش،
      وما اتستخدمش قبل كده من نفس الحساب أو نفس رقم الموبايل أو نفس
      الإيميل. الخصم بيتحسب هنا على السيرفر (مش بنصدّق الرقم اللي جاي من
@@ -106,8 +124,8 @@ export async function onRequestPost({ request, env }){
     customerName: customer ? customer.name : (name || "عميل زائر"),
     items: body.items,
     subtotal: +body.subtotal || 0,
-    shipping: +body.shipping || 0,
-    total: +body.total || 0,
+    shipping: shipping,
+    total: Math.max(0, (+body.total || 0) - clientShipping + shipping),
     name: name,
     phone: phone,
     governorate: governorate,

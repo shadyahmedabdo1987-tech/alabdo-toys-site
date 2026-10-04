@@ -1139,6 +1139,16 @@ html[dir="rtl"] .fsp-bar i{margin-inline-start:0;}
 .aoe-ai{display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin-top:8px;}
 .aoe-ai .pv-spin{width:16px; height:16px;}
 
+.aoe-ship{display:flex; flex-direction:column; gap:8px; padding:10px 12px; border-radius:14px; background:var(--surface-3); border:1.5px solid var(--border);}
+.aoe-ship-row{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+.aoe-ship-row label{font-weight:800; font-size:13.5px;}
+.aoe-ship-in{display:flex; align-items:center; gap:6px;}
+.aoe-ship-in input{width:96px; text-align:center; padding:8px 10px; border-radius:10px; border:1.5px solid var(--border); background:var(--surface); color:var(--ink); font:inherit; font-weight:800; font-variant-numeric:tabular-nums;}
+.aoe-ship-in span{font-size:12.5px; color:var(--ink-soft);}
+.aoe-ship-btns{display:flex; gap:8px; flex-wrap:wrap;}
+.aoe-chip{border:1.5px solid var(--border); background:var(--surface); color:var(--ink); border-radius:999px; padding:6px 12px; font-size:12.5px; font-weight:800;}
+.aoe-chip.on{border-color:#18c08a; background:color-mix(in srgb, #18c08a 12%, var(--surface)); color:#0b8a60;}
+
 .inv-sum{display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; margin-bottom:14px;}
 .inv-tile{display:flex; flex-direction:column; gap:4px; padding:12px 14px; border-radius:16px; background:var(--surface); border:1px solid var(--border); text-align:start; font-family:inherit; color:var(--ink);}
 .inv-tile span{font-size:12px; color:var(--ink-soft); font-weight:700;}
@@ -8335,8 +8345,13 @@ function showAdminOrderEditForm(order){
           + '</div>'
           + '<div class="aoe-proof" id="aoeProof"></div>'
         + '</div>'
-        + '<div style="display:flex; justify-content:space-between; font-size:13px; color:var(--ink-soft);">'
-          + '<span>'+t("الشحن")+'</span><span class="tabular">'+fmt(+order.shipping||0)+' '+cur+'</span>'
+        + '<div class="aoe-ship">'
+          + '<div class="aoe-ship-row"><label for="aoeShip">🚚 '+t("قيمة الشحن")+'</label>'
+            + '<div class="aoe-ship-in"><input id="aoeShip" type="number" inputmode="numeric" min="0" step="1" value="'+(+order.shipping||0)+'"><span>'+cur+'</span></div></div>'
+          + '<div class="aoe-ship-btns">'
+            + '<button type="button" class="aoe-chip" data-ship-set="0">🎁 '+t("شحن مجاني")+'</button>'
+            + '<button type="button" class="aoe-chip" data-ship-set="'+SHIPPING_COST+'">↩️ '+t("الشحن العادي")+' ('+fmt(SHIPPING_COST)+')</button>'
+          + '</div>'
         + '</div>'
         + '<div style="display:flex; justify-content:space-between; font-weight:800; font-size:14.5px; border-top:1.5px solid var(--border); padding-top:10px;">'
           + '<span>'+t("الإجمالي الكلي (شامل الشحن)")+'</span><span class="tabular" id="aoeTotal">0 '+cur+'</span>'
@@ -8357,9 +8372,15 @@ function showAdminOrderEditForm(order){
   var items = (order.items||[]).map(function(it){ return { id: it.id, colorName: it.colorName, sizeLabel: it.sizeLabel, name: it.name, qty: +it.qty||1, price: +it.price||0 }; });
   if(!items.length) items = [{ name:"", qty:1, price:0 }];
 
+  /* قيمة الشحن اللي الأدمن كاتبها (0 = شحن مجاني) */
+  function editShipping(){ var el = document.getElementById("aoeShip"); var v = el ? Math.round(+el.value) : (+order.shipping||0); return (isFinite(v) && v > 0) ? v : 0; }
+  function paintShipChips(){
+    var v = editShipping();
+    document.querySelectorAll("[data-ship-set]").forEach(function(b){ b.classList.toggle("on", +b.dataset.shipSet === v); });
+  }
   function updateTotal(){
     var sub = items.reduce(function(sum, it){ return sum + (+it.qty||0)*(+it.price||0); }, 0);
-    var total = sub - (order.coupon ? Math.round(sub * (+order.couponPercent||0) / 100) : 0) + (+order.shipping||0);
+    var total = sub - (order.coupon ? Math.round(sub * (+order.couponPercent||0) / 100) : 0) + editShipping();
     document.getElementById("aoeTotal").textContent = fmt(total)+" "+t("ج.م");
   }
   function renderItemRows(){
@@ -8379,12 +8400,19 @@ function showAdminOrderEditForm(order){
   }
   renderItemRows();
   updateTotal();
+  paintShipChips();
+  document.getElementById("aoeShip").addEventListener("input", function(){ updateTotal(); paintShipChips(); });
+  document.querySelector(".aoe-ship-btns").addEventListener("click", function(e){
+    var b = e.target.closest("[data-ship-set]"); if(!b) return;
+    document.getElementById("aoeShip").value = b.dataset.shipSet;
+    updateTotal(); paintShipChips();
+  });
 
   /* طريقة الدفع + إيصال التحويل (فودافون كاش / إنستاباي) */
   var pay = { method: order.paymentMethod || "cash", img: null, remove: false, check: null, seq: 0 };
   function currentEditTotal(){
     var sub = items.reduce(function(sum, it){ return sum + (+it.qty||0)*(+it.price||0); }, 0);
-    return sub - (order.coupon ? Math.round(sub * (+order.couponPercent||0) / 100) : 0) + (+order.shipping||0);
+    return sub - (order.coupon ? Math.round(sub * (+order.couponPercent||0) / 100) : 0) + editShipping();
   }
   /* مراجعة الإيصال بالذكاء الاصطناعي (نفس مراجعة إيصال العميل) */
   function aiCheckProof(){
@@ -8475,7 +8503,7 @@ function showAdminOrderEditForm(order){
       }
     }
     var sub2 = cleanItems.reduce(function(sum, it){ return sum + it.qty*it.price; }, 0);
-    var total = sub2 - (order.coupon ? Math.round(sub2 * (+order.couponPercent||0) / 100) : 0) + (+order.shipping||0);
+    var total = sub2 - (order.coupon ? Math.round(sub2 * (+order.couponPercent||0) / 100) : 0) + editShipping();
     var btn = this;
     btn.disabled = true;
     fetch("/api/orders", {
@@ -8488,6 +8516,7 @@ function showAdminOrderEditForm(order){
         governorate: document.getElementById("aoeGovernorate").value,
         address: document.getElementById("aoeAddress").value.trim(),
         paymentMethod: pay.method,
+        shipping: editShipping(),
         paymentProof: pay.img || undefined,
         removeProof: (pay.remove && !pay.img) || undefined
       })

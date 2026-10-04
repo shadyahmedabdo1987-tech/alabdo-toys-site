@@ -1202,6 +1202,8 @@ button.inv-tile{cursor:pointer;}
 .order-eta b{display:block; font-size:14.5px; color:var(--ink); line-height:1.5;}
 .order-eta small{display:block; font-size:12.5px; color:var(--ink-soft); line-height:1.6; margin-top:2px;}
 /* تقرير المبيعات */
+.sal-line-btns{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;}
+.sal-line-btns .btn{justify-content:center;}
 .sal-lq{width:100%; padding:10px 12px; border-radius:12px; border:1.5px solid var(--border); background:var(--surface-3); color:var(--ink); font-family:inherit; font-size:14px; margin-bottom:10px;}
 .sal-lines{display:flex; flex-direction:column; gap:8px;}
 .sal-line{display:flex; gap:12px; align-items:center; padding:10px 12px; border-radius:14px; border:1px solid var(--border); background:var(--surface);}
@@ -4106,6 +4108,11 @@ document.getElementById("themeToggle").addEventListener("click", function(){
    الأقسام السبعة، ومحافظات مصر. الصفحات القانونية ولوحة التحكم وأسماء/أوصاف
    المنتجات هتتضاف في مراحل تالية. */
 var I18N_EN = {
+  "قيمة الأصناف المباعة": "Value of items sold",
+  "تفاصيل مبيعات متجر آل عبده": "Al Abdo Store sales details",
+  "تنزيل التفاصيل PDF": "Download details PDF",
+  "طباعة التفاصيل": "Print details",
+  "عدد الأصناف المباعة": "Items sold (lines)",
   "تفاصيل المبيعات": "Sales details",
   "صنف": "items",
   "ابحث باسم المنتج أو العميل أو رقم الفاتورة...": "Search by product, customer or invoice number...",
@@ -9510,6 +9517,7 @@ function renderSalesPage(){
     + '</tbody><tfoot><tr><td>'+t("الإجمالي")+'</td><td class="tabular">'+fmt(S.count)+'</td><td class="tabular">'+fmt(S.pieces)+'</td><td class="tabular"><b>'+salMoney(S.total)+'</b></td></tr></tfoot></table></div></section>';
   /* تفاصيل المبيعات: كل منتج اتباع لمين وإمتى */
   h += '<section class="admin-card sal-card"><h3>'+t("تفاصيل المبيعات")+' <small>('+fmt(S.lines.length)+' '+t("صنف")+')</small></h3>'
+    + '<div class="sal-line-btns"><button type="button" class="btn btn-primary btn-sm" id="salLinesPdf">⬇️ '+t("تنزيل التفاصيل PDF")+'</button><button type="button" class="btn btn-outline btn-sm" id="salLinesPrint">🖨️ '+t("طباعة التفاصيل")+'</button></div>'
     + '<input type="search" id="salLineQ" class="sal-lq" placeholder="'+escHtml(t("ابحث باسم المنتج أو العميل أو رقم الفاتورة..."))+'" autocomplete="off" value="'+escHtml(SALES.lq)+'">'
     + '<div id="salLines" class="sal-lines"></div></section>';
   /* المنتجات */
@@ -9543,8 +9551,7 @@ function salWhen(ts){
 }
 function salDrawLines(){
   var box = document.getElementById("salLines"), S = SALES.lastS; if(!box || !S) return;
-  var q = SALES.lq.trim().toLowerCase();
-  var rows = q ? S.lines.filter(function(l){ return (l.prod+" "+l.variant+" "+l.cust+" "+l.inv+" "+l.gov).toLowerCase().indexOf(q) > -1; }) : S.lines;
+  var rows = salFilteredLines(S);
   if(!rows.length){ box.innerHTML = '<p class="inv-empty">'+t("مفيش نتائج.")+'</p>'; return; }
   var show = SALES.allLines ? rows : rows.slice(0, 20);
   box.innerHTML = show.map(function(l){
@@ -9587,14 +9594,16 @@ document.getElementById("salPeriods").addEventListener("click", function(e){ var
 document.getElementById("salBody").addEventListener("click", function(e){
   if(e.target.closest("[data-sal-allp]")){ SALES.allProducts = !SALES.allProducts; renderSalesPage(); return; }
   if(e.target.closest("[data-sal-alll]")){ SALES.allLines = !SALES.allLines; salDrawLines(); return; }
+  if(e.target.closest("#salLinesPdf")){ salPdfRun("salLinesPdf", "lines"); return; }
+  if(e.target.closest("#salLinesPrint")){ salPrintRun("salLinesPrint", "lines"); return; }
   if(e.target.closest("[data-sal-retry]")){ SALES.orders = null; salLoad(); renderSalesPage(); }
 });
 document.getElementById("salBody").addEventListener("input", function(e){ if(e.target && e.target.id === "salLineQ"){ SALES.lq = e.target.value; salDrawLines(); } });
 document.getElementById("adminSalesBtn").addEventListener("click", openAdminSalesPage);
 document.getElementById("adminSalesBackBtn").addEventListener("click", closeAdminSalesPage);
-function salFileName(ext){
+function salFileName(ext, mode){
   var R = salRange();
-  return "alabdo-sales-" + salDayKey(R.start) + (salDayKey(R.start) !== salDayKey(new Date(+R.end - 1)) ? "_" + salDayKey(new Date(+R.end - 1)) : "") + "." + ext;
+  return (mode === "lines" ? "alabdo-sales-details-" : "alabdo-sales-") + salDayKey(R.start) + (salDayKey(R.start) !== salDayKey(new Date(+R.end - 1)) ? "_" + salDayKey(new Date(+R.end - 1)) : "") + "." + ext;
 }
 
 /* Excel (CSV) بكل أقسام التقرير */
@@ -9624,7 +9633,9 @@ document.getElementById("salCsv").addEventListener("click", function(){
 });
 
 /* ---------- PDF التقرير: صفحات A4 بتترسم على canvas ---------- */
-function salpRender(S, logo){
+function salpRender(S, logo, mode){
+  var isLines = mode === "lines", LINES = isLines ? salFilteredLines(S) : S.lines;
+  var TITLE_TXT = isLines ? t("تفاصيل مبيعات متجر آل عبده") : t("تقرير مبيعات متجر آل عبده");
   var P = INVP, W = P.W, H = P.H, M = P.M, innerW = W - 2*M, now = new Date();
   var TOP_FIRST = 146, TOP_NEXT = 72, BOTTOM = H - 58;
   var meas = document.createElement("canvas").getContext("2d"); meas.direction = "rtl";
@@ -9638,6 +9649,17 @@ function salpRender(S, logo){
   }
   function T(ctx, s, x, y, font, color, align){ ctx.font = font; ctx.fillStyle = color; ctx.textAlign = align || "right"; ctx.fillText(s, x, y); }
   var cur = " "+t("ج.م");
+  if(isLines){
+    var lp = LINES.reduce(function(a, l){ return a + l.qty; }, 0), lt = LINES.reduce(function(a, l){ return a + l.total; }, 0);
+    blocks.push({ h: SALES.lq.trim() ? 98 : 80, draw:function(ctx, y){
+      var gap = 10, bw = (innerW - gap*2) / 3, bh = 62;
+      [[t("قيمة الأصناف المباعة"), salMoney(lt)+cur, P.deep, true], [t("عدد الأصناف المباعة"), fmt(LINES.length)], [t("القطع"), fmt(lp)]].forEach(function(it, c){
+        tile(ctx, W - M - (c+1)*bw - c*gap, y, bw, bh, it[0], it[1], it[2], it[3]);
+      });
+      if(SALES.lq.trim()) T(ctx, t("بحث")+": «"+SALES.lq.trim()+"»", W - M, y + bh + 16, invpFont(700, 11.5), P.muted);
+    }});
+  }
+  if(!isLines){
   /* الملخص */
   blocks.push({ h: S.discount ? 164 : 146, draw:function(ctx, y){
     var gap = 10, bw = (innerW - gap*2) / 3, bh = 62;
@@ -9674,6 +9696,7 @@ function salpRender(S, logo){
         if(i % every === 0 || i === n-1) T(ctx, salBucketLabel(b, S.monthly, true), x + bwid/2, cy + ch + 13, invpFont(400, 9), P.muted, "center");
       });
     }});
+  }
   }
   /* الجداول */
   function table(title, cols, rows, foot, note){
@@ -9715,6 +9738,7 @@ function salpRender(S, logo){
     if(note) blocks.push({ h: 22, draw:function(ctx, y){ T(ctx, note, W - M, y + 12, invpFont(400, 10.5), P.faint); } });
     blocks.push({ h: 18, gap:true, draw:function(){} });
   }
+  if(!isLines){
   var active = S.buckets.filter(function(b){ return b.count; });
   table((S.buckets.length > 1 ? t("تفاصيل")+" " : "")+(S.monthly ? t("المبيعات بالشهر") : t("المبيعات باليوم")), [
     { label: S.monthly ? t("الشهر") : t("اليوم"), al:"right", get:function(b){ return b.foot ? t("الإجمالي") : salBucketLabel(b, S.monthly); } },
@@ -9738,16 +9762,17 @@ function salpRender(S, logo){
   ]; };
   table(t("حسب طريقة الدفع"), splitCols(t("طريقة الدفع")), S.pay, { foot:true, count:S.count, total:S.total });
   table(t("حسب المحافظة"), splitCols(t("المحافظة")), S.gov, { foot:true, count:S.count, total:S.total });
+  }
   var locD = LANG==="en" ? "en-US" : "ar-EG";
   table(t("تفاصيل المبيعات"), [
-    { label:t("التاريخ"), w:84, al:"right", split:true, font:invpFont(400, 10.5), color:P.muted, get:function(l){ var d = new Date(l.ts); return d.toLocaleDateString(locD, { day:"numeric", month:"short", year:"numeric" })+"\n"+d.toLocaleTimeString(locD, { hour:"numeric", minute:"2-digit" }); } },
-    { label:t("الفاتورة"), w:58, al:"center", font:invpFont(400, 10.5), color:P.muted, get:function(l){ return "#"+l.inv; } },
+    { label:t("التاريخ"), w:84, al:"right", split:true, font:invpFont(400, 10.5), color:P.muted, get:function(l){ if(l.foot) return t("الإجمالي"); var d = new Date(l.ts); return d.toLocaleDateString(locD, { day:"numeric", month:"short", year:"numeric" })+"\n"+d.toLocaleTimeString(locD, { hour:"numeric", minute:"2-digit" }); } },
+    { label:t("الفاتورة"), w:58, al:"center", font:invpFont(400, 10.5), color:P.muted, get:function(l){ return l.foot ? "" : "#"+l.inv; } },
     { label:t("العميل"), w:118, al:"right", wrap:true, font:invpFont(700, 11), get:function(l){ return l.cust; } },
     { label:t("المنتج"), al:"right", wrap:true, font:invpFont(400, 11), get:function(l){ return l.prod+(l.variant ? " ("+l.variant+")" : ""); } },
     { label:t("الكمية"), w:46, al:"center", get:function(l){ return fmt(l.qty); } },
-    { label:t("السعر"), w:62, al:"center", color:P.muted, get:function(l){ return salMoney(l.price); } },
+    { label:t("السعر"), w:62, al:"center", color:P.muted, get:function(l){ return l.foot ? "" : salMoney(l.price); } },
     { label:t("الإجمالي"), w:80, al:"center", font:invpFont(800, 11.5), get:function(l){ return salMoney(l.total)+cur; } }
-  ], S.lines, null, t("كل صنف اتباع في الفترة — الأحدث الأول. الإجمالي قبل خصم الكوبون والشحن."));
+  ], LINES, isLines ? { foot:true, ts:0, inv:"", cust:"", prod:"", variant:"", qty: LINES.reduce(function(a, l){ return a + l.qty; }, 0), price:0, total: LINES.reduce(function(a, l){ return a + l.total; }, 0) } : null, t("كل صنف اتباع في الفترة — الأحدث الأول. الإجمالي قبل خصم الكوبون والشحن."));
 
   /* توزيع البلوكات على الصفحات */
   var pages = [], pg = { list:[] }, y = TOP_FIRST;
@@ -9777,13 +9802,13 @@ function salpRender(S, logo){
         ctx.strokeStyle = "#f6c6da"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(lx + 33, 69, 33, 0, Math.PI*2); ctx.stroke();
       }
       var tx = logo ? lx - 16 : W - M;
-      T(ctx, t("تقرير مبيعات متجر آل عبده"), tx, 52, invpFont(700, 25, true), P.deep);
+      T(ctx, TITLE_TXT, tx, 52, invpFont(700, isLines ? 23 : 25, true), P.deep);
       T(ctx, t("الفترة")+": "+S.R.label+" — "+S.R.span, tx, 82, invpFont(700, 13), P.ink);
       T(ctx, t("اتعمل")+" "+now.toLocaleDateString("ar-EG", { weekday:"long", day:"numeric", month:"long", year:"numeric" })+" — "+now.toLocaleTimeString("ar-EG", { hour:"numeric", minute:"2-digit" }), tx, 103, invpFont(400, 12), P.muted);
       ctx.fillStyle = P.pink; ctx.fillRect(M, 124, innerW, 3);
       T(ctx, t("الطلبات اللي اتمسحت مش داخلة في الحساب"), M, 103, invpFont(400, 10.5), P.faint, "left");
     } else {
-      T(ctx, t("تقرير مبيعات متجر آل عبده")+" — "+S.R.span, W - M, 40, invpFont(700, 12), P.muted);
+      T(ctx, TITLE_TXT+" — "+S.R.span, W - M, 40, invpFont(700, 12), P.muted);
       T(ctx, t("تابع"), M, 40, invpFont(400, 11), P.faint, "left");
       ctx.fillStyle = P.pink; ctx.fillRect(M, 56, innerW, 2);
     }
@@ -9794,39 +9819,44 @@ function salpRender(S, logo){
     return cv;
   });
 }
-function salBuild(){
+function salBuild(mode){
   var S = salCompute();
   return Promise.all([invpFontsReady(), invpImage(BRAND_LOGO_URL)]).then(function(res){
-    var canvases = salpRender(S, res[1]);
-    return { canvases:canvases, bytes: invpBuildPdf(canvases.map(invpCanvasJpeg), t("تقرير مبيعات متجر آل عبده")+" — "+S.R.span) };
+    var canvases = salpRender(S, res[1], mode);
+    return { canvases:canvases, bytes: invpBuildPdf(canvases.map(invpCanvasJpeg), (mode === "lines" ? t("تفاصيل مبيعات متجر آل عبده") : t("تقرير مبيعات متجر آل عبده"))+" — "+S.R.span) };
   });
+}
+function salFilteredLines(S){
+  var q = SALES.lq.trim().toLowerCase();
+  return q ? S.lines.filter(function(l){ return (l.prod+" "+l.variant+" "+l.cust+" "+l.inv+" "+l.gov).toLowerCase().indexOf(q) > -1; }) : S.lines;
 }
 function salBusy(id, on){
   var b = document.getElementById(id); if(!b) return;
   if(on){ b.dataset.orig = b.innerHTML; b.disabled = true; b.innerHTML = "⏳ "+t("جاري التجهيز..."); }
   else { b.disabled = false; if(b.dataset.orig) b.innerHTML = b.dataset.orig; }
 }
-document.getElementById("salPdf").addEventListener("click", function(){
+function salPdfRun(btnId, mode){
   if(!SALES.orders){ showToast(t("⏳ استنى لحد ما الطلبات تتحمّل")); return; }
-  salBusy("salPdf", true);
-  salBuild().then(function(r){
-    var name = salFileName("pdf");
+  salBusy(btnId, true);
+  salBuild(mode).then(function(r){
+    var name = salFileName("pdf", mode);
     invSaveFile(name, "application/pdf", invpBytesToB64(r.bytes), new Blob([r.bytes], { type:"application/pdf" }));
-    salBusy("salPdf", false);
+    salBusy(btnId, false);
     if(!window.AlAbdoNative) showToast("✅ "+t("اتنزّل التقرير PDF")+" ("+fmt(r.canvases.length)+" "+t("صفحة")+")");
-  }).catch(function(e){ console.error(e); salBusy("salPdf", false); showToast("⚠️ "+t("تعذر تجهيز الـ PDF، جرّب تاني.")); });
-});
+  }).catch(function(e){ console.error(e); salBusy(btnId, false); showToast("⚠️ "+t("تعذر تجهيز الـ PDF، جرّب تاني.")); });
+}
+document.getElementById("salPdf").addEventListener("click", function(){ salPdfRun("salPdf"); });
 /* طباعة: في تطبيق الإدارة بتفتح شاشة الطباعة بتاعة أندرويد (طابعة أو
    "حفظ كـ PDF")، وفي المتصفح بتطبع صفحات التقرير نفسها. */
-document.getElementById("salPrint").addEventListener("click", function(){
+function salPrintRun(btnId, mode){
   if(!SALES.orders){ showToast(t("⏳ استنى لحد ما الطلبات تتحمّل")); return; }
-  salBusy("salPrint", true);
-  salBuild().then(function(r){
-    salBusy("salPrint", false);
+  salBusy(btnId, true);
+  salBuild(mode).then(function(r){
+    salBusy(btnId, false);
     var nat = window.AlAbdoNative;
-    if(nat && typeof nat.printPdf === "function"){ nat.printPdf(salFileName("pdf"), invpBytesToB64(r.bytes)); return; }
+    if(nat && typeof nat.printPdf === "function"){ nat.printPdf(salFileName("pdf", mode), invpBytesToB64(r.bytes)); return; }
     if(nat){
-      invSaveFile(salFileName("pdf"), "application/pdf", invpBytesToB64(r.bytes), null);
+      invSaveFile(salFileName("pdf", mode), "application/pdf", invpBytesToB64(r.bytes), null);
       showToast(t("حدّث برنامج الإدارة عشان الطباعة المباشرة — الملف اتحفظ في Downloads وتقدر تطبعه منه"));
       return;
     }
@@ -9843,8 +9873,9 @@ document.getElementById("salPrint").addEventListener("click", function(){
     var go = function(){ try{ fr.contentWindow.focus(); fr.contentWindow.print(); }catch(e){ showToast("⚠️ "+t("الطباعة مش متاحة هنا — نزّل الـ PDF واطبعه")); } };
     var imgs = doc.images, left = imgs.length;
     if(!left) go(); else Array.prototype.forEach.call(imgs, function(im){ if(im.complete){ if(--left === 0) go(); } else im.onload = im.onerror = function(){ if(--left === 0) go(); }; });
-  }).catch(function(e){ console.error(e); salBusy("salPrint", false); showToast("⚠️ "+t("تعذر تجهيز التقرير، جرّب تاني.")); });
-});
+  }).catch(function(e){ console.error(e); salBusy(btnId, false); showToast("⚠️ "+t("تعذر تجهيز التقرير، جرّب تاني.")); });
+}
+document.getElementById("salPrint").addEventListener("click", function(){ salPrintRun("salPrint"); });
 
 /* ---------- الجرس 🔔 = ردود المتجر على العميل ----------
    الجرس بيظهر بس لما يكون فيه رد من الإدارة: رد على طلب توفير منتج، رد على

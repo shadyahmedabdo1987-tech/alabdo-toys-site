@@ -1,5 +1,5 @@
 # آل عبده - الإدارة: بناء تطبيق لوحة التحكم أوتوماتيك على سيرفرات GitHub.
-# icons: admin navy+gold maskable icon (rebuild)
+# icons: admin navy+gold maskable icon (rebuild 2: finds icons in root or .github/workflows)
 # التطبيق بيفتح لوحة تحكم المتجر جوه متصفح داخلي خاص بيه (WebView) - من غير
 # جوجل كروم خالص، فمفيش أي رسالة من كروم أول مرة. تطبيق منفصل عن تطبيق
 # العملاء (com.alabdotoys.admin)، أيقونته عليها ترس، ولموبايلك إنت بس
@@ -1669,9 +1669,15 @@ jobs:
               res=os.path.join(os.environ["P"],"app/src/main/res")
               # admin icon: the store logo on navy + gold ring + gear (admin-icon-*.png in the repo),
               # so it never looks like the customer app on the phone
-              if os.path.exists("admin-icon-512.png") and os.path.exists("admin-icon-maskable-512.png"):
-                  legacy = Image.open("admin-icon-512.png").convert("RGBA").resize((512,512), Image.LANCZOS)
-                  mask = Image.open("admin-icon-maskable-512.png").convert("RGBA").resize((512,512), Image.LANCZOS)
+              def find_icon(fn):
+                  for d in ("", ".github/workflows/", ".github/"):
+                      if os.path.exists(d+fn): return d+fn
+                  return None
+              a_leg, a_mask = find_icon("admin-icon-512.png"), find_icon("admin-icon-maskable-512.png")
+              print("admin icons:", a_leg, a_mask)
+              if a_leg and a_mask:
+                  legacy = Image.open(a_leg).convert("RGBA").resize((512,512), Image.LANCZOS)
+                  mask = Image.open(a_mask).convert("RGBA").resize((512,512), Image.LANCZOS)
               else:
                   legacy, mask = make("icon-512.png","icon-maskable-512.png")
               dens={"mdpi":1,"hdpi":1.5,"xhdpi":2,"xxhdpi":3,"xxxhdpi":4}

@@ -56,7 +56,8 @@ export async function onRequestGet({ request, env }){
   var acc = await getAdminAccount(env);
   if(!rec || !acc || rec.pw !== String(acc.passwordHash || "").slice(0, 16)) return json({ ok:false, error:"unauthorized" }, 401);
 
-  var orders = (await getList(env, "orders")).slice(-15).map(function(o){
+  /* orders the admin already opened are not announced again */
+  var orders = (await getList(env, "orders")).filter(function(o){ return !o.adminSeen; }).slice(-15).map(function(o){
     var qty = 0;
     (Array.isArray(o.items) ? o.items : []).forEach(function(it){ qty += (+it.qty || 0); });
     return { id: o.id, name: o.customerName || o.name || "", total: +o.total || 0, qty: qty, createdAt: o.createdAt || 0 };

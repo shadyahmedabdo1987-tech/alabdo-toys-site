@@ -1197,7 +1197,22 @@ button.inv-tile{cursor:pointer;}
 .inv-item.is-out .inv-chip{background:color-mix(in srgb, #e0364f 14%, var(--surface)); color:color-mix(in srgb, #e0364f 80%, var(--ink));}
 .inv-item.is-low .inv-chip{background:color-mix(in srgb, #ffb703 20%, var(--surface)); color:color-mix(in srgb, #e09400 80%, var(--ink));}
 .inv-item.is-ok .inv-chip{background:color-mix(in srgb, #1fb87f 14%, var(--surface)); color:color-mix(in srgb, #1fb87f 70%, var(--ink));}
+.order-eta{display:flex; align-items:center; gap:12px; margin-top:16px; padding:12px 16px; border-radius:16px; background:color-mix(in srgb, var(--sky) 12%, var(--surface)); border:1.5px solid color-mix(in srgb, var(--sky) 35%, var(--border)); text-align:start; max-width:340px;}
+.order-eta-ic{font-size:30px; line-height:1; flex:none;}
+.order-eta b{display:block; font-size:14.5px; color:var(--ink); line-height:1.5;}
+.order-eta small{display:block; font-size:12.5px; color:var(--ink-soft); line-height:1.6; margin-top:2px;}
 /* تقرير المبيعات */
+.sal-lq{width:100%; padding:10px 12px; border-radius:12px; border:1.5px solid var(--border); background:var(--surface-3); color:var(--ink); font-family:inherit; font-size:14px; margin-bottom:10px;}
+.sal-lines{display:flex; flex-direction:column; gap:8px;}
+.sal-line{display:flex; gap:12px; align-items:center; padding:10px 12px; border-radius:14px; border:1px solid var(--border); background:var(--surface);}
+.sal-line-main{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;}
+.sal-line-main strong{font-size:14px; color:var(--ink); line-height:1.45;}
+.sal-line-var{font-size:12px; color:var(--pink-deep); font-weight:700;}
+.sal-line-meta{font-size:12px; color:var(--ink-soft); line-height:1.55;}
+.sal-line-amt{flex:none; display:flex; flex-direction:column; align-items:flex-end; gap:2px; text-align:end;}
+.sal-line-amt b{font-size:16px; font-weight:800; color:var(--ink);}
+.sal-line-amt b small{font-size:11px; color:var(--ink-soft);}
+.sal-line-amt span{font-size:11.5px; color:var(--ink-soft);}
 .sal-sum{grid-template-columns:1.5fr repeat(4, minmax(0,1fr));}
 .sal-sum .sal-main em{font-style:normal; font-size:11.5px; color:var(--ink-soft); font-weight:700;}
 .sal-sum .sal-main{background:color-mix(in srgb, var(--pink) 9%, var(--surface)); border-color:color-mix(in srgb, var(--pink) 35%, var(--border));}
@@ -4091,6 +4106,15 @@ document.getElementById("themeToggle").addEventListener("click", function(){
    الأقسام السبعة، ومحافظات مصر. الصفحات القانونية ولوحة التحكم وأسماء/أوصاف
    المنتجات هتتضاف في مراحل تالية. */
 var I18N_EN = {
+  "تفاصيل المبيعات": "Sales details",
+  "صنف": "items",
+  "ابحث باسم المنتج أو العميل أو رقم الفاتورة...": "Search by product, customer or invoice number...",
+  "مفيش نتائج.": "No results.",
+  "اعرض أول 20 بس": "Show first 20 only",
+  "كل صنف اتباع في الفترة — الأحدث الأول. الإجمالي قبل خصم الكوبون والشحن.": "Every item sold in the period — newest first. Totals are before coupon discount and shipping.",
+  "و": "and",
+  "طلبك هيوصلك خلال يومين لـ 3 أيام": "Your order will arrive within 2 to 3 days",
+  "متوقع بين": "Expected between",
   "💰 تقرير المبيعات": "💰 Sales report",
   "تقرير المبيعات": "Sales report",
   "التقارير والمخزون": "Reports & inventory",
@@ -5995,6 +6019,13 @@ function showOrderSuccessModal(phone){
       + '<span style="font-size:48px;">✅</span>'
       + '<h3 style="margin-top:8px;">'+t("استلام طلبك بنجاح")+'</h3>'
       + '<p style="color:var(--ink-soft); font-size:14.5px; margin-top:2px; line-height:1.7;">'+t("جاري مراجعة بياناتك وتجهيز منتجك الآن.")+'<br>'+t("سعداء بتعاملكم معنا،")+'</p>'
+      + (function(){
+          /* مدة التوصيل: من يومين لـ 3 أيام من النهارده */
+          var loc = LANG==="en" ? "en-US" : "ar-EG", d1 = new Date(), d2 = new Date();
+          d1.setDate(d1.getDate()+2); d2.setDate(d2.getDate()+3);
+          var o = { weekday:"long", day:"numeric", month:"long" };
+          return '<div class="order-eta"><span class="order-eta-ic" aria-hidden="true">🚚</span><span><b>'+t("طلبك هيوصلك خلال يومين لـ 3 أيام")+'</b><small>'+t("متوقع بين")+' '+escHtml(d1.toLocaleDateString(loc, o))+(LANG==="en" ? " and " : " و")+escHtml(d2.toLocaleDateString(loc, o))+'</small></span></div>';
+        })()
     + '</div>';
   document.getElementById("modalCard").classList.add("acct-card");
   document.getElementById("modalCard").innerHTML = html;
@@ -6004,7 +6035,7 @@ function showOrderSuccessModal(phone){
   document.body.style.overflow = "hidden";
   var goHome = function(){ closeAllPanels(); goToView("home"); };
   document.getElementById("modalCloseBtn").addEventListener("click", goHome);
-  setTimeout(goHome, 3000);
+  setTimeout(goHome, 6000);
 }
 function handlePaymentSubmit(e){
   if(e && e.preventDefault) e.preventDefault();
@@ -9358,7 +9389,7 @@ document.getElementById("invPdf").addEventListener("click", invPdf);
    آخر 7 أيام / الشهر ده / السنة دي / الكل / من–لحد. التفاصيل: المبيعات
    باليوم، أكتر المنتجات مبيعًا، حسب طريقة الدفع، حسب المحافظة.
    التقرير بيتنزل PDF (نفس كاتب الـ PDF بتاع تقرير المخزون) أو بيتطبع. */
-var SALES = { p:"month", from:"", to:"", orders:null, loading:false, err:false, allProducts:false };
+var SALES = { p:"month", from:"", to:"", orders:null, loading:false, err:false, allProducts:false, allLines:false, lq:"" };
 function salDayKey(d){ var p = function(n){ return (n<10?"0":"")+n; }; return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate()); }
 function salParseDay(s){ var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s||""); return m ? new Date(+m[1], +m[2]-1, +m[3]) : null; }
 function salMoney(n){ return fmt(Math.round(+n||0)); }
@@ -9390,7 +9421,7 @@ function salRange(){
 function salCompute(){
   var R = salRange(), s = +R.start, e = +R.end;
   var orders = (SALES.orders||[]).filter(function(o){ var ts = +o.createdAt||0; return ts >= s && ts < e; });
-  var S = { R:R, orders:orders, count:orders.length, total:0, pieces:0, shipping:0, discount:0, buckets:[], products:[], pay:[], gov:[] };
+  var S = { R:R, orders:orders, count:orders.length, total:0, pieces:0, shipping:0, discount:0, buckets:[], products:[], pay:[], gov:[], lines:[] };
   var days = Math.round((e - s) / 86400000), monthly = days > 62;
   var bmap = {}, pmap = {}, paymap = {}, gmap = {};
   /* كل الأيام (أو الشهور) في الفترة، حتى اللي مفيهاش مبيعات، عشان الرسم */
@@ -9412,6 +9443,8 @@ function salCompute(){
       var nm = String(it.name||"").trim() || t("منتج"), pk = it.id!=null && it.id!=="" ? "id:"+it.id : "nm:"+nm;
       var p = pmap[pk]; if(!p){ p = pmap[pk] = { name:nm, qty:0, total:0, orders:0 }; S.products.push(p); }
       p.qty += q; p.total += q*pr; p.orders++;
+      var vr = [it.colorName ? t("لون")+": "+it.colorName : "", it.sizeLabel || ""].filter(Boolean).join(" · ");
+      S.lines.push({ ts:+o.createdAt, inv:String(o.id||"").slice(-6), cust:String(o.customerName || o.name || t("عميل")).trim(), gov:String(o.governorate||""), prod:nm, variant:vr, qty:q, price:pr, total:q*pr });
     });
     var pk2 = o.paymentMethod || "";
     var pm = paymap[pk2]; if(!pm){ pm = paymap[pk2] = { name: pk2 ? paymentMethodLabel(pk2) : t("غير محدد"), count:0, total:0 }; S.pay.push(pm); }
@@ -9421,6 +9454,7 @@ function salCompute(){
     g.count++; g.total += tot;
   });
   S.buckets.sort(function(a, b){ return a.key < b.key ? -1 : 1; });
+  S.lines.sort(function(a, b){ return b.ts - a.ts; });
   S.products.sort(function(a, b){ return b.total - a.total || b.qty - a.qty; });
   var byTotal = function(a, b){ return b.total - a.total || b.count - a.count; };
   S.pay.sort(byTotal); S.gov.sort(byTotal);
@@ -9474,6 +9508,10 @@ function renderSalesPage(){
   h += '<div class="sal-tbl-wrap"><table class="sal-tbl"><thead><tr><th>'+(S.monthly ? t("الشهر") : t("اليوم"))+'</th><th>'+t("الطلبات")+'</th><th>'+t("القطع")+'</th><th>'+t("المبيعات")+'</th></tr></thead><tbody>'
     + active.map(function(b){ return '<tr><td>'+escHtml(salBucketLabel(b, S.monthly))+'</td><td class="tabular">'+fmt(b.count)+'</td><td class="tabular">'+fmt(b.pieces)+'</td><td class="tabular"><b>'+salMoney(b.total)+'</b></td></tr>'; }).join("")
     + '</tbody><tfoot><tr><td>'+t("الإجمالي")+'</td><td class="tabular">'+fmt(S.count)+'</td><td class="tabular">'+fmt(S.pieces)+'</td><td class="tabular"><b>'+salMoney(S.total)+'</b></td></tr></tfoot></table></div></section>';
+  /* تفاصيل المبيعات: كل منتج اتباع لمين وإمتى */
+  h += '<section class="admin-card sal-card"><h3>'+t("تفاصيل المبيعات")+' <small>('+fmt(S.lines.length)+' '+t("صنف")+')</small></h3>'
+    + '<input type="search" id="salLineQ" class="sal-lq" placeholder="'+escHtml(t("ابحث باسم المنتج أو العميل أو رقم الفاتورة..."))+'" autocomplete="off" value="'+escHtml(SALES.lq)+'">'
+    + '<div id="salLines" class="sal-lines"></div></section>';
   /* المنتجات */
   var pAll = S.products, pShow = SALES.allProducts ? pAll : pAll.slice(0, 10), pSum = pAll.reduce(function(a, p){ return a + p.total; }, 0);
   h += '<section class="admin-card sal-card"><h3>'+t("أكتر المنتجات مبيعًا")+' <small>('+fmt(pAll.length)+' '+t("منتج")+')</small></h3>'
@@ -9496,6 +9534,26 @@ function renderSalesPage(){
   h += '<div class="sal-two">' + split(t("حسب طريقة الدفع"), S.pay, "💳") + split(t("حسب المحافظة"), S.gov, "📍") + '</div>';
   if(S.discount) h += '<p class="sal-note">'+t("الخصومات بأكواد الخصم في الفترة دي")+': <b class="tabular">'+salMoney(S.discount)+' '+t("ج.م")+'</b> '+t("(مخصومة من الإجمالي)")+'</p>';
   body.innerHTML = h;
+  SALES.lastS = S;
+  salDrawLines();
+}
+function salWhen(ts){
+  var d = new Date(ts), loc = LANG==="en" ? "en-US" : "ar-EG";
+  return d.toLocaleDateString(loc, { day:"numeric", month:"short", year:"numeric" })+" · "+d.toLocaleTimeString(loc, { hour:"numeric", minute:"2-digit" });
+}
+function salDrawLines(){
+  var box = document.getElementById("salLines"), S = SALES.lastS; if(!box || !S) return;
+  var q = SALES.lq.trim().toLowerCase();
+  var rows = q ? S.lines.filter(function(l){ return (l.prod+" "+l.variant+" "+l.cust+" "+l.inv+" "+l.gov).toLowerCase().indexOf(q) > -1; }) : S.lines;
+  if(!rows.length){ box.innerHTML = '<p class="inv-empty">'+t("مفيش نتائج.")+'</p>'; return; }
+  var show = SALES.allLines ? rows : rows.slice(0, 20);
+  box.innerHTML = show.map(function(l){
+      return '<div class="sal-line"><div class="sal-line-main"><strong>'+escHtml(l.prod)+'</strong>'+(l.variant ? '<span class="sal-line-var">'+escHtml(l.variant)+'</span>' : '')
+        + '<span class="sal-line-meta">👤 '+escHtml(l.cust)+(l.gov ? ' · 📍 '+escHtml(l.gov) : '')+'</span>'
+        + '<span class="sal-line-meta">📅 '+escHtml(salWhen(l.ts))+' · '+t("فاتورة #")+'<bdi dir="ltr">'+escHtml(l.inv)+'</bdi></span></div>'
+        + '<div class="sal-line-amt"><b class="tabular">'+salMoney(l.total)+' <small>'+t("ج.م")+'</small></b><span class="tabular">'+fmt(l.qty)+' × '+salMoney(l.price)+'</span></div></div>';
+    }).join("")
+    + (rows.length > 20 ? '<button type="button" class="aoe-link sal-more" data-sal-alll>'+(SALES.allLines ? t("اعرض أول 20 بس") : t("اعرض الكل")+' ('+fmt(rows.length)+')')+'</button>' : '');
 }
 function salLoad(){
   SALES.loading = true; SALES.err = false;
@@ -9528,8 +9586,10 @@ function closeAdminSalesPage(){
 document.getElementById("salPeriods").addEventListener("click", function(e){ var b = e.target.closest("[data-sal-p]"); if(!b) return; SALES.p = b.dataset.salP; renderSalesPage(); });
 document.getElementById("salBody").addEventListener("click", function(e){
   if(e.target.closest("[data-sal-allp]")){ SALES.allProducts = !SALES.allProducts; renderSalesPage(); return; }
+  if(e.target.closest("[data-sal-alll]")){ SALES.allLines = !SALES.allLines; salDrawLines(); return; }
   if(e.target.closest("[data-sal-retry]")){ SALES.orders = null; salLoad(); renderSalesPage(); }
 });
+document.getElementById("salBody").addEventListener("input", function(e){ if(e.target && e.target.id === "salLineQ"){ SALES.lq = e.target.value; salDrawLines(); } });
 document.getElementById("adminSalesBtn").addEventListener("click", openAdminSalesPage);
 document.getElementById("adminSalesBackBtn").addEventListener("click", closeAdminSalesPage);
 function salFileName(ext){
@@ -9551,6 +9611,8 @@ document.getElementById("salCsv").addEventListener("click", function(){
   S.buckets.filter(function(b){ return b.count; }).forEach(function(b){ row([S.monthly ? b.key : b.key, b.count, b.pieces, Math.round(b.total)]); });
   row([]); row(["#", t("المنتج"), t("الكمية"), t("المبيعات")]);
   S.products.forEach(function(p, i){ row([i+1, p.name, p.qty, Math.round(p.total)]); });
+  row([]); row([t("التاريخ"), t("الوقت"), t("الفاتورة"), t("العميل"), t("المحافظة"), t("المنتج"), t("اللون / الحجم"), t("الكمية"), t("السعر"), t("الإجمالي")]);
+  S.lines.forEach(function(l){ var d = new Date(l.ts); row([salDayKey(d), d.toTimeString().slice(0,5), "#"+l.inv, l.cust, l.gov, l.prod, l.variant, l.qty, l.price, l.total]); });
   row([]); row([t("طريقة الدفع"), t("الطلبات"), t("المبيعات")]);
   S.pay.forEach(function(x){ row([x.name, x.count, Math.round(x.total)]); });
   row([]); row([t("المحافظة"), t("الطلبات"), t("المبيعات")]);
@@ -9619,7 +9681,7 @@ function salpRender(S, logo){
     flex.forEach(function(c){ c.w = (innerW - fixed) / flex.length; });
     var xr = W - M; cols.forEach(function(c){ c.right = xr; c.left = xr - c.w; xr = c.left; });
     var prep = rows.map(function(r){
-      var cells = cols.map(function(c){ meas.font = c.font || invpFont(400, 11.5); return c.wrap ? invpWrap(meas, c.get(r), c.w - 12, 2) : [c.get(r)]; });
+      var cells = cols.map(function(c){ meas.font = c.font || invpFont(400, 11.5); return c.split ? String(c.get(r)).split("\n") : (c.wrap ? invpWrap(meas, c.get(r), c.w - 12, 2) : [c.get(r)]); });
       var n = Math.max.apply(null, cells.map(function(x){ return x.length; }));
       return { cells:cells, h: n > 1 ? 38 : 25 };
     });
@@ -9676,6 +9738,16 @@ function salpRender(S, logo){
   ]; };
   table(t("حسب طريقة الدفع"), splitCols(t("طريقة الدفع")), S.pay, { foot:true, count:S.count, total:S.total });
   table(t("حسب المحافظة"), splitCols(t("المحافظة")), S.gov, { foot:true, count:S.count, total:S.total });
+  var locD = LANG==="en" ? "en-US" : "ar-EG";
+  table(t("تفاصيل المبيعات"), [
+    { label:t("التاريخ"), w:84, al:"right", split:true, font:invpFont(400, 10.5), color:P.muted, get:function(l){ var d = new Date(l.ts); return d.toLocaleDateString(locD, { day:"numeric", month:"short", year:"numeric" })+"\n"+d.toLocaleTimeString(locD, { hour:"numeric", minute:"2-digit" }); } },
+    { label:t("الفاتورة"), w:58, al:"center", font:invpFont(400, 10.5), color:P.muted, get:function(l){ return "#"+l.inv; } },
+    { label:t("العميل"), w:118, al:"right", wrap:true, font:invpFont(700, 11), get:function(l){ return l.cust; } },
+    { label:t("المنتج"), al:"right", wrap:true, font:invpFont(400, 11), get:function(l){ return l.prod+(l.variant ? " ("+l.variant+")" : ""); } },
+    { label:t("الكمية"), w:46, al:"center", get:function(l){ return fmt(l.qty); } },
+    { label:t("السعر"), w:62, al:"center", color:P.muted, get:function(l){ return salMoney(l.price); } },
+    { label:t("الإجمالي"), w:80, al:"center", font:invpFont(800, 11.5), get:function(l){ return salMoney(l.total)+cur; } }
+  ], S.lines, null, t("كل صنف اتباع في الفترة — الأحدث الأول. الإجمالي قبل خصم الكوبون والشحن."));
 
   /* توزيع البلوكات على الصفحات */
   var pages = [], pg = { list:[] }, y = TOP_FIRST;

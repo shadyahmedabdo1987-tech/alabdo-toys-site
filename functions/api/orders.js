@@ -308,6 +308,31 @@ export async function onRequestPut({ request, env }){
   o.phone = (body.phone || "").trim();
   o.governorate = (body.governorate || "").trim();
   o.address = (body.address || "").trim();
+
+  /* payment method + transfer receipt set by the admin (e.g. the customer
+     paid by Vodafone Cash / InstaPay later and sent the screenshot on
+     WhatsApp). The receipt is stored exactly like a customer's one. */
+  var PM = { cash:1, vodafone:1, instapay:1 };
+  if(body.paymentMethod && PM[body.paymentMethod]) o.paymentMethod = body.paymentMethod;
+  if(body.removeProof){
+    try{ await env.STORE_KV.delete("proof:" + o.id); }catch(e){}
+    delete o.proofStored; delete o.proofType; delete o.proofSize; delete o.proofCheck;
+    o.paymentProof = null;
+  }
+  if(typeof body.paymentProof === "string" && body.paymentProof){
+    var am = /^data:(image\/(?:jpeg|jpg|png|webp|gif|heic|heif));base64,([A-Za-z0-9+\/=\s]+)$/.exec(body.paymentProof);
+    if(!am) return json({ ok:false, error:"bad_image" }, 400);
+    var atype = am[1] === "image/jpg" ? "image/jpeg" : am[1];
+    var abin;
+    try{ abin = atob(am[2].replace(/\s+/g, "")); }catch(e){ return json({ ok:false, error:"bad_image" }, 400); }
+    if(!abin.length || abin.length > 8 * 1024 * 1024) return json({ ok:false, error:"too_big" }, 413);
+    var abytes = new Uint8Array(abin.length);
+    for(var ai = 0; ai < abin.length; ai++) abytes[ai] = abin.charCodeAt(ai);
+    await env.STORE_KV.put("proof:" + o.id, abytes, { metadata: { type: atype, size: abytes.length, at: Date.now(), by: "admin" } });
+    o.proofStored = true; o.proofType = atype; o.proofSize = abytes.length;
+    o.paymentProof = null;
+    o.proofCheck = { status: "admin", at: Date.now() };
+  }
   list[idx] = o;
   await saveList(env, "orders", list);
   return json({ ok:true, order:o });

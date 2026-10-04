@@ -101,6 +101,10 @@ export async function onRequestPost({ request, env }){
       shipping = allFree ? 0 : SHIPPING_FEE;
     }
   }catch(e){}
+  /* ...and every order whose products total (after any discount code)
+     reaches FREE_SHIP_MIN ships free too. Checked again below once the
+     discount code is known. (keep equal to FREE_SHIP_MIN in index.html) */
+  var FREE_SHIP_MIN = 1000;
   var clientShipping = +body.shipping || 0;
 
   /* كود الخصم: لازم العميل يكون مسجّل دخول، والكود فعّال ولسه ما خلصش،
@@ -117,6 +121,9 @@ export async function onRequestPost({ request, env }){
     if(cst !== "ok") return json({ ok:false, error:"coupon_" + cst }, 409);
     if(usedBy(coupon, customer, phone)) return json({ ok:false, error:"coupon_used", limit: perCustomerLimit(coupon) }, 409);
   }
+
+  var discPreview = coupon ? Math.round(itemsSubtotal * (+coupon.percent || 0) / 100) : 0;
+  if(itemsSubtotal - discPreview >= FREE_SHIP_MIN) shipping = 0;
 
   var order = {
     id: "ord_" + Date.now().toString(36) + Math.floor(Math.random() * 999),

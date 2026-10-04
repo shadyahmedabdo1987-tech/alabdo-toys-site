@@ -854,6 +854,24 @@ jobs:
                       public boolean hasNotifyToken() { return !StockWatchJob.getNotifyToken(getApplicationContext()).isEmpty(); }
                       @android.webkit.JavascriptInterface
                       public String getNotifyToken() { return StockWatchJob.getNotifyToken(getApplicationContext()); }
+                      /* أول ما الأدمن يفتح فاتورة الطلب: إشعار الطلب ده بيتشال من
+                         شريط الإشعارات (نفس رقم الإشعار اللي اتعمل بيه في StockWatchJob) */
+                      @android.webkit.JavascriptInterface
+                      public void clearOrderNotification(String orderId) {
+                          if (orderId == null || orderId.isEmpty()) return;
+                          try {
+                              android.app.NotificationManager nm = (android.app.NotificationManager) getSystemService(android.content.Context.NOTIFICATION_SERVICE);
+                              if (nm != null) nm.cancel(4000 + (orderId.hashCode() & 0x3fff));
+                          } catch (Exception e) { /* ignore */ }
+                      }
+                      /* كل الطلبات اتفتحت: بيشيل كمان إشعار "X طلبات جديدة" المجمّع */
+                      @android.webkit.JavascriptInterface
+                      public void clearOrderNotifications() {
+                          try {
+                              android.app.NotificationManager nm = (android.app.NotificationManager) getSystemService(android.content.Context.NOTIFICATION_SERVICE);
+                              if (nm != null) nm.cancel(3000 + ("orders".hashCode() & 0x1ff));
+                          } catch (Exception e) { /* ignore */ }
+                      }
                       @android.webkit.JavascriptInterface
                       public void appReady() {
                           runOnUiThread(new Runnable() { @Override public void run() { hideSplash(); } });

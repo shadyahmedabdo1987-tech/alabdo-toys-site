@@ -297,13 +297,17 @@ export async function onRequestPut({ request, env }){
   var o = list[idx];
   o.items = body.items;
   o.total = +body.total || 0;
+  /* the admin can change the shipping fee or make it free (0) */
+  if(body.shipping != null && body.shipping !== ""){
+    var shipEdit = Math.round(+body.shipping);
+    if(isFinite(shipEdit) && shipEdit >= 0) o.shipping = shipEdit;
+  }
   /* الطلب اللي عليه كود خصم: الخصم بيتحسب تاني على الأصناف بعد التعديل */
   var editSub = body.items.reduce(function(sum, it){ return sum + (+it.price || 0) * Math.max(0, +it.qty || 0); }, 0);
   o.subtotal = editSub;
-  if(o.coupon){
-    o.discount = Math.round(editSub * (+o.couponPercent || 0) / 100);
-    o.total = Math.max(0, editSub - o.discount) + (+o.shipping || 0);
-  }
+  o.discount = o.coupon ? Math.round(editSub * (+o.couponPercent || 0) / 100) : (+o.discount || 0);
+  if(!o.coupon) o.discount = 0;
+  o.total = Math.max(0, editSub - o.discount) + (+o.shipping || 0);
   o.name = (body.name || "").trim();
   o.phone = (body.phone || "").trim();
   o.governorate = (body.governorate || "").trim();

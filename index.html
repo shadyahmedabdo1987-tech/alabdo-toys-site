@@ -1058,29 +1058,22 @@ html[dir="ltr"] .preq-back svg{transform:scaleX(-1);}
 .rev-locked{font-size:12.5px; color:var(--ink-soft); background:var(--surface-3); border:1.5px dashed var(--border); border-radius:12px; padding:10px 12px; margin:0;}
 
 /* ===== شحن مجاني (تحت السعر) ===== */
-.fs-badge{--fs-a:#0d9f6e; --fs-b:#18c08a; display:inline-flex; align-items:center; gap:7px; margin-top:6px; padding:4px 11px 4px 9px; border-radius:999px; color:#fff; background:linear-gradient(110deg, var(--fs-a), var(--fs-b) 55%, var(--fs-a)); background-size:220% 100%; box-shadow:0 4px 12px -5px rgba(13,159,110,.65), inset 0 1px 0 rgba(255,255,255,.25); font-size:11.5px; font-weight:800; line-height:1; animation:fsShine 3.2s linear infinite; max-width:100%;}
-.fs-badge.is-lg{font-size:14px; padding:7px 15px 7px 12px; gap:9px; margin-top:8px;}
-.fs-truck{width:15px; height:15px; flex:none; animation:fsDrive 1.6s ease-in-out infinite;}
-.fs-badge.is-lg .fs-truck{width:19px; height:19px;}
+.fs-wrap{align-self:flex-start; width:max-content; max-width:100%; overflow:hidden; padding:3px 4px 7px; margin:2px -4px -4px;}
+.fs-badge{display:inline-flex; align-items:center; gap:7px; padding:5px 12px 5px 10px; border-radius:999px; color:#fff; background:linear-gradient(110deg, #0d9f6e, #18c08a 55%, #0d9f6e); background-size:220% 100%; box-shadow:0 4px 10px -5px rgba(13,159,110,.7), inset 0 1px 0 rgba(255,255,255,.25); font-size:11.5px; font-weight:800; line-height:1.2; white-space:nowrap; will-change:transform, opacity; animation:fsRise 2.4s cubic-bezier(.2,.85,.25,1) infinite, fsShine 2.4s linear infinite;}
+.fs-wrap.is-lg .fs-badge{font-size:14.5px; padding:7px 16px 7px 13px; gap:9px;}
+.fs-truck{width:15px; height:15px; flex:none;}
+.fs-wrap.is-lg .fs-truck{width:19px; height:19px;}
 html[dir="rtl"] .fs-truck{transform:scaleX(-1);}
-.fs-tick{display:inline-grid; overflow:hidden; height:1.35em; align-items:center;}
-.fs-tick > span{grid-area:1/1; white-space:nowrap; transform:translateY(120%); opacity:0; animation:fsTick 3.2s cubic-bezier(.22,.9,.25,1) infinite;}
-.fs-tick > span:nth-child(2){animation-delay:1.6s;}
-@keyframes fsTick{
-  0%{transform:translateY(120%); opacity:0;}
-  8%{transform:translateY(0); opacity:1;}
-  50%{transform:translateY(0); opacity:1;}
-  58%{transform:translateY(-120%); opacity:0;}
-  100%{transform:translateY(-120%); opacity:0;}
+/* بيطلع من تحت ← يثبت شوية ← يطلع لفوق ويختفي ← يرجع من تحت */
+@keyframes fsRise{
+  0%{transform:translateY(140%); opacity:0;}
+  14%{transform:translateY(0); opacity:1;}
+  72%{transform:translateY(0); opacity:1;}
+  88%{transform:translateY(-140%); opacity:0;}
+  100%{transform:translateY(-140%); opacity:0;}
 }
 @keyframes fsShine{ from{background-position:100% 0;} to{background-position:-120% 0;} }
-@keyframes fsDrive{ 0%,100%{translate:0 0;} 50%{translate:0 -1.5px;} }
-@media (prefers-reduced-motion: reduce){
-  .fs-badge, .fs-truck{animation:none;}
-  .fs-tick > span{animation:none; transform:none; opacity:1;}
-  .fs-tick > span:nth-child(2){display:none;}
-}
-.fs-badge{align-self:flex-start; width:max-content;}
+@media (prefers-reduced-motion: reduce){ .fs-badge{animation:none;} }
 .card-rating:empty{display:none;}
 .ship-free{color:#0d9f6e;}
 .cart-ship-note{margin:-2px 0 4px; font-size:11.5px; color:var(--ink-soft); line-height:1.6;}
@@ -3167,13 +3160,14 @@ function setRealRatings(reviews){
   Object.keys(agg).forEach(function(k){ REAL_RATINGS[k] = { avg: agg[k].sum / agg[k].count, count: agg[k].count }; });
   document.querySelectorAll("[data-rate-for]").forEach(function(el){ el.innerHTML = realRatingHtml(el.dataset.rateFor, el.id === "modalRating"); });
 }
-/* "🚚 شحن مجاني" تحت السعر: سطرين بيطلعوا من تحت ويختفوا لفوق ورا بعض */
+/* "🚚 شحن مجاني" تحت السعر: الشريط كله بيطلع من تحت السعر لفوق ويختفي،
+   وبعدين يرجع يطلع من تحت تاني - بسرعة وبشكل متكرر */
 function freeShipHtml(p, size){
   if(!p || !p.freeShipping) return "";
-  return '<div class="fs-badge'+(size==="lg" ? ' is-lg' : '')+'" role="note" aria-label="'+t("شحن مجاني")+'">'
+  return '<div class="fs-wrap'+(size==="lg" ? ' is-lg' : '')+'"><div class="fs-badge" role="note">'
     + '<svg class="fs-truck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h11v9H3z"/><path d="M14 9h4l3 3v3h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg>'
-    + '<span class="fs-tick" aria-hidden="true"><span>'+t("شحن مجاني")+'</span><span>'+(size==="lg" ? t("توصيل مجاني لحد باب البيت") : t("توصيل مجاني"))+'</span></span>'
-  + '</div>';
+    + '<span>'+t("شحن مجاني")+'</span>'
+  + '</div></div>';
 }
 /* ---------- سكرين شوت التحويل (إيصال فودافون كاش / إنستاباي) ----------
    الطلبات الجديدة: الصورة متخزنة لوحدها على السيرفر بجودتها الكاملة

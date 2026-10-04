@@ -1,5 +1,5 @@
 # آل عبده - الإدارة: بناء تطبيق لوحة التحكم أوتوماتيك على سيرفرات GitHub.
-# icons: admin navy+gold maskable icon (rebuild 2: finds icons in root or .github/workflows)
+# icons: admin = round store logo, transparent background + small gold gear (admin-logo-icon-*.png)
 # التطبيق بيفتح لوحة تحكم المتجر جوه متصفح داخلي خاص بيه (WebView) - من غير
 # جوجل كروم خالص، فمفيش أي رسالة من كروم أول مرة. تطبيق منفصل عن تطبيق
 # العملاء (com.alabdotoys.admin)، أيقونته عليها ترس، ولموبايلك إنت بس
@@ -216,7 +216,7 @@ jobs:
           <resources>
               <color name="brandPink">#1B2440</color>
               <color name="splashBg">#1B2440</color>
-              <color name="iconBackground">#1F2A44</color>
+              <color name="iconBackground">#00000000</color>
           </resources>
           EOF
 
@@ -1673,7 +1673,8 @@ jobs:
                   for d in ("", ".github/workflows/", ".github/"):
                       if os.path.exists(d+fn): return d+fn
                   return None
-              a_leg, a_mask = find_icon("admin-icon-512.png"), find_icon("admin-icon-maskable-512.png")
+              a_leg = find_icon("admin-logo-icon-512.png") or find_icon("admin-icon-512.png")
+              a_mask = find_icon("admin-logo-icon-maskable-512.png") or find_icon("admin-icon-maskable-512.png")
               print("admin icons:", a_leg, a_mask)
               if a_leg and a_mask:
                   legacy = Image.open(a_leg).convert("RGBA").resize((512,512), Image.LANCZOS)

@@ -8,6 +8,7 @@
 # المفتاح ميترفعش على الإنترنت أبدًا.
 # وتقدر تشغّله تاني يدوي من Actions ← Build Android APK ← Run workflow.
 
+# icons: new transparent store logo (alabdo-logo.png) - icon-512 / icon-maskable-512 / logo.png
 name: Build Android APK
 
 on:

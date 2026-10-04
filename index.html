@@ -1149,6 +1149,12 @@ html[dir="rtl"] .fsp-bar i{margin-inline-start:0;}
 .aoe-chip{border:1.5px solid var(--border); background:var(--surface); color:var(--ink); border-radius:999px; padding:6px 12px; font-size:12.5px; font-weight:800;}
 .aoe-chip.on{border-color:#18c08a; background:color-mix(in srgb, #18c08a 12%, var(--surface)); color:#0b8a60;}
 
+.ship-by-gov{font-size:12px; color:var(--ink-soft); font-weight:700;}
+.ship-gov{font-size:11px; color:var(--ink-faint); font-weight:600;}
+.gov-ship-line{margin:6px 0 0; font-size:12.5px; color:var(--ink-soft); background:color-mix(in srgb, #18c08a 8%, var(--surface)); border-radius:10px; padding:7px 10px;}
+.gov-ship-line[hidden]{display:none;}
+.gov-ship-line b{color:var(--ink);}
+
 .inv-sum{display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; margin-bottom:14px;}
 .inv-tile{display:flex; flex-direction:column; gap:4px; padding:12px 14px; border-radius:16px; background:var(--surface); border:1px solid var(--border); text-align:start; font-family:inherit; color:var(--ink);}
 .inv-tile span{font-size:12px; color:var(--ink-soft); font-weight:700;}
@@ -2889,7 +2895,7 @@ setTimeout(appSplashHide, 15000);
     <div class="cart-foot-step" id="cartFootStepInfoData" style="display:none;">
       <div class="field" style="margin-bottom:2px;"><label for="checkoutName" data-i18n>الاسم بالكامل *</label><input id="checkoutName" required placeholder="اسمك بالكامل" data-i18n-placeholder autocomplete="off"></div>
       <div class="field" style="margin-bottom:2px;"><label for="checkoutPhone" data-i18n>رقم الموبايل *</label><input id="checkoutPhone" required type="tel" inputmode="numeric" placeholder="01xxxxxxxxx" autocomplete="off"></div>
-      <div class="field" style="margin-bottom:2px;"><label for="checkoutGovernorate" data-i18n>المحافظة *</label><select id="checkoutGovernorate" required></select></div>
+      <div class="field" style="margin-bottom:2px;"><label for="checkoutGovernorate" data-i18n>المحافظة *</label><select id="checkoutGovernorate" required></select><p class="gov-ship-line" id="govShipLine" hidden></p></div>
       <div class="field" style="margin-bottom:4px;"><label for="checkoutAddress" data-i18n>العنوان بالتفصيل *</label><input id="checkoutAddress" required placeholder="العنوان بالتفصيل" data-i18n-placeholder autocomplete="off"></div>
       <div class="field" style="margin-bottom:4px;"><label for="checkoutNotes" data-i18n>ملاحظات (اختياري)</label><textarea id="checkoutNotes" rows="2" style="min-height:56px;" placeholder="أي معلومة أو تعليق حابب تضيفه على الطلب" data-i18n-placeholder autocomplete="off"></textarea></div>
       <p id="checkoutPhoneError" style="color:var(--pink-deep); font-size:12.5px; display:none; margin:-4px 0 4px;"></p>
@@ -4016,6 +4022,10 @@ document.getElementById("themeToggle").addEventListener("click", function(){
    الأقسام السبعة، ومحافظات مصر. الصفحات القانونية ولوحة التحكم وأسماء/أوصاف
    المنتجات هتتضاف في مراحل تالية. */
 var I18N_EN = {
+  "إسكندرية": "Alexandria",
+  "باقي المحافظات": "other governorates",
+  "(حسب المحافظة)": "(+ shipping by governorate)",
+  "الشحن لـ": "Shipping to",
   "منتجات شحنها مجاني": "Free-shipping products",
   "كل الخصومات": "All deals",
   "أو أكتر": "or more",
@@ -5122,7 +5132,16 @@ function cartFreeShipping(){ var it = cartItems(); return it.length > 0 && it.ev
 /* وأي طلب إجمالي منتجاته (بعد خصم الكود) يوصل FREE_SHIP_MIN شحنه مجاني */
 var FREE_SHIP_MIN = 1000;
 function cartReachedFreeMin(){ return cartItems().length > 0 && (cartTotal() - couponDiscount()) >= FREE_SHIP_MIN; }
-function cartShippingCost(){ return !cartItems().length || cartFreeShipping() || cartReachedFreeMin() ? 0 : SHIPPING_COST; }
+/* الشحن على حسب المحافظة: الإسكندرية 50 ج.م وباقي المحافظات SHIPPING_COST (100)
+   (نفس القاعدة على السيرفر في orders.js) */
+var SHIPPING_ALEX = 50;
+function shippingFeeFor(gov){ return String(gov||"").trim() === "الإسكندرية" ? SHIPPING_ALEX : SHIPPING_COST; }
+function checkoutGov(){
+  var el = document.getElementById("checkoutGovernorate"), v = el ? el.value : "";
+  if(!v){ var c = getCustomerProfile(); v = (c && c.governorate) || ""; }
+  return v;
+}
+function cartShippingCost(){ return !cartItems().length || cartFreeShipping() || cartReachedFreeMin() ? 0 : shippingFeeFor(checkoutGov()); }
 function cartGrandTotal(){ return cartItems().length ? Math.max(0, cartTotal() - couponDiscount()) + cartShippingCost() : cartTotal(); }
 
 /* ---------- كود الخصم في السلة ----------
@@ -5436,6 +5455,7 @@ function renderCartFoot(){
     stepCart.style.display = "none";
     stepInfoData.style.display = "flex";
     stepPayment.style.display = "none";
+    updateGovShipLine();
     return;
   }
 
@@ -5455,7 +5475,9 @@ function renderCartFoot(){
   renderCouponBox(items.length);
   var shipEl = document.getElementById("cartShipping");
   if(items.length && (cartFreeShipping() || cartReachedFreeMin())) shipEl.innerHTML = '<b class="ship-free">🚚 '+t("مجاني")+'</b>';
-  else shipEl.textContent = (items.length ? fmt(SHIPPING_COST) : "0")+" "+t("ج.م");
+  else if(!items.length) shipEl.textContent = "0 "+t("ج.م");
+  else if(!checkoutGov()) shipEl.innerHTML = '<span class="ship-by-gov">'+fmt(SHIPPING_ALEX)+' '+t("إسكندرية")+' · '+fmt(SHIPPING_COST)+' '+t("باقي المحافظات")+'</span>';
+  else shipEl.innerHTML = fmt(shippingFeeFor(checkoutGov()))+' '+t("ج.م")+' <small class="ship-gov">('+escHtml(t(checkoutGov()))+')</small>';
   var shipNote = document.getElementById("cartShipNote");
   if(shipNote){
     var someFree = items.some(function(x){ return !!x.p.freeShipping; });
@@ -5476,7 +5498,9 @@ function renderCartFoot(){
         + '<span class="fsp-bar"><i style="width:'+(free ? 100 : pct)+'%"></i></span>';
     }
   }
-  document.getElementById("cartTotal").textContent = fmt(cartGrandTotal())+" "+t("ج.م");
+  document.getElementById("cartTotal").textContent = (items.length && !checkoutGov() && cartShippingCost())
+    ? fmt(Math.max(0, cartTotal() - couponDiscount()))+" "+t("ج.م")+" + "+t("الشحن")
+    : fmt(cartGrandTotal())+" "+t("ج.م");
   document.getElementById("cartContinueBtn").style.display = items.length ? "flex" : "none";
 }
 
@@ -5526,6 +5550,7 @@ function renderCartPaymentStep(){
   var submitBtnHtml = '<button type="button" class="btn btn-primary" style="flex:1;" id="paymentSubmitBtn"'+(pvBlocked ? ' disabled aria-disabled="true"' : '')+'>'+t("إتمام الطلب")+'</button>';
 
   container.innerHTML = (couponDiscount() ? '<div class="cart-total-row sub is-discount"><span>🎟️ '+t("خصم الكود")+' '+escHtml(CART_COUPON.code)+' ('+CART_COUPON.percent+'%)</span><span class="tabular">− '+fmt(couponDiscount())+' '+t('ج.م')+'</span></div>' : '')
+    + '<div class="cart-total-row sub"><span>'+t("الشحن")+' ('+escHtml(t(checkoutGov()||""))+')</span><span class="tabular">'+(cartShippingCost() ? fmt(cartShippingCost())+' '+t('ج.م') : '<b class="ship-free">🚚 '+t("مجاني")+'</b>')+'</span></div>'
     + '<div class="cart-total-row grand"><span>'+t("الإجمالي الكلي")+'</span><span class="tabular">'+fmt(grand)+' '+t('ج.م')+'</span></div>'
     + '<p class="payment-step-label">'+t("اختر وسيلة الدفع")+'</p>'
     + '<div class="payment-methods">'+methodsHtml+'</div>'
@@ -5847,7 +5872,17 @@ document.getElementById("infoConfirmBtn").addEventListener("click", function(){
 });
 document.getElementById("checkoutGovernorate").addEventListener("change", function(){
   if(this.value) document.getElementById("checkoutPhoneError").style.display = "none";
+  updateGovShipLine();
 });
+/* "🚚 الشحن للإسكندرية: 50 ج.م" تحت اختيار المحافظة */
+function updateGovShipLine(){
+  var el = document.getElementById("govShipLine"); if(!el) return;
+  var g = document.getElementById("checkoutGovernorate").value;
+  if(!g || !cartItems().length){ el.hidden = true; return; }
+  el.hidden = false;
+  var c = cartShippingCost();
+  el.innerHTML = c === 0 ? '🚚 '+t("الشحن")+': <b class="ship-free">'+t("مجاني")+'</b>' : '🚚 '+t("الشحن لـ")+' '+escHtml(t(g))+': <b class="tabular">'+fmt(c)+' '+t("ج.م")+'</b> · '+t("الإجمالي")+' <b class="tabular">'+fmt(cartGrandTotal())+' '+t("ج.م")+'</b>';
+}
 
 /* ---------- إتمام الطلب (خطوة وسيلة الدفع) ----------
    عميل مسجّل دخول: الطلب بيتسجّل على حسابه فورًا عن طريق /api/orders،
@@ -8350,7 +8385,7 @@ function showAdminOrderEditForm(order){
             + '<div class="aoe-ship-in"><input id="aoeShip" type="number" inputmode="numeric" min="0" step="1" value="'+(+order.shipping||0)+'"><span>'+cur+'</span></div></div>'
           + '<div class="aoe-ship-btns">'
             + '<button type="button" class="aoe-chip" data-ship-set="0">🎁 '+t("شحن مجاني")+'</button>'
-            + '<button type="button" class="aoe-chip" data-ship-set="'+SHIPPING_COST+'">↩️ '+t("الشحن العادي")+' ('+fmt(SHIPPING_COST)+')</button>'
+            + '<button type="button" class="aoe-chip" id="aoeShipNormal" data-ship-set="'+shippingFeeFor(order.governorate)+'">↩️ '+t("الشحن العادي")+' ('+fmt(shippingFeeFor(order.governorate))+')</button>'
           + '</div>'
         + '</div>'
         + '<div style="display:flex; justify-content:space-between; font-weight:800; font-size:14.5px; border-top:1.5px solid var(--border); padding-top:10px;">'
@@ -8402,6 +8437,11 @@ function showAdminOrderEditForm(order){
   updateTotal();
   paintShipChips();
   document.getElementById("aoeShip").addEventListener("input", function(){ updateTotal(); paintShipChips(); });
+  document.getElementById("aoeGovernorate").addEventListener("change", function(){
+    var nb = document.getElementById("aoeShipNormal"), fee = shippingFeeFor(this.value);
+    if(nb){ nb.dataset.shipSet = fee; nb.textContent = "↩️ "+t("الشحن العادي")+" ("+fmt(fee)+")"; }
+    paintShipChips();
+  });
   document.querySelector(".aoe-ship-btns").addEventListener("click", function(e){
     var b = e.target.closest("[data-ship-set]"); if(!b) return;
     document.getElementById("aoeShip").value = b.dataset.shipSet;

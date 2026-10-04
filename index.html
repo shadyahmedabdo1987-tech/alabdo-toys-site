@@ -1155,6 +1155,15 @@ html[dir="rtl"] .fsp-bar i{margin-inline-start:0;}
 .gov-ship-line[hidden]{display:none;}
 .gov-ship-line b{color:var(--ink);}
 
+/* ===== الطلبات الجديدة اللي لسه ما اتفتحتش ===== */
+.order-new-pill{display:none; margin-inline-start:8px; font-size:10.5px; font-weight:800; color:#fff; background:#e0123f; padding:2px 8px; border-radius:99px; vertical-align:middle;}
+.order-card.is-new{border-color:var(--pink) !important; box-shadow:0 0 0 3px color-mix(in srgb, var(--pink) 14%, transparent);}
+.order-card.is-new .order-new-pill{display:inline-block;}
+.orders-seen-bar{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; padding:9px 12px; border-radius:12px; background:var(--pink-pale); color:var(--pink-deep); font-size:13px; font-weight:800; margin-bottom:4px;}
+.orders-seen-bar[hidden]{display:none;}
+.adm-omini.is-new{position:relative;}
+.adm-omini.is-new::after{content:""; position:absolute; top:10px; inset-inline-end:10px; width:9px; height:9px; border-radius:50%; background:#e0123f; box-shadow:0 0 0 2px var(--surface);}
+
 .inv-sum{display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; margin-bottom:14px;}
 .inv-tile{display:flex; flex-direction:column; gap:4px; padding:12px 14px; border-radius:16px; background:var(--surface); border:1px solid var(--border); text-align:start; font-family:inherit; color:var(--ink);}
 .inv-tile span{font-size:12px; color:var(--ink-soft); font-weight:700;}
@@ -4022,6 +4031,9 @@ document.getElementById("themeToggle").addEventListener("click", function(){
    الأقسام السبعة، ومحافظات مصر. الصفحات القانونية ولوحة التحكم وأسماء/أوصاف
    المنتجات هتتضاف في مراحل تالية. */
 var I18N_EN = {
+  "كل الطلبات اتعلّمت مقروءة": "All orders marked as read",
+  "طلب جديد لسه ما اتفتحش": "new order(s) not opened yet",
+  "علّم الكل مقروء": "Mark all as read",
   "إسكندرية": "Alexandria",
   "باقي المحافظات": "other governorates",
   "(حسب المحافظة)": "(+ shipping by governorate)",
@@ -8271,6 +8283,48 @@ function closeAdminOrdersPage(){
   document.getElementById("adminOrdersPage").classList.remove("active");
   document.getElementById("adminDashboard").classList.add("active");
 }
+/* ---------- إشعار الطلب الجديد يفضل لحد ما تفتح فاتورته ----------
+   الطلب اللي لسه ما اتفتحتش فاتورته بيتعلّم "جديد" (وبيتحسب في عدّاد
+   تاب الطلبات)، وأول ما تفتح الفاتورة بيتعلّم مقروء على السيرفر،
+   وإشعاره بيتشال من شريط إشعارات الموبايل (في تطبيق الإدارة الجديد). */
+var ORDERS_SEEN_CUTOFF = Date.parse("2026-10-04T00:00:00+02:00");
+function orderIsUnseen(o){ return !!o && !o.adminSeen && (+new Date(o.createdAt || 0)) >= ORDERS_SEEN_CUTOFF; }
+function nativeClearOrderNotif(id, all){
+  var nat = window.AlAbdoNative; if(!nat) return;
+  try{
+    if(id && typeof nat.clearOrderNotification === "function") nat.clearOrderNotification(String(id));
+    if(all && typeof nat.clearOrderNotifications === "function") nat.clearOrderNotifications();
+  }catch(e){}
+}
+function syncSeenUI(){
+  document.querySelectorAll("[data-order-id]").forEach(function(el){
+    var o = (ADMIN_ORDERS_CACHE||[]).find(function(x){ return x.id === el.dataset.orderId; });
+    if(o && !orderIsUnseen(o)) el.classList.remove("is-new");
+  });
+  var n = (ADMIN_ORDERS_CACHE||[]).filter(orderIsUnseen).length;
+  var mark = document.getElementById("adminOrdersMarkAll");
+  if(mark){ mark.hidden = !n; var sp = mark.querySelector("span"); if(sp) sp.textContent = "🔔 "+fmt(n)+" "+t("طلب جديد لسه ما اتفتحش"); }
+  if(ADM && ADM.seenChanged) ADM.seenChanged();
+}
+function markOrderSeen(o){
+  if(!orderIsUnseen(o)) return;
+  var now = Date.now();
+  o.adminSeen = now;
+  (ADMIN_ORDERS_CACHE||[]).forEach(function(x){ if(x.id === o.id) x.adminSeen = now; });
+  if(ADM && ADM.markSeenLocal) ADM.markSeenLocal(o.id, now);
+  nativeClearOrderNotif(o.id, false);
+  syncSeenUI();
+  fetch("/api/orders", { method:"PATCH", headers: Object.assign({ "content-type":"application/json" }, adminAuthHeaders()), body: JSON.stringify({ id:o.id }) }).catch(function(){});
+}
+function markAllOrdersSeen(){
+  var now = Date.now();
+  (ADMIN_ORDERS_CACHE||[]).forEach(function(x){ if(orderIsUnseen(x)){ nativeClearOrderNotif(x.id, false); x.adminSeen = now; } });
+  if(ADM && ADM.markSeenLocal) ADM.markSeenLocal("*", now);
+  nativeClearOrderNotif(null, true);
+  syncSeenUI();
+  fetch("/api/orders", { method:"PATCH", headers: Object.assign({ "content-type":"application/json" }, adminAuthHeaders()), body: JSON.stringify({ all:true }) }).catch(function(){});
+  showToast("✅ "+t("كل الطلبات اتعلّمت مقروءة"));
+}
 function renderAdminOrdersPage(){
   var box = document.getElementById("adminOrdersList");
   if(!box) return;
@@ -8282,12 +8336,14 @@ function renderAdminOrdersPage(){
       var countEl = document.getElementById("adminOrderCount");
       if(countEl) countEl.textContent = list.length;
       if(!ADMIN_ORDERS_CACHE.length){ box.innerHTML = '<p style="color:var(--ink-soft); font-size:13px;">'+t("لسه مفيش طلبات مسجّلة.")+'</p>'; return; }
-      box.innerHTML = ADMIN_ORDERS_CACHE.map(function(o, i){
+      var unseenN = ADMIN_ORDERS_CACHE.filter(orderIsUnseen).length;
+      box.innerHTML = '<div class="orders-seen-bar" id="adminOrdersMarkAll"'+(unseenN ? '' : ' hidden')+'><span>🔔 '+fmt(unseenN)+' '+t("طلب جديد لسه ما اتفتحش")+'</span><button type="button" class="aoe-link" data-mark-all-seen>'+t("علّم الكل مقروء")+'</button></div>'
+        + ADMIN_ORDERS_CACHE.map(function(o, i){
         var itemsTxt = (o.items||[]).map(function(it){ return it.name+' ×'+it.qty; }).join(LANG==="en" ? ", " : "، ");
         var d = new Date(o.createdAt);
-        return '<button type="button" class="order-card" data-admin-order-row="'+i+'">'
+        return '<button type="button" class="order-card'+(orderIsUnseen(o) ? ' is-new' : '')+'" data-admin-order-row="'+i+'" data-order-id="'+escHtml(o.id)+'">'
           + '<div class="order-card-top">'
-            + '<div><div class="order-card-id">'+t("فاتورة #")+String(o.id||"").slice(-6)+'</div>'
+            + '<div><div class="order-card-id">'+t("فاتورة #")+String(o.id||"").slice(-6)+'<span class="order-new-pill">'+t("جديد")+'</span></div>'
               + '<div class="order-card-customer">'+(o.customerName||o.name||"-")+' — '+(o.phone||o.customerId||"-")+'</div></div>'
             + '<div class="order-card-date tabular">'+d.toLocaleDateString(LANG==="en"?"en-US":"ar-EG")+'</div>'
           + '</div>'
@@ -8303,6 +8359,8 @@ function renderAdminOrdersPage(){
       box.querySelectorAll("[data-admin-order-row]").forEach(function(btn){
         btn.addEventListener("click", function(){ showAdminOrderInvoiceModal(ADMIN_ORDERS_CACHE[+btn.dataset.adminOrderRow]); });
       });
+      var mab = box.querySelector("[data-mark-all-seen]"); if(mab) mab.addEventListener("click", markAllOrdersSeen);
+      if(ADM && ADM.seenChanged) ADM.seenChanged();
     })
     .catch(function(){ box.innerHTML = '<p style="color:var(--pink-deep); font-size:13px;">'+t("تعذر تحميل الطلبات.")+'</p>'; });
 }
@@ -8327,6 +8385,7 @@ function orderEmailDebugHtml(order){
 }
 function showAdminOrderInvoiceModal(order){
   if(!order) return;
+  markOrderSeen(order);
   var html = '<button class="modal-close" id="modalCloseBtn" aria-label="'+t("إغلاق")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
     + '<div class="modal-info" style="padding:30px 24px;">'
       + '<h3 style="margin-bottom:4px;">'+t("تفاصيل الطلب")+'</h3>'
@@ -11041,7 +11100,7 @@ var ADM = null;
   }
   function setBadge(id, n){ var b = document.getElementById(id); if(!b) return; if(n>0){ b.textContent = n>99 ? "99+" : n; b.hidden = false; } else b.hidden = true; }
   function updateBadges(){
-    setBadge("admOrdersBadge", stats.ordersToday);
+    setBadge("admOrdersBadge", stats.orders ? stats.orders.filter(orderIsUnseen).length : 0);
     setBadge("admMoreBadge", (stats.inquiries||0) + (stats.stock||0) + (stats.prodreq||0));
   }
 
@@ -11096,7 +11155,7 @@ var ADM = null;
       h += '<div class="adm-orders-mini">' + recent.map(function(o, i){
         var name = o.customerName || o.name || "-";
         var d = new Date(o.createdAt);
-        return '<button type="button" class="adm-omini" data-adm-order="'+i+'"><span class="av">'+esc(String(name).trim().charAt(0) || "#")+'</span>'
+        return '<button type="button" class="adm-omini'+(orderIsUnseen(o) ? ' is-new' : '')+'" data-adm-order="'+i+'"><span class="av">'+esc(String(name).trim().charAt(0) || "#")+'</span>'
           + '<span class="mid"><b>'+esc(name)+'</b><small class="adm-num">'+t("فاتورة #")+esc(String(o.id||"").slice(-6))+' · '+d.toLocaleDateString(LANG==="en"?"en-US":"ar-EG")+'</small></span>'
           + '<span class="amt">'+money(o.total)+'</span></button>';
       }).join("") + '</div>';
@@ -11569,6 +11628,15 @@ var ADM = null;
     onExplicitLogout: function(authHeaders){ revokeNotifyToken(authHeaders); },
     onLogout: function(){ shownOnce = false; cur = null; closeSheet(); stats = { at:0, loading:false, orders:null, ordersToday:0, inquiries:null, stock:null, prodreq:null }; updateBadges(); },
     goPage: function(n){ go(n, { parent:"more" }); },
+    markSeenLocal: function(id, at){ (stats.orders||[]).forEach(function(o){ if((id === "*" && orderIsUnseen(o)) || o.id === id) o.adminSeen = at; }); },
+    seenChanged: function(){
+      if(stats.orders && ADMIN_ORDERS_CACHE && ADMIN_ORDERS_CACHE.length){
+        ADMIN_ORDERS_CACHE.forEach(function(x){ if(x.adminSeen) (stats.orders||[]).forEach(function(o){ if(o.id === x.id) o.adminSeen = x.adminSeen; }); });
+      }
+      updateBadges();
+      if(stats.orders && !stats.orders.some(orderIsUnseen)) nativeClearOrderNotif(null, true);
+      if(cur==="home") renderHome();
+    },
     refreshStats: function(){ loadStats(true); },
     /* بعد أي تغيير في المنتجات (إضافة/تعديل/حذف/تحميل من السيرفر) */
     refresh: function(){

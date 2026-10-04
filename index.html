@@ -1089,6 +1089,15 @@ html[dir="rtl"] .fs-truck{transform:scaleX(-1);}
 .fs-toggle-txt b{font-size:14px;}
 .fs-toggle-txt small{font-size:11.5px; color:var(--ink-soft); line-height:1.5;}
 
+.cart-free-prog{display:flex; flex-direction:column; gap:6px; margin:2px 0 6px; padding:9px 11px; border-radius:12px; background:color-mix(in srgb, #18c08a 10%, var(--surface)); border:1px solid color-mix(in srgb, #18c08a 30%, transparent);}
+.cart-free-prog[hidden]{display:none;}
+.fsp-txt{font-size:12.5px; font-weight:700; color:var(--ink);}
+.fsp-txt b{color:#0d9f6e;}
+.fsp-bar{height:7px; border-radius:99px; background:color-mix(in srgb, #18c08a 16%, var(--surface-2)); overflow:hidden;}
+.fsp-bar i{display:block; height:100%; border-radius:99px; background:linear-gradient(90deg, #18c08a, #0d9f6e); transition:width .45s cubic-bezier(.3,.8,.3,1);}
+html[dir="rtl"] .fsp-bar i{margin-inline-start:0;}
+.cart-free-prog.is-done .fsp-txt{color:#0d9f6e;}
+
 .inv-sum{display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; margin-bottom:14px;}
 .inv-tile{display:flex; flex-direction:column; gap:4px; padding:12px 14px; border-radius:16px; background:var(--surface); border:1px solid var(--border); text-align:start; font-family:inherit; color:var(--ink);}
 .inv-tile span{font-size:12px; color:var(--ink-soft); font-weight:700;}
@@ -2819,7 +2828,8 @@ setTimeout(appSplashHide, 15000);
       <div class="cart-total-row sub"><span data-i18n>الإجمالي الفرعي</span><span class="tabular" id="cartSubtotal">0 ج.م</span></div>
       <div class="cart-total-row sub is-discount" id="cartDiscountRow" hidden><span id="cartDiscountLabel">الخصم</span><span class="tabular" id="cartDiscount">0 ج.م</span></div>
       <div class="cart-total-row sub"><span data-i18n>الشحن</span><span class="tabular" id="cartShipping">0 ج.م</span></div>
-      <p class="cart-ship-note" id="cartShipNote" hidden data-i18n>🚚 الشحن المجاني بيتطبق لما كل المنتجات اللي في السلة يكون عليها شحن مجاني.</p>
+      <div class="cart-free-prog" id="cartFreeProg" hidden></div>
+      <p class="cart-ship-note" id="cartShipNote" hidden data-i18n>🚚 الشحن المجاني بيتطبق لما كل المنتجات اللي في السلة يكون عليها شحن مجاني، أو لما إجمالي الطلب يوصل ١٠٠٠ ج.م.</p>
       <div class="cart-total-row grand"><span data-i18n>الإجمالي الكلي</span><span class="tabular" id="cartTotal">0 ج.م</span></div>
       <button type="button" class="btn btn-primary btn-block" id="cartContinueBtn" data-i18n>استمرار</button>
       <button class="btn btn-outline btn-block" data-view-link="products" id="continueBtn" data-i18n>متابعة التسوق</button>
@@ -3939,6 +3949,10 @@ document.getElementById("themeToggle").addEventListener("click", function(){
    الأقسام السبعة، ومحافظات مصر. الصفحات القانونية ولوحة التحكم وأسماء/أوصاف
    المنتجات هتتضاف في مراحل تالية. */
 var I18N_EN = {
+  "مبروك! طلبك شحنه مجاني": "Congrats! Your order ships free",
+  "فاضلك": "Add",
+  "وتاخد شحن مجاني": "more for free shipping",
+  "🚚 الشحن المجاني بيتطبق لما كل المنتجات اللي في السلة يكون عليها شحن مجاني، أو لما إجمالي الطلب يوصل ١٠٠٠ ج.م.": "🚚 Free shipping applies when every product in the cart has free shipping, or when the order reaches 1,000 EGP.",
   "شحن مجاني": "Free shipping",
   "توصيل مجاني لحد باب البيت": "Free delivery to your door",
   "توصيل مجاني": "Free delivery",
@@ -5034,7 +5048,10 @@ var CART_COUPON = null;
 function couponDiscount(){ return (CART_COUPON && cartItems().length) ? Math.round(cartTotal() * CART_COUPON.percent / 100) : 0; }
 /* الشحن مجاني لو كل منتجات السلة عليها "شحن مجاني" (والسيرفر بيحسبه بنفس القاعدة) */
 function cartFreeShipping(){ var it = cartItems(); return it.length > 0 && it.every(function(x){ return !!x.p.freeShipping; }); }
-function cartShippingCost(){ return !cartItems().length || cartFreeShipping() ? 0 : SHIPPING_COST; }
+/* وأي طلب إجمالي منتجاته (بعد خصم الكود) يوصل FREE_SHIP_MIN شحنه مجاني */
+var FREE_SHIP_MIN = 1000;
+function cartReachedFreeMin(){ return cartItems().length > 0 && (cartTotal() - couponDiscount()) >= FREE_SHIP_MIN; }
+function cartShippingCost(){ return !cartItems().length || cartFreeShipping() || cartReachedFreeMin() ? 0 : SHIPPING_COST; }
 function cartGrandTotal(){ return cartItems().length ? Math.max(0, cartTotal() - couponDiscount()) + cartShippingCost() : cartTotal(); }
 
 /* ---------- كود الخصم في السلة ----------
@@ -5366,12 +5383,27 @@ function renderCartFoot(){
   }
   renderCouponBox(items.length);
   var shipEl = document.getElementById("cartShipping");
-  if(items.length && cartFreeShipping()) shipEl.innerHTML = '<b class="ship-free">🚚 '+t("مجاني")+'</b>';
+  if(items.length && (cartFreeShipping() || cartReachedFreeMin())) shipEl.innerHTML = '<b class="ship-free">🚚 '+t("مجاني")+'</b>';
   else shipEl.textContent = (items.length ? fmt(SHIPPING_COST) : "0")+" "+t("ج.م");
   var shipNote = document.getElementById("cartShipNote");
   if(shipNote){
     var someFree = items.some(function(x){ return !!x.p.freeShipping; });
-    shipNote.hidden = !(someFree && !cartFreeShipping());
+    shipNote.hidden = !(someFree && !cartFreeShipping() && !cartReachedFreeMin());
+  }
+  /* شريط "فاضلك كام وتاخد شحن مجاني" */
+  var prog = document.getElementById("cartFreeProg");
+  if(prog){
+    var net = cartTotal() - couponDiscount();
+    var free = cartFreeShipping() || cartReachedFreeMin();
+    prog.hidden = !items.length;
+    if(items.length){
+      var pct = Math.max(4, Math.min(100, Math.round(net / FREE_SHIP_MIN * 100)));
+      prog.classList.toggle("is-done", free);
+      prog.innerHTML = '<span class="fsp-txt">'+(free
+          ? '🎉 '+t("مبروك! طلبك شحنه مجاني")
+          : '🚚 '+t("فاضلك")+' <b class="tabular">'+fmt(Math.ceil(FREE_SHIP_MIN - net))+' '+t("ج.م")+'</b> '+t("وتاخد شحن مجاني"))+'</span>'
+        + '<span class="fsp-bar"><i style="width:'+(free ? 100 : pct)+'%"></i></span>';
+    }
   }
   document.getElementById("cartTotal").textContent = fmt(cartGrandTotal())+" "+t("ج.م");
   document.getElementById("cartContinueBtn").style.display = items.length ? "flex" : "none";

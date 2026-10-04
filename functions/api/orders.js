@@ -465,3 +465,21 @@ async function sendGuestOrderEmail(order, env){
   try{ bodyText = await res.text(); }catch(e){ /* مفيش جسم استجابة نقدر نقراه */ }
   return { ok: res.ok, status: res.status, body: bodyText.slice(0, 400) };
 }
+
+/* PATCH /api/orders - admin only. Body: {id} or {all:true}. Marks an order
+   (or every order) as opened by the admin, so its "new order" badge and
+   phone notification go away. */
+export async function onRequestPatch({ request, env }){
+  var admin = await requireAdmin(request, env);
+  if(!admin) return json({ ok:false, error:"unauthorized" }, 401);
+  var body;
+  try{ body = await request.json(); }catch(e){ return json({ ok:false, error:"bad_json" }, 400); }
+  var list = await getList(env, "orders");
+  var now = Date.now(), changed = 0;
+  list.forEach(function(o){
+    if(o.adminSeen) return;
+    if((body && body.all) || (body && body.id && o.id === body.id)){ o.adminSeen = now; changed++; }
+  });
+  if(changed) await saveList(env, "orders", list);
+  return json({ ok:true, changed: changed });
+}

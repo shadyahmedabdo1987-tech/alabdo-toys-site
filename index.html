@@ -1057,6 +1057,45 @@ html[dir="ltr"] .preq-back svg{transform:scaleX(-1);}
 
 .rev-locked{font-size:12.5px; color:var(--ink-soft); background:var(--surface-3); border:1.5px dashed var(--border); border-radius:12px; padding:10px 12px; margin:0;}
 
+/* ===== شحن مجاني (تحت السعر) ===== */
+.fs-badge{--fs-a:#0d9f6e; --fs-b:#18c08a; display:inline-flex; align-items:center; gap:7px; margin-top:6px; padding:4px 11px 4px 9px; border-radius:999px; color:#fff; background:linear-gradient(110deg, var(--fs-a), var(--fs-b) 55%, var(--fs-a)); background-size:220% 100%; box-shadow:0 4px 12px -5px rgba(13,159,110,.65), inset 0 1px 0 rgba(255,255,255,.25); font-size:11.5px; font-weight:800; line-height:1; animation:fsShine 3.2s linear infinite; max-width:100%;}
+.fs-badge.is-lg{font-size:14px; padding:7px 15px 7px 12px; gap:9px; margin-top:8px;}
+.fs-truck{width:15px; height:15px; flex:none; animation:fsDrive 1.6s ease-in-out infinite;}
+.fs-badge.is-lg .fs-truck{width:19px; height:19px;}
+html[dir="rtl"] .fs-truck{transform:scaleX(-1);}
+.fs-tick{display:inline-grid; overflow:hidden; height:1.35em; align-items:center;}
+.fs-tick > span{grid-area:1/1; white-space:nowrap; transform:translateY(120%); opacity:0; animation:fsTick 3.2s cubic-bezier(.22,.9,.25,1) infinite;}
+.fs-tick > span:nth-child(2){animation-delay:1.6s;}
+@keyframes fsTick{
+  0%{transform:translateY(120%); opacity:0;}
+  8%{transform:translateY(0); opacity:1;}
+  50%{transform:translateY(0); opacity:1;}
+  58%{transform:translateY(-120%); opacity:0;}
+  100%{transform:translateY(-120%); opacity:0;}
+}
+@keyframes fsShine{ from{background-position:100% 0;} to{background-position:-120% 0;} }
+@keyframes fsDrive{ 0%,100%{translate:0 0;} 50%{translate:0 -1.5px;} }
+@media (prefers-reduced-motion: reduce){
+  .fs-badge, .fs-truck{animation:none;}
+  .fs-tick > span{animation:none; transform:none; opacity:1;}
+  .fs-tick > span:nth-child(2){display:none;}
+}
+.fs-badge{align-self:flex-start; width:max-content;}
+.card-rating:empty{display:none;}
+.ship-free{color:#0d9f6e;}
+.cart-ship-note{margin:-2px 0 4px; font-size:11.5px; color:var(--ink-soft); line-height:1.6;}
+.cart-ship-note[hidden]{display:none;}
+.fs-toggle{display:flex; align-items:center; gap:12px; padding:12px 14px; border:1.5px solid var(--border); border-radius:14px; background:var(--surface-3); cursor:pointer;}
+.fs-toggle input{position:absolute; opacity:0; pointer-events:none;}
+.fs-switch{position:relative; flex:none; width:46px; height:26px; border-radius:99px; background:var(--border); transition:background .2s;}
+.fs-switch::after{content:""; position:absolute; top:3px; inset-inline-start:3px; width:20px; height:20px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.25); transition:inset-inline-start .2s;}
+.fs-toggle input:checked + .fs-switch{background:#18c08a;}
+.fs-toggle input:checked + .fs-switch::after{inset-inline-start:23px;}
+.fs-toggle input:focus-visible + .fs-switch{outline:2px solid var(--pink); outline-offset:2px;}
+.fs-toggle-txt{display:flex; flex-direction:column; gap:2px;}
+.fs-toggle-txt b{font-size:14px;}
+.fs-toggle-txt small{font-size:11.5px; color:var(--ink-soft); line-height:1.5;}
+
 .inv-sum{display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; margin-bottom:14px;}
 .inv-tile{display:flex; flex-direction:column; gap:4px; padding:12px 14px; border-radius:16px; background:var(--surface); border:1px solid var(--border); text-align:start; font-family:inherit; color:var(--ink);}
 .inv-tile span{font-size:12px; color:var(--ink-soft); font-weight:700;}
@@ -2459,12 +2498,17 @@ setTimeout(appSplashHide, 15000);
                 <div class="field"><label for="pfPrice" data-i18n>السعر الحالي (ج.م)</label><input id="pfPrice" type="number" min="0" required></div>
                 <div class="field"><label for="pfOld" data-i18n>السعر قبل الخصم (اختياري)</label><input id="pfOld" type="number" min="0" placeholder="اتركه فاضي لو مفيش خصم" data-i18n-placeholder></div>
               </div>
+              <label class="fs-toggle" id="pfFreeShipRow" for="pfFreeShip">
+                <input type="checkbox" id="pfFreeShip">
+                <span class="fs-switch" aria-hidden="true"></span>
+                <span class="fs-toggle-txt"><b data-i18n>🚚 شحن مجاني على المنتج ده</b><small data-i18n>بيظهر للعميل تحت السعر، والطلب بيتشحن مجانًا لو كل منتجات السلة عليها شحن مجاني.</small></span>
+              </label>
               <p id="pfPriceSizesNote" style="color:var(--ink-soft); font-size:12px; margin-top:-6px; display:none;" data-i18n>المنتج ده بأحجام علب مختلفة، فالسعر بيتحدد لكل حجم على حدة تحت.</p>
               <div class="field" id="pfStockRow"><label for="pfStock" data-i18n>الكمية المتاحة (اتركها فاضية لو مش عايز تتبعها)</label><input id="pfStock" type="number" min="0" step="1" placeholder="مثلاً: 10" data-i18n-placeholder></div>
               <p id="pfStockColorsNote" style="color:var(--ink-soft); font-size:12px; margin-top:-6px; display:none;" data-i18n>المنتج ده بألوان، فالكمية بتتحدد لكل لون على حدة تحت.</p>
               <p id="pfStockSizesNote" style="color:var(--ink-soft); font-size:12px; margin-top:-6px; display:none;" data-i18n>المنتج ده بأحجام علب، فالكمية بتتحدد لكل حجم على حدة تحت.</p>
               <div class="field" id="pfLowAtRow"><label for="pfLowAt" data-i18n>حد التنبيه "قرب يخلص" للمنتج ده (اختياري)</label><input id="pfLowAt" type="number" min="0" step="1" inputmode="numeric" placeholder="فاضي = الحد العام للمتجر" data-i18n-placeholder><small id="pfLowAtHint" style="display:block; color:var(--ink-soft); font-size:12px; margin-top:4px;"></small></div>
-              <div class="field-row">
+              <div class="field-row" hidden style="display:none">
                 <div class="field"><label for="pfRating" data-i18n>التقييم (من 5)</label><input id="pfRating" type="number" min="1" max="5" step="0.1" value="4.5"></div>
                 <div class="field"><label for="pfReviews" data-i18n>عدد التقييمات</label><input id="pfReviews" type="number" min="0" value="0"></div>
               </div>
@@ -2782,6 +2826,7 @@ setTimeout(appSplashHide, 15000);
       <div class="cart-total-row sub"><span data-i18n>الإجمالي الفرعي</span><span class="tabular" id="cartSubtotal">0 ج.م</span></div>
       <div class="cart-total-row sub is-discount" id="cartDiscountRow" hidden><span id="cartDiscountLabel">الخصم</span><span class="tabular" id="cartDiscount">0 ج.م</span></div>
       <div class="cart-total-row sub"><span data-i18n>الشحن</span><span class="tabular" id="cartShipping">0 ج.م</span></div>
+      <p class="cart-ship-note" id="cartShipNote" hidden data-i18n>🚚 الشحن المجاني بيتطبق لما كل المنتجات اللي في السلة يكون عليها شحن مجاني.</p>
       <div class="cart-total-row grand"><span data-i18n>الإجمالي الكلي</span><span class="tabular" id="cartTotal">0 ج.م</span></div>
       <button type="button" class="btn btn-primary btn-block" id="cartContinueBtn" data-i18n>استمرار</button>
       <button class="btn btn-outline btn-block" data-view-link="products" id="continueBtn" data-i18n>متابعة التسوق</button>
@@ -3107,6 +3152,29 @@ function categoryIcon(catId){
 })();
 function fmt(n){ return n.toLocaleString(LANG==="en" ? "en-US" : "ar-EG"); }
 function stars(r){ var full=Math.round(r); return "★★★★★".slice(0,full)+"☆☆☆☆☆".slice(0,5-full); }
+/* التقييم اللي بيظهر على كروت المنتجات وفي صفحة المنتج = تقييمات العملاء
+   الحقيقية بس (اللي اشتروا وقيّموا). منتج مالوش تقييمات مبيظهرش عليه نجوم. */
+var REAL_RATINGS = {};
+function realRatingHtml(id, long){
+  var r = REAL_RATINGS[String(id)];
+  if(!r || !r.count) return "";
+  return '<span class="stars">'+stars(r.avg)+'</span><span class="tabular">'+(long ? r.avg.toFixed(1)+' · '+fmt(r.count)+' '+t("تقييم") : '('+fmt(r.count)+')')+'</span>';
+}
+function setRealRatings(reviews){
+  var agg = {};
+  (reviews||[]).forEach(function(r){ var k = String(r.productId); agg[k] = agg[k] || { sum:0, count:0 }; agg[k].sum += (+r.rating||0); agg[k].count++; });
+  REAL_RATINGS = {};
+  Object.keys(agg).forEach(function(k){ REAL_RATINGS[k] = { avg: agg[k].sum / agg[k].count, count: agg[k].count }; });
+  document.querySelectorAll("[data-rate-for]").forEach(function(el){ el.innerHTML = realRatingHtml(el.dataset.rateFor, el.id === "modalRating"); });
+}
+/* "🚚 شحن مجاني" تحت السعر: سطرين بيطلعوا من تحت ويختفوا لفوق ورا بعض */
+function freeShipHtml(p, size){
+  if(!p || !p.freeShipping) return "";
+  return '<div class="fs-badge'+(size==="lg" ? ' is-lg' : '')+'" role="note" aria-label="'+t("شحن مجاني")+'">'
+    + '<svg class="fs-truck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h11v9H3z"/><path d="M14 9h4l3 3v3h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg>'
+    + '<span class="fs-tick" aria-hidden="true"><span>'+t("شحن مجاني")+'</span><span>'+(size==="lg" ? t("توصيل مجاني لحد باب البيت") : t("توصيل مجاني"))+'</span></span>'
+  + '</div>';
+}
 /* ---------- سكرين شوت التحويل (إيصال فودافون كاش / إنستاباي) ----------
    الطلبات الجديدة: الصورة متخزنة لوحدها على السيرفر بجودتها الكاملة
    (proofStored) وبتتجاب من /api/proof?id=<رقم الطلب> بصلاحيات الأدمن
@@ -3877,6 +3945,12 @@ document.getElementById("themeToggle").addEventListener("click", function(){
    الأقسام السبعة، ومحافظات مصر. الصفحات القانونية ولوحة التحكم وأسماء/أوصاف
    المنتجات هتتضاف في مراحل تالية. */
 var I18N_EN = {
+  "شحن مجاني": "Free shipping",
+  "توصيل مجاني لحد باب البيت": "Free delivery to your door",
+  "توصيل مجاني": "Free delivery",
+  "مجاني": "Free",
+  "🚚 الشحن المجاني بيتطبق لما كل المنتجات اللي في السلة يكون عليها شحن مجاني.": "🚚 Free shipping applies when every product in the cart has free shipping.",
+  "آراء العملاء": "Customer reviews",
   "تقييمك للمنتج ده (تقدر تعدّله)": "Your review of this product (you can edit it)",
   "التقييم متاح بس للعملاء اللي اشتروا المنتج ده من المتجر. أول ما تطلبه هتقدر تقيّمه.": "Only customers who bought this product from the store can review it. Order it and you'll be able to review it.",
   "التقييم متاح بس للعملاء اللي اشتروا المنتج ده — سجّل دخولك بالحساب اللي طلبت بيه (من «حسابي»).": "Only customers who bought this product can review it — sign in with the account you ordered with (from «My account»).",
@@ -4964,7 +5038,10 @@ var SHIPPING_COST = 100;
    تاني وقت تسجيل الطلب، والخصم على المنتجات بس (مش على الشحن). */
 var CART_COUPON = null;
 function couponDiscount(){ return (CART_COUPON && cartItems().length) ? Math.round(cartTotal() * CART_COUPON.percent / 100) : 0; }
-function cartGrandTotal(){ return cartItems().length ? Math.max(0, cartTotal() - couponDiscount()) + SHIPPING_COST : cartTotal(); }
+/* الشحن مجاني لو كل منتجات السلة عليها "شحن مجاني" (والسيرفر بيحسبه بنفس القاعدة) */
+function cartFreeShipping(){ var it = cartItems(); return it.length > 0 && it.every(function(x){ return !!x.p.freeShipping; }); }
+function cartShippingCost(){ return !cartItems().length || cartFreeShipping() ? 0 : SHIPPING_COST; }
+function cartGrandTotal(){ return cartItems().length ? Math.max(0, cartTotal() - couponDiscount()) + cartShippingCost() : cartTotal(); }
 
 /* ---------- كود الخصم في السلة ----------
    العميل لازم يكون مسجّل دخول (الكود لمرة واحدة بس لكل عميل، والسيرفر
@@ -5294,7 +5371,14 @@ function renderCartFoot(){
     }
   }
   renderCouponBox(items.length);
-  document.getElementById("cartShipping").textContent = (items.length ? fmt(SHIPPING_COST) : "0")+" "+t("ج.م");
+  var shipEl = document.getElementById("cartShipping");
+  if(items.length && cartFreeShipping()) shipEl.innerHTML = '<b class="ship-free">🚚 '+t("مجاني")+'</b>';
+  else shipEl.textContent = (items.length ? fmt(SHIPPING_COST) : "0")+" "+t("ج.م");
+  var shipNote = document.getElementById("cartShipNote");
+  if(shipNote){
+    var someFree = items.some(function(x){ return !!x.p.freeShipping; });
+    shipNote.hidden = !(someFree && !cartFreeShipping());
+  }
   document.getElementById("cartTotal").textContent = fmt(cartGrandTotal())+" "+t("ج.م");
   document.getElementById("cartContinueBtn").style.display = items.length ? "flex" : "none";
 }
@@ -5729,7 +5813,7 @@ function submitOrderNow(e){
     body: JSON.stringify({
       items: items.map(function(it){ return { id:it.p.id, name:it.p.name+(it.colorName?" (اللون: "+it.colorName+")":"")+(it.sizeLabel?" ("+it.sizeLabel+")":""), price:priceForSize(it.p, it.sizeLabel), qty:it.qty, colorName: it.colorName||null, sizeLabel: it.sizeLabel||null }; }),
       subtotal: cartTotal(),
-      shipping: SHIPPING_COST,
+      shipping: cartShippingCost(),
       total: grand,
       name: f.name, phone: f.phone, governorate: f.governorate, address: f.address, notes: f.notes,
       paymentMethod: cartCheckout.method,
@@ -5933,10 +6017,11 @@ function productCard(p, showCartActions){
     + '<div class="card-body">'
       + '<span class="card-cat">'+catName(p.cat)+'</span>'
       + '<h3 class="card-title">'+pName(p)+'</h3>'
-      + '<div class="card-rating"><span class="stars">'+stars(p.rating)+'</span><span>('+p.reviews+')</span></div>'
+      + '<div class="card-rating" data-rate-for="'+p.id+'">'+realRatingHtml(p.id, false)+'</div>'
       + '<div class="card-price">'+((Array.isArray(p.sizes) && p.sizes.length)
           ? '<span class="price-now tabular">'+t("يبدأ من")+' '+fmt(minSizePrice(p))+' '+t('ج.م')+'</span>'
           : '<span class="price-now tabular">'+fmt(p.price)+' '+t('ج.م')+'</span>'+(p.old?'<span class="price-old tabular">'+fmt(p.old)+' '+t('ج.م')+'</span>':''))+'</div>'
+      + freeShipHtml(p, "sm")
       + (!showCartActions ? "" : outOfStock
           ? '<button class="card-add out-of-stock" data-notify="'+p.id+'">🔔 '+t("أعلمني عند التوفر")+'</button>'
           : '<div class="card-cart-row">'
@@ -6137,8 +6222,9 @@ function openProductModal(id){
       + '<span class="card-cat">'+catName(p.cat)+'</span>'
       + '<h3>'+pName(p)+'</h3>'
       + galleryHtml
-      + '<div class="card-rating"><span class="stars">'+stars(p.rating)+'</span><span>('+p.reviews+' '+t("تقييم")+')</span></div>'
+      + '<div class="card-rating" id="modalRating" data-rate-for="'+p.id+'">'+realRatingHtml(p.id, true)+'</div>'
       + '<div class="card-price" id="modalPriceBox"></div>'
+      + freeShipHtml(p, "lg")
       + '<p class="modal-desc">'+(p.desc && p.desc.trim() ? pDesc(p) : (LANG==="en" ? ("A high-quality "+catName(p.cat)+" toy, great as a gift or for everyday play, made of child-safe materials and quality-guaranteed by Al-Abdo Toys Store.") : ('لعبة عالية الجودة من '+catName(p.cat)+'، مناسبة كهدية أو للاستخدام اليومي، مصنوعة من خامات آمنة على الأطفال ومضمونة الجودة من متجر آل عبده.')))+'</p>'
       + colorPickerHtml
       + sizePickerHtml
@@ -6327,7 +6413,14 @@ function loadProductReviews(p){
 function renderProductReviewsBox(p, data){
   var box = document.getElementById("modalReviews");
   if(!box) return;
-  var html = '<h4 style="margin:0 0 10px;">آراء العملاء'+(data.count ? ' ('+data.count+')' : '')+'</h4>';
+  /* التقييمات بتظهر جوه المنتج اللي اتقيّم بس؛ منتج مالوش تقييمات مبيظهرش
+     فيه قسم التقييمات خالص - إلا لعميل اشتراه (عشان يقدر يقيّمه) */
+  var mr = document.getElementById("modalRating");
+  if(mr && data && !data.offline){ REAL_RATINGS[String(p.id)] = { avg:+data.avg||0, count:+data.count||0 }; mr.innerHTML = realRatingHtml(p.id, true); }
+  var buyer = isCustomerAuthed() && data && data.canReview === true;
+  if(!data || (!data.count && !buyer)){ box.style.display = "none"; box.innerHTML = ""; return; }
+  box.style.display = "";
+  var html = data.count ? '<h4 style="margin:0 0 10px;">'+t("آراء العملاء")+' ('+fmt(data.count)+')</h4>' : '';
   if(data.count){
     html += '<div class="card-rating" style="margin-bottom:10px;"><span class="stars">'+stars(data.avg)+'</span><span class="tabular">'+data.avg.toFixed(1)+'</span></div>'
       + '<div style="display:flex; flex-direction:column; gap:10px; margin-bottom:14px;">'
@@ -6340,7 +6433,7 @@ function renderProductReviewsBox(p, data){
       }).join("")
     + '</div>';
   } else if(!data.offline){
-    html += '<p style="color:var(--ink-soft); font-size:13px; margin-bottom:14px;">لسه مفيش تقييمات لهذا المنتج.</p>';
+    html += '';
   } else {
     html += '<p style="color:var(--ink-soft); font-size:13px; margin-bottom:14px;">تعذر تحميل التقييمات، تأكد من الإنترنت.</p>';
   }
@@ -9993,6 +10086,7 @@ document.getElementById("productForm").addEventListener("submit", function(e){
     rating: +document.getElementById("pfRating").value || 4.5,
     reviews: +document.getElementById("pfReviews").value || 0,
     badge: document.getElementById("pfBadge").value || null,
+    freeShipping: !!document.getElementById("pfFreeShip").checked,
     images: pfImagesData.slice(),
     image: pfImagesData[0] || null,
     colors: pfColorsData.slice(),
@@ -10035,6 +10129,7 @@ function resetProductForm(){
   document.getElementById("productForm").reset();
   document.getElementById("pfId").value = "";
   document.getElementById("pfRating").value = "4.5";
+  document.getElementById("pfFreeShip").checked = false;
   document.getElementById("pfReviews").value = "0";
   document.getElementById("pfStock").value = "";
   document.getElementById("pfLowAt").value = "";
@@ -10073,6 +10168,7 @@ function adminEditProduct(p){
     document.getElementById("pfRating").value = p.rating;
     document.getElementById("pfReviews").value = p.reviews;
     document.getElementById("pfBadge").value = p.badge || "";
+    document.getElementById("pfFreeShip").checked = !!p.freeShipping;
     document.getElementById("pfStock").value = (p.stock==null ? "" : p.stock);
     document.getElementById("pfLowAt").value = (p.lowAt==null ? "" : p.lowAt);
     updatePfLowAtHint();
@@ -10403,7 +10499,10 @@ function initScrollReveal(){
 function loadHomeReviews(){
   fetch("/api/reviews", {cache:"no-store"}).then(function(r){ return r.json(); })
     .then(function(res){
-      if(!res || !res.ok || !res.count) return;
+      if(!res || !res.ok) return;
+      setRealRatings(res.reviews);
+      /* في التطبيق التقييمات بتظهر جوه صفحة كل منتج اتقيّم بس */
+      if(!res.count || isAppMode()) return;
       var section = document.getElementById("homeReviewsSection");
       var withComments = res.reviews.filter(function(r){ return (r.comment||"").trim(); });
       var picked = withComments.slice().sort(function(a,b){ return (b.rating - a.rating) || (b.createdAt - a.createdAt); }).slice(0, 6);
@@ -10998,7 +11097,7 @@ var ADM = null;
     sBasic.appendChild(catRow);
 
     var sPrice = sec("💰", "السعر والكمية");
-    ["pfPriceRow","pfPriceSizesNote","pfStockRow","pfStockColorsNote","pfStockSizesNote","pfLowAtRow"].forEach(function(id){ sPrice.appendChild(document.getElementById(id)); });
+    ["pfPriceRow","pfFreeShipRow","pfPriceSizesNote","pfStockRow","pfStockColorsNote","pfStockSizesNote","pfLowAtRow"].forEach(function(id){ sPrice.appendChild(document.getElementById(id)); });
 
     var dSizes = det("📦", "أحجام العلب", "لو المنتج بأكتر من حجم علبة بسعر وكمية مختلفين", "admSecSizes");
     var szLabel = sizesField.querySelector(":scope > label"); if(szLabel) szLabel.style.display = "none";

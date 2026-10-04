@@ -331,7 +331,37 @@ export async function onRequestPut({ request, env }){
     await env.STORE_KV.put("proof:" + o.id, abytes, { metadata: { type: atype, size: abytes.length, at: Date.now(), by: "admin" } });
     o.proofStored = true; o.proofType = atype; o.proofSize = abytes.length;
     o.paymentProof = null;
-    o.proofCheck = { status: "admin", at: Date.now() };
+
+    /* the receipt the admin attached goes through the same AI check as a
+       customer's (store number / IPA, amount vs this order's total, not
+       used before, not old). The admin can still save it if it fails;
+       the result is shown on the invoice. */
+    var ahash = await sha256Bytes(abytes);
+    var usedBy = await env.STORE_KV.get("pimg:" + ahash);
+    var pvA = null;
+    if(usedBy && usedBy !== o.id){
+      pvA = { status: "fail", reason: "reused" };
+    } else {
+      try{ var pvRawA = await env.STORE_KV.get("pv:" + ahash); pvA = pvRawA ? JSON.parse(pvRawA) : null; }catch(e){ pvA = null; }
+      if(pvA && pvA.status === "fail" && pvA.reason === "reused" && usedBy === o.id) pvA = null;
+      if(!pvA){
+        if(usedBy === o.id){ try{ await env.STORE_KV.delete("pimg:" + ahash); }catch(e){} }
+        pvA = await checkReceipt(env, { bytes: abytes, type: atype }, o.total);
+      }
+      if(pvA.status === "ok" && (+pvA.amount || 0) + 1 < (+o.total || 0)){ pvA.status = "fail"; pvA.reason = "low_amount"; }
+    }
+    o.proofCheck = {
+      status: pvA.status, reason: pvA.reason || null,
+      amount: pvA.amount != null ? pvA.amount : null,
+      recipient: pvA.recipient || "", recipientName: pvA.recipientName || "",
+      reference: pvA.reference || "", provider: pvA.provider || "", date: pvA.date || "",
+      total: +o.total || 0, by: "admin", at: Date.now()
+    };
+    if(pvA.status === "ok"){
+      await env.STORE_KV.put("pimg:" + ahash, o.id);
+      var aref = normRef(pvA.reference || "");
+      if(aref.length >= 6) await env.STORE_KV.put("pref:" + aref, o.id);
+    }
   }
   list[idx] = o;
   await saveList(env, "orders", list);

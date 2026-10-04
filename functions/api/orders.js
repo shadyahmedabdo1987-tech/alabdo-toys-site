@@ -90,6 +90,10 @@ export async function onRequestPost({ request, env }){
      shipping fee applies. Decided here, not taken from the phone.
      (keep SHIPPING_FEE equal to SHIPPING_COST in index.html) */
   var SHIPPING_FEE = 100;
+  /* shipping by governorate: Alexandria 50, everywhere else SHIPPING_FEE
+     (keep equal to SHIPPING_ALEX / SHIPPING_COST in index.html) */
+  var SHIPPING_ALEX = 50;
+  function shipFeeFor(g){ return String(g || "").trim() === "\u0627\u0644\u0625\u0633\u0643\u0646\u062F\u0631\u064A\u0629" ? SHIPPING_ALEX : SHIPPING_FEE; }
   var shipping = +body.shipping || 0;
   try{
     var shipCatalog = (typeof stockCatalog !== "undefined" && stockCatalog) ? stockCatalog : await getCatalog(env);
@@ -98,7 +102,7 @@ export async function onRequestPost({ request, env }){
         var p = shipCatalog.products.find(function(x){ return String(x.id) === String(it.id); });
         return !!(p && p.freeShipping);
       });
-      shipping = allFree ? 0 : SHIPPING_FEE;
+      shipping = allFree ? 0 : shipFeeFor(governorate || (customer && customer.governorate));
     }
   }catch(e){}
   /* ...and every order whose products total (after any discount code)

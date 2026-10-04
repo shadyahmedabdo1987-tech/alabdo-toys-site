@@ -1114,6 +1114,26 @@ html[dir="rtl"] .fsp-bar i{margin-inline-start:0;}
 .disc-chip.is-clear{border-style:dashed; color:var(--ink-soft); border-color:var(--border);}
 .disc-chip:focus-visible{outline:2px solid var(--pink); outline-offset:2px;}
 
+/* ===== تعديل الطلب: طريقة الدفع والإيصال ===== */
+.aoe-pay{display:flex; flex-direction:column; gap:8px; border-top:1.5px solid var(--border); padding-top:12px;}
+.aoe-lbl{font-weight:700; font-size:13px;}
+.aoe-pm{display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;}
+.aoe-pm-btn{display:flex; flex-direction:column; align-items:center; gap:3px; padding:9px 6px; border-radius:12px; border:1.5px solid var(--border); background:var(--surface); color:var(--ink); font-weight:800; font-size:12px; text-align:center;}
+.aoe-pm-btn span{font-size:18px;}
+.aoe-pm-btn.on{border-color:var(--pink); background:var(--pink-pale); color:var(--pink-deep); box-shadow:0 0 0 3px color-mix(in srgb, var(--pink) 15%, transparent);}
+.aoe-pm-btn:focus-visible{outline:2px solid var(--pink); outline-offset:2px;}
+.aoe-proof:empty{display:none;}
+.aoe-proof-card{display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:10px; border-radius:14px; border:1.5px dashed var(--pink-line); background:var(--surface-2);}
+.aoe-proof-card.has{border-style:solid; border-color:color-mix(in srgb, #18c08a 45%, var(--border)); background:color-mix(in srgb, #18c08a 7%, var(--surface));}
+.aoe-proof-thumb{width:52px; height:52px; flex:none; border-radius:10px; overflow:hidden; background:var(--surface); display:grid; place-items:center; font-size:24px; border:1px solid var(--border);}
+.aoe-proof-thumb img{width:100%; height:100%; object-fit:cover;}
+.aoe-proof-txt{flex:1 1 140px; min-width:0; display:flex; flex-direction:column; gap:2px;}
+.aoe-proof-txt b{font-size:13.5px;}
+.aoe-proof-txt small{font-size:11.5px; color:var(--ink-soft);}
+.aoe-proof-acts{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+.aoe-link{background:none; border:0; padding:4px; color:var(--pink-deep); font-weight:700; font-size:12.5px; text-decoration:underline; text-underline-offset:3px;}
+.aoe-note{margin:0; font-size:12px; color:var(--ink-soft);}
+
 .inv-sum{display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; margin-bottom:14px;}
 .inv-tile{display:flex; flex-direction:column; gap:4px; padding:12px 14px; border-radius:16px; background:var(--surface); border:1px solid var(--border); text-align:start; font-family:inherit; color:var(--ink);}
 .inv-tile span{font-size:12px; color:var(--ink-soft); font-weight:700;}
@@ -3248,6 +3268,7 @@ function loadProof(o, admin){
 function proofCheckAdminHtml(o){
   var c = o.proofCheck;
   if(!c) return "";
+  if(c.status === "admin") return '<div class="pv-admin is-ok">📎 '+t("الإيصال ده اتضاف من الإدارة")+(c.at ? ' · '+escHtml(new Date(c.at).toLocaleDateString(LANG==="en"?"en-US":"ar-EG")) : '')+'</div>';
   if(c.status === "ok") return '<div class="pv-admin is-ok">✅ '+t("اتراجع آليًا")+': '+(c.amount!=null ? t("المبلغ")+' '+fmt(+c.amount)+' '+t("ج.م")+' · ' : '')+t("المستلم")+' <bdi dir="ltr">'+escHtml(c.recipient||"-")+'</bdi>'+(c.reference ? ' · '+t("رقم العملية")+' <bdi dir="ltr">'+escHtml(c.reference)+'</bdi>' : '')+(c.date ? ' · '+escHtml(c.date) : '')+'</div>';
   return '<div class="pv-admin is-manual">⚠️ '+t("محتاج مراجعة يدوية — المراجعة الآلية ما اشتغلتش وقت الطلب. اتأكد إن الفلوس وصلت قبل الشحن.")+'</div>';
 }
@@ -8288,6 +8309,13 @@ function showAdminOrderEditForm(order){
           + '<div id="aoeItems" style="display:flex; flex-direction:column; gap:8px; margin-top:8px;"></div>'
           + '<button type="button" class="btn btn-outline btn-sm" id="aoeAddItem" style="margin-top:10px;">'+t("➕ إضافة صنف")+'</button>'
         + '</div>'
+        + '<div class="aoe-pay">'
+          + '<label class="aoe-lbl">'+t("طريقة الدفع")+'</label>'
+          + '<div class="aoe-pm" id="aoePm" role="radiogroup" aria-label="'+t("طريقة الدفع")+'">'
+            + PAYMENT_METHODS.map(function(m){ var on = (order.paymentMethod||"cash")===m.id; return '<button type="button" role="radio" aria-checked="'+on+'" class="aoe-pm-btn'+(on?' on':'')+'" data-pm="'+m.id+'"><span>'+m.icon+'</span>'+t(m.label)+'</button>'; }).join("")
+          + '</div>'
+          + '<div class="aoe-proof" id="aoeProof"></div>'
+        + '</div>'
         + '<div style="display:flex; justify-content:space-between; font-size:13px; color:var(--ink-soft);">'
           + '<span>'+t("الشحن")+'</span><span class="tabular">'+fmt(+order.shipping||0)+' '+cur+'</span>'
         + '</div>'
@@ -8306,7 +8334,8 @@ function showAdminOrderEditForm(order){
   document.getElementById("modalCloseBtn").addEventListener("click", closeAllPanels);
 
   var itemsBox = document.getElementById("aoeItems");
-  var items = (order.items||[]).map(function(it){ return { name: it.name, qty: +it.qty||1, price: +it.price||0 }; });
+  /* بنحتفظ برقم المنتج واللون والحجم مع كل صنف (عشان المخزون وتقييم العميل للمنتج اللي اشتراه) */
+  var items = (order.items||[]).map(function(it){ return { id: it.id, colorName: it.colorName, sizeLabel: it.sizeLabel, name: it.name, qty: +it.qty||1, price: +it.price||0 }; });
   if(!items.length) items = [{ name:"", qty:1, price:0 }];
 
   function updateTotal(){
@@ -8332,6 +8361,45 @@ function showAdminOrderEditForm(order){
   renderItemRows();
   updateTotal();
 
+  /* طريقة الدفع + إيصال التحويل (فودافون كاش / إنستاباي) */
+  var pay = { method: order.paymentMethod || "cash", img: null, remove: false };
+  var hadProof = orderHasProof(order);
+  function renderProofBox(){
+    var box = document.getElementById("aoeProof");
+    if(!paymentMethodNeedsProof(pay.method)){
+      box.innerHTML = (hadProof && !pay.remove) ? '<p class="aoe-note">'+t("الطلب ده عليه إيصال قديم — هيفضل محفوظ.")+' <button type="button" class="aoe-link" data-aoe-rm>'+t("شيل الإيصال")+'</button></p>' : '';
+      return;
+    }
+    var has = pay.img || (hadProof && !pay.remove);
+    box.innerHTML = '<div class="aoe-proof-card'+(has?' has':'')+'">'
+      + '<div class="aoe-proof-thumb">'+(pay.img ? '<img src="'+pay.img+'" alt="">' : (has ? '<span>🧾</span>' : '<span>📷</span>'))+'</div>'
+      + '<div class="aoe-proof-txt"><b>'+(pay.img ? t("إيصال جديد جاهز للحفظ") : (has ? t("فيه إيصال مرفق") : t("إرفاق إيصال التحويل")))+'</b>'
+        + '<small>'+(has ? t("تقدر تغيّره بصورة تانية") : t("سكرين شوت من")+' '+t(paymentMethodLabel(pay.method))+' — '+t("اختياري"))+'</small></div>'
+      + '<div class="aoe-proof-acts">'
+        + (hadProof && !pay.img && !pay.remove ? '<button type="button" class="btn btn-outline btn-sm" data-aoe-view>👁️ '+t("عرض")+'</button>' : '')
+        + '<label class="btn btn-primary btn-sm">'+(has ? '🔄 '+t("تغيير") : '📎 '+t("إرفاق"))+'<input type="file" accept="image/*" id="aoeProofFile" hidden></label>'
+        + (has ? '<button type="button" class="aoe-link" data-aoe-rm>'+t("شيل")+'</button>' : '')
+      + '</div></div>';
+  }
+  renderProofBox();
+  document.getElementById("aoePm").addEventListener("click", function(e){
+    var b = e.target.closest("[data-pm]"); if(!b) return;
+    pay.method = b.dataset.pm;
+    this.querySelectorAll("[data-pm]").forEach(function(x){ var on = x===b; x.classList.toggle("on", on); x.setAttribute("aria-checked", on); });
+    renderProofBox();
+  });
+  document.getElementById("aoeProof").addEventListener("click", function(e){
+    if(e.target.closest("[data-aoe-rm]")){ if(pay.img) pay.img = null; else pay.remove = true; renderProofBox(); return; }
+    if(e.target.closest("[data-aoe-view]")) openProofViewer(order, true);
+  });
+  document.getElementById("aoeProof").addEventListener("change", function(e){
+    var f = e.target.files && e.target.files[0]; if(!f) return;
+    readProofImage(f, function(data){
+      if(!data){ showToast(t("⚠️ تعذر قراءة الصورة، جرّب صورة تانية")); return; }
+      pay.img = data; pay.remove = false; renderProofBox();
+    });
+  });
+
   document.getElementById("aoeAddItem").addEventListener("click", function(){
     items.push({ name:"", qty:1, price:0 });
     renderItemRows();
@@ -8342,7 +8410,11 @@ function showAdminOrderEditForm(order){
     var errEl = document.getElementById("aoeError");
     errEl.style.display = "none";
     var cleanItems = items.filter(function(it){ return String(it.name||"").trim(); }).map(function(it){
-      return { name:String(it.name||"").trim(), qty:Math.max(1, Math.round(+it.qty||1)), price:Math.max(0, +it.price||0) };
+      var o2 = { name:String(it.name||"").trim(), qty:Math.max(1, Math.round(+it.qty||1)), price:Math.max(0, +it.price||0) };
+      if(it.id != null) o2.id = it.id;
+      if(it.colorName) o2.colorName = it.colorName;
+      if(it.sizeLabel) o2.sizeLabel = it.sizeLabel;
+      return o2;
     });
     if(!cleanItems.length){ errEl.textContent = t("لازم يكون فيه صنف واحد على الأقل بالاسم."); errEl.style.display = "block"; return; }
     var sub2 = cleanItems.reduce(function(sum, it){ return sum + it.qty*it.price; }, 0);
@@ -8357,12 +8429,16 @@ function showAdminOrderEditForm(order){
         name: document.getElementById("aoeName").value.trim(),
         phone: document.getElementById("aoePhone").value.trim(),
         governorate: document.getElementById("aoeGovernorate").value,
-        address: document.getElementById("aoeAddress").value.trim()
+        address: document.getElementById("aoeAddress").value.trim(),
+        paymentMethod: pay.method,
+        paymentProof: pay.img || undefined,
+        removeProof: (pay.remove && !pay.img) || undefined
       })
     }).then(function(r){ return r.json().then(function(j){ return {status:r.status, body:j}; }); })
       .then(function(res){
         btn.disabled = false;
         if(res.status===200 && res.body && res.body.ok){
+          delete PROOF_CACHE[String(order.id)+":a"]; delete PROOF_CACHE[String(order.id)+":c"];
           showToast(t("✅ اتحفظت تعديلات الطلب"));
           closeAllPanels();
           renderAdminOrdersPage();

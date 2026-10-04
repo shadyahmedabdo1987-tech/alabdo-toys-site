@@ -1,5 +1,6 @@
 # آل عبده - الإدارة: بناء تطبيق لوحة التحكم أوتوماتيك على سيرفرات GitHub.
 # icons: admin = round store logo, transparent background + small gold gear (admin-logo-icon-*.png)
+# print: AlAbdoNative.printPdf (sales report)
 # التطبيق بيفتح لوحة تحكم المتجر جوه متصفح داخلي خاص بيه (WebView) - من غير
 # جوجل كروم خالص، فمفيش أي رسالة من كروم أول مرة. تطبيق منفصل عن تطبيق
 # العملاء (com.alabdotoys.admin)، أيقونته عليها ترس، ولموبايلك إنت بس
@@ -841,7 +842,20 @@ jobs:
                               } });
                               return;
                           }
-                          runOnUiThread(new Runnable() { @Override public void run() { saveBytes(name, mime, bytes, "✅ اتحفظ الإيصال في Downloads وفي المعرض: ", "احفظ الإيصال"); } });
+                          final boolean isImg = mime != null && mime.startsWith("image/");
+                          runOnUiThread(new Runnable() { @Override public void run() {
+                              if (isImg) saveBytes(name, mime, bytes, "✅ اتحفظ الإيصال في Downloads وفي المعرض: ", "احفظ الإيصال");
+                              else saveBytes(name, mime, bytes, "✅ اتحفظ الملف في Downloads: ", "احفظ الملف");
+                          } });
+                      }
+                      /* طباعة تقرير PDF: بتفتح شاشة الطباعة بتاعة أندرويد (طابعة واي فاي
+                         أو "حفظ كـ PDF") */
+                      @android.webkit.JavascriptInterface
+                      public void printPdf(final String name, final String b64) {
+                          final byte[] bytes;
+                          try { bytes = android.util.Base64.decode(b64 == null ? "" : b64, android.util.Base64.DEFAULT); }
+                          catch (Exception e) { return; }
+                          runOnUiThread(new Runnable() { @Override public void run() { printPdfBytes(name, bytes); } });
                       }
                       /* مفتاح إشعارات الطلبات (بيتحفظ على الموبايل بس) */
                       @android.webkit.JavascriptInterface
@@ -882,6 +896,39 @@ jobs:
 
               /* حفظ ملف النسخة الاحتياطية: في Downloads على أندرويد 10 وأحدث،
                  ولأقدم من كده بيفتح قايمة المشاركة (تحفظه في Drive أو تبعته لنفسك). */
+              private void printPdfBytes(final String name, final byte[] data) {
+                  try {
+                      android.print.PrintManager pm = (android.print.PrintManager) getSystemService(android.content.Context.PRINT_SERVICE);
+                      if (pm == null) throw new Exception("no print service");
+                      final String job = (name == null || name.isEmpty()) ? "alabdo-report" : name.replaceAll("\\.pdf$", "");
+                      android.print.PrintDocumentAdapter adapter = new android.print.PrintDocumentAdapter() {
+                          @Override
+                          public void onLayout(android.print.PrintAttributes oldAttributes, android.print.PrintAttributes newAttributes, android.os.CancellationSignal cancellationSignal, android.print.PrintDocumentAdapter.LayoutResultCallback callback, Bundle extras) {
+                              if (cancellationSignal != null && cancellationSignal.isCanceled()) { callback.onLayoutCancelled(); return; }
+                              android.print.PrintDocumentInfo info = new android.print.PrintDocumentInfo.Builder(job + ".pdf")
+                                  .setContentType(android.print.PrintDocumentInfo.CONTENT_TYPE_DOCUMENT).build();
+                              callback.onLayoutFinished(info, true);
+                          }
+                          @Override
+                          public void onWrite(android.print.PageRange[] pages, android.os.ParcelFileDescriptor destination, android.os.CancellationSignal cancellationSignal, android.print.PrintDocumentAdapter.WriteResultCallback callback) {
+                              java.io.FileOutputStream out = null;
+                              try {
+                                  out = new java.io.FileOutputStream(destination.getFileDescriptor());
+                                  out.write(data);
+                                  callback.onWriteFinished(new android.print.PageRange[] { android.print.PageRange.ALL_PAGES });
+                              } catch (Exception e) {
+                                  callback.onWriteFailed(e.getMessage());
+                              } finally {
+                                  try { if (out != null) out.close(); } catch (Exception e2) { /* ignore */ }
+                              }
+                          }
+                      };
+                      pm.print(job, adapter, new android.print.PrintAttributes.Builder().setMediaSize(android.print.PrintAttributes.MediaSize.ISO_A4).build());
+                  } catch (Exception e) {
+                      android.widget.Toast.makeText(this, "⚠️ الطباعة مش متاحة على الموبايل ده — نزّل الـ PDF واطبعه", android.widget.Toast.LENGTH_LONG).show();
+                  }
+              }
+
               private void saveToDownloads(String name, String mime, String content) {
                   String type = (mime == null || mime.isEmpty()) ? "application/json" : mime;
                   byte[] data = content == null ? new byte[0] : content.getBytes(java.nio.charset.StandardCharsets.UTF_8);

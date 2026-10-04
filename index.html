@@ -1107,6 +1107,10 @@ html[dir="rtl"] .fsp-bar i{margin-inline-start:0;}
 .disc-chip.on{background:linear-gradient(135deg, var(--pink), var(--pink-deep)); color:#fff; border-color:transparent; box-shadow:0 4px 12px -6px color-mix(in srgb, var(--pink) 80%, transparent);}
 .disc-chip.on span{background:rgba(255,255,255,.25); color:#fff;}
 .disc-chip:active{transform:scale(.97);}
+.disc-chip.is-ship{border-color:color-mix(in srgb, #18c08a 45%, var(--border)); color:#0b8a60;}
+.disc-chip.is-ship span{background:color-mix(in srgb, #18c08a 15%, var(--surface)); color:#0b8a60;}
+.disc-chip.is-ship.on{background:linear-gradient(135deg, #18c08a, #0d9f6e); color:#fff; box-shadow:0 4px 12px -6px rgba(13,159,110,.8);}
+.disc-chip.is-ship.on span{background:rgba(255,255,255,.25); color:#fff;}
 .disc-chip.is-clear{border-style:dashed; color:var(--ink-soft); border-color:var(--border);}
 .disc-chip:focus-visible{outline:2px solid var(--pink); outline-offset:2px;}
 
@@ -3962,6 +3966,7 @@ document.getElementById("themeToggle").addEventListener("click", function(){
    الأقسام السبعة، ومحافظات مصر. الصفحات القانونية ولوحة التحكم وأسماء/أوصاف
    المنتجات هتتضاف في مراحل تالية. */
 var I18N_EN = {
+  "منتجات شحنها مجاني": "Free-shipping products",
   "كل الخصومات": "All deals",
   "أو أكتر": "or more",
   "إلغاء الفلتر": "Clear filter",
@@ -6553,7 +6558,7 @@ function renderProductReviewsBox(p, data){
 }
 
 /* ---------- Products view (filter/sort/search) ---------- */
-var state = { cat:"all", q:"", sort:"pop", badge:null, disc:0 };
+var state = { cat:"all", q:"", sort:"pop", badge:null, disc:0, fship:false };
 /* نسبة الخصم على المنتج (من "السعر قبل الخصم") - 0 لو مفيش خصم */
 function discPct(p){ var o = +p.old, n = +p.price; return (o > 0 && n >= 0 && o > n) ? Math.round((1 - n / o) * 100) : 0; }
 /* فلتر الخصومات: شريط فيه "كل الخصومات" ومستويات النسبة اللي ليها منتجات */
@@ -6561,16 +6566,21 @@ var DISC_LEVELS = [10, 20, 30, 50];
 function renderDiscFilter(){
   var box = document.getElementById("discFilter"); if(!box) return;
   var base = PRODUCTS.filter(function(p){ return (state.cat==="all" || p.cat===state.cat) && (state.badge!=="wish" || FAVORITES[p.id]); });
+  /* عدّ الخصومات جوه "الشحن المجاني" لو الفلتر ده شغال، والعكس */
+  var shipBase = base.filter(function(p){ return !state.disc || discPct(p) >= state.disc; });
+  var nShip = shipBase.filter(function(p){ return !!p.freeShipping; }).length;
+  if(state.fship) base = base.filter(function(p){ return !!p.freeShipping; });
   var withDisc = base.filter(function(p){ return discPct(p) > 0; });
-  if(!withDisc.length && !state.disc){ box.hidden = true; box.innerHTML = ""; return; }
+  if(!withDisc.length && !state.disc && !nShip && !state.fship){ box.hidden = true; box.innerHTML = ""; return; }
   box.hidden = false;
   var chip = function(val, label, n){ return '<button type="button" class="disc-chip'+(state.disc===val ? ' on' : '')+'" data-disc="'+val+'" aria-pressed="'+(state.disc===val)+'">'+label+' <span class="tabular">'+fmt(n)+'</span></button>'; };
-  var h = chip(1, '🏷️ '+t("كل الخصومات"), withDisc.length);
+  var h = (nShip || state.fship) ? '<button type="button" class="disc-chip is-ship'+(state.fship ? ' on' : '')+'" data-fship aria-pressed="'+state.fship+'">🚚 '+t("شحن مجاني")+' <span class="tabular">'+fmt(nShip)+'</span></button>' : '';
+  if(withDisc.length || state.disc) h += chip(1, '🏷️ '+t("كل الخصومات"), withDisc.length);
   DISC_LEVELS.forEach(function(lv){
     var n = withDisc.filter(function(p){ return discPct(p) >= lv; }).length;
-    if(n || state.disc===lv) h += chip(lv, t("خصم")+' '+fmt(lv)+'٪ '+t("أو أكتر"), n);
+    if((n || state.disc===lv) && withDisc.length) h += chip(lv, t("خصم")+' '+fmt(lv)+'٪ '+t("أو أكتر"), n);
   });
-  if(state.disc) h += '<button type="button" class="disc-chip is-clear" data-disc="0">✕ '+t("إلغاء الفلتر")+'</button>';
+  if(state.disc || state.fship) h += '<button type="button" class="disc-chip is-clear" data-disc-clear>✕ '+t("إلغاء الفلتر")+'</button>';
   box.innerHTML = h;
 }
 
@@ -6595,6 +6605,7 @@ function applyProducts(){
   if(state.cat!=="all"){ list = list.filter(function(p){ return p.cat===state.cat; }); }
   if(state.badge==="sale"){ list = list.filter(function(p){ return p.old; }); }
   if(state.disc){ list = list.filter(function(p){ return discPct(p) >= state.disc; }); }
+  if(state.fship){ list = list.filter(function(p){ return !!p.freeShipping; }); }
   if(state.badge==="new"){ list = list.filter(function(p){ return p.badge==="new"; }); }
   if(state.badge==="wish"){ list = list.filter(function(p){ return !!FAVORITES[p.id]; }); }
   if(state.q && normSearch(state.q)){
@@ -6647,6 +6658,7 @@ function renderProductsView(){
     : "عرض "+list.length+" من "+PRODUCTS.length+" منتج";
   var title = state.cat==="all" ? t("جميع المنتجات") : catName(state.cat);
   if(state.badge==="sale" || state.disc) title = t("عروض خاصة");
+  else if(state.fship) title = t("منتجات شحنها مجاني");
   renderDiscFilter();
   if(state.badge==="new") title = t("وصل حديثاً");
   if(state.badge==="wish") title = t("المفضلة");
@@ -6661,19 +6673,21 @@ document.getElementById("filterList").addEventListener("click", function(e){
 });
 document.getElementById("sortSelect").addEventListener("change", function(e){ state.sort=e.target.value; renderProductsView(); });
 document.getElementById("discFilter").addEventListener("click", function(e){
-  var b = e.target.closest("[data-disc]"); if(!b) return;
-  var v = +b.dataset.disc;
-  state.disc = (state.disc === v) ? 0 : v;
+  if(e.target.closest("[data-disc-clear]")){ state.disc = 0; state.fship = false; renderProductsView(); return; }
+  var fs = e.target.closest("[data-fship]");
+  var b = e.target.closest("[data-disc]"); if(!b && !fs) return;
+  if(fs) state.fship = !state.fship;
+  else { var v = +b.dataset.disc; state.disc = (state.disc === v) ? 0 : v; }
   if(state.badge === "sale") state.badge = null;
   renderProductsView();
-  var g = document.getElementById("productsGrid"); if(g && state.disc){ var y = g.getBoundingClientRect().top + window.scrollY - 140; if(window.scrollY > y) window.scrollTo({ top: y, behavior:"smooth" }); }
+  var g = document.getElementById("productsGrid"); if(g && (state.disc || state.fship)){ var y = g.getBoundingClientRect().top + window.scrollY - 140; if(window.scrollY > y) window.scrollTo({ top: y, behavior:"smooth" }); }
 });
 document.getElementById("categoryRow").addEventListener("click", function(e){
   var b=e.target.closest("[data-goto-cat]"); if(!b) return;
   state.cat=b.dataset.gotoCat; state.badge=null; state.q=""; goToView("products"); renderProductsView();
 });
 
-function doSearch(q){ state.q=q; state.cat="all"; state.badge=null; state.disc=0; goToView("products"); renderProductsView(); }
+function doSearch(q){ state.q=q; state.cat="all"; state.badge=null; state.disc=0; state.fship=false; goToView("products"); renderProductsView(); }
 /* بحث فوري: المنتجات بتظهر مع أول حروف بتتكتب، ولو البحث اتمسح بترجع كل
    المنتجات تاني (من غير ما نضغط زرار البحث). */
 var liveSearchTimer = null;
@@ -6841,7 +6855,7 @@ document.getElementById("appTabbar").addEventListener("click", function(e){
   if(tab==="me"){ if(appSheet.classList.contains("show")) closeAllPanels(); else { closeAllPanels(); openAppSheet(); } updateAppTabbar(); return; }
   if(tab==="cart"){ closeAllPanels(); renderCartDrawer(); openDrawer(); updateAppTabbar(); return; }
   if(tab==="home"){ goToView("home"); return; }
-  state.cat="all"; state.q=""; state.disc=0;
+  state.cat="all"; state.q=""; state.disc=0; state.fship=false;
   state.badge = tab==="wish" ? "wish" : null;
   goToView("products"); renderProductsView();
 });

@@ -2092,6 +2092,24 @@ html.app-mode .pm-cart{top:calc(12px + env(safe-area-inset-top));}
 .pr-cur small{font-size:12px; color:var(--ink-soft);}
 .pr-preview{display:flex; justify-content:center;}
 .pr-preview[hidden]{display:none;}
+.bn-list{display:flex; flex-direction:column; gap:10px;}
+.bn-item{display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px 10px; align-items:center; padding:10px; border:1.5px solid var(--border); border-radius:14px; background:var(--surface-3);}
+.bn-item img{grid-column:1 / -1; width:100%; aspect-ratio:1600/620; object-fit:cover; border-radius:10px; display:block; background:var(--surface-2);}
+.bn-item select{width:100%; min-width:0; padding:8px 10px; border-radius:10px; border:1.5px solid var(--border); background:var(--surface); color:var(--ink); font-family:inherit; font-size:13px;}
+.bn-acts{display:flex; gap:6px;}
+.bn-acts button{width:36px; height:36px; border-radius:10px; border:1.5px solid var(--border); background:var(--surface); color:var(--ink); font-size:15px; cursor:pointer; display:grid; place-items:center; font-family:inherit;}
+.bn-acts button:disabled{opacity:.35; cursor:default;}
+.bn-acts button.del{color:#d33;}
+.bn-num{grid-column:1 / -1; font-size:12px; font-weight:800; color:var(--ink-soft); margin-bottom:-4px;}
+.bn-status{font-size:13px; font-weight:800; padding:8px 12px; border-radius:12px; background:var(--surface-2); color:var(--ink);}
+.bn-status.is-dirty{background:color-mix(in srgb, #ffb703 18%, var(--surface)); color:color-mix(in srgb, #e09400 75%, var(--ink));}
+.bn-add{display:flex; align-items:center; justify-content:center; gap:8px; padding:14px; border:2px dashed var(--border); border-radius:14px; color:var(--pink-deep); font-weight:900; font-size:14px; cursor:pointer; text-align:center;}
+.bn-add input{position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;}
+.bn-btns{display:flex; flex-wrap:wrap; gap:8px;}
+.bn-btns .btn{flex:1 1 160px;}
+.wholesale-discount-banner .carousel-slide-img[data-link]{cursor:pointer;}
+.wholesale-discount-banner[hidden]{display:none;}
+html.app-mode section.db-empty{display:none;}
 .pr-preview img{max-width:220px; max-height:300px; border-radius:16px; box-shadow:0 8px 22px hsl(var(--shadow)/.18);}
 /* إعلان الشاشة الرئيسية */
 .home-promo{position:fixed; inset:0; z-index:420; background:rgba(16,8,28,.62); display:flex; align-items:center; justify-content:center; padding:24px 20px calc(24px + env(safe-area-inset-bottom)); opacity:0; transition:opacity .25s ease; backdrop-filter:blur(2px);}
@@ -2832,7 +2850,7 @@ try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("messa
             <button class="btn btn-primary btn-sm" id="adminCustomersBtn" type="button" data-i18n>👥 بيانات العملاء</button>
             <button class="btn btn-primary btn-sm" id="adminCouponsBtn" type="button" data-i18n>🎟️ أكواد الخصم</button>
             <button class="btn btn-primary btn-sm" id="adminSalesBtn" type="button" data-i18n>💰 تقرير المبيعات</button>
-            <button class="btn btn-primary btn-sm" id="adminBroadcastBtn" type="button" data-i18n>📣 إشعارات العروض</button>
+            <button class="btn btn-primary btn-sm" id="adminBroadcastBtn" type="button" data-i18n>📣 العروض والإعلانات</button>
             <button class="btn btn-primary btn-sm" id="adminInventoryBtn" type="button" data-i18n>📦 تقرير المخزون</button>
             <button class="btn btn-primary btn-sm" id="adminOrdersBtn" type="button" data-i18n>🧾 طلبات العملاء</button>
             <button class="btn btn-primary btn-sm" id="adminStockBtn" type="button" data-i18n>🔔 طلبات التوفر</button>
@@ -3090,7 +3108,7 @@ try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("messa
 
       <div id="adminBroadcastPage" class="admin-wrap">
         <div class="admin-bar">
-          <div><h1 style="font-size:22px;" data-i18n>📣 إشعارات العروض</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;" data-i18n>ابعت إشعار لكل اللي عندهم تطبيق المتجر على أندرويد، أو انشر إعلان بصورة على الشاشة الرئيسية.</p></div>
+          <div><h1 style="font-size:22px;" data-i18n>📣 العروض والإعلانات</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;" data-i18n>ابعت إشعار لعملاء التطبيق، انشر إعلان بصورة على الشاشة الرئيسية، وعدّل بانرات الخصم.</p></div>
           <div class="admin-actions">
             <button class="btn btn-outline btn-sm" id="adminBroadcastBackBtn" type="button" data-i18n>رجوع للوحة التحكم</button>
           </div>
@@ -3119,6 +3137,18 @@ try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("messa
           <label class="bc-field"><span><b data-i18n>لما العميل يدوس على الصورة يفتح</b></span><select id="prLink"></select></label>
           <label class="bc-field"><span><b data-i18n>يفضل ظاهر لمدة</b></span><select id="prDays"><option value="1" data-i18n>يوم واحد</option><option value="3" data-i18n>3 أيام</option><option value="7" data-i18n>أسبوع</option><option value="30" data-i18n>شهر</option><option value="0" selected data-i18n>لحد ما أوقفه</option></select></label>
           <button type="button" class="btn btn-primary" id="prPublish" data-i18n>🖼️ انشر الإعلان</button>
+        </div>
+        <h3 class="bc-h" id="bnSection" data-i18n>🏷️ بانرات الخصم في الصفحة الرئيسية</h3>
+        <div class="admin-card bc-card">
+          <p class="apr-note" data-i18n>البانرات اللي بتقلّب لوحدها تحت الصفحة الرئيسية. تقدر تضيف بانر، تغيّر ترتيبهم، تخلي البانر يفتح صفحة لما العميل يدوس عليه، أو تمسحهم كلهم فالقسم يختفي. أي تغيير مش بيظهر للعملاء غير لما تدوس "احفظ".</p>
+          <div id="bnStatus" class="bn-status" data-i18n>جاري التحميل...</div>
+          <div id="bnList" class="bn-list"></div>
+          <label class="bn-add"><input type="file" id="bnFile" accept="image/*"><span data-i18n>➕ أضف بانر جديد</span></label>
+          <p class="apr-note" data-i18n>الأفضل صورة عرضية بمقاس 1600×620 (زي البانرات الحالية) عشان متتقصّش من الأطراف.</p>
+          <div class="bn-btns">
+            <button type="button" class="btn btn-primary" id="bnSave" data-i18n>💾 احفظ البانرات</button>
+            <button type="button" class="btn btn-outline" id="bnReset" data-i18n>↩️ رجّع البانرات الأصلية</button>
+          </div>
         </div>
         <h3 class="bc-h" data-i18n>اللي اتبعت قبل كده</h3>
         <div id="bcHistory"><p class="apr-note" data-i18n>جاري التحميل...</p></div>
@@ -4404,6 +4434,38 @@ var I18N_EN = {
   "أسبوع": "1 week",
   "شهر": "1 month",
   "لحد ما أوقفه": "Until I stop it",
+  "📣 العروض والإعلانات": "📣 Offers & ads",
+  "العروض والإعلانات": "Offers & ads",
+  "إشعارات، إعلان الشاشة الرئيسية، وبانرات الخصم": "Notifications, home popup ad and discount banners",
+  "ابعت إشعار لعملاء التطبيق، انشر إعلان بصورة على الشاشة الرئيسية، وعدّل بانرات الخصم.": "Send app notifications, publish a home-screen image ad and edit the discount banners.",
+  "🏷️ بانرات الخصم في الصفحة الرئيسية": "🏷️ Home page discount banners",
+  "البانرات اللي بتقلّب لوحدها تحت الصفحة الرئيسية. تقدر تضيف بانر، تغيّر ترتيبهم، تخلي البانر يفتح صفحة لما العميل يدوس عليه، أو تمسحهم كلهم فالقسم يختفي. أي تغيير مش بيظهر للعملاء غير لما تدوس \"احفظ\".": "The auto-sliding banners on the home page. Add a banner, reorder them, make a banner open a page when tapped, or delete them all to hide the section. Changes only reach customers after you press \"Save\".",
+  "➕ أضف بانر جديد": "➕ Add a new banner",
+  "الأفضل صورة عرضية بمقاس 1600×620 (زي البانرات الحالية) عشان متتقصّش من الأطراف.": "Best is a wide 1600×620 image (like the current banners) so the edges don't get cropped.",
+  "💾 احفظ البانرات": "💾 Save banners",
+  "↩️ رجّع البانرات الأصلية": "↩️ Restore original banners",
+  "عرض خصم": "Discount offer",
+  "بانر": "Banner",
+  "بانرات": "banners",
+  "لفوق": "Move up",
+  "لتحت": "Move down",
+  "لما العميل يدوس على البانر يفتح": "When tapped, the banner opens",
+  "في تغييرات لسه ماتحفظتش — دوس احفظ عشان تظهر للعملاء": "Unsaved changes — press Save to show them to customers",
+  "ظاهر للعملاء دلوقتي: البانرات الأصلية": "Customers now see: the original banners",
+  "قسم البانرات مخفي عند العملاء": "The banners section is hidden for customers",
+  "⚠️ ارفع ملف banners.js الأول": "⚠️ Upload banners.js first",
+  "استنى لحد ما البانرات تحمّل": "Wait until the banners load",
+  "⚠️ أقصى عدد 10 بانرات": "⚠️ Maximum 10 banners",
+  "جاري رفع الصورة...": "Uploading image...",
+  "البانرات اتحفظت وظهرت للعملاء": "Banners saved and live for customers",
+  "قسم البانرات اتخفى عند العملاء": "Banners section hidden for customers",
+  "تخفي قسم البانرات؟": "Hide the banners section?",
+  "مفيش ولا بانر، فالقسم هيختفي من الصفحة الرئيسية عند كل العملاء. تقدر ترجّعه في أي وقت.": "There are no banners, so the section will disappear from the home page for all customers. You can bring it back any time.",
+  "إخفاء": "Hide",
+  "ترجّع البانرات الأصلية؟": "Restore the original banners?",
+  "بانر خصم 10% وبانر خصم 15% هيرجعوا زي ما كانوا، وأي بانرات ضفتها هتتشال.": "The 10% and 15% banners will come back as they were, and any banners you added will be removed.",
+  "رجّع": "Restore",
+  "رجعت البانرات الأصلية": "Original banners restored",
   "مفيش لعبة بالاسم ده": "No toy with that name",
   "جرّب كلمة تانية أو اسم القسم": "Try another word or a category name",
   "عرض كل النتايج": "See all results",
@@ -6737,6 +6799,50 @@ function showHomePromo(p){
     }
   });
 }
+/* ---------- بانرات الخصم (بتتعدل من الإدارة) ----------
+   لو الأدمن لسه ماعدّلهاش بتفضل البانرات الأصلية اللي في الصفحة. آخر نسخة
+   بتتحفظ على الموبايل عشان تظهر على طول أول ما المتجر يفتح من غير ما
+   البانرات القديمة تبان ثانية وتتغير. */
+var DB_CACHE_KEY = "aa_disc_banners";
+var DB_DEFAULT_HTML = '<img class="carousel-slide-img active" src="discount-10.jpg" alt="'+escHtml(t("خصم 10% على الفواتير بقيمة 5,000 جنيه ومافوق"))+'">'
+  + '<img class="carousel-slide-img" src="discount-15.jpg" alt="'+escHtml(t("خصم 15% على الفواتير بقيمة 10,000 جنيه ومافوق"))+'">';
+function dbApply(cfg){
+  var wrap = document.getElementById("discountBannerWrap"); if(!wrap) return;
+  var sig = JSON.stringify(cfg && cfg.set ? cfg.items : "default");
+  if((wrap.dataset.dbSig || JSON.stringify("default")) === sig) return;
+  var section = wrap.closest("section");
+  var nw = document.createElement("div");
+  nw.className = "wholesale-discount-banner"; nw.id = "discountBannerWrap"; nw.dataset.dbSig = sig;
+  if(!cfg || !cfg.set){
+    nw.innerHTML = DB_DEFAULT_HTML;
+  } else {
+    nw.innerHTML = cfg.items.map(function(b, i){
+      return '<img class="carousel-slide-img'+(i===0 ? ' active' : '')+'" src="'+escHtml(b.image)+'" alt="'+escHtml(t("عرض خصم"))+'"'+(b.link && b.link !== "none" ? ' data-link="'+escHtml(b.link)+'"' : '')+(i ? ' loading="lazy"' : '')+' decoding="async">';
+    }).join("");
+  }
+  if(wrap._carStop) wrap._carStop();
+  wrap.parentNode.replaceChild(nw, wrap);
+  var empty = !!(cfg && cfg.set && !cfg.items.length);
+  nw.hidden = empty;
+  if(section){ section.classList.toggle("db-empty", empty); }
+  Array.prototype.forEach.call(nw.querySelectorAll("img"), function(im){ if(im.complete && im.naturalWidth) nw.classList.add("img-ready"); });
+  initSlideCarousel("discountBannerWrap", 5500);
+}
+function dbSaveCache(cfg){ try{ localStorage.setItem(DB_CACHE_KEY, JSON.stringify(cfg)); }catch(e){} }
+function loadDiscountBanners(){
+  fetch("/api/banners", { cache:"no-store" }).then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(res){ if(!res || !res.ok) return; var cfg = { set: !!res.set, items: res.items || [] }; dbSaveCache(cfg); dbApply(cfg); })
+    .catch(function(){});
+}
+(function(){
+  try{ var c = JSON.parse(localStorage.getItem(DB_CACHE_KEY) || "null"); if(c && c.set) dbApply(c); }catch(e){}
+  loadDiscountBanners();
+  document.addEventListener("click", function(e){
+    var im = e.target.closest && e.target.closest("#discountBannerWrap .carousel-slide-img[data-link]");
+    if(im) aaGoLink(im.dataset.link);
+  });
+})();
+
 function loadHomePromo(){
   if(isAdminApp() || isAdminAuthed()) return;
   fetch("/api/promo", { cache:"no-store" }).then(function(r){ return r.ok ? r.json() : null; })
@@ -6850,6 +6956,7 @@ function initSlideCarousel(containerId, intervalMs){
     var b = e.target.closest("[data-car-i]"); if(!b) return;
     var i = +b.dataset.carI; show(i, i > idx ? 1 : -1); restart();
   });
+  container._carStop = function(){ clearInterval(timer); };
   var sx = 0, sy = 0, tracking = false;
   container.addEventListener("touchstart", function(e){ if(e.touches.length !== 1) return; sx = e.touches[0].clientX; sy = e.touches[0].clientY; tracking = true; }, { passive:true });
   container.addEventListener("touchend", function(e){
@@ -10659,7 +10766,7 @@ function bcPreview(){
   document.getElementById("bcBodyCnt").textContent = fmt(bb.length)+"/220";
 }
 function renderAdminBroadcastPage(){
-  bcFillLinkOptions(); bcPreview(); renderAdminPromo();
+  bcFillLinkOptions(); bcPreview(); renderAdminPromo(); renderAdminBanners();
   var box = document.getElementById("bcHistory");
   if(!ADMIN_BC.list) box.innerHTML = '<p class="apr-note">'+t("جاري التحميل...")+'</p>';
   fetch("/api/broadcast?all=1", { headers: adminAuthHeaders(), cache:"no-store" })
@@ -10784,6 +10891,120 @@ document.getElementById("prPublish").addEventListener("click", function(){
         } else done(res.status === 404 || res.status === 405 ? t("⚠️ ارفع ملف promo.js الأول") : t("⚠️ تعذر الحفظ، جرّب تاني."));
       })
       .catch(function(){ done(t("⚠️ تعذر الحفظ، جرّب تاني.")); });
+  });
+});
+/* ---------- (الإدارة) بانرات الخصم ---------- */
+var ADMIN_BN = { items:null, set:false, dirty:false, busy:false };
+var BN_DEFAULTS = [ { id:"d10", image:"discount-10.jpg", link:"none" }, { id:"d15", image:"discount-15.jpg", link:"none" } ];
+function bnLinkOptionsHtml(){
+  var src = document.getElementById("bcLink");
+  return '<option value="none">🚫 '+t("مش بيفتح حاجة (صورة بس)")+'</option>' + (src ? src.innerHTML : "");
+}
+function bnDraw(){
+  var list = document.getElementById("bnList"), st = document.getElementById("bnStatus");
+  var items = ADMIN_BN.items || [];
+  var opts = bnLinkOptionsHtml();
+  list.innerHTML = items.map(function(b, i){
+    return '<div class="bn-item" data-bn-i="'+i+'">'
+      + '<span class="bn-num">'+t("بانر")+' '+fmt(i + 1)+'</span>'
+      + '<img src="'+escHtml(b.image)+'" alt="">'
+      + '<select data-bn-link aria-label="'+escHtml(t("لما العميل يدوس على البانر يفتح"))+'">'+opts+'</select>'
+      + '<div class="bn-acts">'
+        + '<button type="button" data-bn-up aria-label="'+t("لفوق")+'"'+(i === 0 ? ' disabled' : '')+'>▲</button>'
+        + '<button type="button" data-bn-down aria-label="'+t("لتحت")+'"'+(i === items.length - 1 ? ' disabled' : '')+'>▼</button>'
+        + '<button type="button" class="del" data-bn-del aria-label="'+t("مسح")+'">🗑️</button>'
+      + '</div>'
+    + '</div>';
+  }).join("");
+  Array.prototype.forEach.call(list.querySelectorAll("[data-bn-link]"), function(sel, i){ sel.value = items[i].link || "none"; if(!sel.value) sel.value = "none"; });
+  var txt;
+  if(ADMIN_BN.dirty) txt = "✏️ "+t("في تغييرات لسه ماتحفظتش — دوس احفظ عشان تظهر للعملاء");
+  else if(!ADMIN_BN.set) txt = "✅ "+t("ظاهر للعملاء دلوقتي: البانرات الأصلية");
+  else if(!items.length) txt = "🙈 "+t("قسم البانرات مخفي عند العملاء");
+  else txt = "✅ "+t("ظاهر للعملاء دلوقتي")+": "+fmt(items.length)+" "+(items.length === 1 ? t("بانر") : t("بانرات"));
+  st.textContent = txt;
+  st.classList.toggle("is-dirty", ADMIN_BN.dirty);
+}
+function renderAdminBanners(){
+  var st = document.getElementById("bnStatus");
+  if(ADMIN_BN.dirty && ADMIN_BN.items){ bnDraw(); return; }
+  fetch("/api/banners", { cache:"no-store" })
+    .then(function(r){ if(r.status === 404) throw "missing"; return r.json(); })
+    .then(function(res){
+      if(!res || !res.ok) throw 0;
+      ADMIN_BN.set = !!res.set; ADMIN_BN.dirty = false;
+      ADMIN_BN.items = (res.set ? res.items : BN_DEFAULTS).map(function(b){ return { id:b.id, image:b.image, link:b.link || "none" }; });
+      bnDraw();
+    })
+    .catch(function(e){ st.textContent = e === "missing" ? t("⚠️ ارفع ملف banners.js الأول") : t("تعذر التحميل."); });
+}
+function bnChanged(){ ADMIN_BN.dirty = true; bnDraw(); }
+document.getElementById("bnList").addEventListener("click", function(e){
+  var row = e.target.closest("[data-bn-i]"); if(!row) return;
+  var i = +row.dataset.bnI, items = ADMIN_BN.items;
+  if(e.target.closest("[data-bn-up]") && i > 0){ var a = items[i]; items[i] = items[i-1]; items[i-1] = a; bnChanged(); return; }
+  if(e.target.closest("[data-bn-down]") && i < items.length - 1){ var b = items[i]; items[i] = items[i+1]; items[i+1] = b; bnChanged(); return; }
+  if(e.target.closest("[data-bn-del]")){ items.splice(i, 1); bnChanged(); }
+});
+document.getElementById("bnList").addEventListener("change", function(e){
+  var sel = e.target.closest("[data-bn-link]"); if(!sel) return;
+  var i = +sel.closest("[data-bn-i]").dataset.bnI;
+  ADMIN_BN.items[i].link = sel.value; ADMIN_BN.dirty = true;
+  var st = document.getElementById("bnStatus"); st.textContent = "✏️ "+t("في تغييرات لسه ماتحفظتش — دوس احفظ عشان تظهر للعملاء"); st.classList.add("is-dirty");
+});
+document.getElementById("bnFile").addEventListener("change", function(){
+  var inp = this, f = inp.files && inp.files[0]; if(!f) return;
+  if(!ADMIN_BN.items){ showToast(t("استنى لحد ما البانرات تحمّل")); inp.value = ""; return; }
+  if(ADMIN_BN.items.length >= 10){ showToast(t("⚠️ أقصى عدد 10 بانرات")); inp.value = ""; return; }
+  var st = document.getElementById("bnStatus"); st.textContent = "⏳ "+t("جاري رفع الصورة...");
+  readImageAsCompressedDataURL(f, 1600, 0.86, function(dataUrl){
+    uploadImageData(dataUrl, function(url, err){
+      inp.value = "";
+      if(!url){ showToast(err === "missing" ? t("⚠️ ملف img.js مش موجود على السيرفر") : t("⚠️ تعذر رفع الصورة، جرّب تاني.")); bnDraw(); return; }
+      ADMIN_BN.items.push({ id:"bn_"+Date.now().toString(36), image:url, link:"offers" });
+      bnChanged();
+      var last = document.querySelector("#bnList .bn-item:last-child"); if(last) last.scrollIntoView({ block:"center", behavior:"smooth" });
+    });
+  });
+});
+function bnAfterSave(res, msg){
+  ADMIN_BN.set = !!res.set; ADMIN_BN.dirty = false;
+  ADMIN_BN.items = (res.set ? res.items : BN_DEFAULTS).map(function(b){ return { id:b.id, image:b.image, link:b.link || "none" }; });
+  var cfg = { set: !!res.set, items: res.set ? res.items : [] };
+  dbSaveCache(cfg); dbApply(cfg);
+  bnDraw(); showToast(msg);
+}
+document.getElementById("bnSave").addEventListener("click", function(){
+  if(ADMIN_BN.busy || !ADMIN_BN.items) return;
+  var items = ADMIN_BN.items, btn = this;
+  var go = function(){
+    ADMIN_BN.busy = true; btn.disabled = true;
+    fetch("/api/banners", { method:"PUT", headers: Object.assign({ "content-type":"application/json" }, adminAuthHeaders()), body: JSON.stringify({ items: items }) })
+      .then(function(r){ return r.json().then(function(j){ return { status:r.status, body:j }; }); })
+      .then(function(res){
+        ADMIN_BN.busy = false; btn.disabled = false;
+        if(res.body && res.body.ok) bnAfterSave(res.body, "✅ "+(items.length ? t("البانرات اتحفظت وظهرت للعملاء") : t("قسم البانرات اتخفى عند العملاء")));
+        else showToast(res.status === 404 || res.status === 405 ? t("⚠️ ارفع ملف banners.js الأول") : t("⚠️ تعذر الحفظ، جرّب تاني."));
+      })
+      .catch(function(){ ADMIN_BN.busy = false; btn.disabled = false; showToast(t("⚠️ تعذر الحفظ، جرّب تاني.")); });
+  };
+  if(!items.length) appConfirm({ icon:"🙈", title:t("تخفي قسم البانرات؟"), message:t("مفيش ولا بانر، فالقسم هيختفي من الصفحة الرئيسية عند كل العملاء. تقدر ترجّعه في أي وقت."), ok:t("إخفاء") }).then(function(ok){ if(ok) go(); });
+  else go();
+});
+document.getElementById("bnReset").addEventListener("click", function(){
+  if(ADMIN_BN.busy) return;
+  var btn = this;
+  appConfirm({ icon:"↩️", title:t("ترجّع البانرات الأصلية؟"), message:t("بانر خصم 10% وبانر خصم 15% هيرجعوا زي ما كانوا، وأي بانرات ضفتها هتتشال."), ok:t("رجّع") }).then(function(ok){
+    if(!ok) return;
+    ADMIN_BN.busy = true; btn.disabled = true;
+    fetch("/api/banners", { method:"DELETE", headers: adminAuthHeaders() })
+      .then(function(r){ return r.json().then(function(j){ return { status:r.status, body:j }; }); })
+      .then(function(res){
+        ADMIN_BN.busy = false; btn.disabled = false;
+        if(res.body && res.body.ok) bnAfterSave(res.body, "✅ "+t("رجعت البانرات الأصلية"));
+        else showToast(res.status === 404 || res.status === 405 ? t("⚠️ ارفع ملف banners.js الأول") : t("⚠️ تعذر الحفظ، جرّب تاني."));
+      })
+      .catch(function(){ ADMIN_BN.busy = false; btn.disabled = false; showToast(t("⚠️ تعذر الحفظ، جرّب تاني.")); });
   });
 });
 document.getElementById("adminBroadcastBtn").addEventListener("click", openAdminBroadcastPage);
@@ -12723,7 +12944,7 @@ var ADM = null;
     coupons:   { page:"adminCouponsPage",   open:openAdminCouponsPage,   render:renderAdminCouponsPage,   title:"أكواد الخصم" },
     inventory: { page:"adminInventoryPage", open:openAdminInventoryPage, render:renderInventoryPage,      title:"تقرير المخزون" },
     sales:     { page:"adminSalesPage",     open:openAdminSalesPage,     render:renderSalesPage,          title:"تقرير المبيعات" },
-    broadcast: { page:"adminBroadcastPage", open:openAdminBroadcastPage, render:renderAdminBroadcastPage, title:"إشعارات العروض" },
+    broadcast: { page:"adminBroadcastPage", open:openAdminBroadcastPage, render:renderAdminBroadcastPage, title:"العروض والإعلانات" },
     prodreq:   { page:"adminProdReqPage",   open:openAdminProdReqPage,   render:renderAdminProdReqPage,   title:"طلبات توفير منتجات" },
     reviews:   { page:"adminReviewsPage",   open:openAdminReviewsPage,   render:renderAdminReviewsPage,   title:"تقييمات العملاء" }
   };
@@ -13358,7 +13579,7 @@ var ADM = null;
       + li("inquiries", "📨", t("استفسارات العملاء"), t("رسايل صفحة تواصل معنا"), stats.inquiries)
       + li("customers", "👥", t("بيانات العملاء"), "")
       + li("reviews", "⭐", t("تقييمات العملاء"), t("عدّل أو اخفي أو امسح تقييمات المنتجات"))
-      + li("broadcast", "📣", t("إشعارات العروض"), t("ابعت إشعار عرض لكل عملاء التطبيق"))
+      + li("broadcast", "📣", t("العروض والإعلانات"), t("إشعارات، إعلان الشاشة الرئيسية، وبانرات الخصم"))
       + li("coupons", "🎟️", t("أكواد الخصم"), t("اعمل كود خصم بالنسبة اللي تختارها"))
       + li("pvdiag", "🧪", t("فحص مراجعة الإيصالات"), t("اتأكد إن مراجعة فودافون كاش وإنستاباي شغالة"))
       + li("analytics", "📊", t("تحليل الزوار"), "")

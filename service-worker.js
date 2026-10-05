@@ -11,7 +11,7 @@
    - لوحة التحكم بتطلب /api/products?fresh=1، وده بيعدّي على السيرفر مباشرة
      دايمًا، عشان التعديل يتعمل على آخر نسخة حقيقية (ومفيش منتج يتمسح).
    - باقي /api/* (الطلبات والحسابات...) وملف التطبيق .apk: من السيرفر دايمًا. */
-var CACHE_NAME = "aalabda-store-v6";
+var CACHE_NAME = "aalabda-store-v7";
 var IMG_CACHE = "aalabda-img-v1";
 var NAV_TIMEOUT_MS = 1500;
 var CATALOG_KEY = "/api/products";
@@ -86,13 +86,27 @@ self.addEventListener("fetch", function (event) {
     event.respondWith(
       caches.open(CACHE_NAME).then(function (cache) {
         return cache.match("./index.html").then(function (cached) {
+          var servedCached = false;
           var network = fetch(req).then(function (response) {
-            if (response && response.ok) cache.put("./index.html", response.clone());
+            if (response && response.ok) {
+              cache.put("./index.html", response.clone());
+              /* النت كان بطيء فاتفتحت النسخة المحفوظة، والنسخة اللي وصلت من
+                 السيرفر أحدث منها: نبلّغ الصفحة عشان تتحدّث لوحدها */
+              if (servedCached && cached) {
+                var oldTag = cached.headers.get("etag") || cached.headers.get("last-modified") || cached.headers.get("content-length") || "";
+                var newTag = response.headers.get("etag") || response.headers.get("last-modified") || response.headers.get("content-length") || "";
+                if (oldTag && newTag && oldTag !== newTag) {
+                  self.clients.matchAll({ type: "window" }).then(function (list) {
+                    list.forEach(function (c) { c.postMessage({ type: "aa-updated" }); });
+                  });
+                }
+              }
+            }
             return response;
           });
           if (!cached) return network;
           event.waitUntil(network.catch(function () {}));
-          var slow = new Promise(function (resolve) { setTimeout(function () { resolve(cached); }, NAV_TIMEOUT_MS); });
+          var slow = new Promise(function (resolve) { setTimeout(function () { servedCached = true; resolve(cached); }, NAV_TIMEOUT_MS); });
           return Promise.race([network.catch(function () { return cached; }), slow]);
         });
       })

@@ -5477,6 +5477,17 @@ function proofCheckHtml(){
 /* colorName/sizeLabel اختياريين - لو المنتج معاه ألوان أو أحجام علب،
    بيتحطوا جوه مفتاح السلة عشان كل لون/حجم يتحسب كصنف منفصل (شوف
    cartKeyFor فوق). منتج واحد بيستخدم لون أو حجم، مش الاتنين مع بعض. */
+/* ---------- اهتزاز خفيف (Haptic) ----------
+   إضافة منتج للسلة، كل ضغطة زرار في خطوات إتمام الطلب، ونجاح الطلب.
+   تطبيق العميل بيهتز عن طريق AlAbdoNative.haptic (أندرويد)، والموقع من
+   متصفح موبايل أندرويد بـ navigator.vibrate. الآيفون مالوش اهتزاز من المتصفح. */
+var HAPTIC_WEB = { tap:12, add:[22, 45, 32], success:[35, 70, 45, 70, 80], warn:[60, 60, 60] };
+function haptic(kind){
+  kind = kind || "tap";
+  if(isAdminApp()) return;
+  try{ var nat = window.AlAbdoNative; if(nat && typeof nat.haptic === "function"){ nat.haptic(kind); return; } }catch(e){}
+  try{ if(navigator.vibrate && /Android/i.test(navigator.userAgent)) navigator.vibrate(HAPTIC_WEB[kind] || 12); }catch(e){}
+}
 function addToCart(id, qty, colorName, sizeLabel){
   qty = qty || 1;
   var p = PRODUCTS.find(function(x){ return x.id===id; });
@@ -5488,6 +5499,7 @@ function addToCart(id, qty, colorName, sizeLabel){
     showToast(LANG==="en"
       ? "⚠️ Sorry, \""+pName(p)+variantSuffix+"\" is out of stock right now"
       : "⚠️ للأسف «"+p.name+variantSuffix+"» خلص من المخزون دلوقتي");
+    haptic("warn");
     return;
   }
   var nextQty = (cart[key]||0) + qty;
@@ -5502,6 +5514,7 @@ function addToCart(id, qty, colorName, sizeLabel){
       : "✅ تمت إضافة «"+p.name+variantSuffix+"» إلى السلة");
   }
   cart[key] = nextQty;
+  haptic("add");
   saveCart(); renderCartBadge(); renderCartDrawer();
   trackAnalyticsEvent("addToCart");
   fbTrack("AddToCart", { content_name:p.name, content_ids:[String(p.id)], value:priceForSize(p, sizeLabel), currency:"EGP" });
@@ -6056,6 +6069,7 @@ function updateGovShipLine(){
    (functions/api/orders.js) عشان محدش يتأخر عليه - بس مش هيقدر يشوفه
    تاني من على الموقع إلا لو سجّل حساب بعدين. */
 function showOrderSuccessModal(phone){
+  haptic("success");
   var html = '<button class="modal-close" id="modalCloseBtn" aria-label="إغلاق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
     + '<div class="modal-info" style="padding:44px 28px; text-align:center; align-items:center;">'
       + '<span style="font-size:48px;">✅</span>'
@@ -6227,6 +6241,12 @@ function showToast(msg){
 /* ---------- Overlay / Drawer / Modal ---------- */
 var overlay = document.getElementById("overlay");
 var cartDrawer = document.getElementById("cartDrawer");
+/* كل ضغطة زرار جوه السلة وخطوات إتمام الطلب (الكمية، إتمام الطلب، طريقة
+   الدفع، تأكيد الطلب...) = اهتزاز خفيف */
+cartDrawer.addEventListener("click", function(e){
+  var el = e.target.closest("button, a, label, [role='button'], [data-pay], .pay-method, input[type='radio'], input[type='checkbox']");
+  if(el && !el.disabled) haptic("tap");
+}, true);
 var acctDrawer = document.getElementById("acctDrawer");
 var mobileNav = document.getElementById("mobileNav");
 var modalBackdrop = document.getElementById("modalBackdrop");

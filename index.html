@@ -2067,6 +2067,25 @@ html.app-mode .pm-cart{top:calc(12px + env(safe-area-inset-top));}
 /* لون شكل التحميل أوضح (رمادي بلمعة) */
 .skeleton-card .card-media, .skeleton-card .sk-line, html.app-mode .skeleton-card .card-media, .sk-cat .ic, .sk-cat .sk-line, .hero-banner-wrap:not(.img-ready), .wholesale-discount-banner:not(.img-ready){background:linear-gradient(90deg, color-mix(in srgb, var(--ink) 9%, var(--surface)) 0%, color-mix(in srgb, var(--ink) 3%, var(--surface)) 50%, color-mix(in srgb, var(--ink) 9%, var(--surface)) 100%) !important; background-size:200% 100% !important; animation:skShimmer 1.1s linear infinite;}
 .skeleton-card{border-color:transparent !important; box-shadow:none !important;}
+.pr-cur{display:flex; gap:12px; align-items:flex-start;}
+.pr-cur img{width:96px; aspect-ratio:4/5; object-fit:cover; border-radius:12px; border:1px solid var(--border); flex:none;}
+.pr-cur > div{display:flex; flex-direction:column; gap:5px; align-items:flex-start;}
+.pr-cur small{font-size:12px; color:var(--ink-soft);}
+.pr-preview{display:flex; justify-content:center;}
+.pr-preview[hidden]{display:none;}
+.pr-preview img{max-width:220px; max-height:300px; border-radius:16px; box-shadow:0 8px 22px hsl(var(--shadow)/.18);}
+/* إعلان الشاشة الرئيسية */
+.home-promo{position:fixed; inset:0; z-index:420; background:rgba(16,8,28,.62); display:flex; align-items:center; justify-content:center; padding:24px 20px calc(24px + env(safe-area-inset-bottom)); opacity:0; transition:opacity .25s ease; backdrop-filter:blur(2px);}
+.home-promo.show{opacity:1;}
+.home-promo-card{position:relative; width:100%; max-width:380px; display:flex; flex-direction:column; align-items:center; gap:14px; transform:scale(.86) translateY(20px); transition:transform .38s cubic-bezier(.2,1.3,.4,1);}
+.home-promo.show .home-promo-card{transform:none;}
+.home-promo-img{border:0; padding:0; background:none; display:block; width:100%; border-radius:22px; overflow:hidden; box-shadow:0 22px 50px rgba(0,0,0,.45); cursor:pointer;}
+.home-promo-img[disabled]{cursor:default;}
+.home-promo-img img{display:block; width:100%; max-height:68vh; object-fit:contain; background:#fff;}
+.home-promo-x{position:absolute; top:-14px; inset-inline-end:-10px; z-index:2; width:38px; height:38px; border-radius:50%; border:0; background:#fff; color:#2a1f3d; display:grid; place-items:center; box-shadow:0 4px 14px rgba(0,0,0,.3); cursor:pointer;}
+.home-promo-x svg{width:18px; height:18px;}
+.home-promo-cta{min-width:180px; justify-content:center;}
+@media (prefers-reduced-motion: reduce){ .home-promo-card{transition:none; transform:none;} }
 .aa-empty[hidden]{display:none !important;}
 .mab-price{flex:none; font-weight:900; font-size:17px; color:var(--pink-deep); white-space:nowrap; line-height:1.1;}
 .mab-price small{display:block; font-size:11px; font-weight:700; color:var(--ink-faint);}
@@ -3052,7 +3071,7 @@ try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("messa
 
       <div id="adminBroadcastPage" class="admin-wrap">
         <div class="admin-bar">
-          <div><h1 style="font-size:22px;" data-i18n>📣 إشعارات العروض</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;" data-i18n>ابعت إشعار لكل اللي عندهم تطبيق المتجر على أندرويد — بيوصلهم خلال ساعتين تقريبًا.</p></div>
+          <div><h1 style="font-size:22px;" data-i18n>📣 إشعارات العروض</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;" data-i18n>ابعت إشعار لكل اللي عندهم تطبيق المتجر على أندرويد، أو انشر إعلان بصورة على الشاشة الرئيسية.</p></div>
           <div class="admin-actions">
             <button class="btn btn-outline btn-sm" id="adminBroadcastBackBtn" type="button" data-i18n>رجوع للوحة التحكم</button>
           </div>
@@ -3071,6 +3090,16 @@ try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("messa
           </div>
           <button type="button" class="btn btn-primary" id="bcSend" data-i18n>📣 ابعت الإشعار لكل العملاء</button>
           <p class="apr-note" data-i18n>الإشعار بيوصل لنسخة التطبيق الجديدة وبعد كده. العميل لازم يكون موافق على الإشعارات في موبايله.</p>
+        </div>
+        <h3 class="bc-h" data-i18n>🖼️ إعلان على الشاشة الرئيسية</h3>
+        <div class="admin-card bc-card">
+          <p class="apr-note" data-i18n>صورة عليها عرض بتظهر للعميل أول ما يفتح المتجر، ويقدر يقفلها. لو قفلها مش هتظهرله تاني نفس اليوم.</p>
+          <div id="prCurrent"><p class="apr-note" data-i18n>جاري التحميل...</p></div>
+          <label class="bc-field"><span><b data-i18n>صورة الإعلان</b><i data-i18n>الأفضل طولي (زي 4:5)</i></span><input type="file" id="prFile" accept="image/*"></label>
+          <div class="pr-preview" id="prPreview" hidden></div>
+          <label class="bc-field"><span><b data-i18n>لما العميل يدوس على الصورة يفتح</b></span><select id="prLink"></select></label>
+          <label class="bc-field"><span><b data-i18n>يفضل ظاهر لمدة</b></span><select id="prDays"><option value="1" data-i18n>يوم واحد</option><option value="3" data-i18n>3 أيام</option><option value="7" selected data-i18n>أسبوع</option><option value="30" data-i18n>شهر</option><option value="0" data-i18n>لحد ما أوقفه</option></select></label>
+          <button type="button" class="btn btn-primary" id="prPublish" data-i18n>🖼️ انشر الإعلان</button>
         </div>
         <h3 class="bc-h" data-i18n>اللي اتبعت قبل كده</h3>
         <div id="bcHistory"><p class="apr-note" data-i18n>جاري التحميل...</p></div>
@@ -4346,6 +4375,19 @@ document.getElementById("themeToggle").addEventListener("click", function(){
    الأقسام السبعة، ومحافظات مصر. الصفحات القانونية ولوحة التحكم وأسماء/أوصاف
    المنتجات هتتضاف في مراحل تالية. */
 var I18N_EN = {
+  "عرض خاص": "Special offer",
+  "شوف العرض": "See the offer",
+  "🖼️ إعلان على الشاشة الرئيسية": "🖼️ Home screen ad",
+  "صورة الإعلان": "Ad image",
+  "يفضل ظاهر لمدة": "Show for",
+  "يوم واحد": "1 day",
+  "3 أيام": "3 days",
+  "أسبوع": "1 week",
+  "شهر": "1 month",
+  "لحد ما أوقفه": "Until I stop it",
+  "🖼️ انشر الإعلان": "🖼️ Publish ad",
+  "وقف الإعلان": "Stop the ad",
+  "ظاهر للعملاء دلوقتي": "Live for customers now",
   "فيه تحديث جديد للمتجر": "A new version of the store is available",
   "حدّث": "Refresh",
   "📣 إشعارات العروض": "📣 Offer notifications",
@@ -6628,6 +6670,60 @@ window.aaOnUpdated = function(){
 };
 if(window.__aaUpdated) setTimeout(window.aaOnUpdated, 0);
 
+
+/* ---------- إعلان الشاشة الرئيسية (صورة عليها عرض) ----------
+   بيظهر للعميل في الرئيسية بعد ما المتجر يفتح، ويقدر يقفله. لو قفله مش
+   هيظهرله تاني نفس اليوم. الضغط على الصورة بيفتح المكان اللي اخترته. */
+var PROMO_SEEN_KEY = "aa_promo_seen";
+function promoTodayKey(){ var d = new Date(); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); }
+function promoSeen(id){ try{ var s = JSON.parse(localStorage.getItem(PROMO_SEEN_KEY) || "{}"); return s.id === id && s.day === promoTodayKey(); }catch(e){ return false; } }
+function promoMarkSeen(id){ try{ localStorage.setItem(PROMO_SEEN_KEY, JSON.stringify({ id:id, day: promoTodayKey() })); }catch(e){} }
+function closeHomePromo(fromPop){
+  var el = document.getElementById("homePromo"); if(!el || !el.classList.contains("show")) return false;
+  el.classList.remove("show");
+  if(!fromPop && isAppMode() && history.state && history.state.aaPromo){ PZ.skipPop = true; try{ history.back(); }catch(e){ PZ.skipPop = false; } }
+  setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 260);
+  return true;
+}
+function showHomePromo(p){
+  if(!p || !p.image || document.getElementById("homePromo")) return;
+  var el = document.createElement("div");
+  el.id = "homePromo"; el.className = "home-promo"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", t("عرض خاص"));
+  el.innerHTML = '<div class="home-promo-card">'
+    + '<button type="button" class="home-promo-x" data-promo-close aria-label="'+t("إغلاق")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
+    + '<button type="button" class="home-promo-img" data-promo-go'+(p.link && p.link !== "none" ? '' : ' disabled')+'><img src="'+escHtml(p.image)+'" alt="'+escHtml(t("عرض خاص"))+'"></button>'
+    + (p.link && p.link !== "none" ? '<button type="button" class="btn btn-primary home-promo-cta" data-promo-go>'+t("شوف العرض")+' ‹</button>' : '')
+  + '</div>';
+  var img = el.querySelector("img");
+  img.addEventListener("load", function(){
+    if(!document.getElementById("view-home").classList.contains("active") || appAnyPanelOpen()){ el.remove(); return; }
+    document.body.appendChild(el);
+    requestAnimationFrame(function(){ el.classList.add("show"); });
+    if(isAppMode()){ try{ history.pushState({ aaPromo:1 }, "", location.href); }catch(e){} }
+    promoMarkSeen(p.id);
+    haptic("tap");
+  });
+  img.addEventListener("error", function(){ el.remove(); });
+  el.addEventListener("click", function(e){
+    if(e.target.closest("[data-promo-close]") || e.target === el){ closeHomePromo(); return; }
+    if(e.target.closest("[data-promo-go]") && p.link && p.link !== "none"){
+      /* بنقفل الإعلان من غير رجوع في التاريخ (عشان الرجوع مايلغيش الصفحة اللي هنفتحها) */
+      closeHomePromo(true);
+      try{ if(history.state && history.state.aaPromo) history.replaceState(null, "", location.href); }catch(_){}
+      aaGoLink(p.link);
+    }
+  });
+}
+function loadHomePromo(){
+  if(isAdminApp() || isAdminAuthed()) return;
+  fetch("/api/promo", { cache:"no-store" }).then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(res){
+      var p = res && res.ok && res.promo;
+      if(!p || promoSeen(p.id)) return;
+      setTimeout(function(){ showHomePromo(p); }, 900);
+    }).catch(function(){});
+}
+
 /* ---------- 4) "المنتج طار للسلة" + رسالة بزرار عرض السلة ---------- */
 function cartTarget(){
   var pm = document.getElementById("pmCartBtn");
@@ -6946,7 +7042,7 @@ overlay.addEventListener("click", closeAllPanels);
 document.getElementById("cartClose").addEventListener("click", closeAllPanels);
 document.getElementById("continueBtn").addEventListener("click", closeAllPanels);
 document.getElementById("cartBtn").addEventListener("click", function(){ renderCartDrawer(); openDrawer(); });
-document.addEventListener("keydown", function(e){ if(e.key==="Escape"){ if(pzClose()) return; closeAllPanels(); } });
+document.addEventListener("keydown", function(e){ if(e.key==="Escape"){ if(pzClose()) return; if(closeHomePromo()) return; closeAllPanels(); } });
 
 var menuToggle = document.getElementById("menuToggle");
 menuToggle.addEventListener("click", function(){
@@ -7826,7 +7922,7 @@ document.getElementById("appTabbar").addEventListener("click", function(e){
   }
   var mo = new MutationObserver(onPanelChange);
   [cartDrawer, acctDrawer, mobileNav, modalBackdrop, appSheet].forEach(function(el){ if(el) mo.observe(el, {attributes:true, attributeFilter:["class"]}); });
-  window.addEventListener("popstate", function(){ if(pzHandlePop()) return; if(appAnyPanelOpen()) closeAllPanels(); });
+  window.addEventListener("popstate", function(){ if(pzHandlePop()) return; if(closeHomePromo(true)) return; if(appAnyPanelOpen()) closeAllPanels(); });
   updateAppTabbar();
 })();
 
@@ -10487,12 +10583,14 @@ function bcPreview(){
   document.getElementById("bcBodyCnt").textContent = fmt(bb.length)+"/220";
 }
 function renderAdminBroadcastPage(){
-  bcFillLinkOptions(); bcPreview();
+  bcFillLinkOptions(); bcPreview(); renderAdminPromo();
   var box = document.getElementById("bcHistory");
   if(!ADMIN_BC.list) box.innerHTML = '<p class="apr-note">'+t("جاري التحميل...")+'</p>';
   fetch("/api/broadcast?all=1", { headers: adminAuthHeaders(), cache:"no-store" })
     .then(function(r){ if(r.status === 404) throw "missing"; return r.json(); })
-    .then(function(res){ if(!res || !res.ok) throw 0; ADMIN_BC.list = res.items || []; bcDrawHistory(); })
+    .then(function(res){
+      if(!res || !res.ok) throw 0; ADMIN_BC.list = res.items || []; bcDrawHistory();
+    })
     .catch(function(e){ box.innerHTML = '<p class="apr-note is-err">'+(e === "missing" ? t("⚠️ ارفع ملف broadcast.js الأول") : t("تعذر تحميل الإشعارات."))+'</p>'; });
 }
 function bcDrawHistory(){
@@ -10548,6 +10646,68 @@ document.getElementById("bcHistory").addEventListener("click", function(e){
       .then(function(r){ return r.json(); })
       .then(function(j){ if(j && j.ok){ ADMIN_BC.list = (ADMIN_BC.list || []).filter(function(x){ return x.id !== id; }); bcDrawHistory(); showToast("✅ "+t("الإشعار اتمسح")); } else showToast(t("⚠️ تعذر المسح، جرّب تاني.")); })
       .catch(function(){ showToast(t("⚠️ تعذر المسح، جرّب تاني.")); });
+  });
+});
+
+/* ---------- (الإدارة) إعلان الشاشة الرئيسية ---------- */
+var ADMIN_PROMO = { img:null, busy:false };
+function promoAdminLinkOptions(){
+  var src = document.getElementById("bcLink"), sel = document.getElementById("prLink");
+  if(!src || !sel) return;
+  var cur = sel.value || "offers";
+  sel.innerHTML = '<option value="none">🚫 '+t("مش بيفتح حاجة (صورة بس)")+'</option>' + src.innerHTML;
+  sel.value = cur; if(!sel.value) sel.value = "offers";
+}
+function renderAdminPromo(){
+  promoAdminLinkOptions();
+  var box = document.getElementById("prCurrent");
+  fetch("/api/promo?admin=1", { headers: adminAuthHeaders(), cache:"no-store" })
+    .then(function(r){ if(r.status === 404) throw "missing"; return r.json(); })
+    .then(function(res){
+      var p = res && res.promo;
+      if(!p || !res.active){ box.innerHTML = '<p class="apr-note">'+(p ? t("الإعلان اللي فات خلصت مدته.") : t("مفيش إعلان ظاهر للعملاء دلوقتي."))+'</p>'; return; }
+      var loc = LANG==="en" ? "en-US" : "ar-EG";
+      box.innerHTML = '<div class="pr-cur"><img src="'+escHtml(p.image)+'" alt=""><div><b>✅ '+t("ظاهر للعملاء دلوقتي")+'</b>'
+        + '<small>🔗 '+escHtml(p.link === "none" ? t("صورة بس") : bcLinkLabel(p.link))+'</small>'
+        + '<small>⏳ '+(p.until ? t("لحد")+" "+escHtml(new Date(p.until).toLocaleDateString(loc, { weekday:"long", day:"numeric", month:"long" })) : t("لحد ما توقفه"))+'</small>'
+        + '<button type="button" class="btn btn-outline btn-sm" id="prStop">⏹️ '+t("وقف الإعلان")+'</button></div></div>';
+      document.getElementById("prStop").addEventListener("click", function(){
+        appConfirm({ icon:"⏹️", title:t("وقف الإعلان"), message:t("الإعلان هيختفي من عند كل العملاء."), ok:t("وقف") }).then(function(ok){
+          if(!ok) return;
+          fetch("/api/promo", { method:"DELETE", headers: adminAuthHeaders() }).then(function(r){ return r.json(); })
+            .then(function(j){ if(j && j.ok){ showToast("✅ "+t("الإعلان اتوقف")); renderAdminPromo(); } else showToast(t("⚠️ تعذر الحفظ، جرّب تاني.")); })
+            .catch(function(){ showToast(t("⚠️ تعذر الحفظ، جرّب تاني.")); });
+        });
+      });
+    })
+    .catch(function(e){ box.innerHTML = '<p class="apr-note is-err">'+(e === "missing" ? t("⚠️ ارفع ملف promo.js الأول") : t("تعذر التحميل."))+'</p>'; });
+}
+document.getElementById("prFile").addEventListener("change", function(){
+  var f = this.files && this.files[0]; if(!f) return;
+  readImageAsCompressedDataURL(f, 1400, 0.86, function(dataUrl){
+    ADMIN_PROMO.img = dataUrl;
+    var pv = document.getElementById("prPreview");
+    pv.innerHTML = '<img src="'+dataUrl+'" alt="">'; pv.hidden = false;
+  });
+});
+document.getElementById("prPublish").addEventListener("click", function(){
+  if(ADMIN_PROMO.busy) return;
+  if(!ADMIN_PROMO.img){ showToast(t("⚠️ اختار صورة الإعلان الأول")); return; }
+  var link = document.getElementById("prLink").value, days = +document.getElementById("prDays").value;
+  var btn = this; ADMIN_PROMO.busy = true; btn.disabled = true;
+  var done = function(msg){ ADMIN_PROMO.busy = false; btn.disabled = false; if(msg) showToast(msg); };
+  uploadImageData(ADMIN_PROMO.img, function(url, err){
+    if(!url){ done(err === "missing" ? t("⚠️ ملف img.js مش موجود على السيرفر") : t("⚠️ تعذر رفع الصورة، جرّب تاني.")); return; }
+    fetch("/api/promo", { method:"POST", headers: Object.assign({ "content-type":"application/json" }, adminAuthHeaders()), body: JSON.stringify({ image:url, link:link, days:days }) })
+      .then(function(r){ return r.json().then(function(j){ return { status:r.status, body:j }; }); })
+      .then(function(res){
+        if(res.body && res.body.ok){
+          ADMIN_PROMO.img = null; document.getElementById("prFile").value = "";
+          var pv = document.getElementById("prPreview"); pv.hidden = true; pv.innerHTML = "";
+          done("✅ "+t("الإعلان ظهر للعملاء على الشاشة الرئيسية")); renderAdminPromo();
+        } else done(res.status === 404 || res.status === 405 ? t("⚠️ ارفع ملف promo.js الأول") : t("⚠️ تعذر الحفظ، جرّب تاني."));
+      })
+      .catch(function(){ done(t("⚠️ تعذر الحفظ، جرّب تاني.")); });
   });
 });
 document.getElementById("adminBroadcastBtn").addEventListener("click", openAdminBroadcastPage);
@@ -13281,6 +13441,7 @@ loadInitialData(function(){
     else refreshLiveStockAndViews();
     initScrollReveal();
     loadHomeReviews();
+    loadHomePromo();
     appSplashWhenImagesReady();
     /* جاي من إشعار السلة (?aa_open=cart أو clearcart) */
     try{

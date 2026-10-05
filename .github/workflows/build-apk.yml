@@ -9,7 +9,7 @@
 # وتقدر تشغّله تاني يدوي من Actions ← Build Android APK ← Run workflow.
 
 # icons: round store logo only, transparent background (app-logo-icon-maskable-512.png)
-# haptics: AlAbdoNative.haptic (add to cart / checkout taps / order success) v3 - 4-way vibration test
+# haptics: AlAbdoNative.haptic (add to cart / checkout taps / order success) v4 - system haptic + alarm-usage vibration (Huawei)
 name: Build Android APK
 
 on:
@@ -677,60 +677,31 @@ jobs:
                       if (v == null) { lastHaptic = "no-service"; return; }
                       if (!v.hasVibrator()) { lastHaptic = "no-vibrator"; return; }
                       String k = kind == null ? "tap" : kind;
-                      if ("test".equals(k)) { runHapticTest(); lastHaptic = "ok:test"; return; }
                       long[] t;
                       if ("success".equals(k)) t = new long[] { 0, 70, 80, 70, 80, 150 };
                       else if ("warn".equals(k)) t = new long[] { 0, 120, 90, 120 };
                       else if ("add".equals(k)) t = new long[] { 0, 45, 60, 45 };
-                      else if ("test".equals(k)) t = new long[] { 0, 400 };
                       else t = new long[] { 0, 30 };
+                      /* 1) اهتزاز النظام بتاع اللمس (هواوي وشاومي بيحترموه أكتر) */
+                      try {
+                          if (web != null) web.performHapticFeedback(
+                              "tap".equals(k) ? android.view.HapticFeedbackConstants.VIRTUAL_KEY : android.view.HapticFeedbackConstants.LONG_PRESS,
+                              android.view.HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING | android.view.HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING);
+                      } catch (Exception e0) { /* ignore */ }
+                      /* 2) الموتور مباشرة بصفة "تنبيه" عشان أنظمة زي EMUI متتجاهلوش */
+                      android.media.AudioAttributes aa = new android.media.AudioAttributes.Builder()
+                          .setUsage(android.media.AudioAttributes.USAGE_ALARM)
+                          .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION).build();
                       if (Build.VERSION.SDK_INT >= 26) {
-                          if (t.length == 2) v.vibrate(android.os.VibrationEffect.createOneShot(t[1], android.os.VibrationEffect.DEFAULT_AMPLITUDE));
-                          else v.vibrate(android.os.VibrationEffect.createWaveform(t, -1));
+                          android.os.VibrationEffect fx = t.length == 2
+                              ? android.os.VibrationEffect.createOneShot(t[1], android.os.VibrationEffect.DEFAULT_AMPLITUDE)
+                              : android.os.VibrationEffect.createWaveform(t, -1);
+                          v.vibrate(fx, aa);
                       } else {
-                          v.vibrate(t, -1);
+                          v.vibrate(t, -1, aa);
                       }
                       lastHaptic = "ok:" + k;
                   } catch (Exception e) { lastHaptic = "error:" + e.getClass().getSimpleName() + " " + e.getMessage(); }
-              }
-              /* تجربة الاهتزاز: 4 طرق مختلفة ورا بعض (بفاصل ثانية ونص)، وكل واحدة
-                 بيظهر رقمها تحت - عشان نعرف أنهي طريقة الموبايل ده بيستجيب لها
-                 (بعض الموبايلات زي هواوي بتتجاهل طرق معينة). */
-              private void runHapticTest() {
-                  Handler h = new Handler(Looper.getMainLooper());
-                  for (int i = 0; i < 4; i++) {
-                      final int n = i;
-                      h.postDelayed(new Runnable() { @Override public void run() { hapticTestStep(n); } }, 400 + i * 1700L);
-                  }
-              }
-              @SuppressWarnings("deprecation")
-              private void hapticTestStep(int n) {
-                  String label = "تجربة اهتزاز " + (n + 1) + " من 4";
-                  try {
-                      android.os.Vibrator v;
-                      if (Build.VERSION.SDK_INT >= 31) {
-                          android.os.VibratorManager vm = (android.os.VibratorManager) getSystemService(android.content.Context.VIBRATOR_MANAGER_SERVICE);
-                          v = vm != null ? vm.getDefaultVibrator() : null;
-                      } else {
-                          v = (android.os.Vibrator) getSystemService(android.content.Context.VIBRATOR_SERVICE);
-                      }
-                      if (n == 0) {
-                          if (v != null && Build.VERSION.SDK_INT >= 26) v.vibrate(android.os.VibrationEffect.createOneShot(500, android.os.VibrationEffect.DEFAULT_AMPLITUDE));
-                      } else if (n == 1) {
-                          if (v != null && Build.VERSION.SDK_INT >= 26) {
-                              android.media.AudioAttributes aa = new android.media.AudioAttributes.Builder()
-                                  .setUsage(android.media.AudioAttributes.USAGE_ALARM)
-                                  .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION).build();
-                              v.vibrate(android.os.VibrationEffect.createOneShot(500, android.os.VibrationEffect.DEFAULT_AMPLITUDE), aa);
-                          }
-                      } else if (n == 2) {
-                          if (v != null) v.vibrate(500);
-                      } else {
-                          if (web != null) web.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS,
-                              android.view.HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING | android.view.HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING);
-                      }
-                  } catch (Exception e) { label += " (خطأ: " + e.getClass().getSimpleName() + ")"; }
-                  android.widget.Toast.makeText(this, label, android.widget.Toast.LENGTH_SHORT).show();
               }
               private String hapticInfoText() {
                   String ver = "";

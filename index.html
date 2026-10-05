@@ -3093,12 +3093,12 @@ try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("messa
         </div>
         <h3 class="bc-h" data-i18n>🖼️ إعلان على الشاشة الرئيسية</h3>
         <div class="admin-card bc-card">
-          <p class="apr-note" data-i18n>صورة عليها عرض بتظهر للعميل أول ما يفتح المتجر، ويقدر يقفلها. لو قفلها مش هتظهرله تاني نفس اليوم.</p>
+          <p class="apr-note" data-i18n>صورة عليها عرض بتظهر للعميل كل مرة يفتح فيها المتجر أو التطبيق، ويقدر يقفلها. بتفضل تظهر لحد ما توقفها من هنا أو المدة تخلص.</p>
           <div id="prCurrent"><p class="apr-note" data-i18n>جاري التحميل...</p></div>
           <label class="bc-field"><span><b data-i18n>صورة الإعلان</b><i data-i18n>الأفضل طولي (زي 4:5)</i></span><input type="file" id="prFile" accept="image/*"></label>
           <div class="pr-preview" id="prPreview" hidden></div>
           <label class="bc-field"><span><b data-i18n>لما العميل يدوس على الصورة يفتح</b></span><select id="prLink"></select></label>
-          <label class="bc-field"><span><b data-i18n>يفضل ظاهر لمدة</b></span><select id="prDays"><option value="1" data-i18n>يوم واحد</option><option value="3" data-i18n>3 أيام</option><option value="7" selected data-i18n>أسبوع</option><option value="30" data-i18n>شهر</option><option value="0" data-i18n>لحد ما أوقفه</option></select></label>
+          <label class="bc-field"><span><b data-i18n>يفضل ظاهر لمدة</b></span><select id="prDays"><option value="1" data-i18n>يوم واحد</option><option value="3" data-i18n>3 أيام</option><option value="7" data-i18n>أسبوع</option><option value="30" data-i18n>شهر</option><option value="0" selected data-i18n>لحد ما أوقفه</option></select></label>
           <button type="button" class="btn btn-primary" id="prPublish" data-i18n>🖼️ انشر الإعلان</button>
         </div>
         <h3 class="bc-h" data-i18n>اللي اتبعت قبل كده</h3>
@@ -4385,6 +4385,7 @@ var I18N_EN = {
   "أسبوع": "1 week",
   "شهر": "1 month",
   "لحد ما أوقفه": "Until I stop it",
+  "صورة عليها عرض بتظهر للعميل كل مرة يفتح فيها المتجر أو التطبيق، ويقدر يقفلها. بتفضل تظهر لحد ما توقفها من هنا أو المدة تخلص.": "An offer image shown to customers every time they open the store or app; they can close it. It keeps showing until you stop it here or the duration ends.",
   "🖼️ انشر الإعلان": "🖼️ Publish ad",
   "وقف الإعلان": "Stop the ad",
   "ظاهر للعملاء دلوقتي": "Live for customers now",
@@ -6672,12 +6673,12 @@ if(window.__aaUpdated) setTimeout(window.aaOnUpdated, 0);
 
 
 /* ---------- إعلان الشاشة الرئيسية (صورة عليها عرض) ----------
-   بيظهر للعميل في الرئيسية بعد ما المتجر يفتح، ويقدر يقفله. لو قفله مش
-   هيظهرله تاني نفس اليوم. الضغط على الصورة بيفتح المكان اللي اخترته. */
+   بيظهر للعميل في الرئيسية كل مرة يفتح فيها المتجر/التطبيق، ويقدر يقفله.
+   بيفضل يظهر لحد ما الأدمن يوقفه (أو المدة تخلص). جوه نفس الفتحة مش بيتكرر
+   (مثلاً لو سحب الصفحة لتحت يحدّثها). الضغط على الصورة بيفتح المكان اللي اخترته. */
 var PROMO_SEEN_KEY = "aa_promo_seen";
-function promoTodayKey(){ var d = new Date(); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); }
-function promoSeen(id){ try{ var s = JSON.parse(localStorage.getItem(PROMO_SEEN_KEY) || "{}"); return s.id === id && s.day === promoTodayKey(); }catch(e){ return false; } }
-function promoMarkSeen(id){ try{ localStorage.setItem(PROMO_SEEN_KEY, JSON.stringify({ id:id, day: promoTodayKey() })); }catch(e){} }
+function promoSeen(id){ try{ return sessionStorage.getItem(PROMO_SEEN_KEY) === String(id); }catch(e){ return false; } }
+function promoMarkSeen(id){ try{ sessionStorage.setItem(PROMO_SEEN_KEY, String(id)); }catch(e){} }
 function closeHomePromo(fromPop){
   var el = document.getElementById("homePromo"); if(!el || !el.classList.contains("show")) return false;
   el.classList.remove("show");

@@ -9,6 +9,7 @@
 # وتقدر تشغّله تاني يدوي من Actions ← Build Android APK ← Run workflow.
 
 # icons: round store logo only, transparent background (app-logo-icon-maskable-512.png)
+# pro: offers notifications (OffersJob), go: deep links, nicer offline screen
 # haptics: AlAbdoNative.haptic (add to cart / checkout taps / order success)
 name: Build Android APK
 
@@ -133,6 +134,7 @@ jobs:
               <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
               <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
               <uses-permission android:name="android.permission.VIBRATE" />
+              <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
               <application
                   android:allowBackup="true"
@@ -167,6 +169,11 @@ jobs:
 
                   <service
                       android:name=".CartReminderJob"
+                      android:permission="android.permission.BIND_JOB_SERVICE"
+                      android:exported="false" />
+
+                  <service
+                      android:name=".OffersJob"
                       android:permission="android.permission.BIND_JOB_SERVICE"
                       android:exported="false" />
 
@@ -383,6 +390,12 @@ jobs:
                   new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                       @Override public void run() { hideSplash(); }
                   }, 15000);
+                  /* إشعارات العروض: بنسأل السيرفر كل كام ساعة لو فيه عرض جديد */
+                  try { OffersJob.ensureScheduled(this); } catch (Exception e) { /* ignore */ }
+                  /* أول مرة يفتح التطبيق: نطلب إذن الإشعارات (أندرويد 13+) بعد ما يشوف المتجر */
+                  new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                      @Override public void run() { askNotificationPermissionOnce(); }
+                  }, 6000);
               }
 
               /* شاشة الافتتاح (موشن): اللوجو بيظهر بنطّة وبيلف لفة 3D، حواليه
@@ -723,9 +736,15 @@ jobs:
               private String startUrl(Intent intent) {
                   String open = intent != null ? intent.getStringExtra("aa_open") : null;
                   if ("cart".equals(open) || "clearcart".equals(open)) return HOME + "&aa_open=" + open;
+                  if (isGoLink(open)) return HOME + "&aa_open=" + Uri.encode(open);
                   Uri data = intent != null ? intent.getData() : null;
                   if (data != null && isOwnSite(data)) return data.toString();
                   return HOME;
+              }
+
+              /* لينك إشعار العروض: go:offers / go:new / go:products / go:home / go:cat:x / go:p:123 */
+              static boolean isGoLink(String s) {
+                  return s != null && s.length() < 70 && s.matches("go:[A-Za-z0-9:_-]+");
               }
 
               private static boolean isOwnSite(Uri u) {
@@ -831,12 +850,24 @@ jobs:
 
               private void showOffline() {
                   String html = "<!doctype html><html dir='rtl'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
-                      + "<style>body{margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;"
-                      + "font-family:sans-serif;background:#fff8ef;color:#2a1f3d;text-align:center;padding:24px;box-sizing:border-box}"
-                      + "b{font-size:20px}p{margin:0;color:#6b6080}button{border:0;border-radius:999px;background:#ee1f6c;color:#fff;font-size:16px;font-weight:700;padding:12px 28px}</style></head>"
-                      + "<body><div style='font-size:52px'>📶</div><b>مفيش اتصال بالإنترنت</b><p>اتأكد إن النت شغال وجرّب تاني</p>"
-                      + "<button onclick=\"location.href='" + HOME + "'\">حاول تاني</button></body></html>";
-                  web.loadDataWithBaseURL(null, html, "text/html", "utf-8", null);
+                      + "<style>body{margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;"
+                      + "font-family:sans-serif;background:#fff8ef;color:#2a1f3d;text-align:center;padding:28px;box-sizing:border-box}"
+                      + ".art{width:150px;height:150px;border-radius:50%;background:#fff;display:grid;place-items:center;box-shadow:0 14px 34px rgba(238,31,108,.16);margin-bottom:6px;animation:f 3.4s ease-in-out infinite}"
+                      + "@keyframes f{50%{transform:translateY(-8px)}}"
+                      + "b{font-size:21px}p{margin:0;color:#6b6080;line-height:1.7;max-width:300px}"
+                      + "button{margin-top:10px;border:0;border-radius:999px;background:linear-gradient(180deg,#f2457f,#d0175c);color:#fff;font-size:16px;font-weight:700;padding:13px 32px;box-shadow:0 6px 16px rgba(208,23,92,.3)}"
+                      + "small{color:#9b8fb3;font-size:12.5px}.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#ee1f6c;margin:0 2px;animation:d 1.2s infinite}"
+                      + ".dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}@keyframes d{50%{opacity:.25}}</style></head>"
+                      + "<body><div class='art'><svg width='92' height='92' viewBox='0 0 24 24' fill='none' stroke='#ee1f6c' stroke-width='1.8' stroke-linecap='round'>"
+                      + "<path d='M2 8.8a15 15 0 0 1 20 0'/><path d='M5.5 12.3a10 10 0 0 1 13 0'/><path d='M9 15.8a5 5 0 0 1 6 0'/><circle cx='12' cy='19.2' r='1' fill='#ee1f6c'/>"
+                      + "<path d='M3 3l18 18' stroke='#2a1f3d'/></svg></div>"
+                      + "<b>النت فاصل شوية</b><p>اتأكد إن الواي فاي أو الداتا شغالين، وأول ما النت يرجع المتجر هيفتح لوحده.</p>"
+                      + "<button onclick=\"location.href='" + HOME + "'\">حاول تاني</button>"
+                      + "<small>مستنيين النت <span class='dot'></span><span class='dot'></span><span class='dot'></span></small>"
+                      + "<script>window.addEventListener('online',function(){location.href='" + HOME + "'});"
+                      + "setInterval(function(){if(navigator.onLine)fetch('" + HOME + "',{cache:'no-store',mode:'no-cors'}).then(function(){location.href='" + HOME + "'}).catch(function(){})},8000);</script>"
+                      + "</body></html>";
+                  web.loadDataWithBaseURL("https://" + HOST + "/offline", html, "text/html", "utf-8", null);
                   hideSplash();
               }
 
@@ -930,8 +961,8 @@ jobs:
                   super.onNewIntent(intent);
                   /* جاي من إشعار السلة والتطبيق مفتوح: نفتح السلة من غير ما نعيد تحميل الصفحة */
                   final String open = intent != null ? intent.getStringExtra("aa_open") : null;
-                  if ("cart".equals(open) || "clearcart".equals(open)) {
-                      web.evaluateJavascript("window.aaNotifOpen ? aaNotifOpen('" + open + "') : location.replace('" + HOME + "&aa_open=" + open + "')", null);
+                  if ("cart".equals(open) || "clearcart".equals(open) || isGoLink(open)) {
+                      web.evaluateJavascript("window.aaNotifOpen ? aaNotifOpen('" + open + "') : location.replace('" + HOME + "&aa_open=" + Uri.encode(open) + "')", null);
                       return;
                   }
                   Uri data = intent != null ? intent.getData() : null;
@@ -1072,6 +1103,133 @@ jobs:
           }
           EOF
 
+
+      - name: Offers notifications job (OffersJob.java)
+        run: |
+          cat > $P/app/src/main/java/com/alabdotoys/app/OffersJob.java <<'EOF'
+          package com.alabdotoys.app;
+
+          import android.app.Notification;
+          import android.app.NotificationChannel;
+          import android.app.NotificationManager;
+          import android.app.PendingIntent;
+          import android.app.job.JobInfo;
+          import android.app.job.JobParameters;
+          import android.app.job.JobScheduler;
+          import android.app.job.JobService;
+          import android.content.ComponentName;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.content.SharedPreferences;
+          import android.net.Uri;
+          import android.os.Build;
+          import java.io.ByteArrayOutputStream;
+          import java.io.InputStream;
+          import java.net.HttpURLConnection;
+          import java.net.URL;
+          import org.json.JSONArray;
+          import org.json.JSONObject;
+
+          /* إشعارات العروض: كل ساعتين تقريبًا (لما يكون فيه نت) بنسأل السيرفر
+             لو صاحب المتجر بعت عرض جديد من برنامج الإدارة، ولو فيه بنعرضه
+             إشعار. الضغط عليه بيفتح التطبيق على الصفحة اللي اختارها. */
+          public class OffersJob extends JobService {
+              static final String PREFS = "alabdo_offers";
+              static final int JOB_ID = 201;
+              static final String CHANNEL = "offers";
+              static final String API = "https://alabdo-toys.com/api/broadcast?since=";
+
+              static void ensureScheduled(Context c) {
+                  JobScheduler js = (JobScheduler) c.getSystemService(Context.JOB_SCHEDULER_SERVICE);
+                  if (js == null) return;
+                  if (js.getPendingJob(JOB_ID) != null) return;
+                  SharedPreferences sp = c.getSharedPreferences(PREFS, MODE_PRIVATE);
+                  /* أول تشغيل: نعرض بس العروض اللي اتبعتت آخر يوم */
+                  if (sp.getLong("since", 0L) == 0L) sp.edit().putLong("since", System.currentTimeMillis() - 24L * 60L * 60L * 1000L).apply();
+                  JobInfo.Builder b = new JobInfo.Builder(JOB_ID, new ComponentName(c, OffersJob.class))
+                      .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                      .setPeriodic(2L * 60L * 60L * 1000L)
+                      .setPersisted(true);
+                  try { js.schedule(b.build()); } catch (Exception e) { /* ignore */ }
+              }
+
+              @Override
+              public boolean onStartJob(final JobParameters params) {
+                  new Thread(new Runnable() {
+                      @Override public void run() {
+                          try { check(getApplicationContext()); } catch (Exception e) { /* ignore */ }
+                          jobFinished(params, false);
+                      }
+                  }).start();
+                  return true;
+              }
+
+              @Override
+              public boolean onStopJob(JobParameters params) { return true; }
+
+              static void check(Context c) throws Exception {
+                  SharedPreferences sp = c.getSharedPreferences(PREFS, MODE_PRIVATE);
+                  long since = sp.getLong("since", 0L);
+                  HttpURLConnection con = (HttpURLConnection) new URL(API + since).openConnection();
+                  con.setConnectTimeout(15000);
+                  con.setReadTimeout(15000);
+                  con.setRequestProperty("Accept", "application/json");
+                  con.setRequestProperty("User-Agent", "AlAbdoApp/4 offers");
+                  if (con.getResponseCode() != 200) { con.disconnect(); return; }
+                  InputStream in = con.getInputStream();
+                  ByteArrayOutputStream out = new ByteArrayOutputStream();
+                  byte[] buf = new byte[4096];
+                  int n;
+                  while ((n = in.read(buf)) > 0 && out.size() < 64 * 1024) out.write(buf, 0, n);
+                  in.close();
+                  con.disconnect();
+                  JSONObject res = new JSONObject(out.toString("UTF-8"));
+                  if (!res.optBoolean("ok")) return;
+                  JSONArray items = res.optJSONArray("items");
+                  long newest = since;
+                  if (items != null) {
+                      /* السيرفر بيرجّع الأحدث الأول - بنعرضهم من الأقدم للأحدث */
+                      for (int i = items.length() - 1; i >= 0; i--) {
+                          JSONObject it = items.getJSONObject(i);
+                          long at = it.optLong("at", 0L);
+                          if (at <= since) continue;
+                          show(c, it.optString("id", "" + at), it.optString("title", "متجر آل عبده"), it.optString("body", ""), it.optString("link", "home"));
+                          if (at > newest) newest = at;
+                      }
+                  }
+                  if (newest > since) sp.edit().putLong("since", newest).apply();
+              }
+
+              @SuppressWarnings("deprecation")
+              static void show(Context c, String id, String title, String body, String link) {
+                  NotificationManager nm = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
+                  if (nm == null) return;
+                  if (Build.VERSION.SDK_INT >= 26 && nm.getNotificationChannel(CHANNEL) == null) {
+                      NotificationChannel ch = new NotificationChannel(CHANNEL, "العروض والخصومات", NotificationManager.IMPORTANCE_DEFAULT);
+                      ch.setDescription("عروض وخصومات وألعاب جديدة من متجر آل عبده");
+                      nm.createNotificationChannel(ch);
+                  }
+                  String go = "go:" + (link == null || !link.matches("[A-Za-z0-9:_-]{1,60}") ? "home" : link);
+                  int req = 7000 + (id.hashCode() & 0x3ff);
+                  Intent i = new Intent(c, MainActivity.class);
+                  i.putExtra("aa_open", go);
+                  i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                  PendingIntent pi = PendingIntent.getActivity(c, req, i, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                  Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(c, CHANNEL) : new Notification.Builder(c);
+                  b.setSmallIcon(R.drawable.ic_stat_notify)
+                      .setColor(0xFFEE1F6C)
+                      .setLargeIcon(android.graphics.BitmapFactory.decodeResource(c.getResources(), R.drawable.notif_logo))
+                      .setContentTitle(title)
+                      .setContentText(body)
+                      .setStyle(new Notification.BigTextStyle().bigText(body))
+                      .setAutoCancel(true)
+                      .setContentIntent(pi)
+                      .addAction(new Notification.Action.Builder(null, "شوف العرض", pi).build());
+                  if (Build.VERSION.SDK_INT < 26) b.setPriority(Notification.PRIORITY_DEFAULT);
+                  try { nm.notify(req, b.build()); } catch (SecurityException e) { /* notifications not allowed */ }
+              }
+          }
+          EOF
 
       - name: Generate icons from the site's icons
         run: |

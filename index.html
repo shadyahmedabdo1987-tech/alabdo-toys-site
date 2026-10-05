@@ -4134,6 +4134,11 @@ document.getElementById("themeToggle").addEventListener("click", function(){
    الأقسام السبعة، ومحافظات مصر. الصفحات القانونية ولوحة التحكم وأسماء/أوصاف
    المنتجات هتتضاف في مراحل تالية. */
 var I18N_EN = {
+  "اتسحب من المخزون": "Taken from stock",
+  "رجع للمخزون": "Returned to stock",
+  "اتحفظ، بس": "Saved, but",
+  "كان متاح منه": "only had",
+  "بس — الرصيد بقى صفر": "available — stock is now zero",
   "اكتب أول حرف من اسم الصنف...": "Type the first letters of the item...",
   "مفيش منتج بالاسم ده — هيتسجل باللي كتبته": "No matching product — it will be saved as typed",
   "مربوط بالمنتج في المتجر": "Linked to the store product",
@@ -8870,7 +8875,7 @@ function showAdminOrderEditForm(order){
         btn.disabled = false;
         if(res.status===200 && res.body && res.body.ok){
           delete PROOF_CACHE[String(order.id)+":a"]; delete PROOF_CACHE[String(order.id)+":c"];
-          showToast(t("✅ اتحفظت تعديلات الطلب"));
+          showToast(aoeApplyStock(res.body.stock));
           closeAllPanels();
           renderAdminOrdersPage();
         } else {
@@ -8880,6 +8885,31 @@ function showAdminOrderEditForm(order){
       })
       .catch(function(){ btn.disabled=false; errEl.textContent = t("تعذر الاتصال بالسيرفر."); errEl.style.display = "block"; });
   });
+}
+/* بعد حفظ تعديل الفاتورة: السيرفر بيسحب الأصناف الجديدة (أو الكمية الزيادة)
+   من المخزون ويرجّع اللي اتشال - هنا بنحدّث الكميات اللي على الشاشة بنفس
+   الأرقام عشان تفضل مظبوطة، ونقول للأدمن اتسحب إيه. */
+function aoeApplyStock(st){
+  var msg = t("✅ اتحفظت تعديلات الطلب");
+  if(!st || !Array.isArray(st.changes) || !st.changes.length) return msg;
+  st.changes.forEach(function(c){
+    var p = preqFindProduct(c.id); if(!p) return;
+    var h = p;
+    if(c.sizeLabel && Array.isArray(p.sizes)) h = p.sizes.find(function(x){ return x.label === c.sizeLabel; }) || null;
+    else if(c.colorName && Array.isArray(p.colors)) h = p.colors.find(function(x){ return x.name === c.colorName; }) || null;
+    if(h) h.stock = c.stock;
+  });
+  try{ if(typeof saveDraft === "function") saveDraft(); }catch(e){}
+  var out = 0, back = 0;
+  st.changes.forEach(function(c){ if(c.delta < 0) out += -c.delta; else back += c.delta; });
+  var parts = [], pcs = function(n){ return fmt(n)+" "+(LANG==="en" ? (n===1 ? "piece" : "pieces") : (n>=3 && n<=10 ? "قطع" : "قطعة")); };
+  if(out) parts.push(t("اتسحب من المخزون")+" "+pcs(out));
+  if(back) parts.push(t("رجع للمخزون")+" "+pcs(back));
+  if(Array.isArray(st.short) && st.short.length){
+    var sh = st.short[0];
+    return "⚠️ "+t("اتحفظ، بس")+" «"+sh.name+(sh.sizeLabel ? " "+sh.sizeLabel : (sh.colorName ? " "+sh.colorName : ""))+"» "+t("كان متاح منه")+" "+fmt(sh.available)+" "+t("بس — الرصيد بقى صفر");
+  }
+  return msg + (parts.length ? " · "+parts.join(" · ") : "");
 }
 /* حذف طلب نهائيًا (بعد تأكيد من الأدمن) وتحديث صفحة الطلبات فورًا. */
 function deleteAdminOrder(order, confirmed){

@@ -11,6 +11,7 @@
 # icons: round store logo only, transparent background (app-logo-icon-maskable-512.png)
 # pro: offers notifications (OffersJob), go: deep links, nicer offline screen
 # haptics: AlAbdoNative.haptic (add to cart / checkout taps / order success)
+# build 19: same app as 2.0.18, new version number for Google Play
 name: Build Android APK
 
 on:

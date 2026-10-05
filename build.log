@@ -1,0 +1,60 @@
+
+Copy /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.swiftmodule/arm64-apple-ios.abi.json /Users/runner/work/_temp/ios/build/AlabdoToys.build/Release-iphoneos/AlabdoToys.build/Objects-normal/arm64/AlabdoToys.abi.json (in target 'AlabdoToys' from project 'AlabdoToys')
+    cd /Users/runner/work/_temp/ios
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/runner/work/_temp/ios/build/AlabdoToys.build/Release-iphoneos/AlabdoToys.build/Objects-normal/arm64/AlabdoToys.abi.json /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.swiftmodule/arm64-apple-ios.abi.json
+
+Copy /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo /Users/runner/work/_temp/ios/build/AlabdoToys.build/Release-iphoneos/AlabdoToys.build/Objects-normal/arm64/AlabdoToys.swiftsourceinfo (in target 'AlabdoToys' from project 'AlabdoToys')
+    cd /Users/runner/work/_temp/ios
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/runner/work/_temp/ios/build/AlabdoToys.build/Release-iphoneos/AlabdoToys.build/Objects-normal/arm64/AlabdoToys.swiftsourceinfo /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo
+
+Ld /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app/AlabdoToys normal (in target 'AlabdoToys' from project 'AlabdoToys')
+    cd /Users/runner/work/_temp/ios
+    /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios15.0 -isysroot /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -Os -L/Users/runner/work/_temp/ios/build/EagerLinkingTBDs/Release-iphoneos -L/Users/runner/work/_temp/ios/build/Release-iphoneos -F/Users/runner/work/_temp/ios/build/EagerLinkingTBDs/Release-iphoneos -F/Users/runner/work/_temp/ios/build/Release-iphoneos -filelist /Users/runner/work/_temp/ios/build/AlabdoToys.build/Release-iphoneos/AlabdoToys.build/Objects-normal/arm64/AlabdoToys.LinkFileList -Xlinker -rpath -Xlinker /usr/lib/swift -Xlinker -rpath -Xlinker @executable_path/Frameworks -Xlinker -dead_strip -Xlinker -object_path_lto -Xlinker /Users/runner/work/_temp/ios/build/AlabdoToys.build/Release-iphoneos/AlabdoToys.build/Objects-normal/arm64/AlabdoToys_lto.o -Xlinker -dependency_info -Xlinker /Users/runner/work/_temp/ios/build/AlabdoToys.build/Release-iphoneos/AlabdoToys.build/Objects-normal/arm64/AlabdoToys_dependency_info.dat -fobjc-link-runtime -L/Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /Users/runner/work/_temp/ios/build/AlabdoToys.build/Release-iphoneos/AlabdoToys.build/Objects-normal/arm64/AlabdoToys.swiftmodule @/Users/runner/work/_temp/ios/build/AlabdoToys.build/Release-iphoneos/AlabdoToys.build/Objects-normal/arm64/AlabdoToys-linker-args.resp -o /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app/AlabdoToys
+
+LinkAssetCatalog /Users/runner/work/_temp/ios/Sources/Assets.xcassets (in target 'AlabdoToys' from project 'AlabdoToys')
+    cd /Users/runner/work/_temp/ios
+    builtin-linkAssetCatalog --thinned /Users/runner/work/_temp/ios/build/AlabdoToys.build/Release-iphoneos/AlabdoToys.build/assetcatalog_output/thinned --thinned-dependencies /Users/runner/work/_temp/ios/build/AlabdoToys.build/Release-iphoneos/AlabdoToys.build/assetcatalog_dependencies_thinned --thinned-info-plist-content /Users/runner/work/_temp/ios/build/AlabdoToys.build/Release-iphoneos/AlabdoToys.build/assetcatalog_generated_info.plist_thinned --unthinned /Users/runner/work/_temp/ios/build/AlabdoToys.build/Release-iphoneos/AlabdoToys.build/assetcatalog_output/unthinned --unthinned-dependencies /Users/runner/work/_temp/ios/build/AlabdoToys.build/Release-iphoneos/AlabdoToys.build/assetcatalog_dependencies_unthinned --unthinned-info-plist-content /Users/runner/work/_temp/ios/build/AlabdoToys.build/Release-iphoneos/AlabdoToys.build/assetcatalog_generated_info.plist_unthinned --output /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app --plist-output /Users/runner/work/_temp/ios/build/AlabdoToys.build/Release-iphoneos/AlabdoToys.build/assetcatalog_generated_info.plist
+note: Emplaced /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app/Assets.car (in target 'AlabdoToys' from project 'AlabdoToys')
+note: Emplaced /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app/AppIcon76x76@2x~ipad.png (in target 'AlabdoToys' from project 'AlabdoToys')
+note: Emplaced /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app/AppIcon60x60@2x.png (in target 'AlabdoToys' from project 'AlabdoToys')
+
+ProcessInfoPlistFile /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app/Info.plist /Users/runner/work/_temp/ios/Sources/Info.plist (in target 'AlabdoToys' from project 'AlabdoToys')
+    cd /Users/runner/work/_temp/ios
+    builtin-infoPlistUtility /Users/runner/work/_temp/ios/Sources/Info.plist -producttype com.apple.product-type.application -genpkginfo /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app/PkgInfo -expandbuildsettings -format binary -platform iphoneos -additionalcontentfile /Users/runner/work/_temp/ios/build/AlabdoToys.build/Release-iphoneos/AlabdoToys.build/assetcatalog_generated_info.plist -requiredArchitecture arm64 -o /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app/Info.plist
+
+CopySwiftLibs /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app (in target 'AlabdoToys' from project 'AlabdoToys')
+    cd /Users/runner/work/_temp/ios
+    builtin-swiftStdLibTool --copy --verbose --scan-executable /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app/AlabdoToys --scan-folder /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app/Frameworks --scan-folder /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app/PlugIns --scan-folder /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app/SystemExtensions --scan-folder /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app/Extensions --platform iphoneos --toolchain /var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.6.109.0.nGibok/Metal.xctoolchain --toolchain /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app/Frameworks --strip-bitcode --strip-bitcode-tool /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /Users/runner/work/_temp/ios/build/AlabdoToys.build/Release-iphoneos/AlabdoToys.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os --back-deploy-swift-span
+Ignoring --strip-bitcode because --sign was not passed
+
+ExtractAppIntentsMetadata (in target 'AlabdoToys' from project 'AlabdoToys')
+    cd /Users/runner/work/_temp/ios
+    /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.6.109.0.nGibok/Metal.xctoolchain --module-name AlabdoToys --sdk-root /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk --xcode-version 17F113 --platform-family iOS --deployment-target 15.0 --bundle-identifier com.alabdotoys.ios --output /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app --target-triple arm64-apple-ios15.0 --binary-file /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app/AlabdoToys --dependency-file /Users/runner/work/_temp/ios/build/AlabdoToys.build/Release-iphoneos/AlabdoToys.build/Objects-normal/arm64/AlabdoToys_dependency_info.dat --stringsdata-file /Users/runner/work/_temp/ios/build/AlabdoToys.build/Release-iphoneos/AlabdoToys.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /Users/runner/work/_temp/ios/build/AlabdoToys.build/Release-iphoneos/AlabdoToys.build/Objects-normal/arm64/AlabdoToys.SwiftFileList --metadata-file-list /Users/runner/work/_temp/ios/build/AlabdoToys.build/Release-iphoneos/AlabdoToys.build/AlabdoToys.DependencyMetadataFileList --static-metadata-file-list /Users/runner/work/_temp/ios/build/AlabdoToys.build/Release-iphoneos/AlabdoToys.build/AlabdoToys.DependencyStaticMetadataFileList --swift-const-vals-list /Users/runner/work/_temp/ios/build/AlabdoToys.build/Release-iphoneos/AlabdoToys.build/Objects-normal/arm64/AlabdoToys.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --validate-assistant-intents --no-app-shortcuts-localization
+2026-10-05 08:28:39.857 appintentsmetadataprocessor[1913:9425] Starting appintentsmetadataprocessor export
+2026-10-05 08:28:39.863 appintentsmetadataprocessor[1913:9425] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
+
+GenerateDSYMFile /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app.dSYM /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app/AlabdoToys (in target 'AlabdoToys' from project 'AlabdoToys')
+    cd /Users/runner/work/_temp/ios
+    /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app/AlabdoToys -o /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app.dSYM
+
+AppIntentsSSUTraining (in target 'AlabdoToys' from project 'AlabdoToys')
+    cd /Users/runner/work/_temp/ios
+    /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsnltrainingprocessor --infoplist-path /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app/Info.plist --temp-dir-path /Users/runner/work/_temp/ios/build/AlabdoToys.build/Release-iphoneos/AlabdoToys.build/ssu --bundle-id com.alabdotoys.ios --product-path /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app --extracted-metadata-path /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app/Metadata.appintents --metadata-file-list /Users/runner/work/_temp/ios/build/AlabdoToys.build/Release-iphoneos/AlabdoToys.build/AlabdoToys.DependencyMetadataFileList --source-file /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app/Info.plist --archive-ssu-assets
+2026-10-05 08:28:39.890 appintentsnltrainingprocessor[1929:9473] Parsing options for appintentsnltrainingprocessor
+2026-10-05 08:28:39.891 appintentsnltrainingprocessor[1929:9473] Starting AppIntents SSU YAML Generation
+2026-10-05 08:28:39.894 appintentsnltrainingprocessor[1929:9473] No AppShortcuts found - Skipping.
+
+RegisterExecutionPolicyException /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app (in target 'AlabdoToys' from project 'AlabdoToys')
+    cd /Users/runner/work/_temp/ios
+    builtin-RegisterExecutionPolicyException /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app
+
+Validate /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app (in target 'AlabdoToys' from project 'AlabdoToys')
+    cd /Users/runner/work/_temp/ios
+    builtin-validationUtility /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app -shallow-bundle -infoplist-subpath Info.plist
+
+Touch /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app (in target 'AlabdoToys' from project 'AlabdoToys')
+    cd /Users/runner/work/_temp/ios
+    /usr/bin/touch -c /Users/runner/work/_temp/ios/build/Release-iphoneos/AlabdoToys.app
+
+** BUILD SUCCEEDED **
+

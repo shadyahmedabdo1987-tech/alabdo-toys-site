@@ -3188,7 +3188,7 @@ try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("messa
             <b id="bcPrevTitle"></b><p id="bcPrevBody"></p>
           </div>
           <button type="button" class="btn btn-primary" id="bcSend" data-i18n>📣 ابعت الإشعار لكل العملاء</button>
-          <p class="apr-note" data-i18n>الإشعار بيوصل لنسخة التطبيق الجديدة وبعد كده. العميل لازم يكون موافق على الإشعارات في موبايله.</p>
+          <p class="apr-note" data-i18n>الإشعار بيوصل للعميل أول ما يفتح التطبيق (نسخة 2.0.20 وبعد كده)، ولو التطبيق مقفول بيوصله خلال ساعتين تقريبًا. العميل لازم يكون موافق على الإشعارات في موبايله.</p>
         </div>
         <h3 class="bc-h" data-i18n>🖼️ إعلان على الشاشة الرئيسية</h3>
         <div class="admin-card bc-card">
@@ -11055,7 +11055,7 @@ document.getElementById("bcSend").addEventListener("click", function(){
       .then(function(res){
         btn.disabled = false;
         if(res.body && res.body.ok){
-          showToast("✅ "+t("الإشعار اتبعت — هيوصل للعملاء خلال ساعتين تقريبًا"));
+          showToast("✅ "+t("الإشعار اتبعت — بيوصل للعميل أول ما يفتح التطبيق، أو خلال ساعتين تقريبًا لو التطبيق مقفول"));
           document.getElementById("bcTitle").value = ""; document.getElementById("bcBody").value = ""; bcPreview();
           (ADMIN_BC.list = ADMIN_BC.list || []).unshift(res.body.item); bcDrawHistory();
         } else if(res.status === 429) showToast(t("⚠️ استنى دقيقة قبل ما تبعت إشعار تاني"));

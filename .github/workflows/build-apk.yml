@@ -9,7 +9,7 @@
 # وتقدر تشغّله تاني يدوي من Actions ← Build Android APK ← Run workflow.
 
 # icons: round store logo only, transparent background (app-logo-icon-maskable-512.png)
-# haptics: AlAbdoNative.haptic (add to cart / checkout taps / order success)
+# haptics: AlAbdoNative.haptic (add to cart / checkout taps / order success) v2 - longer pulses + hapticInfo test
 name: Build Android APK
 
 on:
@@ -649,6 +649,8 @@ jobs:
                           @Override public void run() { doHaptic(kind); }
                       });
                   }
+                  @JavascriptInterface
+                  public String hapticInfo() { return hapticInfoText(); }
                   /* الصفحة بتبلغنا بعدد المنتجات اللي في السلة (عشان تذكير السلة) */
                   @JavascriptInterface
                   public void cartChanged(int count, String names) {
@@ -659,6 +661,9 @@ jobs:
                   }
               }
 
+              private String lastHaptic = "";
+              /* الاهتزاز: مدد أطول شوية (30-150 مللي ثانية) بالقوة الافتراضية
+                 للجهاز، عشان يتحس على كل الموبايلات حتى اللي موتورها ضعيف. */
               @SuppressWarnings("deprecation")
               private void doHaptic(String kind) {
                   try {
@@ -669,25 +674,41 @@ jobs:
                       } else {
                           v = (android.os.Vibrator) getSystemService(android.content.Context.VIBRATOR_SERVICE);
                       }
-                      if (v == null || !v.hasVibrator()) return;
+                      if (v == null) { lastHaptic = "no-service"; return; }
+                      if (!v.hasVibrator()) { lastHaptic = "no-vibrator"; return; }
                       String k = kind == null ? "tap" : kind;
-                      long[] t = null; int[] a = null;
-                      if ("success".equals(k)) { t = new long[] { 0, 35, 70, 45, 70, 80 }; a = new int[] { 0, 180, 0, 210, 0, 255 }; }
-                      else if ("warn".equals(k)) { t = new long[] { 0, 60, 60, 60 }; a = new int[] { 0, 255, 0, 255 }; }
-                      else if ("add".equals(k)) { t = new long[] { 0, 24, 45, 34 }; a = new int[] { 0, 170, 0, 255 }; }
-                      if (t == null) {
-                          if (Build.VERSION.SDK_INT >= 29) v.vibrate(android.os.VibrationEffect.createPredefined(android.os.VibrationEffect.EFFECT_CLICK));
-                          else if (Build.VERSION.SDK_INT >= 26) v.vibrate(android.os.VibrationEffect.createOneShot(16, android.os.VibrationEffect.DEFAULT_AMPLITUDE));
-                          else v.vibrate(16);
-                          return;
-                      }
+                      long[] t;
+                      if ("success".equals(k)) t = new long[] { 0, 70, 80, 70, 80, 150 };
+                      else if ("warn".equals(k)) t = new long[] { 0, 120, 90, 120 };
+                      else if ("add".equals(k)) t = new long[] { 0, 45, 60, 45 };
+                      else if ("test".equals(k)) t = new long[] { 0, 400 };
+                      else t = new long[] { 0, 30 };
                       if (Build.VERSION.SDK_INT >= 26) {
-                          if (v.hasAmplitudeControl()) v.vibrate(android.os.VibrationEffect.createWaveform(t, a, -1));
+                          if (t.length == 2) v.vibrate(android.os.VibrationEffect.createOneShot(t[1], android.os.VibrationEffect.DEFAULT_AMPLITUDE));
                           else v.vibrate(android.os.VibrationEffect.createWaveform(t, -1));
                       } else {
                           v.vibrate(t, -1);
                       }
-                  } catch (Exception e) { /* الاهتزاز مش أساسي */ }
+                      lastHaptic = "ok:" + k;
+                  } catch (Exception e) { lastHaptic = "error:" + e.getClass().getSimpleName() + " " + e.getMessage(); }
+              }
+              private String hapticInfoText() {
+                  String ver = "";
+                  try { ver = getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Exception e) { /* ignore */ }
+                  boolean has = false, amp = false;
+                  try {
+                      android.os.Vibrator v;
+                      if (Build.VERSION.SDK_INT >= 31) {
+                          android.os.VibratorManager vm = (android.os.VibratorManager) getSystemService(android.content.Context.VIBRATOR_MANAGER_SERVICE);
+                          v = vm != null ? vm.getDefaultVibrator() : null;
+                      } else {
+                          v = (android.os.Vibrator) getSystemService(android.content.Context.VIBRATOR_SERVICE);
+                      }
+                      if (v != null) { has = v.hasVibrator(); if (Build.VERSION.SDK_INT >= 26) amp = v.hasAmplitudeControl(); }
+                  } catch (Exception e) { /* ignore */ }
+                  int ringer = -1;
+                  try { android.media.AudioManager am = (android.media.AudioManager) getSystemService(android.content.Context.AUDIO_SERVICE); if (am != null) ringer = am.getRingerMode(); } catch (Exception e) { /* ignore */ }
+                  return "{\"version\":\"" + ver + "\",\"sdk\":" + Build.VERSION.SDK_INT + ",\"vibrator\":" + has + ",\"amplitude\":" + amp + ",\"ringer\":" + ringer + ",\"maker\":\"" + Build.MANUFACTURER + " " + Build.MODEL + "\",\"last\":\"" + lastHaptic.replace("\"", "'") + "\"}";
               }
 
               /* أندرويد 13 وأحدث: لازم العميل يوافق على الإشعارات - بنسأله مرة واحدة

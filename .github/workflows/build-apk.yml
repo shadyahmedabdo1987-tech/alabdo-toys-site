@@ -9,6 +9,7 @@
 # وتقدر تشغّله تاني يدوي من Actions ← Build Android APK ← Run workflow.
 
 # icons: round store logo only, transparent background (app-logo-icon-maskable-512.png)
+# haptics: AlAbdoNative.haptic (add to cart / checkout taps / order success)
 name: Build Android APK
 
 on:
@@ -131,6 +132,7 @@ jobs:
               <uses-permission android:name="android.permission.INTERNET" />
               <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
               <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+              <uses-permission android:name="android.permission.VIBRATE" />
 
               <application
                   android:allowBackup="true"
@@ -640,6 +642,13 @@ jobs:
                           @Override public void run() { hideSplash(); }
                       });
                   }
+                  /* اهتزاز خفيف: إضافة للسلة / ضغطات إتمام الطلب / نجاح الطلب */
+                  @JavascriptInterface
+                  public void haptic(final String kind) {
+                      runOnUiThread(new Runnable() {
+                          @Override public void run() { doHaptic(kind); }
+                      });
+                  }
                   /* الصفحة بتبلغنا بعدد المنتجات اللي في السلة (عشان تذكير السلة) */
                   @JavascriptInterface
                   public void cartChanged(int count, String names) {
@@ -648,6 +657,37 @@ jobs:
                           @Override public void run() { askNotificationPermissionOnce(); }
                       });
                   }
+              }
+
+              @SuppressWarnings("deprecation")
+              private void doHaptic(String kind) {
+                  try {
+                      android.os.Vibrator v;
+                      if (Build.VERSION.SDK_INT >= 31) {
+                          android.os.VibratorManager vm = (android.os.VibratorManager) getSystemService(android.content.Context.VIBRATOR_MANAGER_SERVICE);
+                          v = vm != null ? vm.getDefaultVibrator() : null;
+                      } else {
+                          v = (android.os.Vibrator) getSystemService(android.content.Context.VIBRATOR_SERVICE);
+                      }
+                      if (v == null || !v.hasVibrator()) return;
+                      String k = kind == null ? "tap" : kind;
+                      long[] t = null; int[] a = null;
+                      if ("success".equals(k)) { t = new long[] { 0, 35, 70, 45, 70, 80 }; a = new int[] { 0, 180, 0, 210, 0, 255 }; }
+                      else if ("warn".equals(k)) { t = new long[] { 0, 60, 60, 60 }; a = new int[] { 0, 255, 0, 255 }; }
+                      else if ("add".equals(k)) { t = new long[] { 0, 24, 45, 34 }; a = new int[] { 0, 170, 0, 255 }; }
+                      if (t == null) {
+                          if (Build.VERSION.SDK_INT >= 29) v.vibrate(android.os.VibrationEffect.createPredefined(android.os.VibrationEffect.EFFECT_CLICK));
+                          else if (Build.VERSION.SDK_INT >= 26) v.vibrate(android.os.VibrationEffect.createOneShot(16, android.os.VibrationEffect.DEFAULT_AMPLITUDE));
+                          else v.vibrate(16);
+                          return;
+                      }
+                      if (Build.VERSION.SDK_INT >= 26) {
+                          if (v.hasAmplitudeControl()) v.vibrate(android.os.VibrationEffect.createWaveform(t, a, -1));
+                          else v.vibrate(android.os.VibrationEffect.createWaveform(t, -1));
+                      } else {
+                          v.vibrate(t, -1);
+                      }
+                  } catch (Exception e) { /* الاهتزاز مش أساسي */ }
               }
 
               /* أندرويد 13 وأحدث: لازم العميل يوافق على الإشعارات - بنسأله مرة واحدة

@@ -5481,43 +5481,13 @@ function proofCheckHtml(){
    إضافة منتج للسلة، كل ضغطة زرار في خطوات إتمام الطلب، ونجاح الطلب.
    تطبيق العميل بيهتز عن طريق AlAbdoNative.haptic (أندرويد)، والموقع من
    متصفح موبايل أندرويد بـ navigator.vibrate. الآيفون مالوش اهتزاز من المتصفح. */
-var HAPTIC_WEB = { tap:30, add:[45, 60, 45], success:[70, 80, 70, 80, 150], warn:[120, 90, 120], test:400 };
+var HAPTIC_WEB = { tap:30, add:[45, 60, 45], success:[70, 80, 70, 80, 150], warn:[120, 90, 120] };
 function haptic(kind){
   kind = kind || "tap";
   if(isAdminApp()) return;
   try{ var nat = window.AlAbdoNative; if(nat && typeof nat.haptic === "function"){ nat.haptic(kind); return; } }catch(e){}
   try{ if(navigator.vibrate && /Android/i.test(navigator.userAgent)) navigator.vibrate(HAPTIC_WEB[kind] || 30); }catch(e){}
 }
-/* تجربة الاهتزاز: 5 ضغطات ورا بعض على لوجو المتجر فوق (في تطبيق العميل)
-   بتعمل اهتزاز طويل وبتعرض حالة الاهتزاز على الموبايل - عشان نعرف لو
-   الموبايل مفيهوش موتور اهتزاز أو الاهتزاز مقفول من الإعدادات. */
-(function(){
-  var taps = [], logo = document.querySelector(".site-header .brand, header .brand") || document.querySelector(".brand");
-  if(!logo) return;
-  logo.addEventListener("click", function(){
-    var now = Date.now(); taps = taps.filter(function(x){ return now - x < 3000; }); taps.push(now);
-    if(taps.length < 5) return;
-    taps = [];
-    haptic("test");
-    var nat = window.AlAbdoNative, info = null;
-    setTimeout(function(){
-      try{ if(nat && typeof nat.hapticInfo === "function") info = JSON.parse(nat.hapticInfo()); }catch(e){ info = null; }
-      var lines = [];
-      if(!nat) lines.push(t("ده الموقع مش التطبيق — الاهتزاز من المتصفح بيشتغل على أندرويد بس."));
-      else if(!info) lines.push(t("نسخة التطبيق دي قديمة ومفيهاش الاهتزاز — نزّل آخر نسخة."));
-      else {
-        lines.push(t("نسخة التطبيق")+": "+(info.version||"-"));
-        lines.push(t("الموبايل فيه موتور اهتزاز")+": "+(info.vibrator ? t("أيوه ✅") : t("لأ ❌")));
-        lines.push(t("وضع الرنة")+": "+({0:t("صامت تمامًا 🔕"),1:t("اهتزاز 📳"),2:t("عادي 🔔")}[info.ringer] || "-"));
-        lines.push(t("نتيجة آخر اهتزاز")+": "+(String(info.last||"").indexOf("ok") === 0 ? t("اتبعت للموبايل ✅") : (info.last || "-")));
-        lines.push((info.maker||"")+" · Android SDK "+info.sdk);
-        lines.push("");
-        lines.push(t("دلوقتي الموبايل هيجرّب 4 طرق اهتزاز ورا بعض، وكل واحدة بيظهر رقمها تحت الشاشة. قولّي حسّيت بأنهي رقم."));
-      }
-      appAlert({ icon:"📳", title:t("تجربة الاهتزاز"), message: lines.join("\n"), ok:t("تمام") });
-    }, 450);
-  });
-})();
 function addToCart(id, qty, colorName, sizeLabel){
   qty = qty || 1;
   var p = PRODUCTS.find(function(x){ return x.id===id; });

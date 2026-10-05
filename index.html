@@ -5511,6 +5511,8 @@ function haptic(kind){
         lines.push(t("وضع الرنة")+": "+({0:t("صامت تمامًا 🔕"),1:t("اهتزاز 📳"),2:t("عادي 🔔")}[info.ringer] || "-"));
         lines.push(t("نتيجة آخر اهتزاز")+": "+(String(info.last||"").indexOf("ok") === 0 ? t("اتبعت للموبايل ✅") : (info.last || "-")));
         lines.push((info.maker||"")+" · Android SDK "+info.sdk);
+        lines.push("");
+        lines.push(t("دلوقتي الموبايل هيجرّب 4 طرق اهتزاز ورا بعض، وكل واحدة بيظهر رقمها تحت الشاشة. قولّي حسّيت بأنهي رقم."));
       }
       appAlert({ icon:"📳", title:t("تجربة الاهتزاز"), message: lines.join("\n"), ok:t("تمام") });
     }, 450);

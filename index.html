@@ -2032,6 +2032,25 @@ html.app-mode .modal-backdrop.show > .modal-card.acct-card{animation:aaSheetUp .
 .header-search .srch-panel .srch-chip:active{transform:scale(.94);}
 .header-search .srch-panel .srch-h button{color:var(--pink-deep); padding:2px 4px;}
 .aa-empty .srch-chip{background:var(--surface-2);}
+/* نتايج البحث بالصور وانت بتكتب */
+.srch-panel.has-results{max-height:min(58vh, 460px); overflow-y:auto; overscroll-behavior:contain; padding:8px 8px 10px; gap:6px;}
+.srch-prods{display:flex; flex-direction:column; gap:2px;}
+.header-search .srch-panel button.srch-prod{display:flex; align-items:center; gap:12px; width:100% !important; padding:7px 8px; border-radius:14px; text-align:start; white-space:normal; justify-content:flex-start; cursor:pointer; font:inherit; color:var(--ink); border:0;}
+.header-search .srch-panel button.srch-prod:hover, .header-search .srch-panel button.srch-prod:focus-visible{background:var(--surface-2);}
+.header-search .srch-panel button.srch-prod:active{background:var(--surface-2); transform:scale(.985);}
+.srch-prod-img{flex:none; width:58px; height:58px; border-radius:12px; overflow:hidden; display:grid; place-items:center; font-size:28px; position:relative;}
+.srch-prod-img img{width:100%; height:100%; object-fit:cover; display:block;}
+.srch-prod-txt{flex:1; min-width:0; display:flex; flex-direction:column; gap:3px;}
+.srch-prod-name{font-size:14px; font-weight:800; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;}
+.srch-prod-name mark{background:color-mix(in srgb, var(--pink) 22%, transparent); color:inherit; border-radius:4px; padding:0 1px;}
+.srch-prod-meta{display:flex; align-items:center; flex-wrap:wrap; gap:4px 8px; font-size:12px; color:var(--ink-soft);}
+.srch-prod-price{font-weight:900; color:var(--pink-deep); font-size:13.5px; font-variant-numeric:tabular-nums;}
+.srch-prod-old{text-decoration:line-through; color:var(--ink-faint); font-variant-numeric:tabular-nums;}
+.srch-prod-out{background:var(--surface-2); color:var(--ink-soft); border-radius:999px; padding:1px 8px; font-weight:800; font-size:11px;}
+.srch-prod-go{flex:none; color:var(--ink-faint); font-size:20px; line-height:1;}
+.header-search .srch-panel button.srch-all{position:sticky !important; bottom:-10px; z-index:1; box-shadow:0 -10px 14px -6px var(--surface) !important; width:100% !important; padding:11px 12px; border-radius:12px; background:var(--surface-2); color:var(--pink-deep); font-weight:900; font-size:13.5px; border:0; cursor:pointer; font-family:inherit;}
+.srch-none{padding:14px 10px; text-align:center; font-size:13.5px; color:var(--ink-soft); line-height:1.7;}
+.srch-none b{color:var(--ink); display:block; font-size:14.5px;}
 /* إشعارات العروض (الإدارة) */
 .bc-card{display:flex; flex-direction:column; gap:12px; margin-bottom:16px;}
 .bc-tpls{display:flex; flex-wrap:wrap; align-items:center; gap:8px; font-size:12.5px; font-weight:800; color:var(--ink-soft);}
@@ -4385,6 +4404,9 @@ var I18N_EN = {
   "أسبوع": "1 week",
   "شهر": "1 month",
   "لحد ما أوقفه": "Until I stop it",
+  "مفيش لعبة بالاسم ده": "No toy with that name",
+  "جرّب كلمة تانية أو اسم القسم": "Try another word or a category name",
+  "عرض كل النتايج": "See all results",
   "صورة عليها عرض بتظهر للعميل كل مرة يفتح فيها المتجر أو التطبيق، ويقدر يقفلها. بتفضل تظهر لحد ما توقفها من هنا أو المدة تخلص.": "An offer image shown to customers every time they open the store or app; they can close it. It keeps showing until you stop it here or the duration ends.",
   "🖼️ انشر الإعلان": "🖼️ Publish ad",
   "وقف الإعلان": "Stop the ad",
@@ -6862,13 +6884,6 @@ function saveRecentSearch(q){
   a.unshift(q); a = a.slice(0, 8);
   try{ localStorage.setItem(RECENT_Q_KEY, JSON.stringify(a)); }catch(e){}
 }
-function searchSuggestions(){
-  var out = [], seen = {};
-  function add(x){ x = String(x || "").trim(); var k = normSearch(x); if(!x || seen[k]) return; seen[k] = 1; out.push(x); }
-  CATS.forEach(function(c){ add(catName(c.id)); });
-  PRODUCTS.slice().sort(function(a, b){ return (b.reviews||0) - (a.reviews||0); }).slice(0, 6).forEach(function(p){ add(pName(p).split(" ").slice(0, 2).join(" ")); });
-  return out.slice(0, 10);
-}
 function srchPanelEl(){
   var el = document.getElementById("srchPanel");
   if(el) return el;
@@ -6881,6 +6896,18 @@ function srchPanelEl(){
     if(clr){ try{ localStorage.removeItem(RECENT_Q_KEY); }catch(_){} renderSrchPanel(); return; }
     var del = e.target.closest("[data-srch-del]");
     if(del){ var q0 = del.dataset.srchDel; var a = recentSearches().filter(function(x){ return x !== q0; }); try{ localStorage.setItem(RECENT_Q_KEY, JSON.stringify(a)); }catch(_){} renderSrchPanel(); return; }
+    var pr = e.target.closest("[data-srch-prod]");
+    if(pr){
+      var inp0 = document.getElementById("searchInput"), pid = +pr.dataset.srchProd;
+      saveRecentSearch(inp0.value); el.hidden = true; inp0.blur();
+      setTimeout(function(){ openProductModal(pid); }, 60);
+      return;
+    }
+    if(e.target.closest("[data-srch-all]")){
+      var inp1 = document.getElementById("searchInput");
+      saveRecentSearch(inp1.value); el.hidden = true; inp1.blur(); doSearch(inp1.value);
+      return;
+    }
     var chip = e.target.closest("[data-srch-q]");
     if(chip){
       var q = chip.dataset.srchQ, inp = document.getElementById("searchInput");
@@ -6891,23 +6918,71 @@ function srchPanelEl(){
 }
 function renderSrchPanel(){
   var el = srchPanelEl(); if(!el) return;
-  var rec = recentSearches(), sug = CATALOG_READY ? searchSuggestions() : [];
+  var rec = recentSearches();
   var h = "";
   if(rec.length){
     h += '<div class="srch-h"><b>🕘 '+t("آخر عمليات بحثك")+'</b><button type="button" data-srch-clear>'+t("مسح")+'</button></div>'
       + '<div class="srch-chips">'+rec.map(function(q){ return '<span class="srch-chip is-recent"><button type="button" data-srch-q="'+escHtml(q)+'">'+escHtml(q)+'</button><button type="button" class="x" data-srch-del="'+escHtml(q)+'" aria-label="'+t("مسح")+'">×</button></span>'; }).join("")+'</div>';
   }
-  if(sug.length){
-    h += '<div class="srch-h"><b>✨ '+t("ممكن تدوّر على")+'</b></div>'
-      + '<div class="srch-chips">'+sug.map(function(q){ return '<button type="button" class="srch-chip" data-srch-q="'+escHtml(q)+'">'+escHtml(q)+'</button>'; }).join("")+'</div>';
+  el.innerHTML = h;
+  el.classList.remove("has-results");
+  el.hidden = !h;
+}
+/* نتايج فورية بالصور تحت خانة البحث وانت بتكتب (زي المتاجر الكبيرة):
+   صورة المنتج + اسمه + السعر، والضغط عليه بيفتح صفحة المنتج على طول. */
+function srchFindProducts(q){
+  var words = normSearch(q).split(" ").filter(Boolean); if(!words.length) return [];
+  var nq = normSearch(q);
+  return PRODUCTS.map(function(p){
+    var c = CATS.find(function(x){ return x.id===p.cat; });
+    var nm = normSearch(p.name+" "+(p.name_en||""));
+    var hay = nm+" "+normSearch(c ? (c.name||"")+" "+(c.name_en||"") : "");
+    if(!words.every(function(w){ return hay.indexOf(w) > -1; })) return null;
+    var score = (normSearch(pName(p)).indexOf(nq) === 0 ? 4 : 0) + (nm.indexOf(nq) > -1 ? 2 : 0) + (words.every(function(w){ return nm.indexOf(w) > -1; }) ? 1 : 0) + (productOutOfStockOverall(p) ? -3 : 0);
+    return { p:p, score:score };
+  }).filter(Boolean).sort(function(a, b){ return (b.score - a.score) || ((b.p.reviews||0) - (a.p.reviews||0)); }).map(function(x){ return x.p; });
+}
+function srchMark(name, q){
+  var safe = escHtml(name), raw = String(q || "").trim();
+  if(raw.length < 2) return safe;
+  var i = name.toLowerCase().indexOf(raw.toLowerCase());
+  if(i < 0) return safe;
+  return escHtml(name.slice(0, i))+'<mark>'+escHtml(name.slice(i, i+raw.length))+'</mark>'+escHtml(name.slice(i+raw.length));
+}
+function srchProdRow(p, q){
+  var imgs = productImages(p), out = productOutOfStockOverall(p), hasSizes = Array.isArray(p.sizes) && p.sizes.length;
+  var cat = CAT_MAP[p.cat] || {};
+  var price = hasSizes ? t("يبدأ من")+' '+fmt(minSizePrice(p))+' '+t("ج.م") : fmt(p.price)+' '+t("ج.م");
+  return '<button type="button" class="srch-prod" data-srch-prod="'+p.id+'">'
+    + '<span class="srch-prod-img" style="background:'+(cat.color || "var(--surface-2)")+'">'+(imgs.length ? '<img src="'+escHtml(imgs[0])+'" alt="" loading="lazy">' : categoryIcon(p.cat))+'</span>'
+    + '<span class="srch-prod-txt"><span class="srch-prod-name">'+srchMark(pName(p), q)+'</span>'
+      + '<span class="srch-prod-meta"><span class="srch-prod-price">'+price+'</span>'
+        + (!hasSizes && p.old ? '<span class="srch-prod-old">'+fmt(p.old)+'</span>' : '')
+        + (out ? '<span class="srch-prod-out">'+t("غير متوفر")+'</span>' : '<span>'+escHtml(catName(p.cat))+'</span>')
+      + '</span></span>'
+    + '<span class="srch-prod-go" aria-hidden="true">‹</span>'
+  + '</button>';
+}
+function renderSrchResults(q){
+  var el = srchPanelEl(); if(!el) return;
+  if(!CATALOG_READY){ el.hidden = true; return; }
+  var list = srchFindProducts(q), MAX = 6;
+  var h;
+  if(!list.length){
+    h = '<div class="srch-none"><b>'+t("مفيش لعبة بالاسم ده")+'</b>'+t("جرّب كلمة تانية أو اسم القسم")+'</div>';
+  } else {
+    h = '<div class="srch-prods">'+list.slice(0, MAX).map(function(p){ return srchProdRow(p, q); }).join("")+'</div>'
+      + (list.length > MAX ? '<button type="button" class="srch-all" data-srch-all>'+t("عرض كل النتايج")+' ('+fmt(list.length)+')</button>' : '');
   }
   el.innerHTML = h;
-  el.hidden = !h;
+  el.classList.add("has-results");
+  el.scrollTop = 0;
+  el.hidden = false;
 }
 (function(){
   var inp = document.getElementById("searchInput"); if(!inp) return;
-  inp.addEventListener("focus", function(){ if(!inp.value.trim()) renderSrchPanel(); });
-  inp.addEventListener("input", function(){ var el = document.getElementById("srchPanel"); if(inp.value.trim()){ if(el) el.hidden = true; } else renderSrchPanel(); });
+  inp.addEventListener("focus", function(){ if(normSearch(inp.value)) renderSrchResults(inp.value); else renderSrchPanel(); });
+  inp.addEventListener("input", function(){ if(normSearch(inp.value)) renderSrchResults(inp.value); else renderSrchPanel(); });
   inp.addEventListener("blur", function(){ setTimeout(function(){ var el = document.getElementById("srchPanel"); if(el) el.hidden = true; }, 120); });
   inp.addEventListener("keydown", function(e){ if(e.key === "Escape"){ var el = document.getElementById("srchPanel"); if(el && !el.hidden){ el.hidden = true; e.stopPropagation(); } } });
   document.getElementById("searchForm").addEventListener("submit", function(){ saveRecentSearch(inp.value); var el = document.getElementById("srchPanel"); if(el) el.hidden = true; inp.blur(); }, true);

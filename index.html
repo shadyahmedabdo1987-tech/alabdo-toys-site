@@ -1089,6 +1089,37 @@ html[dir="rtl"] .fs-truck{transform:scaleX(-1);}
 .fs-toggle-txt b{font-size:14px;}
 .fs-toggle-txt small{font-size:11.5px; color:var(--ink-soft); line-height:1.5;}
 
+.tr-card{display:flex; flex-direction:column; gap:12px;}
+.tr-master{display:flex; align-items:center; gap:12px; padding:12px; border-radius:14px; background:var(--surface-2); cursor:pointer;}
+.tr-master input{width:22px; height:22px; accent-color:var(--pink-deep); flex:none;}
+.tr-master span{display:flex; flex-direction:column; gap:2px; font-size:14px;}
+.tr-master small{font-size:12px; color:var(--ink-soft); font-weight:600;}
+.tr-list{display:flex; flex-direction:column; gap:10px;}
+.tr-item{display:flex; flex-direction:column; gap:10px; padding:12px; border-radius:14px; border:1.5px solid var(--border); background:var(--surface-3);}
+.tr-item.is-off{opacity:.6;}
+.tr-head{display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:13px; font-weight:800;}
+.tr-head .tr-cnt{font-size:12px; color:var(--ink-soft); font-weight:700;}
+.tr-row{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:10px;}
+.tr-f{display:flex; flex-direction:column; gap:5px; font-size:12.5px; font-weight:800; color:var(--ink-soft); min-width:0;}
+.tr-f input, .tr-f select{width:100%; min-width:0; padding:10px 12px; border-radius:12px; border:1.5px solid var(--border); background:var(--surface); color:var(--ink); font-family:inherit; font-size:15px; font-weight:800; font-variant-numeric:tabular-nums;}
+.tr-val{display:flex; gap:6px;}
+.tr-val input{flex:1;}
+.tr-val select{width:auto; flex:none; font-size:13px; padding:10px 8px;}
+.tr-sum{margin:0; font-size:13px; line-height:1.6; color:var(--ink); background:color-mix(in srgb, #f5b301 12%, var(--surface)); border-radius:10px; padding:8px 10px;}
+.tr-acts{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+.tr-acts label{display:flex; align-items:center; gap:8px; font-size:13px; font-weight:800; cursor:pointer;}
+.tr-acts label input{width:20px; height:20px; accent-color:var(--pink-deep);}
+.tr-acts button{border:1.5px solid var(--border); background:var(--surface); color:#d33; border-radius:10px; padding:7px 12px; font-family:inherit; font-weight:800; font-size:13px; cursor:pointer;}
+.tr-add{padding:14px; border:2px dashed var(--border); border-radius:14px; background:none; color:var(--pink-deep); font-weight:900; font-size:14px; cursor:pointer; font-family:inherit;}
+.tr-rules{margin:0; padding-inline-start:18px; display:flex; flex-direction:column; gap:4px; font-size:12.5px; line-height:1.7; color:var(--ink-soft);}
+.tier-box{display:flex; flex-direction:column; gap:6px; font-size:12.5px; line-height:1.6;}
+.tier-box[hidden]{display:none;}
+.tier-box p{margin:0;}
+.tier-on{padding:8px 11px; border-radius:12px; background:color-mix(in srgb, #f5b301 16%, var(--surface)); border:1px solid color-mix(in srgb, #f5b301 40%, transparent); color:var(--ink); font-weight:700;}
+.tier-guest{color:var(--ink-soft); font-weight:700;}
+.tier-next{display:flex; flex-direction:column; gap:6px; padding:8px 11px; border-radius:12px; background:var(--surface-2); color:var(--ink-soft); font-weight:700;}
+.tier-next b{color:var(--ink);}
+.tier-next i{display:block; height:6px; border-radius:99px; background:linear-gradient(90deg, #f5b301 var(--p), color-mix(in srgb, var(--ink) 10%, transparent) var(--p));}
 .cart-free-prog{display:flex; flex-direction:column; gap:6px; margin:2px 0 6px; padding:9px 11px; border-radius:12px; background:color-mix(in srgb, #18c08a 10%, var(--surface)); border:1px solid color-mix(in srgb, #18c08a 30%, transparent);}
 .cart-free-prog[hidden]{display:none;}
 .fsp-txt{font-size:12.5px; font-weight:700; color:var(--ink);}
@@ -2849,6 +2880,7 @@ try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("messa
             <button class="btn btn-primary btn-sm" id="adminProdReqBtn" type="button"><span data-i18n>🧸 طلبات توفير منتجات</span><span id="adminProdReqBadge"></span></button>
             <button class="btn btn-primary btn-sm" id="adminCustomersBtn" type="button" data-i18n>👥 بيانات العملاء</button>
             <button class="btn btn-primary btn-sm" id="adminCouponsBtn" type="button" data-i18n>🎟️ أكواد الخصم</button>
+            <button class="btn btn-primary btn-sm" id="adminTiersBtn" type="button" data-i18n>🏆 خصم المشتريات</button>
             <button class="btn btn-primary btn-sm" id="adminSalesBtn" type="button" data-i18n>💰 تقرير المبيعات</button>
             <button class="btn btn-primary btn-sm" id="adminBroadcastBtn" type="button" data-i18n>📣 العروض والإعلانات</button>
             <button class="btn btn-primary btn-sm" id="adminInventoryBtn" type="button" data-i18n>📦 تقرير المخزون</button>
@@ -3230,6 +3262,29 @@ try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("messa
         <div class="adm-group-title cpn-list-title" data-i18n>الأكواد اللي عملتها</div>
         <div id="adminCouponsList" style="display:flex; flex-direction:column; gap:12px;">
           <p style="color:var(--ink-soft); font-size:13px;" data-i18n>جاري التحميل...</p>
+        </div>
+      </div>
+
+      <div id="adminTiersPage" class="admin-wrap">
+        <div class="admin-bar">
+          <div><h1 style="font-size:22px;" data-i18n>🏆 خصم المشتريات</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;" data-i18n>لما إجمالي مشتريات العميل يوصل رقم انت بتحدده، بياخد خصم على المنتجات في كل طلباته الجاية بشكل تلقائي.</p></div>
+          <div class="admin-actions">
+            <button class="btn btn-outline btn-sm" id="adminTiersBackBtn" type="button" data-i18n>رجوع للوحة التحكم</button>
+          </div>
+        </div>
+        <div class="admin-card tr-card">
+          <label class="tr-master"><input type="checkbox" id="trEnabled"><span><b data-i18n>خصم المشتريات شغال</b><small data-i18n>اقفله لو عايز توقف كل المستويات مرة واحدة</small></span></label>
+          <div id="trStatus" class="bn-status" data-i18n>جاري التحميل...</div>
+          <div id="trList" class="tr-list"></div>
+          <button type="button" class="tr-add" id="trAdd" data-i18n>➕ أضف مستوى خصم</button>
+          <ul class="tr-rules">
+            <li data-i18n>المشتريات بتتحسب من كل طلبات العميل المسجّل اللي فاتت (المنتجات من غير الشحن). الطلبات اللي بتمسحها مش بتتحسب.</li>
+            <li data-i18n>الخصم بيتطبق على المنتجات في الفاتورة، والعميل بيشوفه في السلة قبل ما يأكد الطلب.</li>
+            <li data-i18n>لو العميل وصل أكتر من مستوى بياخد خصم أعلى مستوى وصله.</li>
+            <li data-i18n>ما بيتجمعش مع كود الخصم: لو العميل استخدم كود بياخد الخصم الأكبر فيهم بس.</li>
+            <li data-i18n>العميل لازم يكون مسجّل دخول. الضيف (من غير حساب) مالوش خصم مشتريات.</li>
+          </ul>
+          <button type="button" class="btn btn-primary btn-block" id="trSave" data-i18n>💾 احفظ</button>
         </div>
       </div>
 
@@ -4018,7 +4073,7 @@ function orderInvoiceHtml(o){
   var totalsBlock = hasShipping
     ? '<div style="display:flex; flex-direction:column; gap:3px; font-size:12.5px; border-top:1.5px solid var(--border); padding-top:8px;">'
         + '<div style="display:flex; justify-content:space-between; color:var(--ink-soft);"><span>'+t("الإجمالي الفرعي")+'</span><span class="tabular">'+fmt(subtotal)+' '+cur+'</span></div>'
-        + (hasDiscount ? '<div class="is-discount" style="display:flex; justify-content:space-between; gap:8px; color:color-mix(in srgb, #1fb87f 70%, var(--ink)); font-weight:700;"><span>🎟️ '+t("خصم الكود")+' <bdi dir="ltr">'+escHtml(o.coupon||"")+'</bdi> ('+(+o.couponPercent||0)+'%)</span><span class="tabular">− '+fmt(+o.discount)+' '+cur+'</span></div>' : '')
+        + (hasDiscount ? '<div class="is-discount" style="display:flex; justify-content:space-between; gap:8px; color:color-mix(in srgb, #1fb87f 70%, var(--ink)); font-weight:700;"><span>'+(o.tier ? '🏆 '+t("خصم المشتريات")+' ('+tierValueText(o.tier)+')' : '🎟️ '+t("خصم الكود")+' <bdi dir="ltr">'+escHtml(o.coupon||"")+'</bdi> ('+(+o.couponPercent||0)+'%)')+'</span><span class="tabular">− '+fmt(+o.discount)+' '+cur+'</span></div>' : '')
         + '<div style="display:flex; justify-content:space-between; color:var(--ink-soft);"><span>'+t("الشحن")+'</span><span class="tabular">'+fmt(o.shipping)+' '+cur+'</span></div>'
         + '<div style="display:flex; justify-content:space-between; font-weight:800; font-size:13.5px; padding-top:4px;"><span>'+t("الإجمالي الكلي")+'</span><span class="tabular">'+fmt(o.total)+' '+cur+'</span></div>'
       + '</div>'
@@ -5685,7 +5740,80 @@ var SHIPPING_COST = 100;
 /* كود الخصم المتطبّق على السلة دلوقتي ({code, percent}) - بيتأكد منه السيرفر
    تاني وقت تسجيل الطلب، والخصم على المنتجات بس (مش على الشحن). */
 var CART_COUPON = null;
-function couponDiscount(){ return (CART_COUPON && cartItems().length) ? Math.round(cartTotal() * CART_COUPON.percent / 100) : 0; }
+function codeDiscount(){ return (CART_COUPON && cartItems().length) ? Math.round(cartTotal() * CART_COUPON.percent / 100) : 0; }
+/* ---------- خصم المشتريات (حسب إجمالي مشتريات العميل) ----------
+   الأدمن بيحدد مستويات: لو مشتريات العميل اللي فاتت وصلت رقم معيّن ياخد
+   خصم (نسبة أو مبلغ) على المنتجات. ما بيتجمعش مع كود الخصم: بيتطبق الأكبر.
+   السيرفر بيحسب نفس الحسبة بالظبط وقت تسجيل الطلب (orders.js). */
+var TIERS_PUB = null, MY_TIER = null, myTierAt = 0, myTierBusy = false;
+function orderEditDiscount(order, sub){
+  if(order.coupon) return Math.round(sub * (+order.couponPercent||0) / 100);
+  if(order.tier) return tierCalc(order.tier, sub);
+  return 0;
+}
+function tierCalc(tier, sub){
+  sub = Math.max(0, +sub || 0); if(!tier || !sub) return 0;
+  return tier.type === "fixed" ? Math.min(sub, Math.round(+tier.value || 0)) : Math.round(sub * (+tier.value || 0) / 100);
+}
+function tierValueText(tier){ return tier.type === "fixed" ? fmt(tier.value)+" "+t("ج.م") : fmt(tier.value)+"%"; }
+function myTierNow(){
+  var c = getCustomerProfile();
+  return (c && MY_TIER && MY_TIER.cid === c.identifier && MY_TIER.tier) ? MY_TIER.tier : null;
+}
+function tierDiscountNow(){ return cartItems().length ? tierCalc(myTierNow(), cartTotal()) : 0; }
+/* مين اللي متطبق: "tier" لو خصم المشتريات أكبر من الكود أو قده، "code" لو الكود أكبر */
+function discountSource(){
+  var r = tierDiscountNow(), c = codeDiscount();
+  if(r > 0 && r >= c) return "tier";
+  return c > 0 ? "code" : "";
+}
+function couponDiscount(){ var src = discountSource(); return src === "tier" ? tierDiscountNow() : (src === "code" ? codeDiscount() : 0); }
+function discountLabel(){
+  if(discountSource() === "tier"){ var tr = myTierNow(); return "🏆 "+t("خصم المشتريات")+" ("+tierValueText(tr)+")"; }
+  return "🎟️ "+t("خصم الكود")+" "+(CART_COUPON ? CART_COUPON.code+" ("+CART_COUPON.percent+"%)" : "");
+}
+function loadTiersPublic(){
+  fetch("/api/tiers", { cache:"no-store" }).then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(res){ if(res && res.ok){ TIERS_PUB = res.enabled ? (res.tiers || []) : []; if(document.getElementById("cartDrawer") && document.getElementById("cartDrawer").classList.contains("show")) renderCartFoot(); } })
+    .catch(function(){});
+}
+function refreshMyTier(force){
+  var c = getCustomerProfile();
+  if(!c){ MY_TIER = null; return; }
+  if(myTierBusy || (!force && MY_TIER && MY_TIER.cid === c.identifier && Date.now() - myTierAt < 30000)) return;
+  myTierBusy = true;
+  fetch("/api/tiers?me=1", { headers: customerAuthHeaders(), cache:"no-store" }).then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(res){
+      myTierBusy = false; myTierAt = Date.now();
+      if(!res || !res.ok) return;
+      var before = JSON.stringify(MY_TIER);
+      MY_TIER = { cid: c.identifier, spend: +res.spend || 0, tier: res.tier || null, next: res.next || null, enabled: !!res.enabled };
+      if(before !== JSON.stringify(MY_TIER)){
+        if(cartCheckout.step === "payment") renderCartPaymentStep(); else renderCartFoot();
+      }
+    }).catch(function(){ myTierBusy = false; });
+}
+/* سطر صغير في السلة: إجمالي مشترياتك + فاضلك قد إيه للخصم اللي بعده */
+function renderTierBox(hasItems){
+  var box = document.getElementById("tierBox");
+  if(!box){
+    var cb = document.getElementById("couponBox"); if(!cb) return;
+    box = document.createElement("div"); box.id = "tierBox"; box.className = "tier-box"; cb.parentNode.insertBefore(box, cb);
+  }
+  var c = getCustomerProfile(), h = "";
+  if(hasItems && c && MY_TIER && MY_TIER.cid === c.identifier && MY_TIER.enabled){
+    var tr = MY_TIER.tier, nx = MY_TIER.next;
+    if(tr) h += '<p class="tier-on">🏆 '+t("مبروك! مشترياتك وصلت")+' '+fmt(tr.min)+' '+t("ج.م")+' — '+t("ليك خصم")+' <b>'+tierValueText(tr)+'</b> '+t("على المنتجات")+'</p>';
+    if(nx){
+      var left = Math.max(0, nx.min - MY_TIER.spend), pct = Math.max(4, Math.min(100, Math.round(MY_TIER.spend / nx.min * 100)));
+      h += '<div class="tier-next"><span>🎯 '+t("فاضلك")+' <b class="tabular">'+fmt(Math.ceil(left))+' '+t("ج.م")+'</b> '+t("مشتريات وتاخد خصم")+' <b>'+tierValueText(nx)+'</b> '+t("على طلباتك الجاية")+'</span><i style="--p:'+pct+'%"></i></div>';
+    }
+  } else if(hasItems && !c && TIERS_PUB && TIERS_PUB.length){
+    var first = TIERS_PUB[0];
+    h = '<p class="tier-guest">🏆 '+t("سجّل دخول عشان مشترياتك تتحسب — لما توصل")+' '+fmt(first.min)+' '+t("ج.م")+' '+t("تاخد خصم")+' '+tierValueText(first)+'</p>';
+  }
+  box.innerHTML = h; box.hidden = !h;
+}
 /* الشحن مجاني لو كل منتجات السلة عليها "شحن مجاني" (والسيرفر بيحسبه بنفس القاعدة) */
 function cartFreeShipping(){ var it = cartItems(); return it.length > 0 && it.every(function(x){ return !!x.p.freeShipping; }); }
 /* وأي طلب إجمالي منتجاته (بعد خصم الكود) يوصل FREE_SHIP_MIN شحنه مجاني */
@@ -5735,6 +5863,7 @@ function renderCouponBox(hasItems){
     box.innerHTML = '<div class="coupon-chip"><span class="coupon-chip-ic" aria-hidden="true">🎟️</span>'
       + '<span class="coupon-chip-tx"><strong dir="ltr">'+escHtml(CART_COUPON.code)+'</strong><span>'+t("خصم")+' '+CART_COUPON.percent+'% '+t("على المنتجات")+(+CART_COUPON.left > 1 ? ' · '+t("باقيلك")+' '+fmt(CART_COUPON.left)+' '+t("استخدامات") : '')+'</span></span>'
       + '<button type="button" class="coupon-chip-x" id="couponRemove" aria-label="'+t("إلغاء الكود")+'">✕</button></div>';
+    if(discountSource() === "tier") box.insertAdjacentHTML("beforeend", '<p class="coupon-hint">🏆 '+t("خصم المشتريات بتاعك أكبر من الكود، فهيتطبق هو والكود مش هيتحسب عليك.")+'</p>');
     document.getElementById("couponRemove").addEventListener("click", function(){ CART_COUPON = null; couponMsg = null; renderCartFoot(); });
     return;
   }
@@ -6050,11 +6179,13 @@ function renderCartFoot(){
     var dv = couponDiscount();
     dRow.hidden = !dv;
     if(dv){
-      document.getElementById("cartDiscountLabel").textContent = t("خصم الكود")+" ("+CART_COUPON.percent+"%)";
+      document.getElementById("cartDiscountLabel").textContent = discountLabel();
       document.getElementById("cartDiscount").textContent = "− "+fmt(dv)+" "+t("ج.م");
     }
   }
   renderCouponBox(items.length);
+  renderTierBox(items.length);
+  if(items.length) refreshMyTier(false);
   var shipEl = document.getElementById("cartShipping");
   if(items.length && (cartFreeShipping() || cartReachedFreeMin())) shipEl.innerHTML = '<b class="ship-free">🚚 '+t("مجاني")+'</b>';
   else if(!items.length) shipEl.textContent = "0 "+t("ج.م");
@@ -6131,7 +6262,7 @@ function renderCartPaymentStep(){
   var pvBlocked = paymentMethodNeedsProof(cartCheckout.method) && (!cartCheckout.proofData || !cartCheckout.proofCheck || (cartCheckout.proofCheck.state !== "ok" && cartCheckout.proofCheck.state !== "manual"));
   var submitBtnHtml = '<button type="button" class="btn btn-primary" style="flex:1;" id="paymentSubmitBtn"'+(pvBlocked ? ' disabled aria-disabled="true"' : '')+'>'+t("إتمام الطلب")+'</button>';
 
-  container.innerHTML = (couponDiscount() ? '<div class="cart-total-row sub is-discount"><span>🎟️ '+t("خصم الكود")+' '+escHtml(CART_COUPON.code)+' ('+CART_COUPON.percent+'%)</span><span class="tabular">− '+fmt(couponDiscount())+' '+t('ج.م')+'</span></div>' : '')
+  container.innerHTML = (couponDiscount() ? '<div class="cart-total-row sub is-discount"><span>'+escHtml(discountLabel())+'</span><span class="tabular">− '+fmt(couponDiscount())+' '+t('ج.م')+'</span></div>' : '')
     + '<div class="cart-total-row sub"><span>'+t("الشحن")+' ('+escHtml(t(checkoutGov()||""))+')</span><span class="tabular">'+(cartShippingCost() ? fmt(cartShippingCost())+' '+t('ج.م') : '<b class="ship-free">🚚 '+t("مجاني")+'</b>')+'</span></div>'
     + '<div class="cart-total-row grand"><span>'+t("الإجمالي الكلي")+'</span><span class="tabular">'+fmt(grand)+' '+t('ج.م')+'</span></div>'
     + '<p class="payment-step-label">'+t("اختر وسيلة الدفع")+'</p>'
@@ -6566,6 +6697,7 @@ function submitOrderNow(e){
       resetCheckoutFields();
       resetCartCheckout();
       CART_COUPON = null;
+      MY_TIER = null; setTimeout(function(){ refreshMyTier(true); }, 1500);
       showOrderSuccessModal(f.phone);
     } else if(res && /^proof_/.test(res.error||"")){
       cartCheckout.proofCheck = { state:"fail", reason: res.error.replace(/^proof_/, ""), amount: res.amount, total: res.total != null ? res.total : grand };
@@ -6870,6 +7002,7 @@ function loadBanners(slot){
   });
 })();
 
+setTimeout(function(){ loadTiersPublic(); refreshMyTier(true); }, 1200);
 function loadHomePromo(){
   if(isAdminApp() || isAdminAuthed()) return;
   fetch("/api/promo", { cache:"no-store" }).then(function(r){ return r.ok ? r.json() : null; })
@@ -9499,6 +9632,7 @@ function renderAdminOrdersPage(){
           + '</div>'
           + '<div class="order-card-items">'+itemsTxt+'</div>'
           + (o.coupon ? '<div class="order-card-coupon">🎟️ '+t("كود خصم")+' <bdi dir="ltr">'+escHtml(o.coupon)+'</bdi> — '+(+o.couponPercent||0)+'%</div>' : '')
+          + (o.tier ? '<div class="order-card-coupon">🏆 '+t("خصم المشتريات")+' '+tierValueText(o.tier)+' — '+t("مشترياته قبلها")+' '+fmt(o.tier.spend||0)+' '+t("ج.م")+'</div>' : '')
           + (orderHasProof(o) ? '<div class="order-card-proof">🧾 '+t("إيصال تحويل مرفق")+' — '+paymentMethodLabel(o.paymentMethod)+'</div>' : '')
           + '<div class="order-card-bottom">'
             + '<span class="order-card-open">'+t("عرض الفاتورة كاملة ⟵")+'</span>'
@@ -9667,7 +9801,7 @@ function showAdminOrderEditForm(order){
   }
   function updateTotal(){
     var sub = items.reduce(function(sum, it){ return sum + (+it.qty||0)*(+it.price||0); }, 0);
-    var total = sub - (order.coupon ? Math.round(sub * (+order.couponPercent||0) / 100) : 0) + editShipping();
+    var total = sub - orderEditDiscount(order, sub) + editShipping();
     document.getElementById("aoeTotal").textContent = fmt(total)+" "+t("ج.م");
   }
   function renderItemRows(focusIdx){
@@ -9753,7 +9887,7 @@ function showAdminOrderEditForm(order){
   var pay = { method: order.paymentMethod || "cash", img: null, remove: false, check: null, seq: 0 };
   function currentEditTotal(){
     var sub = items.reduce(function(sum, it){ return sum + (+it.qty||0)*(+it.price||0); }, 0);
-    return sub - (order.coupon ? Math.round(sub * (+order.couponPercent||0) / 100) : 0) + editShipping();
+    return sub - orderEditDiscount(order, sub) + editShipping();
   }
   /* مراجعة الإيصال بالذكاء الاصطناعي (نفس مراجعة إيصال العميل) */
   function aiCheckProof(){
@@ -9844,7 +9978,7 @@ function showAdminOrderEditForm(order){
       }
     }
     var sub2 = cleanItems.reduce(function(sum, it){ return sum + it.qty*it.price; }, 0);
-    var total = sub2 - (order.coupon ? Math.round(sub2 * (+order.couponPercent||0) / 100) : 0) + editShipping();
+    var total = sub2 - orderEditDiscount(order, sub2) + editShipping();
     var btn = this;
     btn.disabled = true;
     fetch("/api/orders", {
@@ -10683,7 +10817,7 @@ function renderSalesPage(){
       + '</div></section>';
   }
   h += '<div class="sal-two">' + split(t("حسب طريقة الدفع"), S.pay, "💳") + split(t("حسب المحافظة"), S.gov, "📍") + '</div>';
-  if(S.discount) h += '<p class="sal-note">'+t("الخصومات بأكواد الخصم في الفترة دي")+': <b class="tabular">'+salMoney(S.discount)+' '+t("ج.م")+'</b> '+t("(مخصومة من الإجمالي)")+'</p>';
+  if(S.discount) h += '<p class="sal-note">'+t("الخصومات (أكواد الخصم وخصم المشتريات) في الفترة دي")+': <b class="tabular">'+salMoney(S.discount)+' '+t("ج.م")+'</b> '+t("(مخصومة من الإجمالي)")+'</p>';
   body.innerHTML = h;
   SALES.lastS = S;
   salDrawLines();
@@ -11134,7 +11268,7 @@ function salpRender(S, logo, mode){
       var r = Math.floor(i/3), c = i%3, x = W - M - (c+1)*bw - c*gap;
       tile(ctx, x, y + r*(bh+gap), bw, bh, it[0], it[1], it[2], it[3]);
     });
-    if(S.discount) T(ctx, t("الخصومات بأكواد الخصم")+": "+salMoney(S.discount)+cur+" "+t("(مخصومة من الإجمالي)"), W - M, y + 2*bh + gap + 16, invpFont(400, 11.5), P.muted);
+    if(S.discount) T(ctx, t("الخصومات (أكواد + خصم المشتريات)")+": "+salMoney(S.discount)+cur+" "+t("(مخصومة من الإجمالي)"), W - M, y + 2*bh + gap + 16, invpFont(400, 11.5), P.muted);
   }});
   /* الرسم */
   if(S.buckets.length > 1){
@@ -12131,6 +12265,119 @@ document.getElementById("cpnCreate").addEventListener("click", function(){
     .catch(function(){ btn.disabled = false; err.textContent = t("⚠️ تعذر الاتصال بالسيرفر."); err.hidden = false; });
 });
 document.getElementById("adminCouponsBtn").addEventListener("click", openAdminCouponsPage);
+
+/* ---------- (الإدارة) خصم المشتريات ---------- */
+var ADMIN_TR = { tiers:null, enabled:true, counts:{}, dirty:false, busy:false };
+function openAdminTiersPage(){
+  document.getElementById("adminDashboard").classList.remove("active");
+  document.getElementById("adminTiersPage").classList.add("active");
+  window.scrollTo({top:0, behavior:"instant" in document.documentElement.style ? "instant" : "auto"});
+  renderAdminTiersPage();
+}
+function closeAdminTiersPage(){
+  document.getElementById("adminTiersPage").classList.remove("active");
+  document.getElementById("adminDashboard").classList.add("active");
+}
+function trSummary(tr){
+  if(!(+tr.min > 0) || !(+tr.value > 0)) return t("اكتب الرقم وقيمة الخصم");
+  return t("لو إجمالي مشتريات العميل وصل")+" "+fmt(+tr.min)+" "+t("ج.م")+" "+t("ياخد خصم")+" "+tierValueText({ type:tr.type, value:+tr.value })+" "+t("على المنتجات في كل طلب بعد كده");
+}
+function trStatusText(){
+  if(ADMIN_TR.dirty) return "✏️ "+t("في تغييرات لسه ماتحفظتش — دوس احفظ");
+  var on = (ADMIN_TR.tiers || []).filter(function(x){ return x.active; }).length;
+  if(!ADMIN_TR.tiers || !ADMIN_TR.tiers.length) return t("لسه مفيش مستويات — دوس \"أضف مستوى خصم\"");
+  if(!ADMIN_TR.enabled) return "⏸️ "+t("خصم المشتريات متوقف — مفيش عميل بياخده دلوقتي");
+  if(!on) return "⏸️ "+t("كل المستويات موقفة");
+  return "✅ "+t("شغال")+": "+fmt(on)+" "+(on === 1 ? t("مستوى") : t("مستويات"));
+}
+function trDraw(){
+  var list = document.getElementById("trList"), tiers = ADMIN_TR.tiers || [];
+  document.getElementById("trEnabled").checked = !!ADMIN_TR.enabled;
+  list.innerHTML = tiers.map(function(tr, i){
+    var cnt = ADMIN_TR.counts[tr.id];
+    return '<div class="tr-item'+(tr.active && ADMIN_TR.enabled ? '' : ' is-off')+'" data-tr-i="'+i+'">'
+      + '<div class="tr-head"><span>🏆 '+t("مستوى")+' '+fmt(i + 1)+'</span>'+(cnt != null ? '<span class="tr-cnt">👥 '+fmt(cnt)+' '+t("عميل وصلوه")+'</span>' : '')+'</div>'
+      + '<div class="tr-row">'
+        + '<label class="tr-f">'+t("لما مشترياته توصل (ج.م)")+'<input type="number" inputmode="numeric" min="1" step="1" data-tr-min value="'+(tr.min || "")+'" placeholder="5000"></label>'
+        + '<label class="tr-f">'+t("قيمة الخصم")+'<span class="tr-val"><input type="number" inputmode="decimal" min="0" step="any" data-tr-val value="'+(tr.value || "")+'" placeholder="10"><select data-tr-type aria-label="'+escHtml(t("نوع الخصم"))+'"><option value="percent">%</option><option value="fixed">'+t("ج.م")+'</option></select></span></label>'
+      + '</div>'
+      + '<p class="tr-sum">'+escHtml(trSummary(tr))+'</p>'
+      + '<div class="tr-acts"><label><input type="checkbox" data-tr-on'+(tr.active ? ' checked' : '')+'> '+t("شغال")+'</label><button type="button" data-tr-del>🗑️ '+t("مسح")+'</button></div>'
+    + '</div>';
+  }).join("");
+  Array.prototype.forEach.call(list.querySelectorAll("[data-tr-type]"), function(sel, i){ sel.value = tiers[i].type || "percent"; });
+  var st = document.getElementById("trStatus"); st.textContent = trStatusText(); st.classList.toggle("is-dirty", ADMIN_TR.dirty);
+}
+function renderAdminTiersPage(){
+  if(ADMIN_TR.dirty && ADMIN_TR.tiers){ trDraw(); return; }
+  var st = document.getElementById("trStatus");
+  fetch("/api/tiers?admin=1", { headers: adminAuthHeaders(), cache:"no-store" })
+    .then(function(r){ if(r.status === 404) throw "missing"; return r.json(); })
+    .then(function(res){
+      if(!res || !res.ok) throw 0;
+      ADMIN_TR.tiers = (res.tiers || []).map(function(x){ return { id:x.id, min:x.min, type:x.type, value:x.value, active:x.active !== false }; });
+      ADMIN_TR.enabled = res.enabled !== false || !ADMIN_TR.tiers.length;
+      ADMIN_TR.counts = res.counts || {}; ADMIN_TR.dirty = false;
+      trDraw();
+    })
+    .catch(function(e){ st.textContent = e === "missing" ? t("⚠️ ارفع ملفات خصم المشتريات (tiers.js و _tiers.js) الأول") : t("تعذر التحميل."); });
+}
+function trChanged(redraw){
+  ADMIN_TR.dirty = true;
+  if(redraw) trDraw();
+  else { var st = document.getElementById("trStatus"); st.textContent = trStatusText(); st.classList.add("is-dirty"); }
+}
+document.getElementById("trList").addEventListener("input", function(e){
+  var row = e.target.closest("[data-tr-i]"); if(!row) return;
+  var tr = ADMIN_TR.tiers[+row.dataset.trI];
+  if(e.target.matches("[data-tr-min]")) tr.min = Math.round(+e.target.value || 0);
+  else if(e.target.matches("[data-tr-val]")) tr.value = +e.target.value || 0;
+  else return;
+  row.querySelector(".tr-sum").textContent = trSummary(tr);
+  trChanged(false);
+});
+document.getElementById("trList").addEventListener("change", function(e){
+  var row = e.target.closest("[data-tr-i]"); if(!row) return;
+  var tr = ADMIN_TR.tiers[+row.dataset.trI];
+  if(e.target.matches("[data-tr-type]")){ tr.type = e.target.value; row.querySelector(".tr-sum").textContent = trSummary(tr); trChanged(false); }
+  else if(e.target.matches("[data-tr-on]")){ tr.active = e.target.checked; row.classList.toggle("is-off", !(tr.active && ADMIN_TR.enabled)); trChanged(false); }
+});
+document.getElementById("trList").addEventListener("click", function(e){
+  var del = e.target.closest("[data-tr-del]"); if(!del) return;
+  ADMIN_TR.tiers.splice(+del.closest("[data-tr-i]").dataset.trI, 1);
+  trChanged(true);
+});
+document.getElementById("trAdd").addEventListener("click", function(){
+  if(!ADMIN_TR.tiers){ showToast(t("استنى لحد ما الصفحة تحمّل")); return; }
+  if(ADMIN_TR.tiers.length >= 20){ showToast(t("⚠️ أقصى عدد 20 مستوى")); return; }
+  var last = ADMIN_TR.tiers[ADMIN_TR.tiers.length - 1];
+  ADMIN_TR.tiers.push({ id:"tr_"+Date.now().toString(36), min: last ? (+last.min || 0) * 2 : 5000, type: last ? last.type : "percent", value: last ? (last.type === "fixed" ? (+last.value || 0) * 2 : Math.min(90, (+last.value || 0) + 5)) : 10, active:true });
+  trChanged(true);
+  var items = document.querySelectorAll("#trList .tr-item"); var el = items[items.length - 1];
+  if(el){ el.scrollIntoView({ block:"center", behavior:"smooth" }); var inp = el.querySelector("[data-tr-min]"); if(inp) inp.focus(); }
+});
+document.getElementById("trEnabled").addEventListener("change", function(){
+  if(!ADMIN_TR.tiers) return;
+  ADMIN_TR.enabled = this.checked; trChanged(true);
+});
+document.getElementById("trSave").addEventListener("click", function(){
+  if(ADMIN_TR.busy || !ADMIN_TR.tiers) return;
+  var bad = ADMIN_TR.tiers.findIndex(function(x){ return !(+x.min > 0) || !(+x.value > 0) || (x.type === "percent" && +x.value > 90); });
+  if(bad > -1){ showToast("⚠️ "+t("مستوى")+" "+fmt(bad + 1)+": "+t("اكتب رقم المشتريات وقيمة الخصم صح (النسبة لحد 90%)")); return; }
+  var seen = {}, dup = ADMIN_TR.tiers.some(function(x){ if(seen[x.min]) return true; seen[x.min] = 1; return false; });
+  if(dup){ showToast(t("⚠️ في مستويين بنفس رقم المشتريات — غيّر واحد فيهم")); return; }
+  var btn = this; ADMIN_TR.busy = true; btn.disabled = true;
+  fetch("/api/tiers", { method:"PUT", headers: Object.assign({ "content-type":"application/json" }, adminAuthHeaders()), body: JSON.stringify({ enabled: ADMIN_TR.enabled, tiers: ADMIN_TR.tiers }) })
+    .then(function(r){ return r.json().then(function(j){ return { status:r.status, body:j }; }); })
+    .then(function(res){
+      ADMIN_TR.busy = false; btn.disabled = false;
+      if(res.body && res.body.ok){ ADMIN_TR.dirty = false; showToast("✅ "+t("خصم المشتريات اتحفظ")); renderAdminTiersPage(); }
+      else showToast(res.status === 404 || res.status === 405 ? t("⚠️ ارفع ملفات خصم المشتريات (tiers.js و _tiers.js) الأول") : t("⚠️ تعذر الحفظ، جرّب تاني."));
+    })
+    .catch(function(){ ADMIN_TR.busy = false; btn.disabled = false; showToast(t("⚠️ تعذر الحفظ، جرّب تاني.")); });
+});
+document.getElementById("adminTiersBtn").addEventListener("click", openAdminTiersPage);
+document.getElementById("adminTiersBackBtn").addEventListener("click", closeAdminTiersPage);
 document.getElementById("adminCouponsBackBtn").addEventListener("click", closeAdminCouponsPage);
 
 /* ---------- صفحة "بيانات العملاء" - كل حسابات العملاء المسجّلين، بصلاحية
@@ -12977,6 +13224,7 @@ var ADM = null;
     inquiries: { page:"adminInquiriesPage", open:openAdminInquiriesPage, render:renderAdminInquiriesPage, title:"استفسارات العملاء" },
     customers: { page:"adminCustomersPage", open:openAdminCustomersPage, render:renderAdminCustomersPage, title:"بيانات العملاء" },
     coupons:   { page:"adminCouponsPage",   open:openAdminCouponsPage,   render:renderAdminCouponsPage,   title:"أكواد الخصم" },
+    tiers:     { page:"adminTiersPage",     open:openAdminTiersPage,     render:renderAdminTiersPage,     title:"خصم المشتريات" },
     inventory: { page:"adminInventoryPage", open:openAdminInventoryPage, render:renderInventoryPage,      title:"تقرير المخزون" },
     sales:     { page:"adminSalesPage",     open:openAdminSalesPage,     render:renderSalesPage,          title:"تقرير المبيعات" },
     broadcast: { page:"adminBroadcastPage", open:openAdminBroadcastPage, render:renderAdminBroadcastPage, title:"العروض والإعلانات" },
@@ -12985,7 +13233,7 @@ var ADM = null;
   };
   var SCREENS = { home:"admHome", products:"admProducts", form:"admFormScreen", cats:"admCatsScreen", settings:"admSettingsScreen", more:"admMore" };
   var TITLES = { home:"لوحة التحكم", products:"المنتجات", form:"إضافة منتج", more:"المزيد", cats:"الأقسام", settings:"إعدادات الحساب" };
-  var TAB_OF = { home:"home", products:"products", form:"products", orders:"orders", more:"more", cats:"more", settings:"more", stock:"more", analytics:"more", inquiries:"more", customers:"more", coupons:"more", inventory:"more", sales:"more", broadcast:"more", prodreq:"more", reviews:"more" };
+  var TAB_OF = { home:"home", products:"products", form:"products", orders:"orders", more:"more", cats:"more", settings:"more", stock:"more", analytics:"more", inquiries:"more", customers:"more", coupons:"more", tiers:"more", inventory:"more", sales:"more", broadcast:"more", prodreq:"more", reviews:"more" };
   var cur = null, parentOf = {}, shownOnce = false;
   var pendingDelta = {}, flushTimer = null;
   var list = { filter:"all", q:"" };
@@ -13616,6 +13864,7 @@ var ADM = null;
       + li("reviews", "⭐", t("تقييمات العملاء"), t("عدّل أو اخفي أو امسح تقييمات المنتجات"))
       + li("broadcast", "📣", t("العروض والإعلانات"), t("إشعارات، إعلان الشاشة الرئيسية، والبانرات"))
       + li("coupons", "🎟️", t("أكواد الخصم"), t("اعمل كود خصم بالنسبة اللي تختارها"))
+      + li("tiers", "🏆", t("خصم المشتريات"), t("خصم تلقائي لما مشتريات العميل توصل رقم معيّن"))
       + li("pvdiag", "🧪", t("فحص مراجعة الإيصالات"), t("اتأكد إن مراجعة فودافون كاش وإنستاباي شغالة"))
       + li("analytics", "📊", t("تحليل الزوار"), "")
     + '</div>'

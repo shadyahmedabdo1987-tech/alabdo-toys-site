@@ -12,6 +12,7 @@
 # pro: offers notifications (OffersJob), go: deep links, nicer offline screen
 # haptics: AlAbdoNative.haptic (add to cart / checkout taps / order success)
 # build 19: same app as 2.0.18, new version number for Google Play
+# offers: check on every app open + keep offers while notifications are off
 name: Build Android APK
 
 on:
@@ -720,6 +721,21 @@ jobs:
                   super.onStart();
                   foreground = true;
                   CartReminderJob.cancelAll(this);
+                  /* أول ما العميل يفتح التطبيق بنشيّك على العروض الجديدة على طول
+                     (من غير ما نستنى معاد الفحص اللي كل ساعتين) */
+                  final android.content.Context appCtx = getApplicationContext();
+                  new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                      @Override public void run() { OffersJob.checkNowAsync(appCtx, false); }
+                  }, 2500);
+              }
+
+              @Override
+              public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+                  super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+                  /* العميل لسه موافق على الإشعارات: نوريه العروض اللي فاتته */
+                  if (requestCode == 2001 && grantResults != null && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                      OffersJob.checkNowAsync(getApplicationContext(), true);
+                  }
               }
 
               @Override
@@ -1154,8 +1170,37 @@ jobs:
                   try { js.schedule(b.build()); } catch (Exception e) { /* ignore */ }
               }
 
+              static long lastCheck = 0L;
+
+              /* فحص فوري (لما التطبيق يتفتح / لما الإشعارات تتفعّل) - مش أكتر من
+                 مرة كل 3 دقايق عشان ما نضغطش على السيرفر */
+              static void checkNowAsync(final Context c, boolean force) {
+                  long now = System.currentTimeMillis();
+                  if (!force && now - lastCheck < 3L * 60L * 1000L) return;
+                  lastCheck = now;
+                  new Thread(new Runnable() {
+                      @Override public void run() {
+                          try { check(c); } catch (Exception e) { /* ignore */ }
+                      }
+                  }).start();
+              }
+
+              /* الإشعارات مسموحة؟ (إذن أندرويد 13 + إن العميل ما قفلش إشعارات
+                 التطبيق أو قناة العروض من الإعدادات) */
+              static boolean canNotify(Context c) {
+                  NotificationManager nm = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
+                  if (nm == null) return false;
+                  if (Build.VERSION.SDK_INT >= 24 && !nm.areNotificationsEnabled()) return false;
+                  if (Build.VERSION.SDK_INT >= 26) {
+                      NotificationChannel ch = nm.getNotificationChannel(CHANNEL);
+                      if (ch != null && ch.getImportance() == NotificationManager.IMPORTANCE_NONE) return false;
+                  }
+                  return true;
+              }
+
               @Override
               public boolean onStartJob(final JobParameters params) {
+                  lastCheck = System.currentTimeMillis();
                   new Thread(new Runnable() {
                       @Override public void run() {
                           try { check(getApplicationContext()); } catch (Exception e) { /* ignore */ }
@@ -1168,9 +1213,15 @@ jobs:
               @Override
               public boolean onStopJob(JobParameters params) { return true; }
 
-              static void check(Context c) throws Exception {
+              static synchronized void check(Context c) throws Exception {
+                  /* لو الإشعارات مقفولة ما بنسألش السيرفر خالص وما بنحرّكش "since"،
+                     فالعروض ما بتضيعش وبتوصل أول ما الإشعارات تتفعّل (بس اللي
+                     اتبعتت آخر 3 أيام، عشان ما يوصلوش عروض قديمة خلصت). */
+                  if (!canNotify(c)) return;
                   SharedPreferences sp = c.getSharedPreferences(PREFS, MODE_PRIVATE);
                   long since = sp.getLong("since", 0L);
+                  long floor = System.currentTimeMillis() - 3L * 24L * 60L * 60L * 1000L;
+                  if (since < floor) since = floor;
                   HttpURLConnection con = (HttpURLConnection) new URL(API + since).openConnection();
                   con.setConnectTimeout(15000);
                   con.setReadTimeout(15000);

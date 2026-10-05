@@ -299,6 +299,7 @@ export async function onRequestPut({ request, env }){
   if(idx === -1) return json({ ok:false, error:"not_found" }, 404);
 
   var o = list[idx];
+  var oldItems = Array.isArray(o.items) ? o.items.slice() : [];
   o.items = body.items;
   o.total = +body.total || 0;
   /* the admin can change the shipping fee or make it free (0) */
@@ -373,7 +374,51 @@ export async function onRequestPut({ request, env }){
   }
   list[idx] = o;
   await saveList(env, "orders", list);
-  return json({ ok:true, order:o });
+  /* المخزون: الفرق بين الأصناف قبل وبعد التعديل بيتسحب من الرصيد (صنف
+     جديد أو كمية زادت) أو بيرجع للرصيد (صنف اتشال أو كمية قلّت). */
+  var stock = null;
+  try{ stock = await applyEditStock(env, oldItems, o.items); }catch(e){ stock = null; }
+  return json({ ok:true, order:o, stock:stock });
+}
+
+/* مفتاح الصنف في المخزون: المنتج + الحجم أو اللون (نفس ترتيب الخصم وقت الطلب) */
+function stockKey(it){
+  if(!it || it.id == null || it.id === "") return null;
+  var sz = String(it.sizeLabel || "").trim(), cl = String(it.colorName || "").trim();
+  return String(it.id) + "|" + (sz ? "s:" + sz : (cl ? "c:" + cl : ""));
+}
+async function applyEditStock(env, oldItems, newItems){
+  var delta = {}, info = {};
+  function add(arr, sign){
+    (arr || []).forEach(function(it){
+      var k = stockKey(it); if(!k) return;
+      delta[k] = (delta[k] || 0) + sign * Math.max(0, Math.round(+it.qty || 0));
+      if(!info[k]) info[k] = it;
+    });
+  }
+  add(oldItems, -1); add(newItems, +1);
+  var keys = Object.keys(delta).filter(function(k){ return delta[k] !== 0; });
+  if(!keys.length) return { changes:[], short:[] };
+  var catalog = await getCatalog(env);
+  if(!catalog || !Array.isArray(catalog.products)) return null;
+  var changes = [], short = [], changed = false;
+  keys.forEach(function(k){
+    var it = info[k], d = delta[k];
+    var p = catalog.products.find(function(x){ return String(x.id) === String(it.id); });
+    if(!p) return;
+    var sz = String(it.sizeLabel || "").trim(), cl = String(it.colorName || "").trim(), holder = null;
+    if(sz && Array.isArray(p.sizes) && p.sizes.length) holder = p.sizes.find(function(x){ return x.label === sz; }) || null;
+    else if(cl && Array.isArray(p.colors)) holder = p.colors.find(function(x){ return x.name === cl; }) || null;
+    else holder = p;
+    if(!holder || holder.stock == null) return;          /* الكمية مش متتبعة */
+    var before = +holder.stock || 0;
+    if(d > before) short.push({ id:p.id, name:p.name, sizeLabel: sz || null, colorName: cl || null, available: before, requested: d });
+    holder.stock = Math.max(0, before - d);
+    changed = true;
+    changes.push({ id:p.id, name:p.name, sizeLabel: sz || null, colorName: cl || null, delta: -d, stock: holder.stock });
+  });
+  if(changed) await saveCatalog(env, catalog);
+  return { changes:changes, short:short };
 }
 
 /* DELETE /api/orders - admin only. Body: {id}. Permanently removes one

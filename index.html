@@ -1201,6 +1201,32 @@ button.inv-tile{cursor:pointer;}
 .order-eta-ic{font-size:30px; line-height:1; flex:none;}
 .order-eta b{display:block; font-size:14.5px; color:var(--ink); line-height:1.5;}
 .order-eta small{display:block; font-size:12.5px; color:var(--ink-soft); line-height:1.6; margin-top:2px;}
+/* تعديل الفاتورة: اختيار الصنف من قائمة منسدلة */
+.aoe-item{position:relative;}
+@media (max-width:640px){
+  .aoe-item{grid-template-columns:1fr 1.2fr auto !important; row-gap:6px !important;}
+  .aoe-item > .aoe-ac{grid-column:1 / -1; order:0;}
+  .aoe-item > .aoe-ac-list{order:1;}
+  .aoe-item > .field:not(.aoe-ac), .aoe-item > [data-item-remove]{order:2;}
+  .aoe-item + .aoe-item{padding-top:10px; border-top:1px dashed var(--border);}
+}
+.aoe-ac{min-width:0;}
+.aoe-ac-var{display:block; margin-top:4px; font-size:11.5px; font-weight:700; color:var(--pink-deep); line-height:1.4;}
+.aoe-ac-var[hidden]{display:none;}
+.aoe-ac-list{grid-column:1 / -1; display:flex; flex-direction:column; max-height:280px; overflow-y:auto; border:1.5px solid color-mix(in srgb, var(--pink) 40%, var(--border)); border-radius:14px; background:var(--surface); box-shadow:0 10px 26px hsl(var(--shadow)/.16); padding:4px; margin-top:-2px;}
+.aoe-ac-list[hidden]{display:none;}
+.aoe-ac-opt{display:flex; align-items:center; gap:10px; width:100%; padding:8px 9px; border:0; border-radius:10px; background:transparent; color:var(--ink); font-family:inherit; text-align:start; cursor:pointer;}
+.aoe-ac-opt + .aoe-ac-opt{border-top:1px solid var(--border); border-radius:0;}
+.aoe-ac-opt.on, .aoe-ac-opt:hover{background:var(--pink-pale); border-radius:10px;}
+.aoe-ac-opt img, .aoe-ac-ph{flex:none; width:40px; height:40px; border-radius:9px; object-fit:cover; background:var(--surface-2); display:grid; place-items:center; font-size:20px;}
+.aoe-ac-txt{flex:1; min-width:0; display:flex; flex-direction:column; gap:1px;}
+.aoe-ac-txt b{font-size:13.5px; font-weight:800; line-height:1.4; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;}
+.aoe-ac-txt small{font-size:11.5px; color:var(--pink-deep); font-weight:700;}
+.aoe-ac-side{flex:none; display:flex; flex-direction:column; align-items:flex-end; gap:2px;}
+.aoe-ac-side b{font-size:13px; font-weight:800;}
+.aoe-ac-side small{font-size:11px; color:color-mix(in srgb, #1fb87f 75%, var(--ink)); font-weight:700;}
+.aoe-ac-side small.is-out{color:#d0314a;}
+.aoe-ac-empty{margin:0; padding:10px; font-size:12.5px; color:var(--ink-soft); text-align:center;}
 /* تقرير المبيعات */
 .sal-line-btns{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;}
 .sal-line-btns .btn{justify-content:center;}
@@ -4108,6 +4134,10 @@ document.getElementById("themeToggle").addEventListener("click", function(){
    الأقسام السبعة، ومحافظات مصر. الصفحات القانونية ولوحة التحكم وأسماء/أوصاف
    المنتجات هتتضاف في مراحل تالية. */
 var I18N_EN = {
+  "اكتب أول حرف من اسم الصنف...": "Type the first letters of the item...",
+  "مفيش منتج بالاسم ده — هيتسجل باللي كتبته": "No matching product — it will be saved as typed",
+  "مربوط بالمنتج في المتجر": "Linked to the store product",
+  "المنتج ده خلص من المخزن": "This product is out of stock",
   "قيمة الأصناف المباعة": "Value of items sold",
   "تفاصيل مبيعات متجر آل عبده": "Al Abdo Store sales details",
   "تنزيل التفاصيل PDF": "Download details PDF",
@@ -8531,12 +8561,55 @@ function showAdminOrderInvoiceModal(order){
 /* صف واحد قابل للتعديل بتاع صنف داخل نموذج تعديل الطلب (اسم/كمية/سعر +
    زرار حذف الصنف نفسه من الطلب). */
 function adminOrderItemRowHtml(it, idx){
-  return '<div class="field-row" data-item-row="'+idx+'" style="grid-template-columns:2fr 1fr 1fr auto; align-items:end; gap:8px;">'
-    + '<div class="field"><label>'+t("الصنف")+'</label><input data-item-name value="'+String(it.name||"").replace(/"/g,"&quot;")+'"></div>'
+  var vr = [it.colorName ? t("لون")+": "+it.colorName : "", it.sizeLabel || ""].filter(Boolean).join(" · ");
+  return '<div class="field-row aoe-item" data-item-row="'+idx+'" style="grid-template-columns:2fr 1fr 1fr auto; align-items:end; gap:8px;">'
+    + '<div class="field aoe-ac"><label>'+t("الصنف")+'</label><input data-item-name autocomplete="off" placeholder="'+escHtml(t("اكتب أول حرف من اسم الصنف..."))+'" value="'+String(it.name||"").replace(/"/g,"&quot;")+'">'
+      + '<small class="aoe-ac-var" data-item-var'+(vr ? '' : ' hidden')+'>'+(it.id!=null ? '🔗 ' : '')+escHtml(vr)+'</small></div>'
     + '<div class="field"><label>'+t("الكمية")+'</label><input data-item-qty type="number" min="1" step="1" value="'+(+it.qty||1)+'"></div>'
     + '<div class="field"><label>'+t("السعر")+'</label><input data-item-price type="number" min="0" step="0.01" value="'+(+it.price||0)+'"></div>'
     + '<button type="button" data-item-remove aria-label="'+t("حذف الصنف")+'" style="border:0;background:var(--surface-2);width:38px;height:38px;border-radius:10px;color:var(--pink-deep); flex:none;">🗑️</button>'
+    + '<div class="aoe-ac-list" data-item-ac role="listbox" hidden></div>'
   + '</div>';
+}
+/* ---------- اختيار الصنف من قائمة منسدلة وانت بتكتب (تعديل الفاتورة) ----------
+   من أول حرف بتظهر المنتجات اللي اسمها فيه الحروف دي (اللي بيبدأ بيها الأول)،
+   ولو المنتج له ألوان أو أحجام كل واحد بيظهر لوحده بسعره وكميته في المخزن. */
+function aoeNorm(x){
+  return String(x||"").toLowerCase().replace(/[\u064B-\u0652\u0640]/g, "").replace(/[أإآٱ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/\s+/g, " ").trim();
+}
+function aoeProductOptions(q){
+  var nq = aoeNorm(q); if(!nq) return [];
+  var scored = [];
+  PRODUCTS.forEach(function(p){
+    var names = [p.name, p.name_en].filter(Boolean).map(aoeNorm), sc = -1;
+    names.forEach(function(n){
+      var s2 = n.indexOf(nq) === 0 ? 0 : ((" "+n).indexOf(" "+nq) > -1 ? 1 : (n.indexOf(nq) > -1 ? 2 : -1));
+      if(s2 > -1 && (sc < 0 || s2 < sc)) sc = s2;
+    });
+    if(sc > -1) scored.push({ p:p, sc:sc });
+  });
+  scored.sort(function(a, b){ return a.sc - b.sc || String(a.p.name).localeCompare(String(b.p.name), "ar"); });
+  var out = [];
+  scored.slice(0, 12).forEach(function(x){
+    var p = x.p;
+    if(Array.isArray(p.sizes) && p.sizes.length){
+      p.sizes.forEach(function(sz){ out.push({ p:p, sizeLabel: sz.label, price: priceForSize(p, sz.label), stock: sz.stock!=null ? (+sz.stock||0) : null, variant: sz.label }); });
+    } else if(Array.isArray(p.colors) && p.colors.length){
+      p.colors.forEach(function(c){ out.push({ p:p, colorName: c.name, price: +p.price||0, stock: c.stock!=null ? (+c.stock||0) : null, variant: t("لون")+": "+c.name }); });
+    } else {
+      out.push({ p:p, price: +p.price||0, stock: p.stock!=null ? (+p.stock||0) : null, variant: "" });
+    }
+  });
+  return out.slice(0, 30);
+}
+function aoeOptionHtml(o, i, active){
+  var img = preqProdImg(o.p), st = o.stock;
+  var stTxt = st==null ? "" : (st > 0 ? t("متاح")+" "+fmt(st) : t("خلص"));
+  return '<button type="button" role="option" class="aoe-ac-opt'+(i===active ? ' on' : '')+'" data-ac-i="'+i+'" aria-selected="'+(i===active)+'">'
+    + (img ? '<img src="'+escHtml(img)+'" alt="" loading="lazy">' : '<span class="aoe-ac-ph" aria-hidden="true">🧸</span>')
+    + '<span class="aoe-ac-txt"><b>'+escHtml(o.p.name)+'</b>'+(o.variant ? '<small>'+escHtml(o.variant)+'</small>' : '')+'</span>'
+    + '<span class="aoe-ac-side"><b class="tabular">'+fmt(o.price)+' '+t("ج.م")+'</b>'+(stTxt ? '<small class="'+(st > 0 ? '' : 'is-out')+'">'+stTxt+'</small>' : '')+'</span>'
+  + '</button>';
 }
 /* نموذج تعديل الطلب (اسم/موبايل/عنوان + الأصناف بكمياتها وأسعارها، والإجمالي
    بيتحسب لوحده أول بأول) - بيبدّل مكان الفاتورة في نفس المودال، وبيرجع
@@ -8601,11 +8674,60 @@ function showAdminOrderEditForm(order){
     var total = sub - (order.coupon ? Math.round(sub * (+order.couponPercent||0) / 100) : 0) + editShipping();
     document.getElementById("aoeTotal").textContent = fmt(total)+" "+t("ج.م");
   }
-  function renderItemRows(){
+  function renderItemRows(focusIdx){
     itemsBox.innerHTML = items.map(function(it, idx){ return adminOrderItemRowHtml(it, idx); }).join("");
     itemsBox.querySelectorAll("[data-item-row]").forEach(function(row){
       var idx = +row.dataset.itemRow;
-      row.querySelector("[data-item-name]").addEventListener("input", function(){ items[idx].name = this.value; });
+      var nameIn = row.querySelector("[data-item-name]"), list = row.querySelector("[data-item-ac]"), ac = { opts:[], on:-1 };
+      function closeAc(){ list.hidden = true; list.innerHTML = ""; ac.opts = []; ac.on = -1; nameIn.setAttribute("aria-expanded", "false"); }
+      function drawAc(){
+        ac.opts = aoeProductOptions(nameIn.value);
+        if(!ac.opts.length){
+          if(aoeNorm(nameIn.value)){ list.hidden = false; list.innerHTML = '<p class="aoe-ac-empty">'+t("مفيش منتج بالاسم ده — هيتسجل باللي كتبته")+'</p>'; }
+          else closeAc();
+          return;
+        }
+        if(ac.on >= ac.opts.length) ac.on = 0;
+        list.innerHTML = ac.opts.map(function(o, i){ return aoeOptionHtml(o, i, ac.on); }).join("");
+        list.hidden = false; nameIn.setAttribute("aria-expanded", "true");
+      }
+      function pick(o){
+        /* نفس شكل اسم الصنف في طلبات العملاء: الاسم (اللون: ...) (الحجم) */
+        var nm = o.p.name + (o.colorName ? " ("+t("اللون")+": "+o.colorName+")" : "") + (o.sizeLabel ? " ("+o.sizeLabel+")" : "");
+        items[idx] = { id: o.p.id, name: nm, colorName: o.colorName, sizeLabel: o.sizeLabel, qty: +items[idx].qty||1, price: +o.price||0 };
+        nameIn.value = nm;
+        row.querySelector("[data-item-price]").value = +o.price||0;
+        var v = row.querySelector("[data-item-var]");
+        v.textContent = "🔗 "+(o.variant || t("مربوط بالمنتج في المتجر")); v.hidden = false;
+        closeAc(); updateTotal();
+        if(o.stock!=null && o.stock <= 0) showToast("⚠️ "+t("المنتج ده خلص من المخزن"));
+        var qIn = row.querySelector("[data-item-qty]"); if(qIn){ qIn.focus(); qIn.select(); }
+      }
+      nameIn.addEventListener("input", function(){
+        items[idx].name = this.value;
+        /* لو اتكتب اسم تاني بعد ما اخترنا منتج، نفك الربط بالمنتج القديم */
+        if(items[idx].id!=null){ delete items[idx].id; delete items[idx].colorName; delete items[idx].sizeLabel; var v = row.querySelector("[data-item-var]"); v.hidden = true; v.textContent = ""; }
+        ac.on = 0; drawAc();
+      });
+      nameIn.addEventListener("focus", function(){ if(aoeNorm(this.value) && items[idx].id==null){ ac.on = 0; drawAc(); } });
+      nameIn.addEventListener("keydown", function(e){
+        /* Esc يقفل القائمة بس، من غير ما يقفل نافذة تعديل الفاتورة */
+        if(e.key === "Escape" && !list.hidden){ e.preventDefault(); e.stopPropagation(); closeAc(); return; }
+        if(list.hidden || !ac.opts.length) return;
+        if(e.key === "ArrowDown" || e.key === "ArrowUp"){
+          e.preventDefault();
+          ac.on = (ac.on + (e.key === "ArrowDown" ? 1 : -1) + ac.opts.length) % ac.opts.length;
+          list.querySelectorAll("[data-ac-i]").forEach(function(b){ var on = +b.dataset.acI === ac.on; b.classList.toggle("on", on); b.setAttribute("aria-selected", on); if(on) b.scrollIntoView({ block:"nearest" }); });
+        } else if(e.key === "Enter"){ e.preventDefault(); if(ac.on > -1) pick(ac.opts[ac.on]); }
+        else if(e.key === "Escape"){ closeAc(); }
+      });
+      nameIn.addEventListener("blur", function(){ setTimeout(function(){ if(document.activeElement !== nameIn) closeAc(); }, 180); });
+      /* pointerdown بدل click عشان الاختيار يتم قبل ما الكيبورد يقفل والقائمة تختفي */
+      list.addEventListener("pointerdown", function(e){
+        var b = e.target.closest("[data-ac-i]"); if(!b) return;
+        e.preventDefault(); pick(ac.opts[+b.dataset.acI]);
+      });
+      if(focusIdx === idx) setTimeout(function(){ nameIn.focus(); }, 30);
       row.querySelector("[data-item-qty]").addEventListener("input", function(){ items[idx].qty = +this.value||0; updateTotal(); });
       row.querySelector("[data-item-price]").addEventListener("input", function(){ items[idx].price = +this.value||0; updateTotal(); });
       row.querySelector("[data-item-remove]").addEventListener("click", function(){
@@ -8700,7 +8822,7 @@ function showAdminOrderEditForm(order){
 
   document.getElementById("aoeAddItem").addEventListener("click", function(){
     items.push({ name:"", qty:1, price:0 });
-    renderItemRows();
+    renderItemRows(items.length - 1);
     updateTotal();
   });
   document.getElementById("aoeCancelBtn").addEventListener("click", function(){ showAdminOrderInvoiceModal(order); });

@@ -1,7 +1,7 @@
 import { json, getList, saveList, requireAdmin, requireCustomer, getCatalog, saveCatalog } from "../_lib.js";
 import { getCoupons, saveCoupons, findCoupon, couponState, usedBy, perCustomerLimit, normPhone } from "../_coupons.js";
 import { dataUrlToBytes, sha256Bytes, checkReceipt, normRef } from "../_payproof.js";
-import { getTierConfig, activeTiers, customerSpend, pickTier, tierAmount } from "../_tiers.js";
+import { getTierConfig, activeTiers, pickTier, tierAmount } from "../_tiers.js";
 
 /* GET /api/orders - admin headers return every order (for the admin
    dashboard's order list); customer headers return only that customer's
@@ -127,21 +127,16 @@ export async function onRequestPost({ request, env }){
     if(usedBy(coupon, customer, phone)) return json({ ok:false, error:"coupon_used", limit: perCustomerLimit(coupon) }, 409);
   }
 
-  /* خصم المشتريات: لو العميل المسجّل إجمالي مشترياته اللي فاتت وصل مستوى
-     من المستويات اللي الأدمن حددها بياخد خصمه على المنتجات. ما بيتجمعش مع
-     كود الخصم: بياخد الأكبر فيهم (ولو خصم المشتريات هو الأكبر الكود مش
-     بيتحسب عليه إنه اتستخدم). */
+  /* خصم قيمة الطلب: لو قيمة المنتجات في الطلب ده وصلت مستوى من المستويات
+     اللي الأدمن حددها بياخد خصم أعلى مستوى وصله (مش بيتجمعوا). ما بيتجمعش
+     مع كود الخصم: بياخد الأكبر فيهم (ولو خصم الطلب هو الأكبر الكود مش
+     بيتحسب عليه إنه اتستخدم). شغال للعميل المسجّل والضيف. */
   var tierInfo = null, tierDisc = 0;
-  if(customer){
-    try{
-      var tiersAct = activeTiers(await getTierConfig(env));
-      if(tiersAct.length){
-        var spendNow = customerSpend(await getList(env, "orders"), customer.identifier);
-        var tr = pickTier(tiersAct, spendNow);
-        if(tr){ tierDisc = tierAmount(tr, itemsSubtotal); tierInfo = { id: tr.id, min: tr.min, type: tr.type, value: tr.value, spend: Math.round(spendNow) }; }
-      }
-    }catch(e){ tierInfo = null; tierDisc = 0; }
-  }
+  try{
+    var tiersAct = activeTiers(await getTierConfig(env));
+    var tr = tiersAct.length ? pickTier(tiersAct, itemsSubtotal) : null;
+    if(tr){ tierDisc = tierAmount(tr, itemsSubtotal); tierInfo = { id: tr.id, min: tr.min, type: tr.type, value: tr.value, spend: Math.round(itemsSubtotal) }; }
+  }catch(e){ tierInfo = null; tierDisc = 0; }
   var codeDisc = coupon ? Math.round(itemsSubtotal * (+coupon.percent || 0) / 100) : 0;
   if(tierDisc > 0 && tierDisc >= codeDisc) coupon = null;
   else { tierInfo = null; tierDisc = 0; }
@@ -502,7 +497,7 @@ async function sendGuestOrderEmail(order, env){
   });
   lines.push("الإجمالي الفرعي: " + order.subtotal + " ج.م");
   if(order.coupon) lines.push("كود الخصم: " + order.coupon + " (" + order.couponPercent + "%) - خصم " + order.discount + " ج.م");
-  if(order.tier) lines.push("خصم المشتريات: " + (order.tier.type === "fixed" ? order.tier.value + " ج.م" : order.tier.value + "%") + " (إجمالي مشترياته " + order.tier.spend + " ج.م) - خصم " + order.discount + " ج.م");
+  if(order.tier) lines.push("خصم قيمة الطلب: " + (order.tier.type === "fixed" ? order.tier.value + " ج.م" : order.tier.value + "%") + " (الطلب عدّى " + order.tier.min + " ج.م) - خصم " + order.discount + " ج.م");
   lines.push("الشحن: " + order.shipping + " ج.م");
   lines.push("الإجمالي الكلي: " + order.total + " ج.م");
   lines.push("نوع العميل: " + (order.customerId ? ("عميل مسجّل (حساب: " + order.customerId + ")") : "ضيف بدون حساب"));

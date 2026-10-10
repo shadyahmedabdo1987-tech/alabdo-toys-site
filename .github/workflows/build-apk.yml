@@ -13,6 +13,7 @@
 # haptics: AlAbdoNative.haptic (add to cart / checkout taps / order success)
 # build 19: same app as 2.0.18, new version number for Google Play
 # offers: check on every app open + keep offers while notifications are off
+# v2 (AlAbdoApp/5): order-status notifications, Play in-app review, app shortcuts
 name: Build Android APK
 
 on:
@@ -125,6 +126,7 @@ jobs:
 
           dependencies {
               implementation 'androidx.core:core:1.13.1'
+              implementation 'com.google.android.play:review:2.0.2'
           }
           EOF
 
@@ -167,6 +169,8 @@ jobs:
                           <category android:name="android.intent.category.BROWSABLE" />
                           <data android:scheme="https" android:host="alabdo-toys.com" />
                       </intent-filter>
+
+                      <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
                   </activity>
 
                   <service
@@ -196,7 +200,31 @@ jobs:
           <?xml version="1.0" encoding="utf-8"?>
           <resources>
               <string name="app_name">متجر آل عبده</string>
+              <string name="sc_offers">العروض</string>
+              <string name="sc_cart">السلة</string>
+              <string name="sc_orders">طلباتي</string>
           </resources>
+          EOF
+
+          cat > $P/app/src/main/res/xml/shortcuts.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+              <shortcut android:shortcutId="offers" android:enabled="true" android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="@string/sc_offers" android:shortcutLongLabel="@string/sc_offers">
+                  <intent android:action="android.intent.action.VIEW" android:targetPackage="com.alabdotoys.app" android:targetClass="com.alabdotoys.app.MainActivity">
+                      <extra android:name="aa_open" android:value="go:offers" />
+                  </intent>
+              </shortcut>
+              <shortcut android:shortcutId="cart" android:enabled="true" android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="@string/sc_cart" android:shortcutLongLabel="@string/sc_cart">
+                  <intent android:action="android.intent.action.VIEW" android:targetPackage="com.alabdotoys.app" android:targetClass="com.alabdotoys.app.MainActivity">
+                      <extra android:name="aa_open" android:value="cart" />
+                  </intent>
+              </shortcut>
+              <shortcut android:shortcutId="orders" android:enabled="true" android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="@string/sc_orders" android:shortcutLongLabel="@string/sc_orders">
+                  <intent android:action="android.intent.action.VIEW" android:targetPackage="com.alabdotoys.app" android:targetClass="com.alabdotoys.app.MainActivity">
+                      <extra android:name="aa_open" android:value="go:orders" />
+                  </intent>
+              </shortcut>
+          </shortcuts>
           EOF
 
           cat > $P/app/src/main/res/values/colors.xml <<'EOF'
@@ -664,6 +692,19 @@ jobs:
                           @Override public void run() { doHaptic(kind); }
                       });
                   }
+                  /* العميل اللي مسجّل دخول (عشان إشعارات حالة الطلب والردود توصله
+                     والتطبيق مقفول). فاضي = خرج من حسابه. */
+                  @JavascriptInterface
+                  public void setCustomer(String id, String pass) {
+                      OffersJob.setCustomer(getApplicationContext(), id, pass);
+                  }
+                  /* تقييم التطبيق على جوجل بلاي من جوه التطبيق */
+                  @JavascriptInterface
+                  public void requestReview() {
+                      runOnUiThread(new Runnable() {
+                          @Override public void run() { startInAppReview(); }
+                      });
+                  }
                   /* الصفحة بتبلغنا بعدد المنتجات اللي في السلة (عشان تذكير السلة) */
                   @JavascriptInterface
                   public void cartChanged(int count, String names) {
@@ -671,6 +712,27 @@ jobs:
                       if (count > 0) runOnUiThread(new Runnable() {
                           @Override public void run() { askNotificationPermissionOnce(); }
                       });
+                  }
+              }
+
+              private void startInAppReview() {
+                  try {
+                      final com.google.android.play.core.review.ReviewManager rm = com.google.android.play.core.review.ReviewManagerFactory.create(this);
+                      rm.requestReviewFlow().addOnCompleteListener(new com.google.android.gms.tasks.OnCompleteListener<com.google.android.play.core.review.ReviewInfo>() {
+                          @Override public void onComplete(com.google.android.gms.tasks.Task<com.google.android.play.core.review.ReviewInfo> task) {
+                              if (task.isSuccessful()) {
+                                  try { rm.launchReviewFlow(MainActivity.this, task.getResult()); } catch (Exception e) { openPlayPage(); }
+                              } else openPlayPage();
+                          }
+                      });
+                  } catch (Throwable e) { openPlayPage(); }
+              }
+
+              private void openPlayPage() {
+                  try {
+                      startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + getPackageName())));
+                  } catch (Exception e) {
+                      try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + getPackageName()))); } catch (Exception e2) { /* ignore */ }
                   }
               }
 
@@ -783,7 +845,7 @@ jobs:
                   s.setSupportMultipleWindows(false);
                   s.setJavaScriptCanOpenWindowsAutomatically(false);
                   s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-                  s.setUserAgentString(s.getUserAgentString() + " AlAbdoApp/4");
+                  s.setUserAgentString(s.getUserAgentString() + " AlAbdoApp/5");
                   CookieManager.getInstance().setAcceptCookie(true);
                   web.setOverScrollMode(View.OVER_SCROLL_NEVER);
               web.addJavascriptInterface(new SplashBridge(), "AlAbdoNative");
@@ -1226,7 +1288,7 @@ jobs:
                   con.setConnectTimeout(15000);
                   con.setReadTimeout(15000);
                   con.setRequestProperty("Accept", "application/json");
-                  con.setRequestProperty("User-Agent", "AlAbdoApp/4 offers");
+                  con.setRequestProperty("User-Agent", "AlAbdoApp/5 offers");
                   if (con.getResponseCode() != 200) { con.disconnect(); return; }
                   InputStream in = con.getInputStream();
                   ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -1250,6 +1312,83 @@ jobs:
                       }
                   }
                   if (newest > since) sp.edit().putLong("since", newest).apply();
+                  try { checkNotes(c); } catch (Exception e) { /* ignore */ }
+              }
+
+              /* حساب العميل اللي في التطبيق (بتتبعته الصفحة) */
+              static void setCustomer(Context c, String id, String pass) {
+                  SharedPreferences sp = c.getSharedPreferences(PREFS, MODE_PRIVATE);
+                  String old = sp.getString("cid", "");
+                  SharedPreferences.Editor ed = sp.edit();
+                  if (id == null || id.length() == 0 || pass == null || pass.length() == 0) {
+                      ed.remove("cid").remove("cpass").remove("notes_since").apply();
+                      return;
+                  }
+                  ed.putString("cid", id).putString("cpass", pass);
+                  if (!id.equals(old)) ed.putLong("notes_since", System.currentTimeMillis());
+                  ed.apply();
+              }
+
+              /* إشعارات العميل نفسه: حالة طلبه (اتجهز/خرج للشحن/وصل) وردود المتجر */
+              static void checkNotes(Context c) throws Exception {
+                  SharedPreferences sp = c.getSharedPreferences(PREFS, MODE_PRIVATE);
+                  String cid = sp.getString("cid", ""), cpass = sp.getString("cpass", "");
+                  if (cid.length() == 0 || cpass.length() == 0) return;
+                  long since = sp.getLong("notes_since", 0L);
+                  if (since == 0L) { sp.edit().putLong("notes_since", System.currentTimeMillis()).apply(); return; }
+                  HttpURLConnection con = (HttpURLConnection) new URL("https://alabdo-toys.com/api/notifications").openConnection();
+                  con.setConnectTimeout(15000);
+                  con.setReadTimeout(15000);
+                  con.setRequestProperty("Accept", "application/json");
+                  con.setRequestProperty("User-Agent", "AlAbdoApp/5 notes");
+                  con.setRequestProperty("X-Customer-Id", cid);
+                  con.setRequestProperty("X-Customer-Pass", cpass);
+                  if (con.getResponseCode() != 200) { con.disconnect(); return; }
+                  InputStream in = con.getInputStream();
+                  ByteArrayOutputStream out = new ByteArrayOutputStream();
+                  byte[] buf = new byte[4096];
+                  int n;
+                  while ((n = in.read(buf)) > 0 && out.size() < 256 * 1024) out.write(buf, 0, n);
+                  in.close();
+                  con.disconnect();
+                  JSONObject res = new JSONObject(out.toString("UTF-8"));
+                  if (!res.optBoolean("ok")) return;
+                  JSONArray items = res.optJSONArray("items");
+                  long newest = since;
+                  int shown = 0;
+                  if (items != null) {
+                      for (int i = items.length() - 1; i >= 0; i--) {
+                          JSONObject it = items.getJSONObject(i);
+                          long at = it.optLong("at", 0L);
+                          if (at <= since) continue;
+                          if (at > newest) newest = at;
+                          if (it.optBoolean("seen", false) || shown >= 3) continue;
+                          String kind = it.optString("kind", "");
+                          String title, body, link = "home";
+                          if ("order".equals(kind)) {
+                              title = it.optString("title", "تحديث طلبك");
+                              body = it.optString("message", "");
+                              link = "orders";
+                          } else if ("stock".equals(kind)) {
+                              title = "🎉 رجع متوفر";
+                              body = it.optString("message", it.optString("title", ""));
+                              String pid = it.optString("productId", "");
+                              if (pid.matches("\\d{1,12}")) link = "p:" + pid;
+                          } else if ("preq".equals(kind)) {
+                              JSONObject rep = it.optJSONObject("reply");
+                              title = "💬 رد على طلبك: " + it.optString("productName", "");
+                              body = rep != null ? rep.optString("message", "") : "";
+                              String pid = rep != null ? rep.optString("productId", "") : "";
+                              if (pid.matches("\\d{1,12}")) link = "p:" + pid;
+                          } else {
+                              title = "💬 رد على استفسارك";
+                              body = it.optString("message", "");
+                          }
+                          show(c, it.optString("id", "" + at), title, body.length() > 0 ? body : "متجر آل عبده", link);
+                          shown++;
+                      }
+                  }
+                  if (newest > since) sp.edit().putLong("notes_since", newest).apply();
               }
 
               @SuppressWarnings("deprecation")

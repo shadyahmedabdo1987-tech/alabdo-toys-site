@@ -5,7 +5,8 @@ import { getNotes, saveNotes, noteMatches } from "../_notes.js";
    GET  /api/notifications            (X-Customer-Id / X-Customer-Pass)
         -> {ok, items:[newest first], unread}
         item.kind: "preq" (reply to a product request), "inquiry" (reply to a
-        contact-us message), "stock" (a product they waited for is back).
+        contact-us message), "stock" (a product they waited for is back),
+        "order" (the store changed the status of one of their orders).
    POST {action:"seen"}               -> marks everything as read
    POST {action:"remove", id}         -> hides one item from their bell
    (ASCII-only comments on purpose, same as _lib.js.) */
@@ -29,7 +30,8 @@ export async function onRequestGet({ request, env }){
     items.push({
       id: n.id, kind: n.type, at: n.at, seen: n.seen !== false,
       title: n.title || "", quote: n.quote || "", message: n.message || "",
-      productId: n.productId || null, image: n.image || null
+      productId: n.productId || null, image: n.image || null,
+      orderId: n.orderId || null, status: n.status || null
     });
   });
   items.sort(function(a, b){ return (b.at || 0) - (a.at || 0); });

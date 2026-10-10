@@ -2186,6 +2186,48 @@ html[dir="rtl"] .v2-qstep{animation-name:v2qInR;}
 .v2-chips[hidden]{display:none;}
 .v2-chips button{border:0; background:color-mix(in srgb, var(--pink) 12%, var(--surface)); color:var(--pink-deep); border-radius:999px; padding:6px 11px; font:inherit; font-size:12.5px; font-weight:800; cursor:pointer;}
 
+/* السلة زي نون */
+.v2-cart{display:flex; flex-direction:column; gap:12px; width:100%;}
+.v2-cbanner{position:relative; padding:10px 12px 14px; border-radius:12px; background:color-mix(in srgb, #ffe14d 35%, var(--surface)); font-size:13px; font-weight:700; color:var(--ink); overflow:hidden;}
+.v2-cbanner.is-ok{padding-bottom:10px; background:color-mix(in srgb, #1fb87f 14%, var(--surface)); color:color-mix(in srgb, #1fb87f 60%, var(--ink));}
+.v2-cbanner i{position:absolute; inset-inline:12px; bottom:6px; height:4px; border-radius:99px; background:linear-gradient(90deg, #f5b301 var(--p), color-mix(in srgb, var(--ink) 10%, transparent) var(--p));}
+.v2-ci-list{display:flex; flex-direction:column; gap:10px;}
+.v2-ci{display:flex; gap:12px; padding:10px; border:1px solid var(--border); border-radius:14px; background:var(--surface);}
+.v2-ci-img{flex:none; width:92px; height:92px; border-radius:12px; overflow:hidden; display:grid; place-items:center; font-size:36px; cursor:pointer;}
+.v2-ci-img img{width:100%; height:100%; object-fit:cover;}
+.v2-ci-info{flex:1; min-width:0; display:flex; flex-direction:column; gap:3px;}
+.v2-ci-top{display:flex; align-items:flex-start; gap:6px;}
+.v2-ci-name{flex:1; min-width:0; font-size:13.5px; line-height:1.45; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; cursor:pointer;}
+.v2-ci-x{flex:none; width:26px; height:26px; border:0; border-radius:50%; background:var(--surface-2); color:var(--ink-soft); font-size:12px; cursor:pointer;}
+.v2-ci-var{font-size:12px; color:var(--ink-soft);}
+.v2-ci-price{display:flex; align-items:baseline; flex-wrap:wrap; gap:3px;}
+.v2-ci-price b{font-size:16px; font-weight:900;}
+.v2-ci-price small{font-size:11px; color:var(--ink-soft); font-weight:700;}
+.v2-ci-price s{font-size:12px; color:var(--ink-faint); margin-inline-start:3px;}
+.v2-ci-price em{font-style:normal; font-size:12px; font-weight:900; color:#1a8a50;}
+.v2-ci-eta{font-size:12px; color:var(--ink-soft);}
+.v2-ci-eta b{color:var(--ink);}
+.v2-ci-tag{font-size:12px; color:var(--ink-soft);}
+.v2-ci-left{font-size:12px; font-weight:800; color:#d1460f;}
+.v2-ci-step{display:inline-flex; align-items:center; align-self:flex-start; margin-top:4px; border:1.5px solid var(--border); border-radius:10px; overflow:hidden; height:34px;}
+.v2-ci-step button{width:36px; height:100%; border:0; background:var(--surface-2); color:var(--ink); font:inherit; font-size:18px; font-weight:900; cursor:pointer; display:grid; place-items:center;}
+.v2-ci-step button svg{width:16px; height:16px;}
+.v2-ci-step span{min-width:36px; text-align:center; font-weight:900; font-size:14px;}
+.v2-crecs{margin-top:4px;}
+.v2-crecs h4{margin:4px 0 8px; font-size:15px;}
+html.v2 #cartBody{flex-direction:column;}
+html.v2 #cartFootStepCart > #cartFreeProg, html.v2 #cartFootStepCart > .cart-total-row, html.v2 #cartFootStepCart > .cart-ship-note, html.v2 #cartFootStepCart > #cartContinueBtn, html.v2 #cartFootStepCart > #continueBtn{display:none !important;}
+.v2-csum{display:flex; flex-direction:column; gap:8px;}
+.v2-csum[hidden]{display:none;}
+.v2-csave{align-self:flex-start; background:color-mix(in srgb, #1fb87f 16%, var(--surface)); color:#14784a; font-size:12.5px; font-weight:800; padding:4px 10px; border-radius:999px;}
+.v2-csum-row{display:flex; align-items:center; gap:12px;}
+.v2-csum-t{flex:1; min-width:0; display:flex; flex-direction:column; line-height:1.25;}
+.v2-csum-t > small{font-size:12px; color:var(--ink-soft); font-weight:700;}
+.v2-csum-t > b{font-size:20px; font-weight:900;}
+.v2-csum-t > b small{font-size:12px;}
+.v2-csum-ship{font-size:11.5px !important;}
+.v2-checkout{flex:1.3; min-height:48px; font-size:15.5px !important; white-space:nowrap;}
+
 /* شيت من تحت */
 .v2-sheet{position:fixed; inset:0; z-index:9000; background:rgba(15,10,25,.45); display:flex; align-items:flex-end; justify-content:center; opacity:0; transition:opacity .2s ease;}
 .v2-sheet.show{opacity:1;}
@@ -2235,7 +2277,12 @@ html[dir="rtl"] .v2-qstep{animation-name:v2qInR;}
 #modalCard > .modal-info, #modalCard > .modal-media{min-width:0; max-width:100%;}
 html.v2 #modalCard{overflow-x:hidden;}
 html.v2 .modal-cart-row{gap:8px; flex:1 1 100%; width:100%;}
-html.v2 .modal-cart-row #modalAddBtn{flex:1 1 auto;}
+html.v2 .modal-cart-row #modalAddBtn{flex:1 1 0;}
+html.v2 .modal-cart-row .mab-price{display:none;}
+html.v2 .modal-cart-row .v2-buy{flex:1 1 0; background:#1f2a5c !important; color:#fff !important; box-shadow:0 3px 0 #111a40 !important;}
+html.v2 #modalActionsBox .modal-incart{order:-1; flex:1 1 100%; margin:-12px -16px 10px; padding:8px 12px; background:#ffe14d; color:#1f1a2e; text-align:center; font-weight:800; font-size:13.5px;}
+html.v2 #modalActionsBox .modal-incart b{color:#1f1a2e;}
+html.v2:not(.app-mode) #modalActionsBox .modal-incart{margin:0 0 8px; border-radius:10px;}
 html.v2 .modal-cart-row .btn{padding-inline:8px; font-size:14.5px; white-space:nowrap; line-height:1.2;}
 html.v2 .modal-cart-row .qty-stepper button{width:34px;}
 html.v2 .modal-cart-row .qty-stepper span{width:34px; min-width:34px;}
@@ -6326,6 +6373,8 @@ function addToCart(id, qty, colorName, sizeLabel){
   if(isAppMode()){
     var flySrc = document.getElementById("modalBackdrop").classList.contains("show") ? pgCurrentImg() : null;
     flyToCart(flySrc);
+    /* الشكل الجديد (زي نون): الشريط الأصفر "في سلتك" في صفحة المنتج بيكفي */
+    if(typeof AA_V2 !== "undefined" && AA_V2) return;
     aaSnack("✅ "+(LANG==="en" ? "\""+pName(p)+"\" added to cart" : "«"+p.name+variantSuffix+"» "+"اتضافت للسلة"), t("عرض السلة"), function(){ closeAllPanels(); renderCartDrawer(); openDrawer(); });
     return;
   }
@@ -7523,6 +7572,75 @@ document.addEventListener("click", function(e){
   if(!e.target.closest(".v2-qstep")) v2CloseSteppers();
 }, true);
 
+/* ---------- السلة (زي نون) ---------- */
+var V2_TRASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>';
+function v2CartSavings(){
+  var s = 0;
+  cartItems().forEach(function(it){ var hasSz = it.sizeLabel && Array.isArray(it.p.sizes) && it.p.sizes.length; if(!hasSz && it.p.old && +it.p.old > +it.p.price) s += (+it.p.old - +it.p.price) * it.qty; });
+  return s + (typeof couponDiscount === "function" ? couponDiscount() : 0);
+}
+function v2CartItemHtml(it){
+  var p = it.p, img = it.colorImage || productMainImage(p), key = String(it.cartKey).replace(/"/g, "&quot;");
+  var price = priceForSize(p, it.sizeLabel), hasSz = !!it.sizeLabel;
+  var pct = (!hasSz && p.old && +p.old > +p.price) ? Math.round((1 - p.price / p.old) * 100) : 0;
+  var stock = it.sizeLabel ? sizeStockFor(p, it.sizeLabel) : variantStock(p, it.colorName);
+  var variant = [it.colorName ? t("اللون")+": "+it.colorName : "", it.sizeLabel || ""].filter(Boolean).join(" · ");
+  return '<div class="v2-ci">'
+    + '<div class="v2-ci-img" style="background:'+(CAT_MAP[p.cat] ? CAT_MAP[p.cat].color : 'var(--surface-2)')+'" data-open="'+p.id+'">'+(img ? '<img src="'+img+'" alt="" loading="lazy">' : categoryIcon(p.cat))+'</div>'
+    + '<div class="v2-ci-info">'
+      + '<div class="v2-ci-top"><b class="v2-ci-name" data-open="'+p.id+'">'+escHtml(pName(p))+'</b><button type="button" class="v2-ci-x" data-remove="'+key+'" aria-label="'+t("حذف من السلة")+'">✕</button></div>'
+      + (variant ? '<small class="v2-ci-var">'+escHtml(variant)+'</small>' : '')
+      + '<div class="v2-ci-price"><b class="tabular">'+fmt(price)+'</b> <small>'+t("ج.م")+'</small>'+(pct ? ' <s class="tabular">'+fmt(p.old)+'</s> <em>'+fmt(pct)+'%-</em>' : '')+'</div>'
+      + '<div class="v2-ci-eta">🚚 '+t("يوصلك")+' <b>'+escHtml(v2EtaShort())+'</b></div>'
+      + (p.freeShipping ? '<div class="v2-ci-tag">📦 '+t("شحن مجاني")+'</div>' : '')
+      + (stock != null && stock > 0 && stock <= 5 ? '<div class="v2-ci-left">🔥 '+t("باقي")+' '+fmt(stock)+' '+t("بس")+'</div>' : '')
+      + '<div class="v2-ci-step"><button type="button" data-dec="'+key+'" aria-label="'+(it.qty <= 1 ? t("حذف من السلة") : t("تقليل الكمية"))+'">'+(it.qty <= 1 ? V2_TRASH : '−')+'</button><span class="tabular qty-num" onclick="0">'+fmt(it.qty)+'</span><button type="button" data-inc="'+key+'" aria-label="'+t("زيادة الكمية")+'">+</button></div>'
+    + '</div>'
+  + '</div>';
+}
+function v2CartRecsHtml(items){
+  var inCart = {}, cats = {};
+  items.forEach(function(it){ inCart[it.p.id] = 1; cats[it.p.cat] = 1; });
+  var list = PRODUCTS.filter(function(p){ return !inCart[p.id] && !productOutOfStockOverall(p); })
+    .sort(function(a, b){ return ((cats[b.cat] ? 1 : 0) - (cats[a.cat] ? 1 : 0)) || (v2Popularity(b) - v2Popularity(a)); }).slice(0, 10);
+  if(!list.length) return "";
+  return '<div class="v2-crecs"><h4>🧸 '+t("ممكن يعجبك كمان")+'</h4><div class="v2-row is-mini">'+list.map(v2Card).join("")+'</div></div>';
+}
+function v2RenderCart(){
+  if(!AA_V2) return;
+  var body = document.getElementById("cartBody"), items = cartItems();
+  if(!body || !items.length) return;
+  var shipFree = cartFreeShipping() || cartReachedFreeMin();
+  var left = Math.max(0, FREE_SHIP_MIN - (cartTotal() - couponDiscount()));
+  var banner = shipFree ? '<div class="v2-cbanner is-ok">🎉 '+t("الشحن مجاني على الطلب ده")+'</div>'
+    : '<div class="v2-cbanner">🚚 '+t("زوّد")+' <b class="tabular">'+fmt(Math.ceil(left))+' '+t("ج.م")+'</b> '+t("وخد شحن مجاني")+'<i style="--p:'+Math.max(4, Math.min(100, Math.round((cartTotal() - couponDiscount()) / FREE_SHIP_MIN * 100)))+'%"></i></div>';
+  body.innerHTML = '<div class="v2-cart">'+banner+'<div class="v2-ci-list">'+items.map(v2CartItemHtml).join("")+'</div>'+v2CartRecsHtml(items)+'</div>';
+}
+function v2RenderCartSum(){
+  if(!AA_V2) return;
+  var step = document.getElementById("cartFootStepCart"); if(!step) return;
+  var box = document.getElementById("v2CartSum");
+  if(!box){
+    box = document.createElement("div"); box.id = "v2CartSum"; box.className = "v2-csum";
+    step.appendChild(box);
+    box.addEventListener("click", function(e){ if(e.target.closest("[data-v2-checkout]")){ var c = document.getElementById("cartContinueBtn"); if(c) c.click(); } });
+  }
+  var items = cartItems();
+  if(!items.length){ box.hidden = true; return; }
+  box.hidden = false;
+  var save = v2CartSavings(), ship = cartShippingCost(), n = items.reduce(function(s, it){ return s + it.qty; }, 0);
+  box.innerHTML = (save > 0 ? '<span class="v2-csave">🎉 '+t("وفّرت")+' <b class="tabular">'+fmt(save)+' '+t("ج.م")+'</b></span>' : '')
+    + '<div class="v2-csum-row"><div class="v2-csum-t"><small>'+t("الإجمالي")+'</small><b class="tabular">'+fmt(cartGrandTotal())+' <small>'+t("ج.م")+'</small></b><small class="v2-csum-ship">'+(ship ? t("شامل الشحن")+' '+fmt(ship)+' '+t("ج.م") : (checkoutGov() || cartFreeShipping() || cartReachedFreeMin() ? t("الشحن مجاني") : t("الشحن بيتحسب حسب المحافظة")))+'</small></div>'
+    + '<button type="button" class="btn btn-primary v2-checkout" data-v2-checkout>'+t("إتمام الشراء")+' ('+fmt(n)+')</button></div>';
+}
+
+document.addEventListener("click", function(e){
+  if(!AA_V2) return;
+  var o = e.target.closest("#cartBody [data-open]"); if(!o || e.target.closest("[data-qadd],[data-wish]")) return;
+  e.preventDefault(); e.stopPropagation();
+  var id = +o.dataset.open; closeAllPanels(); setTimeout(function(){ openProductModal(id); }, 260);
+}, true);
+
 /* ---------- الرئيسية: صفوف بتتسحب بالعرض ---------- */
 function v2RecentIds(){ try{ var a = JSON.parse(localStorage.getItem("aa_recent_p") || "[]"); return Array.isArray(a) ? a : []; }catch(e){ return []; } }
 function v2PushRecent(id){
@@ -7739,6 +7857,9 @@ function v2EnhanceModal(id){
   var rev = document.getElementById("modalReviews");
   if(rev) rev.insertAdjacentHTML("afterend", v2RelatedHtml(p));
   card.addEventListener("click", function(e){ if(e.target.closest("[data-v2-gov-open]")) v2OpenGovSheet(); });
+  v2EnsureBuyNow();
+  var box = document.getElementById("modalActionsBox");
+  if(box) new MutationObserver(v2EnsureBuyNow).observe(box, { childList:true });
   v2StartTicker();
 }
 /* "اشتري الآن" جنب "أضف للسلة": بيضيف المنتج ويوديك على خطوة بيانات التوصيل على طول */
@@ -7747,6 +7868,7 @@ function v2EnsureBuyNow(){
   if(!add || document.getElementById("v2BuyNow")) return;
   var b = document.createElement("button"); b.type = "button"; b.id = "v2BuyNow"; b.className = "btn v2-buy"; b.textContent = t("اشتري الآن");
   add.parentNode.insertBefore(b, add.nextSibling);
+  add.textContent = t("أضف للسلة");
   b.addEventListener("click", function(){
     if(!modalQty){ var plus = document.getElementById("modalQtyPlus"); if(plus) plus.click(); }
     window.__aaBuyNow = true;
@@ -7870,6 +7992,10 @@ function v2SyncNativeCustomer(){
   applyProducts = function(){ var l = _ap(); return AA_V2 ? v2ApplyExtra(l) : l; };
   var _rpv = renderProductsView;
   renderProductsView = function(){ _rpv(); if(AA_V2) v2RenderToolbar(); };
+  var _rcd = renderCartDrawer;
+  renderCartDrawer = function(){ _rcd(); if(AA_V2){ v2RenderCart(); } };
+  var _rcft = renderCartFoot;
+  renderCartFoot = function(){ _rcft(); if(AA_V2) v2RenderCartSum(); };
   var _rna = renderNewArrivals;
   renderNewArrivals = function(){ _rna(); if(AA_V2) v2RenderHome(); };
   var _opm = openProductModal;
@@ -8836,7 +8962,7 @@ function openProductModal(id){
         + '<button type="button" id="modalQtyPlus" aria-label="'+t("زيادة الكمية")+'">+</button>'
       + '</div>'
     + '</div>'
-    + (inCartNow > 0 ? '<p class="modal-incart">🛒 '+t("عندك")+' <b class="tabular">'+fmt(inCartNow)+'</b> '+t("في السلة — غيّر العدد بـ + و − ودوس")+' «'+t("أضف للسلة")+'»</p>' : '')
+    + (inCartNow > 0 ? '<p class="modal-incart">🛒 '+(typeof AA_V2 !== "undefined" && AA_V2 ? '<b class="tabular">'+fmt(inCartNow)+'</b> '+t("في سلتك") : t("عندك")+' <b class="tabular">'+fmt(inCartNow)+'</b> '+t("في السلة — غيّر العدد بـ + و − ودوس")+' «'+t("أضف للسلة")+'»')+'</p>' : '')
     + (stockNow!=null && stockNow<=10
         ? '<p class="modal-stock-hint">'+t("باقي")+' '+fmt(stockNow)+' '+t("قطعة بس من المنتج ده")+'</p>'
         : '');

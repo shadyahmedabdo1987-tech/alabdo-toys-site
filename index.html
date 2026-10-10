@@ -2217,6 +2217,14 @@ html.v2 #newArrivalsSection, html.v2 #offersSection, html.v2 #bestSellersSection
 .v2-rel{margin-top:16px; border-top:1.5px solid var(--border); padding-top:14px;}
 .v2-buy{background:#ffb703 !important; color:#1f1a2e !important; border:0 !important; font-weight:900 !important; box-shadow:0 3px 0 #d99a00 !important;}
 .modal-cart-row .v2-buy{flex:1; white-space:nowrap; padding-inline:12px;}
+/* صفحة المنتج: ممنوع أي عنصر يوسّع الشاشة أعرض من الموبايل */
+#modalCard > .modal-info, #modalCard > .modal-media{min-width:0; max-width:100%;}
+html.v2 #modalCard{overflow-x:hidden;}
+html.v2 .modal-cart-row{gap:8px;}
+html.v2 .modal-cart-row .mab-price{display:none;}
+html.v2 .modal-cart-row .btn{padding-inline:8px; font-size:14.5px; white-space:nowrap; line-height:1.2;}
+html.v2 .modal-cart-row .qty-stepper button{width:34px;}
+html.v2 .modal-cart-row .qty-stepper span{width:34px; min-width:34px;}
 .v2-rb{display:flex; gap:16px; align-items:center; margin:0 0 14px; padding:12px; border-radius:14px; background:var(--surface-3);}
 .v2-rb-avg{display:flex; flex-direction:column; align-items:center; gap:2px; flex:none; min-width:72px;}
 .v2-rb-avg b{font-size:32px; line-height:1; font-weight:900;}

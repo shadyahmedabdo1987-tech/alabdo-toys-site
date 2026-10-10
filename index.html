@@ -2134,6 +2134,18 @@ html.v2 #newArrivalsSection, html.v2 #offersSection, html.v2 #bestSellersSection
 
 /* كارت المنتج */
 .card.v2c{display:flex; flex-direction:column; border-radius:14px; overflow:hidden;}
+html.v2 .card.v2c .card-quick{display:flex; position:absolute; bottom:8px; inset-inline-end:8px; width:36px; height:36px; border-radius:12px; border:0; background:#fff; color:#1f1a2e; align-items:center; justify-content:center; box-shadow:0 3px 10px rgba(0,0,0,.18); z-index:4; cursor:pointer; padding:0;}
+html.v2 .card.v2c .card-quick svg{width:20px; height:20px;}
+html.v2 .card.v2c .card-quick.is-in{background:var(--pink-deep); color:#fff; width:auto; min-width:36px; padding:0 8px; gap:3px;}
+html.v2 .card.v2c .card-quick.is-in svg{width:18px; height:18px;}
+html.v2 .card.v2c .card-quick em{font-style:normal; font-weight:900; font-size:13px;}
+.v2-qstep{position:absolute; bottom:8px; inset-inline-end:8px; width:min(124px, calc(100% - 16px)); z-index:5; display:flex; align-items:center; justify-content:space-between; height:38px; border-radius:12px; background:var(--pink-deep); color:#fff; box-shadow:0 4px 12px rgba(0,0,0,.22); overflow:hidden; animation:v2qIn .16s ease;}
+.v2-qstep button{width:38px; height:100%; border:0; background:none; color:#fff; font:inherit; font-size:20px; font-weight:900; cursor:pointer; display:grid; place-items:center;}
+.v2-qstep button svg{width:17px; height:17px;}
+.v2-qstep b{font-size:15px;}
+@keyframes v2qIn{from{clip-path:inset(0 0 0 70% round 12px); opacity:.6} to{clip-path:inset(0 0 0 0 round 12px); opacity:1}}
+html[dir="rtl"] .v2-qstep{animation-name:v2qInR;}
+@keyframes v2qInR{from{clip-path:inset(0 70% 0 0 round 12px); opacity:.6} to{clip-path:inset(0 0 0 0 round 12px); opacity:1}}
 .card.v2c .card-media{aspect-ratio:1/1; height:auto;}
 .card.v2c.is-out .card-media{filter:grayscale(.6); opacity:.75;}
 .v2-badges{position:absolute; top:8px; inset-inline-start:8px; z-index:3; display:flex; flex-direction:column; align-items:flex-start; gap:4px; pointer-events:none;}
@@ -2222,8 +2234,8 @@ html.v2 #newArrivalsSection, html.v2 #offersSection, html.v2 #bestSellersSection
 /* صفحة المنتج: ممنوع أي عنصر يوسّع الشاشة أعرض من الموبايل */
 #modalCard > .modal-info, #modalCard > .modal-media{min-width:0; max-width:100%;}
 html.v2 #modalCard{overflow-x:hidden;}
-html.v2 .modal-cart-row{gap:8px;}
-html.v2 .modal-cart-row .mab-price{display:none;}
+html.v2 .modal-cart-row{gap:8px; flex:1 1 100%; width:100%;}
+html.v2 .modal-cart-row #modalAddBtn{flex:1 1 auto;}
 html.v2 .modal-cart-row .btn{padding-inline:8px; font-size:14.5px; white-space:nowrap; line-height:1.2;}
 html.v2 .modal-cart-row .qty-stepper button{width:34px;}
 html.v2 .modal-cart-row .qty-stepper span{width:34px; min-width:34px;}
@@ -4875,7 +4887,8 @@ var I18N_EN = {
   "اعرض أول 20 بس": "Show first 20 only",
   "كل صنف اتباع في الفترة — الأحدث الأول. الإجمالي قبل خصم الكوبون والشحن.": "Every item sold in the period — newest first. Totals are before coupon discount and shipping.",
   "و": "and",
-  "طلبك هيوصلك خلال يومين لـ 3 أيام": "Your order will arrive within 2 to 3 days",
+  "طلبك هيوصلك خلال 3 لـ 5 أيام": "Your order will arrive within 3 to 5 days",
+  "خلال 3 لـ 5 أيام": "within 3 to 5 days",
   "متوقع بين": "Expected between",
   "💰 تقرير المبيعات": "💰 Sales report",
   "تقرير المبيعات": "Sales report",
@@ -5922,7 +5935,7 @@ function appAlert(o){ return appDialog(o || {}, false); }
 /* ---------- Cart ---------- */
 var cart = {};
 try{ cart = JSON.parse(localStorage.getItem("aa_cart") || "{}"); }catch(e){ cart = {}; }
-function saveCart(){ try{ localStorage.setItem("aa_cart", JSON.stringify(cart)); }catch(e){} }
+function saveCart(){ try{ localStorage.setItem("aa_cart", JSON.stringify(cart)); }catch(e){} if(typeof v2SyncQuick === "function" && AA_V2) requestAnimationFrame(v2SyncQuick); }
 
 /* ---------- المفضلة (Wishlist) ---------- محفوظة على حساب العميل نفسه في
    السيرفر (مش في تخزين المتصفح)، عشان كل عميل يشوف مفضلته هو بس، حتى لو
@@ -6286,7 +6299,7 @@ function addToCart(id, qty, colorName, sizeLabel){
     showToast(LANG==="en"
       ? "⚠️ Only "+stock+" left of \""+pName(p)+variantSuffix+"\""
       : "⚠️ الكمية المتاحة من «"+p.name+variantSuffix+"» بقت "+stock+" بس");
-  } else if(!isAppMode()){
+  } else if(!isAppMode() && !window.__aaQuickAdd){
     showToast(LANG==="en"
       ? "✅ \""+pName(p)+variantSuffix+"\" added to cart"
       : "✅ تمت إضافة «"+p.name+variantSuffix+"» إلى السلة");
@@ -6302,7 +6315,14 @@ function addToCart(id, qty, colorName, sizeLabel){
   /* جوه التطبيق: العميل بيفضل في صفحة المنتج، والصورة بتطير للسلة تحت،
      ورسالة صغيرة فيها زرار "عرض السلة" (زي التطبيقات الكبيرة). */
   /* "اشتري الآن": العميل رايح للدفع على طول، فمفيش داعي لرسالة "عرض السلة" */
-  if(window.__aaBuyNow){ return; }
+  if(window.__aaBuyNow || window.__aaQuiet){ return; }
+  /* إضافة سريعة من الكارت: الصورة بتطير للسلة ورسالة صغيرة، من غير ما السلة تتفتح */
+  if(window.__aaQuickAdd){
+    var qImg = null;
+    try{ var qb = document.querySelector('[data-qadd="'+id+'"]'); var qm = qb && qb.closest(".card-media"); qImg = qm ? (qm.querySelector(".card-photo.active") || qm.querySelector("img")) : null; }catch(e){}
+    flyToCart(qImg);
+    return;
+  }
   if(isAppMode()){
     var flySrc = document.getElementById("modalBackdrop").classList.contains("show") ? pgCurrentImg() : null;
     flyToCart(flySrc);
@@ -6867,11 +6887,11 @@ function showOrderSuccessModal(phone){
       + '<h3 style="margin-top:8px;">'+t("استلام طلبك بنجاح")+'</h3>'
       + '<p style="color:var(--ink-soft); font-size:14.5px; margin-top:2px; line-height:1.7;">'+t("جاري مراجعة بياناتك وتجهيز منتجك الآن.")+'<br>'+t("سعداء بتعاملكم معنا،")+'</p>'
       + (function(){
-          /* مدة التوصيل: من يومين لـ 3 أيام من النهارده */
+          /* مدة التوصيل: من 3 لـ 5 أيام من النهارده */
           var loc = LANG==="en" ? "en-US" : "ar-EG", d1 = new Date(), d2 = new Date();
-          d1.setDate(d1.getDate()+2); d2.setDate(d2.getDate()+3);
+          d1.setDate(d1.getDate()+3); d2.setDate(d2.getDate()+5);
           var o = { weekday:"long", day:"numeric", month:"long" };
-          return '<div class="order-eta"><span class="order-eta-ic" aria-hidden="true">🚚</span><span><b>'+t("طلبك هيوصلك خلال يومين لـ 3 أيام")+'</b><small>'+t("متوقع بين")+' '+escHtml(d1.toLocaleDateString(loc, o))+(LANG==="en" ? " and " : " و")+escHtml(d2.toLocaleDateString(loc, o))+'</small></span></div>';
+          return '<div class="order-eta"><span class="order-eta-ic" aria-hidden="true">🚚</span><span><b>'+t("طلبك هيوصلك خلال 3 لـ 5 أيام")+'</b><small>'+t("متوقع بين")+' '+escHtml(d1.toLocaleDateString(loc, o))+(LANG==="en" ? " and " : " و")+escHtml(d2.toLocaleDateString(loc, o))+'</small></span></div>';
         })()
     + '</div>';
   document.getElementById("modalCard").classList.add("acct-card");
@@ -7304,10 +7324,10 @@ function v2DateTxt(d, withMonth){
   var loc = LANG === "en" ? "en-US" : "ar-EG";
   return d.toLocaleDateString(loc, withMonth ? { weekday:"long", day:"numeric", month:"long" } : { weekday:"long", day:"numeric" });
 }
-/* الطلب بيوصل من يومين لـ 3 أيام (نفس الكلام اللي في رسالة إتمام الطلب) */
-function v2EtaShort(){ return v2DateTxt(v2Day(2), true); }
+/* الطلب بيوصل من 3 لـ 5 أيام (نفس الكلام اللي في رسالة إتمام الطلب) */
+function v2EtaShort(){ return t("خلال 3 لـ 5 أيام"); }
 function v2EtaRange(){
-  var a = v2Day(2), b = v2Day(3);
+  var a = v2Day(3), b = v2Day(5);
   return a.getMonth() === b.getMonth() ? v2DateTxt(a, false)+" – "+v2DateTxt(b, true) : v2DateTxt(a, true)+" – "+v2DateTxt(b, true);
 }
 function v2RenderDeliverBar(){
@@ -7420,7 +7440,7 @@ function v2Card(p){
       + media + badges
       + '<button class="open-detail" data-open="'+p.id+'" aria-label="'+t("عرض تفاصيل")+' '+escHtml(pName(p))+'"></button>'
       + '<button class="card-wish'+(FAVORITES[p.id] ? ' active' : '')+'" data-wish="'+p.id+'" aria-label="'+(FAVORITES[p.id] ? t('إزالة من المفضلة') : t('أضف للمفضلة'))+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.6-9.5-9C.7 8.4 2.3 5 5.6 5 7.6 5 9 6 12 8.5 15 6 16.4 5 18.4 5c3.3 0 4.9 3.4 3.1 7-2.5 4.4-9.5 9-9.5 9Z"/></svg></button>'
-      + (out ? '' : '<button class="card-quick" data-open="'+p.id+'" aria-label="'+t("أضف للسلة")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>')
+      + (out ? '' : v2QuickHtml(p))
     + '</div>'
     + '<div class="card-body v2-body">'
       + '<h3 class="card-title v2-title">'+escHtml(pName(p))+'</h3>'
@@ -7432,6 +7452,76 @@ function v2Card(p){
     + '</div>'
   + '</article>';
 }
+
+/* ---------- إضافة سريعة من الكارت (زي نون) ----------
+   "+" على صورة المنتج بيضيفه للسلة على طول، وبعدها الزرار بيبقى سلة عليها
+   العدد. الدوس عليها بيفتح عداد صغير (− العدد +) يتقفل لوحده. المنتج اللي
+   بألوان أو أحجام بيفتح صفحته عشان العميل يختار الأول. */
+function v2NeedsChoice(p){ return (Array.isArray(p.colors) && p.colors.length) || (Array.isArray(p.sizes) && p.sizes.length); }
+function v2CartQtyOf(p){ var n = 0, id = String(p.id); Object.keys(cart).forEach(function(k){ if(k === id || k.indexOf(id+"::") === 0) n += +cart[k] || 0; }); return n; }
+var V2_CART_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.4 12.2a2 2 0 0 0 2 1.8h7.7a2 2 0 0 0 2-1.6L21 8H6"/><circle cx="10" cy="20.5" r="1.2"/><circle cx="17" cy="20.5" r="1.2"/></svg>';
+function v2QuickHtml(p){
+  var q = v2NeedsChoice(p) ? v2CartQtyOf(p) : (cart[String(p.id)] || 0);
+  if(q > 0) return '<button type="button" class="card-quick v2q is-in" data-qadd="'+p.id+'" aria-label="'+t("في السلة")+' '+fmt(q)+'">'+V2_CART_SVG+'<em class="tabular">'+fmt(q)+'</em></button>';
+  return '<button type="button" class="card-quick v2q" data-qadd="'+p.id+'" aria-label="'+t("أضف للسلة")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>';
+}
+function v2SyncQuick(){
+  if(!AA_V2) return;
+  Array.prototype.forEach.call(document.querySelectorAll(".card-quick.v2q[data-qadd]"), function(b){
+    if(b.closest(".card") && b.closest(".card").querySelector(".v2-qstep")) return;
+    var p = PRODUCTS.find(function(x){ return String(x.id) === b.dataset.qadd; }); if(!p) return;
+    b.outerHTML = v2QuickHtml(p);
+  });
+}
+function v2CloseSteppers(except){
+  Array.prototype.forEach.call(document.querySelectorAll(".v2-qstep"), function(st){ if(st !== except){ clearTimeout(st._t); st.remove(); } });
+}
+function v2OpenStepper(btn, p){
+  v2CloseSteppers();
+  var media = btn.closest(".card-media"); if(!media) return;
+  var q = cart[String(p.id)] || 0;
+  var st = document.createElement("div"); st.className = "v2-qstep"; st.dataset.pid = p.id;
+  st.innerHTML = '<button type="button" data-qstep="-1" aria-label="'+t("تقليل الكمية")+'">'+(q <= 1 ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>' : '−')+'</button><b class="tabular">'+fmt(q)+'</b><button type="button" data-qstep="1" aria-label="'+t("زيادة الكمية")+'">+</button>';
+  media.appendChild(st);
+  btn.style.visibility = "hidden";
+  v2ArmStepper(st);
+}
+function v2ArmStepper(st){ clearTimeout(st._t); st._t = setTimeout(function(){ st.remove(); v2SyncQuick(); }, 3500); }
+document.addEventListener("click", function(e){
+  var b = e.target.closest("[data-qadd]");
+  if(b){
+    e.preventDefault(); e.stopPropagation();
+    var p = PRODUCTS.find(function(x){ return String(x.id) === b.dataset.qadd; }); if(!p) return;
+    if(v2NeedsChoice(p)){ openProductModal(p.id); if(!v2CartQtyOf(p)) showToast(t("👆 اختار اللون أو الحجم الأول")); return; }
+    if(cart[String(p.id)] > 0){ v2OpenStepper(b, p); return; }
+    var media0 = b.closest(".card-media");
+    window.__aaQuickAdd = true;
+    try{ addToCart(p.id, 1); } finally { window.__aaQuickAdd = false; }
+    /* زي نون: بعد الإضافة العداد بيفتح (🗑 1 +) وبعد ثواني بيتقفل لسلة عليها العدد */
+    if(cart[String(p.id)] > 0 && media0) setTimeout(function(){ var nb = media0.querySelector("[data-qadd]"); if(nb) v2OpenStepper(nb, p); }, 30);
+    return;
+  }
+  var sb = e.target.closest("[data-qstep]");
+  if(sb){
+    e.preventDefault(); e.stopPropagation();
+    var st = sb.closest(".v2-qstep"), p2 = PRODUCTS.find(function(x){ return String(x.id) === st.dataset.pid; }); if(!p2) return;
+    var key = String(p2.id), d = +sb.dataset.qstep, have = cart[key] || 0;
+    if(d > 0){
+      window.__aaQuickAdd = true; window.__aaQuiet = true;
+      try{ addToCart(p2.id, 1); } finally { window.__aaQuickAdd = false; window.__aaQuiet = false; }
+    } else {
+      if(have <= 1) delete cart[key]; else cart[key] = have - 1;
+      saveCart(); renderCartBadge(); renderCartDrawer(); haptic("tap");
+    }
+    var nq = cart[key] || 0;
+    if(!nq){ clearTimeout(st._t); st.remove(); v2SyncQuick(); showToast("🗑️ "+t("اتشال من السلة")); return; }
+    st.querySelector("b").textContent = fmt(nq);
+    st.querySelector('[data-qstep="-1"]').innerHTML = nq <= 1 ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>' : '−';
+    v2ArmStepper(st);
+    return;
+  }
+  if(!e.target.closest(".v2-qstep")) v2CloseSteppers();
+}, true);
 
 /* ---------- الرئيسية: صفوف بتتسحب بالعرض ---------- */
 function v2RecentIds(){ try{ var a = JSON.parse(localStorage.getItem("aa_recent_p") || "[]"); return Array.isArray(a) ? a : []; }catch(e){ return []; } }
@@ -7649,9 +7739,6 @@ function v2EnhanceModal(id){
   var rev = document.getElementById("modalReviews");
   if(rev) rev.insertAdjacentHTML("afterend", v2RelatedHtml(p));
   card.addEventListener("click", function(e){ if(e.target.closest("[data-v2-gov-open]")) v2OpenGovSheet(); });
-  v2EnsureBuyNow();
-  var box = document.getElementById("modalActionsBox");
-  if(box) new MutationObserver(v2EnsureBuyNow).observe(box, { childList:true });
   v2StartTicker();
 }
 /* "اشتري الآن" جنب "أضف للسلة": بيضيف المنتج ويوديك على خطوة بيانات التوصيل على طول */
@@ -7698,7 +7785,7 @@ function v2TimelineHtml(o){
     var done = i <= idx, at = hist[st.k];
     return '<div class="v2-tl-step'+(done ? ' done' : '')+(i === idx ? ' cur' : '')+'"><i>'+st.ic+'</i><b>'+t(st.l)+'</b>'+(done && at ? '<small>'+escHtml(new Date(at).toLocaleDateString(loc, { day:"numeric", month:"short" }))+'</small>' : '')+'</div>';
   }).join("")+'</div>'
-  + (s !== "delivered" ? '<p class="v2-tl-eta">🚚 '+t("الطلب بيوصل عادةً خلال يومين لـ 3 أيام من تسجيله")+'</p>' : '');
+  + (s !== "delivered" ? '<p class="v2-tl-eta">🚚 '+t("الطلب بيوصل عادةً خلال 3 لـ 5 أيام من تسجيله")+'</p>' : '');
 }
 function v2Reorder(order){
   var added = 0, skipped = [];

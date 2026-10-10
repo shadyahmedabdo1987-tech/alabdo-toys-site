@@ -2228,6 +2228,37 @@ html.v2 #cartFootStepCart > #cartFreeProg, html.v2 #cartFootStepCart > .cart-tot
 .v2-csum-ship{font-size:11.5px !important;}
 .v2-checkout{flex:1.3; min-height:48px; font-size:15.5px !important; white-space:nowrap;}
 
+/* زي نون: «أضف للسلة» من صفحة المنتج — تحميل صغير وبعدين شيت "اتضاف للسلة" */
+html.v2 #modalAddBtn.is-loading{color:transparent !important; background:var(--surface-2) !important; box-shadow:none !important; position:relative; pointer-events:none;}
+html.v2 #modalAddBtn.is-loading::after{content:""; position:absolute; top:50%; left:50%; width:20px; height:20px; margin:-10px 0 0 -10px; border-radius:50%; border:2.5px solid var(--pink-deep); border-top-color:transparent; animation:v2spin .7s linear infinite;}
+@keyframes v2spin{to{transform:rotate(360deg);}}
+.v2-as-ov{position:fixed; inset:0; z-index:9100; background:rgba(15,10,25,.45); display:flex; align-items:flex-end; justify-content:center; opacity:0; transition:opacity .22s ease;}
+.v2-as-ov.show{opacity:1;}
+.v2-as{width:100%; max-width:560px; background:var(--surface); color:var(--ink); border-radius:20px 20px 0 0; padding:8px 16px calc(16px + env(safe-area-inset-bottom)); transform:translateY(100%); transition:transform .3s cubic-bezier(.2,.8,.25,1); box-shadow:0 -8px 30px rgba(0,0,0,.18);}
+.v2-as-ov.show .v2-as{transform:none;}
+.v2-as-grab{display:block; width:40px; height:4px; border-radius:4px; background:var(--border); margin:0 auto 12px;}
+.v2-as-top{display:flex; align-items:center; justify-content:center; min-height:84px;}
+.v2-as-pic{position:relative; flex:0 0 76px; width:76px; height:76px;}
+.v2-as-ring{position:absolute; inset:0; width:100%; height:100%; transform:rotate(-90deg);}
+.v2-as-ring circle{fill:none; stroke:#1d9a55; stroke-width:3.5; stroke-linecap:round; stroke-dasharray:232.5; stroke-dashoffset:232.5;}
+.v2-as-ov.show .v2-as-ring circle{animation:v2asRing .6s .32s ease-out forwards;}
+@keyframes v2asRing{to{stroke-dashoffset:0;}}
+.v2-as-img{position:absolute; inset:7px; border-radius:50%; overflow:hidden; background:#fff; display:grid; place-items:center; font-size:28px;}
+.v2-as-img img{width:100%; height:100%; object-fit:contain;}
+.v2-as-ok{position:absolute; bottom:1px; inset-inline-end:1px; width:22px; height:22px; border-radius:50%; background:#1d9a55; border:2px solid var(--surface); display:grid; place-items:center; transform:scale(0);}
+.v2-as-ok svg{width:13px; height:13px;}
+.v2-as-ov.show .v2-as-ok{animation:v2asOk .3s .9s cubic-bezier(.3,1.6,.5,1) forwards;}
+@keyframes v2asOk{to{transform:scale(1);}}
+.v2-as-info{flex:1 1 auto; min-width:0; max-width:0; opacity:0; overflow:hidden; padding-inline-start:0; display:flex; flex-direction:column; gap:3px;}
+.v2-as-ov.show .v2-as-info{animation:v2asInfo .45s 1.1s ease forwards;}
+@keyframes v2asInfo{to{max-width:100%; opacity:1; padding-inline-start:14px;}}
+.v2-as-info b{font-size:16px; white-space:nowrap;}
+.v2-as-info small{font-size:13px; color:var(--ink-soft); line-height:1.45; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;}
+.v2-as-btns{display:flex; gap:10px; margin-top:16px;}
+.v2-as-btns button{flex:1 1 0; min-height:46px; border-radius:12px; font:inherit; font-size:14.5px; font-weight:900; cursor:pointer;}
+.v2-as-cont{background:var(--surface); color:var(--pink-deep); border:1.5px solid var(--pink-deep);}
+.v2-as-view{background:#d6155f; color:#fff; border:0; box-shadow:0 3px 0 hsl(var(--shadow)/.25);}
+@media (prefers-reduced-motion: reduce){ .v2-as, .v2-as-ov{transition:none;} .v2-as-ov.show .v2-as-ring circle, .v2-as-ov.show .v2-as-ok, .v2-as-ov.show .v2-as-info{animation-duration:.01s; animation-delay:0s;} }
 /* شيت من تحت */
 .v2-sheet{position:fixed; inset:0; z-index:9000; background:rgba(15,10,25,.45); display:flex; align-items:flex-end; justify-content:center; opacity:0; transition:opacity .2s ease;}
 .v2-sheet.show{opacity:1;}
@@ -7426,6 +7457,45 @@ function v2CloseSheet(fromPop){
   return true;
 }
 window.addEventListener("popstate", function(){ if(document.getElementById("v2Sheet")) v2CloseSheet(true); });
+/* زي نون: بعد «أضف للسلة» من صفحة المنتج بيطلع شيت من تحت: صورة المنتج في دايرة
+   بتتملى أخضر + علامة ✓، وبعدها "اتضاف للسلة" واسم المنتج، وزرارين
+   «كمّل تسوق» و«عرض السلة». */
+function v2AddedSheet(p, img, variant){
+  v2CloseAdded(true);
+  var ov = document.createElement("div"); ov.className = "v2-as-ov"; ov.id = "v2AddedSheet";
+  ov.innerHTML = '<div class="v2-as" role="dialog" aria-modal="true" aria-label="'+t("اتضاف للسلة")+'"><i class="v2-as-grab"></i>'
+    + '<div class="v2-as-top"><div class="v2-as-pic"><svg class="v2-as-ring" viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="37"/></svg>'
+      + '<span class="v2-as-img">'+(img ? '<img src="'+img+'" alt="">' : categoryIcon(p.cat))+'</span>'
+      + '<b class="v2-as-ok" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.2 4.2L19 7"/></svg></b></div>'
+      + '<div class="v2-as-info"><b>'+t("اتضاف للسلة")+'</b><small>'+escHtml(pName(p))+(variant ? ' — '+escHtml(variant) : '')+'</small></div></div>'
+    + '<div class="v2-as-btns"><button type="button" class="v2-as-cont" data-as="close">'+t("كمّل تسوق")+'</button><button type="button" class="v2-as-view" data-as="cart">'+t("عرض السلة")+'</button></div>'
+  + '</div>';
+  document.body.appendChild(ov);
+  void ov.offsetWidth; ov.classList.add("show");
+  if(isAppMode()){ try{ history.pushState({ aaAdded:1 }, "", location.href); }catch(e){} }
+  ov.addEventListener("click", function(e){
+    if(e.target === ov || e.target.closest('[data-as="close"]')){ v2CloseAdded(); return; }
+    if(e.target.closest('[data-as="cart"]')){
+      v2CloseAdded();
+      setTimeout(function(){ closeAllPanels(); renderCartDrawer(); openDrawer(); }, 90);
+    }
+  });
+  /* سحب الشيت لتحت بيقفله */
+  var card = ov.querySelector(".v2-as"), y0 = null, dy = 0;
+  card.addEventListener("touchstart", function(e){ y0 = e.touches[0].clientY; dy = 0; card.style.transition = "none"; }, { passive:true });
+  card.addEventListener("touchmove", function(e){ if(y0 == null) return; dy = Math.max(0, e.touches[0].clientY - y0); card.style.transform = "translateY("+dy+"px)"; }, { passive:true });
+  card.addEventListener("touchend", function(){ card.style.transition = ""; if(dy > 70) v2CloseAdded(); else card.style.transform = ""; y0 = null; });
+}
+function v2CloseAdded(noHistory){
+  var ov = document.getElementById("v2AddedSheet"); if(!ov) return false;
+  ov.id = ""; ov.classList.remove("show");
+  var card = ov.querySelector(".v2-as"); if(card) card.style.transform = "";
+  setTimeout(function(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }, 320);
+  if(!noHistory && isAppMode() && history.state && history.state.aaAdded){ try{ PZ.skipPop = true; history.back(); }catch(e){ PZ.skipPop = false; } }
+  return true;
+}
+/* زرار الرجوع وهو مفتوح بيقفل الشيت بس (وصفحة المنتج تفضل مفتوحة) */
+window.addEventListener("popstate", function(e){ if(document.getElementById("v2AddedSheet")){ v2CloseAdded(true); e.stopImmediatePropagation(); } });
 function v2GovList(){
   var sel = document.getElementById("checkoutGovernorate"), out = [];
   if(sel) Array.prototype.forEach.call(sel.options, function(o){ if(o.value) out.push(o.value); });
@@ -9076,11 +9146,21 @@ function openProductModal(id){
       var c2 = modalSelectedColor ? modalSelectedColor.name : null, s2 = modalSelectedSize ? modalSelectedSize.label : null;
       var k2 = cartKeyFor(p.id, c2, s2), have = cart[k2] || 0, stT = modalStockTotal();
       if(stT!=null && have>=stT){ if(!window.__aaBuyNow) showToast(t("⚠️ الكمية المتاحة")+' '+fmt(stT)+' '+t("قطعة بس")); return; }
-      addToCart(p.id, 1, c2, s2);
-      var bx = document.getElementById("modalActionsBox");
-      if(!bx || !modalBackdrop.classList.contains("show")) return;
-      renderModalActions();
-      if(!window.__aaBuyNow && (cart[k2] || 0) > 0){ var q2 = document.getElementById("v2ModalQ"); if(q2 && q2._open) q2._open(); }
+      /* «اشتري الآن» بيضيف على طول ويروح للدفع */
+      if(window.__aaBuyNow){ addToCart(p.id, 1, c2, s2); return; }
+      /* زي نون: الزرار بيلف ثانية، وبعدها العدد بيتحدّث وبيطلع شيت "اتضاف للسلة" */
+      var btn = this, img = (modalSelectedColor && modalSelectedColor.image) || productMainImage(p);
+      if(btn.classList.contains("is-loading")) return;
+      btn.classList.add("is-loading"); btn.setAttribute("aria-busy", "true");
+      setTimeout(function(){
+        window.__aaQuiet = true;
+        try{ addToCart(p.id, 1, c2, s2); } finally { window.__aaQuiet = false; }
+        var added = (cart[k2] || 0) > have;
+        if(added && typeof cartBump === "function") cartBump();
+        if(!modalBackdrop.classList.contains("show") || !document.getElementById("modalActionsBox")) return;
+        renderModalActions();
+        if(added) setTimeout(function(){ v2AddedSheet(p, img, [c2 ? t("اللون")+": "+c2 : "", s2 || ""].filter(Boolean).join(" · ")); }, 120);
+      }, 700);
     });
   }
   if(colors.length){

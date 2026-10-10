@@ -6421,6 +6421,9 @@ function renderCartBadge(){
   document.getElementById("cartCount").textContent = n;
   var tb = document.getElementById("appTabCartCount");
   if(tb){ tb.textContent = n > 99 ? "99+" : n; tb.setAttribute("data-zero", n ? "0" : "1"); }
+  /* أيقونة السلة اللي فوق جوه صفحة المنتج: بتتحدّث مع أي تغيير (إضافة/تقليل/مسح) */
+  var pmc = document.getElementById("pmCartCount");
+  if(pmc){ pmc.textContent = fmt(n); pmc.hidden = !n; }
   notifyNativeCart(n);
 }
 /* تطبيق الأندرويد بيعرف عدد المنتجات اللي في السلة، عشان لو العميل قفل

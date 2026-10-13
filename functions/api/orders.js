@@ -16,7 +16,14 @@ export async function onRequestGet({ request, env }){
   var customer = await requireCustomer(request, env);
   if(customer){
     var list = await getList(env, "orders");
-    var mine = list.filter(function(o){ return o.customerId === customer.identifier; });
+    var id = String(customer.identifier || "").toLowerCase();
+    var tail = String(customer.identifier || "").replace(/\D/g, "").slice(-10);
+    var mine = list.filter(function(o){
+      if(o.customerId && String(o.customerId).toLowerCase() === id) return true;
+      if(tail.length >= 9 && String(o.phone || "").replace(/\D/g, "").slice(-10) === tail) return true;
+      if(tail.length >= 9 && String(o.customerId || "").replace(/\D/g, "").slice(-10) === tail) return true;
+      return false;
+    });
     return json({ ok:true, orders: mine });
   }
   return json({ ok:false, error:"unauthorized" }, 401);
@@ -159,6 +166,8 @@ export async function onRequestPost({ request, env }){
     notes: (body.notes || "").trim(),
     paymentMethod: (body.paymentMethod || "").trim(),
     paymentProof: null,
+    status: "new",
+    statusHistory: [{ s: "new", at: Date.now() }],
     createdAt: Date.now()
   };
 

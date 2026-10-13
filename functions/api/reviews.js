@@ -9,24 +9,38 @@ import { json, getList, saveList, requireCustomer, requireAdmin } from "../_lib.
    placed while logged in carry customerId; older guest orders are matched
    by the last 10 digits of the phone number, the same number the account
    uses. Rating is only unlocked after the order status is "delivered". */
-function tail10(v){ return String(v || "").replace(/\D/g, "").slice(-10); }
+function digits(v){ return String(v || "").replace(/\D/g, ""); }
+function tail10(v){ return digits(v).slice(-10); }
+function sameCustomerId(a, b){
+  var left = String(a || "").toLowerCase(), right = String(b || "").toLowerCase();
+  if(left && right && left === right) return true;
+  var t1 = tail10(a), t2 = tail10(b);
+  return t1.length >= 9 && t1 === t2;
+}
 function orderIsMine(o, customer){
-  var id = String(customer.identifier || "").toLowerCase(), tail = tail10(customer.identifier);
-  return (o.customerId && String(o.customerId).toLowerCase() === id)
-    || (!o.customerId && tail.length >= 9 && tail10(o.phone) === tail);
+  if(!o || !customer) return false;
+  if(sameCustomerId(o.customerId, customer.identifier)) return true;
+  /* لو customerId فاضي أو مكتوب بصيغة مختلفة، نطابق برقم الموبايل على الطلب */
+  var tail = tail10(customer.identifier);
+  return tail.length >= 9 && tail10(o.phone) === tail;
+}
+function isDelivered(o){
+  var s = String((o && o.status) || "new").toLowerCase().trim();
+  return s === "delivered" || s === "وصل";
 }
 function deliveredAtOf(o){
   var hist = Array.isArray(o.statusHistory) ? o.statusHistory : [];
   for(var i = hist.length - 1; i >= 0; i--){
-    if(hist[i] && hist[i].s === "delivered") return +hist[i].at || 0;
+    if(hist[i] && (hist[i].s === "delivered" || hist[i].s === "وصل")) return +hist[i].at || 0;
   }
+  /* لو الحالة وصل من غير تاريخ في السجل، نعتبر وقت آخر تحديث/الإنشاء */
+  if(isDelivered(o)) return +o.updatedAt || +o.createdAt || Date.now();
   return +o.createdAt || 0;
 }
 async function hasPurchased(env, customer, productId){
   var orders = await getList(env, "orders");
   return orders.some(function(o){
-    if((o.status || "new") !== "delivered") return false;
-    if(!orderIsMine(o, customer)) return false;
+    if(!isDelivered(o) || !orderIsMine(o, customer)) return false;
     return (o.items || []).some(function(it){ return String(it.id) === String(productId); });
   });
 }
@@ -40,12 +54,12 @@ async function pendingReviews(env, customer){
   var reviews = await getList(env, "reviews");
   var reviewedAt = {};
   reviews.forEach(function(r){
-    if(r.customerId !== customer.identifier) return;
+    if(!sameCustomerId(r.customerId, customer.identifier)) return;
     var pid = String(r.productId), at = +r.createdAt || 0;
     if(reviewedAt[pid] == null || at > reviewedAt[pid]) reviewedAt[pid] = at;
   });
   var delivered = orders.filter(function(o){
-    return (o.status || "new") === "delivered" && orderIsMine(o, customer);
+    return isDelivered(o) && orderIsMine(o, customer);
   }).sort(function(a, b){ return deliveredAtOf(b) - deliveredAtOf(a); });
   var seen = {}, pending = [];
   delivered.forEach(function(o){
@@ -64,7 +78,7 @@ async function pendingReviews(env, customer){
       });
     });
   });
-  return pending;
+  return { pending: pending, rated: reviewedAt };
 }
 
 export async function onRequestGet({ request, env }){
@@ -80,8 +94,8 @@ export async function onRequestGet({ request, env }){
   if(url.searchParams.get("pending") === "1"){
     var pendingCustomer = await requireCustomer(request, env);
     if(!pendingCustomer) return json({ ok:false, error:"unauthorized" }, 401);
-    var pending = await pendingReviews(env, pendingCustomer);
-    return json({ ok:true, pending: pending });
+    var result = await pendingReviews(env, pendingCustomer);
+    return json({ ok:true, pending: result.pending, rated: result.rated });
   }
   /* public: hidden reviews are left out and the phone number never leaves
      the server */
@@ -97,7 +111,7 @@ export async function onRequestGet({ request, env }){
     var customer = await requireCustomer(request, env);
     if(customer){
       out.canReview = await hasPurchased(env, customer, productId);
-      var mine = all.find(function(r){ return r.customerId === customer.identifier && String(r.productId) === String(productId); });
+      var mine = all.find(function(r){ return sameCustomerId(r.customerId, customer.identifier) && String(r.productId) === String(productId); });
       if(mine) out.mine = { rating: mine.rating, comment: mine.comment || "" };
     }
   }
@@ -126,7 +140,7 @@ export async function onRequestPost({ request, env }){
 
   var reviews = await getList(env, "reviews");
   var idx = reviews.findIndex(function(r){
-    return r.customerId === customer.identifier && String(r.productId) === String(productId);
+    return sameCustomerId(r.customerId, customer.identifier) && String(r.productId) === String(productId);
   });
   var entry = {
     id: idx > -1 ? reviews[idx].id : ("rev_" + Date.now().toString(36) + Math.floor(Math.random() * 999)),

@@ -611,9 +611,10 @@ html[dir="ltr"] .drawer.show{transform:translateX(0);}
 .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 
 /* ============ Post-delivery quick-rate banner ============ */
-.rate-banner{position:fixed; inset-inline:16px; bottom:calc(24px + env(safe-area-inset-bottom)); z-index:115; display:flex; align-items:center; gap:12px; background:#fff; color:#111; border-radius:14px; padding:12px; box-shadow:0 10px 28px rgba(15,23,42,.18); transform:translateY(120%); opacity:0; pointer-events:none; transition:transform .35s ease, opacity .28s ease; max-width:520px; margin-inline:auto; left:16px; right:16px; border:1px solid rgba(15,23,42,.06);}
+.rate-banner{position:fixed; inset-inline:16px; bottom:calc(24px + env(safe-area-inset-bottom)); z-index:140; display:flex; align-items:center; gap:12px; background:#fff; color:#111; border-radius:14px; padding:12px; box-shadow:0 10px 28px rgba(15,23,42,.18); transform:translateY(120%); opacity:0; pointer-events:none; transition:transform .35s ease, opacity .28s ease; max-width:520px; margin-inline:auto; left:16px; right:16px; border:1px solid rgba(15,23,42,.06);}
 .rate-banner.show{transform:none; opacity:1; pointer-events:auto;}
 .rate-banner[hidden]{display:none !important;}
+html.app-mode .rate-banner{z-index:140;}
 .rate-banner .rb-thumb{width:48px; height:48px; border-radius:10px; object-fit:cover; background:#f3f4f6; flex:none;}
 .rate-banner .rb-thumb.is-emoji{display:flex; align-items:center; justify-content:center; font-size:22px;}
 .rate-banner .rb-body{flex:1; min-width:0; display:flex; flex-direction:column; gap:6px;}
@@ -7330,7 +7331,7 @@ document.addEventListener("error", function(e){
 
 /* ---------- نسخة جديدة من الموقع: نحدّث لوحدنا لو العميل لسه فاتح، أو نعرض زرار تحديث ---------- */
 window.aaOnUpdated = function(){
-  var fresh = Date.now() - (window.__aaBoot || 0) < 20000;
+  var fresh = Date.now() - (window.__aaBoot || 0) < 60000;
   var busy = appAnyPanelOpen() || (document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) || cartCount() > 0 && document.getElementById("cartDrawer").classList.contains("show");
   if(fresh && !busy){ location.reload(); return; }
   aaSnack("✨ "+t("فيه تحديث جديد للمتجر"), t("حدّث"), function(){ location.reload(); });
@@ -8128,9 +8129,9 @@ function v2MaybeAskReview(orders){
 }
 
 /* ---------- بانر تقييم المنتجات بعد التسليم (موقع + تطبيق العميل) ---------- */
-var RATE_SNOOZE_KEY = "aa_rate_snooze";
-var RATE_SNOOZE_MS = 6 * 3600000; /* إخفاء مؤقت 6 ساعات بس، ومش بيلغي تسليم جديد */
-var RATE_POLL_MS = 25000;
+var RATE_SNOOZE_KEY = "aa_rate_snooze_v2";
+var RATE_SNOOZE_MS = 4 * 3600000; /* إخفاء مؤقت 4 ساعات بس، ومش بيلغي تسليم جديد */
+var RATE_POLL_MS = 15000;
 var rateQueue = [];
 var rateBusy = false;
 var rateHideTimer = null;
@@ -8139,14 +8140,19 @@ var ratePollTimer = null;
 var rateAdvanceTimer = null;
 var rateFetchInFlight = false;
 var rateSeenSession = {}; /* منتجات اتقيّمت أو اتقفلت في الجلسة دي عشان منكررش البانر فوري */
+var rateRatedMap = {}; /* آخر تقييم محفوظ من السيرفر: productId -> createdAt */
+try{ localStorage.removeItem("aa_rate_snooze"); }catch(e){} /* مسح الإخفاء القديم اللي كان بيمنع الظهور */
 function rateSnoozeMap(){
   try{ return JSON.parse(localStorage.getItem(RATE_SNOOZE_KEY) || "{}") || {}; }catch(e){ return {}; }
 }
 function rateIsSnoozed(pid, deliveredAt){
   var m = rateSnoozeMap(), v = m[String(pid)];
   if(v == null) return false;
-  /* صيغة قديمة: رقم = until */
-  if(typeof v === "number") return v > Date.now();
+  if(typeof v === "number"){
+    /* صيغة قديمة: لو في تسليم معروف، نتجاهل الإخفاء ونرجّع نعرض */
+    if(deliveredAt) return false;
+    return v > Date.now();
+  }
   var until = +v.until || 0, snoozedAt = +v.at || 0;
   /* تسليم جديد بعد ما قفل البانر → نرجّع نعرض التقييم */
   if(deliveredAt && +deliveredAt > snoozedAt) return false;
@@ -8156,6 +8162,35 @@ function rateSnooze(pid){
   var m = rateSnoozeMap();
   m[String(pid)] = { until: Date.now() + RATE_SNOOZE_MS, at: Date.now() };
   try{ localStorage.setItem(RATE_SNOOZE_KEY, JSON.stringify(m)); }catch(e){}
+}
+function rateDeliveredAtOf(o){
+  var hist = Array.isArray(o && o.statusHistory) ? o.statusHistory : [];
+  for(var i = hist.length - 1; i >= 0; i--){
+    if(hist[i] && (hist[i].s === "delivered" || hist[i].s === "وصل")) return +hist[i].at || 0;
+  }
+  var s = String((o && o.status) || "").toLowerCase();
+  if(s === "delivered" || s === "وصل") return +o.updatedAt || +o.createdAt || Date.now();
+  return +((o && o.createdAt) || 0);
+}
+function ratePendingFromOrders(orders, rated){
+  rated = rated || rateRatedMap || {};
+  var delivered = (orders || []).filter(function(o){
+    var s = String((o && o.status) || "new").toLowerCase();
+    return s === "delivered" || s === "وصل";
+  }).sort(function(a, b){ return rateDeliveredAtOf(b) - rateDeliveredAtOf(a); });
+  var seen = {}, out = [];
+  delivered.forEach(function(o){
+    var at = rateDeliveredAtOf(o);
+    (o.items || []).forEach(function(it){
+      var pid = String(it.id);
+      if(!pid || seen[pid]) return;
+      seen[pid] = 1;
+      var last = rated[pid];
+      if(last != null && +last >= at) return;
+      out.push({ productId: it.id, name: it.name || "", orderId: o.id, deliveredAt: at });
+    });
+  });
+  return out;
 }
 function rateBannerEl(){ return document.getElementById("rateBanner"); }
 function rateClearAdvance(){ if(rateAdvanceTimer){ clearTimeout(rateAdvanceTimer); rateAdvanceTimer = null; } }
@@ -8308,16 +8343,22 @@ function loadPendingRatings(){
   if(rateFetchInFlight){ schedulePendingRatings(2500); return; }
   if(rateBusy){ schedulePendingRatings(8000); return; }
   rateFetchInFlight = true;
-  fetch("/api/reviews?pending=1", { cache:"no-store", headers: customerAuthHeaders() })
-    .then(function(r){ return r.json(); })
-    .then(function(res){
-      rateFetchInFlight = false;
-      if(!res || !res.ok || !Array.isArray(res.pending)){ schedulePendingRatings(RATE_POLL_MS); return; }
-      rateMergeQueue(res.pending);
-      showNextRateBanner();
-      if(!rateBusy && !rateQueue.length) schedulePendingRatings(RATE_POLL_MS);
-    })
-    .catch(function(){ rateFetchInFlight = false; schedulePendingRatings(RATE_POLL_MS); });
+  var hdr = customerAuthHeaders();
+  Promise.all([
+    fetch("/api/reviews?pending=1", { cache:"no-store", headers: hdr }).then(function(r){ return r.json(); }).catch(function(){ return null; }),
+    fetch("/api/orders", { cache:"no-store", headers: hdr }).then(function(r){ return r.json(); }).catch(function(){ return null; })
+  ]).then(function(pair){
+    rateFetchInFlight = false;
+    var rev = pair[0], ord = pair[1];
+    if(rev && rev.ok && rev.rated && typeof rev.rated === "object") rateRatedMap = rev.rated;
+    var list = [];
+    if(rev && rev.ok && Array.isArray(rev.pending)) list = list.concat(rev.pending);
+    /* مصدر تاني من طلبات العميل نفسها (اللي شايفها «وصل») — لو الـ pending فاضي لسبب مطابقة */
+    if(ord && ord.ok && Array.isArray(ord.orders)) list = list.concat(ratePendingFromOrders(ord.orders, rateRatedMap));
+    rateMergeQueue(list);
+    showNextRateBanner();
+    if(!rateBusy && !rateQueue.length) schedulePendingRatings(RATE_POLL_MS);
+  }).catch(function(){ rateFetchInFlight = false; schedulePendingRatings(RATE_POLL_MS); });
 }
 function startRateBannerWatch(){
   if(ratePollTimer) return;
@@ -8488,13 +8529,19 @@ function v2LoadOrders(){
       };
       if(V2.openOrderId){ var want = orders.find(function(o){ return o.id === V2.openOrderId; }); V2.openOrderId = null; if(want) showOrderDetailModal(want); }
       v2MaybeAskReview(orders);
-      schedulePendingRatings(800);
+      try{
+        if(typeof ratePendingFromOrders === "function" && typeof rateMergeQueue === "function"){
+          rateMergeQueue(ratePendingFromOrders(orders, rateRatedMap));
+          showNextRateBanner();
+        }
+      }catch(e){}
+      schedulePendingRatings(400);
     })
     .catch(function(){ var box = document.getElementById("acctDrawerOrders"); if(box) box.innerHTML = '<p style="color:var(--pink-deep); font-size:13px;">'+t("تعذر تحميل الطلبات، جرّب تاني.")+'</p>'; });
 }
 function v2BootOrdersCheck(){
   if(!isCustomerAuthed() || isAdminAuthed()) return;
-  schedulePendingRatings(600);
+  schedulePendingRatings(300);
   if(!isAppMode() || !window.AlAbdoNative || typeof window.AlAbdoNative.requestReview !== "function") return;
   fetch("/api/orders", { headers: customerAuthHeaders(), cache:"no-store" }).then(function(r){ return r.json(); })
     .then(function(res){ if(res && res.ok) v2MaybeAskReview(res.orders || []); }).catch(function(){});

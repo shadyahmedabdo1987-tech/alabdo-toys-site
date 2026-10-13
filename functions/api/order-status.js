@@ -26,6 +26,7 @@ export async function onRequestPost({ request, env }){
   if((o.status || "new") === status) return json({ ok:true, order:o, same:true });
   const at = Date.now();
   o.status = status;
+  o.updatedAt = at;
   o.statusHistory = Array.isArray(o.statusHistory) ? o.statusHistory : [{ s:"new", at: o.createdAt || at }];
   o.statusHistory.push({ s: status, at });
   await saveList(env, "orders", list);

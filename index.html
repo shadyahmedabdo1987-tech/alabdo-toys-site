@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+<meta charset="UTF-8">
 <!-- بنطبّق اللغة المحفوظة (لو فيه) قبل أي حاجة تانية عشان الصفحة تفتح على
      شكلها الصح (LTR/إنجليزي) من غير وميض بشكل التاجه القديم لحظة التحميل. -->
 <script>(function(){try{
@@ -70,7 +71,6 @@ fbq('track', 'PageView');
 src="https://www.facebook.com/tr?id=604071008636850&ev=PageView&noscript=1"
 /></noscript>
 <!-- End Meta Pixel Code -->
-<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>متجر آل عبده | ألعاب أطفال أصلية في الإسكندرية — توصيل لكل مصر</title>
 <meta name="description" content="متجر آل عبده لبيع ألعاب الأطفال الأصلية في الإسكندرية، مصر. تشكيلة واسعة من الألعاب التعليمية والسيارات والدمى وألعاب البنات والأولاد، بأسعار مناسبة وتوصيل لكل المحافظات، مع الدفع نقدًا عند الاستلام أو فودافون كاش أو إنستاباي.">
@@ -223,72 +223,95 @@ ul{margin:0; padding:0; list-style:none;}
 .topbar li{display:flex; align-items:center; gap:6px; font-weight:700;}
 .topbar svg{width:15px; height:15px; flex:none;}
 
-.site-header{position:sticky; top:0; z-index:60; background:var(--surface); box-shadow:0 1px 0 var(--border);}
-.site-header.is-scrolled{box-shadow:0 6px 18px hsl(var(--shadow)/.10);}
+.site-header{position:sticky; top:0; z-index:60; background:color-mix(in srgb, var(--surface) 92%, transparent); box-shadow:0 1px 0 var(--border); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);}
+.site-header.is-scrolled{box-shadow:0 8px 24px hsl(var(--shadow)/.10);}
 .header-row{display:flex; align-items:center; gap:24px; padding-block:14px;}
 /* من غير order/margin هنا، اللوجو بياخد ترتيبه الطبيعي في الـ DOM (تاني
    عنصر بعد زرار القائمة)، وبما إن الصفحة rtl بتبدأ من اليمين، فده بيخلي
    اللوجو يظهر على يمين واجهة الموقع فوق. */
-.brand{display:flex; align-items:center; gap:12px; flex:none; perspective:1000px;}
-.brand-logo{width:64px; height:64px; aspect-ratio:1/1; object-fit:cover; border-radius:50%; flex:none; filter:drop-shadow(0 4px 10px hsl(var(--shadow)/.28)); transform-style:preserve-3d; will-change:transform; animation:brandLogoSpin 7s linear infinite;}
-@keyframes brandLogoSpin{ from{transform:rotateY(0deg);} to{transform:rotateY(360deg);} }
-@media (prefers-reduced-motion: reduce){ .brand-logo{animation:none;} .about-hero .art img{animation:none;} }
+.brand{display:flex; align-items:center; gap:12px; flex:none;}
+.brand-logo{width:64px; height:64px; aspect-ratio:1/1; object-fit:cover; border-radius:50%; flex:none; filter:drop-shadow(0 4px 12px hsl(var(--shadow)/.22)); transition:transform .45s cubic-bezier(.2,.8,.2,1), filter .45s ease;}
+.brand:hover .brand-logo{transform:scale(1.04) rotate(-4deg); filter:drop-shadow(0 8px 18px hsl(var(--shadow)/.28));}
+@media (prefers-reduced-motion: reduce){ .brand-logo, .brand:hover .brand-logo{transition:none; transform:none;} .about-hero .art img{animation:none;} }
 .brand-text .name{font-family:"Baloo Bhaijaan 2"; font-weight:800; font-size:21px; color:var(--pink-deep);}
 .brand-text .tag{font-size:12px; color:var(--ink-soft); font-weight:700;}
 
 .header-search{flex:1; max-width:520px; position:relative;}
-.header-search input{width:100%; padding:12px 46px 12px 16px; border-radius:999px; border:2px solid var(--border); background:var(--surface-3); color:var(--ink); font-size:14px;}
+.header-search input{width:100%; padding:12px 46px 12px 16px; border-radius:14px; border:1.5px solid var(--border); background:var(--surface-3); color:var(--ink); font-size:14px; transition:border-color .18s ease, box-shadow .18s ease;}
+.header-search input:focus{border-color:color-mix(in srgb, var(--pink) 55%, var(--border)); box-shadow:0 0 0 4px color-mix(in srgb, var(--pink) 16%, transparent);}
 .header-search input:focus-visible{outline-offset:0;}
-.header-search button{position:absolute; inset-inline-start:6px; top:50%; transform:translateY(-50%); width:34px; height:34px; border-radius:50%; border:0; background:linear-gradient(180deg, var(--pink), var(--pink-deep)); color:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 0 rgba(255,255,255,.35) inset, 0 3px 0 color-mix(in srgb, var(--pink-deep) 72%, black), 0 6px 12px hsl(var(--shadow)/.22); transition:transform .15s ease;}
-.header-search button:hover{transform:translateY(calc(-50% - 2px));}
-.header-search button:active{transform:translateY(calc(-50% + 2px)); box-shadow:0 1px 0 rgba(255,255,255,.25) inset, 0 1px 0 color-mix(in srgb, var(--pink-deep) 72%, black);}
+.header-search button{position:absolute; inset-inline-start:6px; top:50%; transform:translateY(-50%); width:34px; height:34px; border-radius:10px; border:0; background:var(--pink); color:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 14px color-mix(in srgb, var(--pink) 35%, transparent); transition:transform .15s ease, background .15s ease;}
+.header-search button:hover{background:var(--pink-deep); transform:translateY(calc(-50% - 1px));}
+.header-search button:active{transform:translateY(calc(-50% + 1px));}
 .header-search svg{width:16px; height:16px;}
 
 /* align-items:stretch (بدل center) عشان كل أزرار الهيدر (المظهر/اللغة/حسابي/
    السلة) تاخد نفس الارتفاع بالظبط حتى لو محتواها مختلف (زرار اللغة نص بس من
    غير أيقونة)، فيبانوا متناسقين ومتساوين في الشكل. */
 .header-actions{display:flex; align-items:stretch; gap:10px; flex:none;}
-/* ---------- زرار أيقونة ثلاثي الأبعاد: وش فاتح + حرف سفلي غامق بيدي إحساس
-   إنه زرار "حقيقي" مرفوع عن السطح، وبيتضغط لتحت فعليًا لما تدوس عليه. ---------- */
-/* ---------- أيقونات الهيدر (السلة/حسابي/المظهر) بنفس لون تاب "الرئيسية"
-   النشط - وردي متدرج بحرف سفلي غامق، بدل الخلفية البيضا. ---------- */
-.icon-btn{position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; min-width:64px; background:linear-gradient(180deg, var(--pink), var(--pink-deep)); border:0; color:#fff; padding:8px 12px; border-radius:14px; font-size:12px; font-weight:700; box-shadow:0 1px 0 rgba(255,255,255,.3) inset, 0 3px 0 color-mix(in srgb, var(--pink-deep) 72%, black), 0 8px 14px hsl(var(--shadow)/.22); transition:transform .15s ease, box-shadow .15s ease;}
-.icon-btn:hover{transform:translateY(-2px); box-shadow:0 1px 0 rgba(255,255,255,.3) inset, 0 5px 0 color-mix(in srgb, var(--pink-deep) 72%, black), 0 12px 18px hsl(var(--shadow)/.26);}
-.icon-btn:active{transform:translateY(2px); box-shadow:0 1px 0 rgba(255,255,255,.25) inset, 0 1px 0 color-mix(in srgb, var(--pink-deep) 72%, black), 0 4px 8px hsl(var(--shadow)/.18);}
+/* أيقونات الهيدر بهوية أنظف: خلفية وردية هادئة بدل الحرف الثلاثي الأبعاد. */
+.icon-btn{position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; min-width:64px; background:var(--surface); border:1.5px solid var(--border); color:var(--pink-deep); padding:8px 12px; border-radius:14px; font-size:12px; font-weight:700; box-shadow:0 4px 14px hsl(var(--shadow)/.06); transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease, background .15s ease, color .15s ease;}
+.icon-btn:hover{transform:translateY(-1px); border-color:var(--pink-line); background:var(--pink-pale); box-shadow:0 8px 18px hsl(var(--shadow)/.10);}
+.icon-btn:active{transform:translateY(1px); box-shadow:0 2px 8px hsl(var(--shadow)/.08);}
 .icon-btn svg{width:23px; height:23px;}
-.cart-count{position:absolute; top:-2px; inset-inline-end:2px; background:#fff; color:var(--pink-deep); font-size:11px; font-weight:800; min-width:18px; height:18px; border-radius:999px; display:flex; align-items:center; justify-content:center; padding:0 4px; box-shadow:0 1px 0 rgba(255,255,255,.6) inset, 0 2px 5px hsl(var(--shadow)/.4);}
+.cart-count{position:absolute; top:-2px; inset-inline-end:2px; background:var(--pink); color:#fff; font-size:11px; font-weight:800; min-width:18px; height:18px; border-radius:999px; display:flex; align-items:center; justify-content:center; padding:0 4px; box-shadow:0 2px 6px color-mix(in srgb, var(--pink) 40%, transparent);}
 .menu-toggle{display:none; background:none; border:0; color:var(--ink); padding:8px;}
 .menu-toggle svg{width:26px; height:26px;}
 
 .main-nav{border-top:1px solid var(--border);}
 .main-nav .wrap{display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; padding-block:10px;}
 .main-nav .wrap::-webkit-scrollbar{display:none;}
-/* ---------- تابات التنقل الرئيسية: التاب النشط بيتحول لشريحة مرفوعة
-   ثلاثية الأبعاد (زي زرار حقيقي مضغوط لجوه الموقع)، بدل خط تحتي بسيط. ---------- */
-.main-nav a{white-space:nowrap; padding:11px 18px; font-weight:800; font-size:14.5px; color:var(--ink-soft); border-radius:12px; transition:transform .15s ease, box-shadow .15s ease, background .15s ease, color .15s ease;}
+.main-nav a{white-space:nowrap; padding:11px 18px; font-weight:800; font-size:14.5px; color:var(--ink-soft); border-radius:12px; transition:transform .15s ease, background .15s ease, color .15s ease;}
 .main-nav a:hover{color:var(--pink-deep); background:var(--surface-2);}
-.main-nav a.active{color:#fff; background:linear-gradient(180deg, var(--pink), var(--pink-deep)); box-shadow:0 1px 0 rgba(255,255,255,.3) inset, 0 3px 0 color-mix(in srgb, var(--pink-deep) 70%, black), 0 8px 14px hsl(var(--shadow)/.24); transform:translateY(-2px);}
-.main-nav a.active:hover{color:#fff; background:linear-gradient(180deg, var(--pink), var(--pink-deep));}
+.main-nav a.active{color:#fff; background:var(--pink); box-shadow:0 8px 18px color-mix(in srgb, var(--pink) 28%, transparent);}
+.main-nav a.active:hover{color:#fff; background:var(--pink-deep);}
 
 /* ============ Hero ============ */
-.hero{position:relative; overflow:hidden; background:radial-gradient(120% 140% at 100% 0%,var(--sky-pale),var(--surface-2) 55%,var(--bg));}
-.hero-inner{display:flex; flex-direction:column; align-items:center; gap:22px; padding-block:40px;}
-.hero-banner-wrap{position:relative; width:100%; max-width:1100px; aspect-ratio:1480/484; border-radius:26px; overflow:hidden; box-shadow:0 20px 45px hsl(var(--shadow)/.2);}
+/* هيرو عالمي: صورة كاملة العرض كسطح بصري واحد + براند + عنوان + جملة + CTA */
+.hero{position:relative; overflow:hidden; width:100%; background:
+  radial-gradient(120% 90% at 85% 10%, color-mix(in srgb, var(--sky-pale) 70%, transparent), transparent 55%),
+  radial-gradient(90% 80% at 10% 90%, color-mix(in srgb, var(--pink-pale) 80%, transparent), transparent 50%),
+  linear-gradient(180deg, var(--surface-2), var(--bg));}
+.hero-stage{position:relative; min-height:min(78vh, 720px); height:min(78vh, 720px); display:grid; align-items:end;}
+.hero-banner-wrap{position:absolute !important; inset:0 !important; width:100% !important; max-width:none !important; height:100% !important; aspect-ratio:auto !important; border-radius:0 !important; overflow:hidden; box-shadow:none !important;}
+.hero-banner-wrap::after{content:""; position:absolute; inset:0; z-index:3; pointer-events:none; background:
+  linear-gradient(180deg, rgba(16,8,24,.22) 0%, rgba(16,8,24,.18) 38%, rgba(16,8,24,.82) 100%),
+  linear-gradient(90deg, rgba(16,8,24,.78) 0%, rgba(16,8,24,.42) 46%, rgba(16,8,24,.12) 100%);}
+html[dir="ltr"] .hero-banner-wrap::after{background:
+  linear-gradient(180deg, rgba(16,8,24,.22) 0%, rgba(16,8,24,.18) 38%, rgba(16,8,24,.82) 100%),
+  linear-gradient(270deg, rgba(16,8,24,.78) 0%, rgba(16,8,24,.42) 46%, rgba(16,8,24,.12) 100%);}
+.hero-copy{position:relative; z-index:4; width:100%; padding-block:clamp(48px, 10vh, 96px) clamp(36px, 7vh, 72px); color:#fff; max-width:640px; animation:heroCopyIn .7s cubic-bezier(.16,.84,.44,1) both;}
+@keyframes heroCopyIn{ from{opacity:0; transform:translateY(18px);} to{opacity:1; transform:none;} }
+.hero-brand{font-family:"Baloo Bhaijaan 2","Almarai",sans-serif; font-weight:800; font-size:clamp(36px, 5.6vw, 68px); line-height:1.05; letter-spacing:-.02em; margin:0 0 12px; text-shadow:0 10px 32px rgba(0,0,0,.45);}
+.hero-title{font-family:"Baloo Bhaijaan 2","Almarai",sans-serif; font-weight:700; font-size:clamp(20px, 2.5vw, 28px); line-height:1.35; margin:0 0 10px; max-width:18ch; text-wrap:balance; text-shadow:0 6px 18px rgba(0,0,0,.35);}
+.hero-lead{margin:0 0 22px; font-size:clamp(14.5px, 1.5vw, 17px); line-height:1.7; color:rgba(255,255,255,.9); max-width:34ch; text-shadow:0 4px 14px rgba(0,0,0,.35);}
+.hero-ctas{display:flex; gap:12px; flex-wrap:wrap; align-items:center;}
+.hero-ctas .btn-primary{min-width:168px; box-shadow:0 12px 28px rgba(0,0,0,.28);}
+.hero-inner{display:contents;}
 /* كاروسيل سلايد عام - بيتبادل الصور بحركة انزلاق (يمين/شمال بالتبادل)
    بدل التلاشي البسيط، ومستخدم لبانر الهيرو وبانر الخصم مع بعض. */
-.carousel-slide-img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0; transform:translateX(0); transition:transform .9s cubic-bezier(.65,0,.35,1), opacity .9s ease; z-index:1;}
-.carousel-slide-img.active{opacity:1; transform:translateX(0); z-index:2;}
+.carousel-slide-img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0; transform:translateX(0) scale(1.04); transition:transform 1.1s cubic-bezier(.65,0,.35,1), opacity .9s ease; z-index:1;}
+.carousel-slide-img.active{opacity:1; transform:translateX(0) scale(1); z-index:2;}
 @media (prefers-reduced-motion: reduce){
-  .carousel-slide-img{transition:opacity .4s ease;}
+  .carousel-slide-img{transition:opacity .4s ease; transform:none;}
+  .carousel-slide-img.active{transform:none;}
+  .hero-copy{animation:none;}
+}
+@media (max-width:760px){
+  .hero-stage{min-height:min(72vh, 620px);}
+  .hero-copy{padding-block:40px 32px; max-width:none;}
+  .hero-brand{font-size:clamp(30px, 10vw, 42px);}
+  .hero-title{max-width:none; font-size:clamp(18px, 5.2vw, 24px);}
 }
 
 /* ============ Payment methods marquee ============ */
-.payment-marquee{width:100%; max-width:1100px; overflow:hidden; background:var(--surface); border:1px solid var(--border); border-radius:999px; box-shadow:0 10px 24px hsl(var(--shadow)/.14); -webkit-mask-image:linear-gradient(to right, transparent 0, #000 40px, #000 calc(100% - 40px), transparent 100%); mask-image:linear-gradient(to right, transparent 0, #000 40px, #000 calc(100% - 40px), transparent 100%);}
-.payment-marquee-track{display:flex; align-items:center; width:max-content; padding:10px 20px; animation:paymentMarquee 16s linear infinite;}
+.hero-trust{padding-block:18px 8px;}
+.payment-marquee{width:100%; overflow:hidden; background:var(--surface); border:1px solid var(--border); border-radius:16px; box-shadow:0 8px 22px hsl(var(--shadow)/.08); -webkit-mask-image:linear-gradient(to right, transparent 0, #000 40px, #000 calc(100% - 40px), transparent 100%); mask-image:linear-gradient(to right, transparent 0, #000 40px, #000 calc(100% - 40px), transparent 100%);}
+.payment-marquee-track{display:flex; align-items:center; width:max-content; padding:12px 20px; animation:paymentMarquee 16s linear infinite;}
 .payment-marquee-group{display:flex; align-items:center; gap:40px; flex-shrink:0; margin-inline-end:40px;}
 .payment-marquee-label{display:flex; align-items:center; gap:6px; font-weight:900; font-size:14px; color:var(--ink); white-space:nowrap;}
-.payment-chip{display:inline-flex; align-items:center; gap:8px; font-weight:800; font-size:13.5px; white-space:nowrap; padding:6px 14px 6px 6px; border-radius:999px;}
-.payment-chip .chip-ic{width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0; box-shadow:0 1px 0 rgba(255,255,255,.4) inset, 0 3px 6px rgba(0,0,0,.22);}
+.payment-chip{display:inline-flex; align-items:center; gap:8px; font-weight:800; font-size:13.5px; white-space:nowrap; padding:6px 12px 6px 6px; border-radius:12px;}
+.payment-chip .chip-ic{width:26px; height:26px; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;}
 .payment-chip .chip-ic svg{width:15px; height:15px;}
 .payment-chip.pm-vodafone{background:rgba(230,0,0,.1); color:#c40000;}
 .payment-chip.pm-vodafone .chip-ic{background:#e60000;}
@@ -301,7 +324,7 @@ ul{margin:0; padding:0; list-style:none;}
 .payment-chip.no-ic{padding:6px 14px;}
 .payment-chip .chip-ic.tk-img{background:#fff; overflow:hidden; padding:0;}
 .payment-chip .chip-ic.tk-img img{width:100%; height:100%; object-fit:cover; display:block;}
-.payment-marquee-label .chip-ic{width:24px; height:24px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; color:#fff; flex:none; overflow:hidden;}
+.payment-marquee-label .chip-ic{width:24px; height:24px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; color:#fff; flex:none; overflow:hidden;}
 .payment-marquee-label .chip-ic svg{width:14px; height:14px;}
 .payment-marquee-label .chip-ic.tk-img img{width:100%; height:100%; object-fit:cover;}
 /* الشريط بيتحرك دايمًا من اليمين للشمال في اتجاه LTR (حتى والصفحة عربي)،
@@ -311,18 +334,18 @@ ul{margin:0; padding:0; list-style:none;}
 html[dir="ltr"] .payment-marquee-group{direction:ltr;}
 @keyframes paymentMarquee{ from{transform:translateX(0);} to{transform:translateX(-50%);} }
 @media (prefers-reduced-motion: reduce){ .payment-marquee-track{animation-duration:70s;} }
-@media (max-width:640px){ .payment-marquee-track{padding:9px 16px;} .payment-marquee-group{gap:26px; margin-inline-end:26px;} }
+@media (max-width:640px){ .payment-marquee-track{padding:10px 16px;} .payment-marquee-group{gap:26px; margin-inline-end:26px;} }
 
 /* ============ بانر التسجيل ============ */
-.wholesale-promo{background:linear-gradient(135deg,var(--pink-pale),var(--sunshine-pale)); border:1px solid var(--border); border-radius:20px; padding:11px; display:flex; flex-direction:column; gap:9px; box-shadow:0 10px 26px hsl(var(--shadow)/.14); max-width:620px; margin-inline:auto;}
+.wholesale-promo{background:linear-gradient(135deg,var(--pink-pale),var(--sunshine-pale)); border:1px solid var(--border); border-radius:20px; padding:11px; display:flex; flex-direction:column; gap:9px; box-shadow:0 10px 26px hsl(var(--shadow)/.10); max-width:920px; margin-inline:auto;}
 .wholesale-top{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:13px 18px; display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;}
 .wholesale-top-text h3{color:var(--ink); font-size:17px; margin:0 0 3px; font-weight:800;}
 .wholesale-top-text p{color:var(--ink-soft); font-size:13.5px; margin:0;}
-.wholesale-register-btn{background:var(--pink); color:#fff; font-weight:800; font-size:14px; padding:10px 20px; border-radius:11px; border:none; cursor:pointer; white-space:nowrap; transition:transform .18s ease, background .18s ease;}
-.wholesale-register-btn:hover{background:var(--pink-deep); transform:translateY(-2px);}
+.wholesale-register-btn{background:var(--pink); color:#fff; font-weight:800; font-size:14px; padding:10px 20px; border-radius:12px; border:none; cursor:pointer; white-space:nowrap; transition:transform .18s ease, background .18s ease, box-shadow .18s ease; box-shadow:0 8px 18px color-mix(in srgb, var(--pink) 28%, transparent);}
+.wholesale-register-btn:hover{background:var(--pink-deep); transform:translateY(-1px);}
 .wholesale-register-btn:active{transform:translateY(0);}
 
-.wholesale-discount-banner{position:relative; width:100%; aspect-ratio:1600/620; border-radius:14px; overflow:hidden; box-shadow:0 8px 20px hsl(var(--shadow)/.18);}
+.wholesale-discount-banner{position:relative; width:100%; aspect-ratio:1600/620; border-radius:14px; overflow:hidden; box-shadow:0 8px 20px hsl(var(--shadow)/.14);}
 @media (max-width:640px){
   .wholesale-top{padding:11px 14px; gap:10px;}
   .wholesale-register-btn{padding:8px 16px; font-size:13px;}
@@ -330,35 +353,31 @@ html[dir="ltr"] .payment-marquee-group{direction:ltr;}
 }
 .hero-below{display:flex; flex-direction:column; align-items:center; gap:16px; text-align:center;}
 .eyebrow{display:inline-flex; align-items:center; gap:8px; background:var(--surface); border:1px solid var(--pink-line); color:var(--pink-deep); font-weight:800; font-size:13px; padding:6px 14px; border-radius:999px;}
-.hero-ctas{display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:center;}
 .hero-badge{background:var(--surface); color:var(--ink); padding:10px 16px; border-radius:999px; font-weight:800; font-size:13px; display:inline-flex; align-items:center; gap:8px; box-shadow:0 8px 20px hsl(var(--shadow)/.15); border:1px solid var(--border);}
 
 /* ============ Buttons ============ */
-/* ---------- أزرار ثلاثية الأبعاد: كل زرار بقى ليه "حرف" سفلي غامق شكله
-   زرار حقيقي مرتفع عن السطح، وبيتضغط فعليًا (يتحرك لتحت وحرفه يختفي) لما
-   العميل يدوس عليه - إحساس احترافي وملموس بدل اللون الفلات البسيط. ---------- */
-.btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:13px 26px; border-radius:999px; font-weight:800; font-size:15px; border:2px solid transparent; transition:transform .15s ease, box-shadow .15s ease, background .15s ease;}
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:13px 26px; border-radius:14px; font-weight:800; font-size:15px; border:1.5px solid transparent; transition:transform .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease;}
 .btn svg{width:18px; height:18px;}
-.btn-primary{background:linear-gradient(180deg, var(--pink), var(--pink-deep)); color:#fff; box-shadow:0 1px 0 rgba(255,255,255,.35) inset, 0 4px 0 color-mix(in srgb, var(--pink-deep) 72%, black), 0 12px 22px hsl(var(--shadow)/.26);}
-.btn-primary:hover{background:linear-gradient(180deg, var(--pink), var(--pink-deep)); transform:translateY(-2px); box-shadow:0 1px 0 rgba(255,255,255,.35) inset, 0 6px 0 color-mix(in srgb, var(--pink-deep) 72%, black), 0 16px 26px hsl(var(--shadow)/.3);}
-.btn-primary:active{transform:translateY(3px); box-shadow:0 1px 0 rgba(255,255,255,.25) inset, 0 1px 0 color-mix(in srgb, var(--pink-deep) 72%, black), 0 5px 10px hsl(var(--shadow)/.2);}
-.btn-outline{background:var(--surface); color:var(--ink); border-color:var(--border); box-shadow:0 1px 0 rgba(255,255,255,.5) inset, 0 4px 0 color-mix(in srgb, var(--border) 55%, black), 0 10px 18px hsl(var(--shadow)/.12);}
-.btn-outline:hover{border-color:var(--pink); transform:translateY(-2px); box-shadow:0 1px 0 rgba(255,255,255,.5) inset, 0 6px 0 color-mix(in srgb, var(--border) 55%, black), 0 14px 22px hsl(var(--shadow)/.16);}
-.btn-outline:active{transform:translateY(3px); box-shadow:0 1px 0 rgba(255,255,255,.4) inset, 0 1px 0 color-mix(in srgb, var(--border) 55%, black), 0 4px 10px hsl(var(--shadow)/.1);}
-.btn-whatsapp{background:linear-gradient(180deg, #29dd70, #1ebd5a); color:#fff; box-shadow:0 1px 0 rgba(255,255,255,.35) inset, 0 4px 0 color-mix(in srgb, #1ebd5a 72%, black), 0 12px 20px rgba(30,189,90,.28);}
-.btn-whatsapp:hover{transform:translateY(-2px);}
-.btn-whatsapp:active{transform:translateY(3px); box-shadow:0 1px 0 rgba(255,255,255,.25) inset, 0 1px 0 color-mix(in srgb, #1ebd5a 72%, black);}
-.btn-sky{background:linear-gradient(180deg, var(--sky), var(--sky-deep)); color:#fff; box-shadow:0 1px 0 rgba(255,255,255,.35) inset, 0 4px 0 color-mix(in srgb, var(--sky-deep) 72%, black), 0 12px 20px hsl(var(--shadow)/.22);}
-.btn-sky:hover{transform:translateY(-2px);}
-.btn-sky:active{transform:translateY(3px); box-shadow:0 1px 0 rgba(255,255,255,.25) inset, 0 1px 0 color-mix(in srgb, var(--sky-deep) 72%, black);}
+.btn-primary{background:var(--pink); color:#fff; box-shadow:0 10px 22px color-mix(in srgb, var(--pink) 30%, transparent);}
+.btn-primary:hover{background:var(--pink-deep); transform:translateY(-1px); box-shadow:0 14px 26px color-mix(in srgb, var(--pink) 34%, transparent);}
+.btn-primary:active{transform:translateY(1px); box-shadow:0 4px 12px color-mix(in srgb, var(--pink) 28%, transparent);}
+.btn-outline{background:var(--surface); color:var(--ink); border-color:var(--border); box-shadow:0 6px 16px hsl(var(--shadow)/.08);}
+.btn-outline:hover{border-color:var(--pink); color:var(--pink-deep); transform:translateY(-1px); box-shadow:0 10px 20px hsl(var(--shadow)/.12);}
+.btn-outline:active{transform:translateY(1px); box-shadow:0 3px 10px hsl(var(--shadow)/.08);}
+.btn-whatsapp{background:#1ebd5a; color:#fff; box-shadow:0 10px 20px rgba(30,189,90,.28);}
+.btn-whatsapp:hover{transform:translateY(-1px); background:#19a84f;}
+.btn-whatsapp:active{transform:translateY(1px);}
+.btn-sky{background:var(--sky); color:#fff; box-shadow:0 10px 20px color-mix(in srgb, var(--sky) 30%, transparent);}
+.btn-sky:hover{transform:translateY(-1px); background:var(--sky-deep);}
+.btn-sky:active{transform:translateY(1px);}
 .btn-block{width:100%;}
 .btn-sm{padding:9px 16px; font-size:13.5px;}
-.btn-sm.btn-primary{box-shadow:0 1px 0 rgba(255,255,255,.35) inset, 0 3px 0 color-mix(in srgb, var(--pink-deep) 72%, black), 0 8px 14px hsl(var(--shadow)/.22);}
-.btn-sm.btn-primary:active{transform:translateY(2px); box-shadow:0 1px 0 rgba(255,255,255,.25) inset, 0 1px 0 color-mix(in srgb, var(--pink-deep) 72%, black);}
-.btn-sm.btn-outline{box-shadow:0 1px 0 rgba(255,255,255,.5) inset, 0 3px 0 color-mix(in srgb, var(--border) 55%, black), 0 6px 12px hsl(var(--shadow)/.1);}
-.btn-sm.btn-outline:active{transform:translateY(2px); box-shadow:0 1px 0 rgba(255,255,255,.4) inset, 0 1px 0 color-mix(in srgb, var(--border) 55%, black);}
-.btn-sm.btn-sky{box-shadow:0 1px 0 rgba(255,255,255,.35) inset, 0 3px 0 color-mix(in srgb, var(--sky-deep) 72%, black), 0 8px 14px hsl(var(--shadow)/.18);}
-.btn-sm.btn-sky:active{transform:translateY(2px); box-shadow:0 1px 0 rgba(255,255,255,.25) inset, 0 1px 0 color-mix(in srgb, var(--sky-deep) 72%, black);}
+.btn-sm.btn-primary{box-shadow:0 6px 14px color-mix(in srgb, var(--pink) 28%, transparent);}
+.btn-sm.btn-primary:active{transform:translateY(1px);}
+.btn-sm.btn-outline{box-shadow:0 4px 10px hsl(var(--shadow)/.08);}
+.btn-sm.btn-outline:active{transform:translateY(1px);}
+.btn-sm.btn-sky{box-shadow:0 6px 14px color-mix(in srgb, var(--sky) 28%, transparent);}
+.btn-sm.btn-sky:active{transform:translateY(1px);}
 
 /* ============ Section shells ============ */
 .section{padding-block:52px;}
@@ -370,50 +389,50 @@ html[dir="ltr"] .payment-marquee-group{direction:ltr;}
 
 /* ============ Categories ============ */
 .cat-row{display:grid; grid-template-columns:repeat(7,1fr); gap:14px;}
-.cat-chip{display:flex; flex-direction:column; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:18px 8px; text-align:center; font-weight:800; font-size:13px; color:var(--ink); box-shadow:0 6px 14px hsl(var(--shadow)/.08); transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;}
-.cat-chip:hover{border-color:var(--pink); transform:translateY(-4px); box-shadow:0 14px 24px hsl(var(--shadow)/.16);}
+.cat-chip{display:flex; flex-direction:column; align-items:center; gap:10px; background:transparent; border:0; border-radius:0; padding:8px 4px; text-align:center; font-weight:800; font-size:13px; color:var(--ink); box-shadow:none; transition:transform .18s ease, color .18s ease;}
+.cat-chip:hover{color:var(--pink-deep); transform:translateY(-3px);}
 .cat-chip:active{transform:translateY(0);}
-/* ---------- أيقونة القسم كأنها كرة زجاجية ثلاثية الأبعاد: لمعة فاتحة أعلى
-   الكرة + ظل غامق جوّاها تحت + ظل خارجي بيرفعها عن الخلفية. ---------- */
-.cat-chip .ic{width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:26px; overflow:hidden; background:radial-gradient(circle at 33% 26%, #fff, var(--surface-2) 62%, var(--surface-3) 100%); box-shadow:0 1px 0 rgba(255,255,255,.8) inset, inset 0 -7px 10px hsl(var(--shadow)/.14), 0 8px 14px hsl(var(--shadow)/.18);}
+.cat-chip .ic{width:64px; height:64px; border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:28px; overflow:hidden; background:var(--surface); border:1px solid var(--border); box-shadow:0 8px 18px hsl(var(--shadow)/.08); transition:box-shadow .18s ease, border-color .18s ease, transform .18s ease;}
+.cat-chip:hover .ic{border-color:var(--pink-line); box-shadow:0 12px 24px hsl(var(--shadow)/.12);}
 .cat-chip .ic img{width:100%; height:100%; object-fit:cover;}
 
 /* ============ Promo strip ============ */
 .promo-row{display:grid; grid-template-columns:repeat(3,1fr); gap:18px;}
-.promo-card{border-radius:22px; padding:26px; display:flex; align-items:center; justify-content:space-between; gap:14px; color:#fff; position:relative; overflow:hidden; cursor:pointer; transition:transform .2s ease, box-shadow .2s ease; -webkit-tap-highlight-color:transparent;}
-.promo-card::after{content:""; position:absolute; inset-inline-end:-30px; top:-30px; width:120px; height:120px; border-radius:50%; background:rgba(255,255,255,.18); transition:transform .3s ease;}
-.promo-card:hover{transform:translateY(-5px); box-shadow:0 16px 30px hsl(var(--shadow)/.28);}
-.promo-card:hover::after{transform:scale(1.15);}
-.promo-card:active{transform:translateY(-2px) scale(.98);}
+.promo-card{border-radius:22px; padding:26px; display:flex; align-items:center; justify-content:space-between; gap:14px; color:#fff; position:relative; overflow:hidden; cursor:pointer; transition:transform .2s ease, box-shadow .2s ease; -webkit-tap-highlight-color:transparent; box-shadow:0 12px 28px hsl(var(--shadow)/.14);}
+.promo-card::after{content:""; position:absolute; inset-inline-end:-30px; top:-30px; width:120px; height:120px; border-radius:50%; background:rgba(255,255,255,.14); transition:transform .3s ease;}
+.promo-card:hover{transform:translateY(-4px); box-shadow:0 18px 34px hsl(var(--shadow)/.20);}
+.promo-card:hover::after{transform:scale(1.12);}
+.promo-card:active{transform:translateY(-1px) scale(.99);}
 .promo-card h3{font-size:22px; line-height:1.3;}
 .promo-card p{font-size:13px; opacity:.92; margin-top:4px;}
-.promo-card .emoji{font-size:40px; filter:drop-shadow(0 8px 10px rgba(0,0,0,.28));}
+.promo-card .emoji{font-size:40px; filter:drop-shadow(0 6px 10px rgba(0,0,0,.22));}
 .promo-1{background:linear-gradient(135deg,#ff5c8a,#c81856);}
 .promo-2{background:linear-gradient(135deg,#2bc2ef,#0e7fb0);}
 .promo-3{background:linear-gradient(135deg,#ffb703,#e07a00);}
 
 /* ============ Product cards ============ */
 .grid-products{display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:18px;}
-.card{background:var(--surface); border:1px solid var(--border); border-radius:20px; overflow:hidden; display:flex; flex-direction:column;}
-.card-media{position:relative; aspect-ratio:1/1; display:flex; align-items:center; justify-content:center; font-size:64px;}
-.card-badge{position:absolute; top:10px; inset-inline-start:10px; background:var(--pink); color:#fff; font-weight:800; font-size:12px; padding:4px 10px; border-radius:999px;}
+.card{background:var(--surface); border:1px solid var(--border); border-radius:18px; overflow:hidden; display:flex; flex-direction:column; transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease; box-shadow:0 6px 18px hsl(var(--shadow)/.06);}
+.card:hover{transform:translateY(-3px); border-color:color-mix(in srgb, var(--pink) 28%, var(--border)); box-shadow:0 14px 28px hsl(var(--shadow)/.12);}
+.card-media{position:relative; aspect-ratio:1/1; display:flex; align-items:center; justify-content:center; font-size:64px; background:linear-gradient(180deg, var(--surface-3), var(--surface));}
+.card-badge{position:absolute; top:10px; inset-inline-start:10px; background:var(--pink); color:#fff; font-weight:800; font-size:12px; padding:4px 10px; border-radius:8px;}
 .card-badge.out-of-stock{background:var(--ink-faint);}
-.card-wish{position:absolute; top:10px; inset-inline-end:10px; width:32px; height:32px; border-radius:50%; background:var(--surface); border:0; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 0 rgba(255,255,255,.6) inset, 0 3px 0 color-mix(in srgb, var(--border) 55%, black), 0 8px 14px hsl(var(--shadow)/.2); cursor:pointer; transition:transform .15s ease, box-shadow .15s ease;}
-.card-wish:hover{transform:translateY(-2px) scale(1.05);}
-.card-wish:active{transform:translateY(1px) scale(.94); box-shadow:0 1px 0 rgba(255,255,255,.5) inset, 0 1px 0 color-mix(in srgb, var(--border) 55%, black);}
+.card-wish{position:absolute; top:10px; inset-inline-end:10px; width:34px; height:34px; border-radius:12px; background:rgba(255,255,255,.92); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px hsl(var(--shadow)/.12); cursor:pointer; transition:transform .15s ease, box-shadow .15s ease, background .15s ease;}
+.card-wish:hover{transform:translateY(-1px) scale(1.04); background:#fff;}
+.card-wish:active{transform:scale(.96);}
 .card-wish svg{width:16px; height:16px; transition:fill .15s, stroke .15s;}
 .card-wish.active svg{fill:var(--pink-deep); stroke:var(--pink-deep);}
 .card-body{padding:14px; display:flex; flex-direction:column; gap:8px; flex:1;}
-.card-cat{font-size:11.5px; color:var(--ink-faint); font-weight:800;}
-.card-title{font-size:14.5px; font-weight:800; min-height:38px;}
+.card-cat{font-size:11.5px; color:var(--ink-faint); font-weight:800; letter-spacing:.02em; text-transform:uppercase;}
+.card-title{font-size:14.5px; font-weight:800; min-height:38px; line-height:1.45;}
 .card-rating{display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--ink-soft);}
 .card-rating .stars{color:var(--sunshine); letter-spacing:1px;}
 .card-price{display:flex; align-items:baseline; gap:8px; margin-top:auto;}
 .price-now{font-size:19px; font-weight:800; color:var(--pink-deep);}
 .price-old{font-size:13px; color:var(--ink-faint); text-decoration:line-through;}
-.card-add{display:flex; align-items:center; gap:8px; border:0; background:linear-gradient(180deg, var(--pink), var(--pink-deep)); color:#fff; font-weight:800; padding:10px; border-radius:12px; font-size:13.5px; box-shadow:0 1px 0 rgba(255,255,255,.35) inset, 0 3px 0 color-mix(in srgb, var(--pink-deep) 72%, black), 0 8px 14px hsl(var(--shadow)/.2); transition:transform .15s ease, box-shadow .15s ease;}
-.card-add:hover{transform:translateY(-2px);}
-.card-add:active{transform:translateY(2px); box-shadow:0 1px 0 rgba(255,255,255,.25) inset, 0 1px 0 color-mix(in srgb, var(--pink-deep) 72%, black);}
+.card-add{display:flex; align-items:center; gap:8px; border:0; background:var(--pink); color:#fff; font-weight:800; padding:10px; border-radius:12px; font-size:13.5px; box-shadow:0 8px 16px color-mix(in srgb, var(--pink) 26%, transparent); transition:transform .15s ease, box-shadow .15s ease, background .15s ease;}
+.card-add:hover{background:var(--pink-deep); transform:translateY(-1px);}
+.card-add:active{transform:translateY(1px); box-shadow:0 3px 10px color-mix(in srgb, var(--pink) 24%, transparent);}
 .card-add svg{width:16px; height:16px;}
 .card-add.out-of-stock{background:var(--surface-2); color:var(--ink-soft); border:1.5px solid var(--border); justify-content:center; box-shadow:none;}
 .card-add.out-of-stock:hover{background:var(--surface-2); transform:none;}
@@ -455,7 +474,7 @@ html[dir="ltr"] .payment-marquee-group{direction:ltr;}
 /* ============ Trust strip ============ */
 .trust-row{display:grid; grid-template-columns:repeat(5,1fr); gap:16px; text-align:center;}
 .trust-item{display:flex; flex-direction:column; align-items:center; gap:10px; font-weight:800; font-size:13px; color:var(--ink-soft);}
-.trust-item .ic{width:52px; height:52px; border-radius:50%; background:radial-gradient(circle at 33% 26%, var(--surface), var(--surface-2) 68%); color:var(--pink-deep); display:flex; align-items:center; justify-content:center; box-shadow:0 1px 0 rgba(255,255,255,.7) inset, inset 0 -7px 10px hsl(var(--shadow)/.12), 0 8px 14px hsl(var(--shadow)/.16);}
+.trust-item .ic{width:52px; height:52px; border-radius:16px; background:var(--surface); color:var(--pink-deep); display:flex; align-items:center; justify-content:center; border:1px solid var(--border); box-shadow:0 8px 18px hsl(var(--shadow)/.08);}
 .trust-item .ic svg{width:24px; height:24px;}
 
 /* ============ CTA ribbon ============ */
@@ -747,13 +766,13 @@ html[dir="ltr"] .drawer.show{transform:translateX(0);}
    الاتجاه، اتجاه إخفاء القائمة الجانبية لازم يتقلب معاها في وضع LTR. */
 html[dir="ltr"] .mobile-nav{transform:translateX(-105%);}
 html[dir="ltr"] .mobile-nav.show{transform:translateX(0);}
-.mobile-nav a{display:block; padding:13px 16px; font-weight:800; border-radius:13px; margin-block:5px; background:var(--surface-2); box-shadow:0 1px 0 rgba(255,255,255,.5) inset, 0 3px 0 color-mix(in srgb, var(--border) 55%, black); transition:transform .12s ease, box-shadow .12s ease;}
-.mobile-nav a:active{transform:translateY(2px); box-shadow:0 1px 0 rgba(255,255,255,.4) inset, 0 1px 0 color-mix(in srgb, var(--border) 55%, black);}
+.mobile-nav a{display:block; padding:13px 16px; font-weight:800; border-radius:13px; margin-block:5px; background:var(--surface-2); border:1px solid var(--border); box-shadow:none; transition:transform .12s ease, background .12s ease, border-color .12s ease;}
+.mobile-nav a:active{transform:scale(.98); background:var(--pink-pale); border-color:var(--pink-line);}
 
 
 /* ============ Responsive ============ */
 @media (max-width:980px){
-  .hero-inner{padding-block:28px;}
+  .hero-stage{min-height:min(70vh, 640px);}
   .cat-row{grid-template-columns:repeat(4,1fr);}
   .promo-row{grid-template-columns:1fr; }
   .trust-row{grid-template-columns:repeat(3,1fr); row-gap:22px;}
@@ -1547,21 +1566,25 @@ html.app-mode .section-head{margin-bottom:10px; align-items:center; flex-wrap:no
 html.app-mode .section-head h2{font-size:17px; gap:6px;}
 html.app-mode .section-head .sub{display:none;}
 html.app-mode .link-more{font-size:13px;}
-html.app-mode .hero{background:none;}
-html.app-mode .hero-inner{padding-block:10px 0; gap:10px;}
-html.app-mode .hero-banner-wrap{border-radius:14px; box-shadow:0 4px 12px hsl(var(--shadow)/.12);}
+html.app-mode .hero{background:none; margin:0 -12px;}
+html.app-mode .hero-stage{min-height:0; height:auto; display:block;}
+html.app-mode .hero-banner-wrap{position:relative !important; inset:auto !important; width:100% !important; height:auto !important; aspect-ratio:1480/484 !important; border-radius:0 !important; box-shadow:none !important;}
+html.app-mode .hero-banner-wrap::after{display:none;}
+html.app-mode .hero-copy{display:none !important;}
+html.app-mode .hero-trust{padding:10px 0 4px;}
+html.app-mode .payment-marquee{border-radius:12px; box-shadow:none;}
 /* بانر الخصومات جوه التطبيق: من غير الإطار الوردي، وبياخد العرض كله زي البانر الرئيسي */
 html.app-mode .wholesale-promo{background:none; border:0; padding:0; box-shadow:none; border-radius:0; max-width:none; gap:0;}
 html.app-mode .wholesale-discount-banner{aspect-ratio:1600/620; border-radius:14px; box-shadow:0 4px 12px hsl(var(--shadow)/.12);}
 
-/* الأقسام: دواير تتسحب يمين وشمال */
+/* الأقسام: مربعات ناعمة تتسحب يمين وشمال */
 html.app-mode .cat-row{display:flex; gap:14px; overflow-x:auto; scrollbar-width:none; padding:2px 2px 6px;}
 html.app-mode .cat-row::-webkit-scrollbar, html.app-mode .promo-row::-webkit-scrollbar,
 html.app-mode #newArrivalsGrid::-webkit-scrollbar, html.app-mode #bestSellersGrid::-webkit-scrollbar,
 html.app-mode #filterList::-webkit-scrollbar{display:none;}
 html.app-mode .cat-chip{flex:0 0 72px; background:none; border:0; box-shadow:none; padding:0; gap:6px; font-size:11.5px; font-weight:700; transform:none;}
 html.app-mode .cat-chip:hover{transform:none; box-shadow:none;}
-html.app-mode .cat-chip .ic{width:62px; height:62px; box-shadow:0 2px 8px hsl(var(--shadow)/.14);}
+html.app-mode .cat-chip .ic{width:62px; height:62px; border-radius:18px; box-shadow:0 2px 8px hsl(var(--shadow)/.12);}
 html.app-mode .promo-row{display:flex; gap:10px; overflow-x:auto; scrollbar-width:none; scroll-snap-type:x mandatory;}
 html.app-mode .promo-card{flex:0 0 80%; padding:16px 18px; border-radius:16px; scroll-snap-align:start;}
 html.app-mode .promo-card h3{font-size:17px;}
@@ -1572,6 +1595,7 @@ html.app-mode .grid-products{grid-template-columns:repeat(2,minmax(0,1fr)); gap:
 html.app-mode #newArrivalsGrid, html.app-mode #bestSellersGrid{grid-template-columns:none; grid-auto-flow:column; grid-auto-columns:44%; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; padding-bottom:4px;}
 html.app-mode #newArrivalsGrid .card, html.app-mode #bestSellersGrid .card{scroll-snap-align:start;}
 html.app-mode .card{border:0; border-radius:14px; box-shadow:0 1px 4px hsl(var(--shadow)/.12);}
+html.app-mode .card:hover{transform:none;}
 html.app-mode .card-media{background:#fff !important;}
 html.app-mode .card-body{padding:8px 10px 10px; gap:3px;}
 html.app-mode .card-cat{display:none;}
@@ -1582,8 +1606,8 @@ html.app-mode .card-price{margin-top:2px; gap:6px; flex-wrap:wrap;}
 html.app-mode .card-price .price-now{font-size:15px;}
 html.app-mode .card-price .price-old{font-size:11px;}
 html.app-mode .card-badge{top:8px; inset-inline-start:8px; font-size:10.5px; padding:3px 8px; border-radius:6px;}
-html.app-mode .card-wish{top:8px; inset-inline-end:8px; width:30px; height:30px; box-shadow:0 1px 5px rgba(0,0,0,.16);}
-html.app-mode .card-quick{display:flex; position:absolute; bottom:8px; inset-inline-end:8px; width:34px; height:34px; border-radius:50%; border:0; background:var(--pink); color:#fff; align-items:center; justify-content:center; box-shadow:0 3px 8px hsl(var(--shadow)/.28); z-index:2; cursor:pointer;}
+html.app-mode .card-wish{top:8px; inset-inline-end:8px; width:30px; height:30px; border-radius:10px; box-shadow:0 1px 5px rgba(0,0,0,.16);}
+html.app-mode .card-quick{display:flex; position:absolute; bottom:8px; inset-inline-end:8px; width:34px; height:34px; border-radius:12px; border:0; background:var(--pink); color:#fff; align-items:center; justify-content:center; box-shadow:0 4px 10px color-mix(in srgb, var(--pink) 34%, transparent); z-index:2; cursor:pointer;}
 html.app-mode .card-quick svg{width:18px; height:18px;}
 html.app-mode .card-quick:active{transform:scale(.9);}
 
@@ -1618,11 +1642,12 @@ html.app-mode .drawer{width:100vw; padding-top:env(safe-area-inset-top);}
 html.app-mode .toast{bottom:calc(76px + env(safe-area-inset-bottom));}
 
 /* شريط التبويبات تحت */
-html.app-mode .app-tabbar{display:grid; grid-template-columns:repeat(5,1fr); position:fixed; inset-inline:0; bottom:0; z-index:70; background:var(--surface); border-top:1px solid var(--border); padding-bottom:env(safe-area-inset-bottom); box-shadow:0 -4px 14px hsl(var(--shadow)/.08);}
-.app-tab{appearance:none; border:0; background:none; font:inherit; position:relative; display:flex; flex-direction:column; align-items:center; gap:3px; padding:8px 2px 7px; color:var(--ink-faint); font-size:10.5px; font-weight:700; cursor:pointer; -webkit-tap-highlight-color:transparent;}
-.app-tab svg{width:23px; height:23px;}
-.app-tab.active{color:var(--pink);}
-.app-tab.active::before{content:""; position:absolute; top:0; width:30px; height:3px; border-radius:0 0 3px 3px; background:var(--pink);}
+html.app-mode .app-tabbar{display:grid; grid-template-columns:repeat(5,1fr); position:fixed; inset-inline:0; bottom:0; z-index:70; background:color-mix(in srgb, var(--surface) 92%, transparent); border-top:1px solid var(--border); padding-bottom:env(safe-area-inset-bottom); box-shadow:0 -8px 24px hsl(var(--shadow)/.08); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);}
+.app-tab{appearance:none; border:0; background:none; font:inherit; position:relative; display:flex; flex-direction:column; align-items:center; gap:3px; padding:9px 2px 8px; color:var(--ink-faint); font-size:10.5px; font-weight:700; cursor:pointer; -webkit-tap-highlight-color:transparent; transition:color .18s ease;}
+.app-tab svg{width:23px; height:23px; transition:transform .18s ease;}
+.app-tab.active{color:var(--pink-deep);}
+.app-tab.active svg{transform:translateY(-1px);}
+.app-tab.active::before{content:""; position:absolute; top:0; width:22px; height:3px; border-radius:0 0 4px 4px; background:var(--pink); box-shadow:0 4px 10px color-mix(in srgb, var(--pink) 40%, transparent);}
 .app-tab .tab-badge{position:absolute; top:3px; inset-inline-end:calc(50% - 20px); min-width:17px; height:17px; padding:0 4px; border-radius:9px; background:var(--pink); color:#fff; font-size:10px; font-weight:800; display:flex; align-items:center; justify-content:center; border:2px solid var(--surface);}
 .app-tab .tab-badge[data-zero="1"]{display:none;}
 
@@ -2036,6 +2061,9 @@ html.app-mode .pg-count{top:calc(14px + env(safe-area-inset-top));}
 .car-dots{position:absolute; bottom:10px; inset-inline:0; z-index:5; display:flex; justify-content:center; gap:6px;}
 .car-dots button{width:8px; height:8px; padding:0; border:0; border-radius:999px; background:rgba(255,255,255,.65); box-shadow:0 1px 3px rgba(0,0,0,.25); cursor:pointer; transition:width .3s ease, background .3s ease;}
 .car-dots button.on{width:22px; background:#fff;}
+/* في الهيرو الكامل: النقط فوق عشان متتغطاش بنص البراند والـ CTA */
+.hero-stage > .hero-banner-wrap > .car-dots{bottom:auto; top:18px;}
+html.app-mode .hero-stage > .hero-banner-wrap > .car-dots{top:auto; bottom:10px;}
 .hero-banner-wrap, .wholesale-discount-banner{touch-action:pan-y;}
 
 /* صف العروض في الرئيسية (في التطبيق بيتسحب بالعرض زي وصل حديثًا) */
@@ -2616,23 +2644,38 @@ try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("messa
 <!-- ===================== HOME ===================== -->
 <section class="view active" id="view-home" data-view="home">
   <div class="hero">
-    <div class="wrap hero-inner">
+    <div class="hero-stage">
       <div class="hero-banner-wrap" id="heroBannerWrap">
         <img class="carousel-slide-img active" src="hero-banner-3.jpg" alt="متجر آل عبده — كل اللي طفلك بيحبه في مكان واحد" fetchpriority="high" decoding="async">
         <img class="carousel-slide-img" src="hero-banner-4.jpg" alt="متجر آل عبده — متعة أكبر.. طفولة أجمل" loading="lazy" decoding="async">
       </div>
+      <div class="wrap hero-copy app-hide">
+        <p class="hero-brand" data-i18n>متجر آل عبده</p>
+        <h1 class="hero-title" data-i18n>عالم من اللعب.. ذكريات تدوم</h1>
+        <p class="hero-lead" data-i18n>ألعاب أصلية آمنة، بأسعار واضحة، وتوصيل لكل محافظات مصر.</p>
+        <div class="hero-ctas">
+          <button class="btn btn-primary" data-view-link="products">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h2l2.4 12.2a2 2 0 0 0 2 1.8h7.7a2 2 0 0 0 2-1.6L21 8H6"/></svg>
+            <span data-i18n>تسوق الآن</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
+  <section class="section hero-trust reveal" style="padding-top:18px; padding-bottom:0">
+    <div class="wrap">
       <div class="payment-marquee" aria-label="طرق الدفع المتاحة" data-i18n-aria>
         <div class="payment-marquee-track">
           <span class="payment-marquee-group">
-            <span class="payment-marquee-label" data-i18n>✅ متاح كل طرق الدفع</span>
+            <span class="payment-marquee-label" data-i18n>متاح كل طرق الدفع</span>
             <span class="payment-chip pm-vodafone"><span class="chip-ic"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 6 2 11c0 2.6 1.2 4.9 3.1 6.5-.1 1-.5 2.3-1.4 3.3 1.5.2 3.2-.3 4.5-1.2 1.2.4 2.5.6 3.8.6 5.5 0 10-4 10-9s-4.5-9-10-9Z"/></svg></span><span data-i18n>فودافون كاش</span></span>
             <span class="payment-chip pm-instapay"><span class="chip-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h11l-3-3m3 3-3 3"/><path d="M17 17H6l3 3m-3-3 3-3"/></svg></span><span data-i18n>إنستاباي</span></span>
             <span class="payment-chip pm-cash"><span class="chip-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2.4"/><circle cx="12" cy="12" r="2.6"/></svg></span><span data-i18n>نقدًا عند الاستلام</span></span>
             <span class="payment-marquee-dot">✦</span>
           </span>
           <span class="payment-marquee-group" aria-hidden="true">
-            <span class="payment-marquee-label" data-i18n>✅ متاح كل طرق الدفع</span>
+            <span class="payment-marquee-label" data-i18n>متاح كل طرق الدفع</span>
             <span class="payment-chip pm-vodafone"><span class="chip-ic"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 6 2 11c0 2.6 1.2 4.9 3.1 6.5-.1 1-.5 2.3-1.4 3.3 1.5.2 3.2-.3 4.5-1.2 1.2.4 2.5.6 3.8.6 5.5 0 10-4 10-9s-4.5-9-10-9Z"/></svg></span><span data-i18n>فودافون كاش</span></span>
             <span class="payment-chip pm-instapay"><span class="chip-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h11l-3-3m3 3-3 3"/><path d="M17 17H6l3 3m-3-3 3-3"/></svg></span><span data-i18n>إنستاباي</span></span>
             <span class="payment-chip pm-cash"><span class="chip-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2.4"/><circle cx="12" cy="12" r="2.6"/></svg></span><span data-i18n>نقدًا عند الاستلام</span></span>
@@ -2640,20 +2683,8 @@ try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("messa
           </span>
         </div>
       </div>
-
-      <div class="hero-below app-hide">
-        <span class="eyebrow" data-i18n>🎉 عروض وخصومات على مجموعة مختارة من المنتجات</span>
-        <div class="hero-ctas">
-          <button class="btn btn-primary" data-view-link="products">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h2l2.4 12.2a2 2 0 0 0 2 1.8h7.7a2 2 0 0 0 2-1.6L21 8H6"/></svg>
-            <span data-i18n>تسوق الآن</span>
-          </button>
-          <a class="btn btn-outline" href="#about" data-view-link="about" data-i18n>تعرف علينا</a>
-          <span class="hero-badge" data-i18n>⭐ +33,000 عميل سعيد بمنتجاتنا</span>
-        </div>
-      </div>
     </div>
-  </div>
+  </section>
 
   <section class="section reveal" style="padding-bottom:0">
     <div class="wrap">
@@ -5200,12 +5231,16 @@ var I18N_EN = {
   "الصفحة الرئيسية - متجر آل عبده": "Home - Al-Abdo Toys Store",
 
   "✅ متاح كل طرق الدفع": "✅ All payment methods available",
+  "متاح كل طرق الدفع": "All payment methods available",
   "فودافون كاش": "Vodafone Cash",
   "إنستاباي": "InstaPay",
   "نقدًا عند الاستلام": "Cash on delivery",
   "نقدي عند الاستلام": "Cash on Delivery",
   "طرق الدفع المتاحة": "Available payment methods",
   "🎉 عروض وخصومات على مجموعة مختارة من المنتجات": "🎉 Offers and discounts on a selected range of products",
+  "متجر آل عبده": "Al-Abdo Toys",
+  "عالم من اللعب.. ذكريات تدوم": "A world of play.. memories that last",
+  "ألعاب أصلية آمنة، بأسعار واضحة، وتوصيل لكل محافظات مصر.": "Genuine safe toys, clear prices, and delivery across Egypt.",
   "تسوق الآن": "Shop Now",
   "تعرف علينا": "Learn About Us",
   "⭐ +33,000 عميل سعيد بمنتجاتنا": "⭐ +33,000 customers happy with our products",
@@ -8242,7 +8277,7 @@ var TK_BUILTIN = {
   cash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2.4"/><circle cx="12" cy="12" r="2.6"/></svg>'
 };
 var TK_DEFAULTS = [
-  { id:"tk_l", text:"✅ متاح كل طرق الدفع", color:"", logo:"", plain:true },
+  { id:"tk_l", text:"متاح كل طرق الدفع", color:"", logo:"", plain:true },
   { id:"tk_v", text:"فودافون كاش", color:"#e60000", logo:"builtin:vodafone", plain:false },
   { id:"tk_i", text:"إنستاباي", color:"#7b2ff7", logo:"builtin:instapay", plain:false },
   { id:"tk_c", text:"نقدًا عند الاستلام", color:"#1a9d63", logo:"builtin:cash", plain:false }

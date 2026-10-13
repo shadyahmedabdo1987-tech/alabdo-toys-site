@@ -1,12 +1,15 @@
-# تنزيل تطبيقات آل عبده للتجربة
+# تنزيل تطبيقات آل عبده
 
-## تطبيق العملاء
-- [alabdo-toys-v2.0.22-trial.apk](./alabdo-toys-v2.0.22-trial.apk)
+## تطبيق العملاء (Google Play)
+- [AAB غير موقّع](./alabdo-toys-v2.0.22-unsigned.aab) — `2.0.22`
+- [APK تجريبي](./alabdo-toys-v2.0.22-trial.apk)
 
-## برنامج الإدارة
-- [alabdo-admin-v2.0.18-trial.apk](./alabdo-admin-v2.0.18-trial.apk)
+## برنامج الإدارة — النسخة النهائية
+- **للتثبيت والتجربة مباشرة:** [alabdo-admin-final-trial.apk](./alabdo-admin-final-trial.apk)
+- **للتوقيع بمفتاحك (النسخة النهائية غير موقّعة):** [alabdo-admin-final-unsigned.apk](./alabdo-admin-final-unsigned.apk)
 
-## Google Play (AAB غير موقّع)
-- [alabdo-toys-v2.0.22-unsigned.aab](./alabdo-toys-v2.0.22-unsigned.aab)
+package: `com.alabdotoys.admin`  
+versionName: `2.0.18` — versionCode: `18`  
+الاسم: آل عبده - الإدارة
 
-> لو التطبيق متثبت قبل كده بمفتاح تاني: امسحه الأول ثم ثبّت.
+> برنامج الإدارة مش بيترفع على Google Play — تثبيت مباشر على موبايلك.

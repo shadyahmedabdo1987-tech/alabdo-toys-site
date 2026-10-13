@@ -31,14 +31,18 @@ async function hasPurchased(env, customer, productId){
   });
 }
 
-/* Products from the customer's delivered orders that they have not rated yet,
-   newest delivery first. Used by the floating quick-rate banner. */
+/* Products from the customer's delivered orders still waiting for a rating.
+   Newest delivery first. A product is pending when the customer has no review
+   yet, OR their last review is older than this delivery (bought & received
+   again after they rated it before). */
 async function pendingReviews(env, customer){
   var orders = await getList(env, "orders");
   var reviews = await getList(env, "reviews");
-  var reviewed = {};
+  var reviewedAt = {};
   reviews.forEach(function(r){
-    if(r.customerId === customer.identifier) reviewed[String(r.productId)] = true;
+    if(r.customerId !== customer.identifier) return;
+    var pid = String(r.productId), at = +r.createdAt || 0;
+    if(reviewedAt[pid] == null || at > reviewedAt[pid]) reviewedAt[pid] = at;
   });
   var delivered = orders.filter(function(o){
     return (o.status || "new") === "delivered" && orderIsMine(o, customer);
@@ -48,8 +52,10 @@ async function pendingReviews(env, customer){
     var at = deliveredAtOf(o);
     (o.items || []).forEach(function(it){
       var pid = String(it.id);
-      if(!pid || seen[pid] || reviewed[pid]) return;
+      if(!pid || seen[pid]) return;
       seen[pid] = true;
+      var lastReview = reviewedAt[pid];
+      if(lastReview != null && lastReview >= at) return;
       pending.push({
         productId: it.id,
         name: it.name || "",

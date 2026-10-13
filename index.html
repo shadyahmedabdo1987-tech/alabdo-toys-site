@@ -8129,24 +8129,40 @@ function v2MaybeAskReview(orders){
 
 /* ---------- بانر تقييم المنتجات بعد التسليم (موقع + تطبيق العميل) ---------- */
 var RATE_SNOOZE_KEY = "aa_rate_snooze";
-var RATE_SNOOZE_MS = 7 * 86400000;
+var RATE_SNOOZE_MS = 6 * 3600000; /* إخفاء مؤقت 6 ساعات بس، ومش بيلغي تسليم جديد */
+var RATE_POLL_MS = 25000;
 var rateQueue = [];
 var rateBusy = false;
 var rateHideTimer = null;
 var rateFetchTimer = null;
+var ratePollTimer = null;
+var rateAdvanceTimer = null;
+var rateFetchInFlight = false;
+var rateSeenSession = {}; /* منتجات اتقيّمت أو اتقفلت في الجلسة دي عشان منكررش البانر فوري */
 function rateSnoozeMap(){
   try{ return JSON.parse(localStorage.getItem(RATE_SNOOZE_KEY) || "{}") || {}; }catch(e){ return {}; }
 }
-function rateIsSnoozed(pid){
-  var m = rateSnoozeMap(), until = +m[String(pid)] || 0;
+function rateIsSnoozed(pid, deliveredAt){
+  var m = rateSnoozeMap(), v = m[String(pid)];
+  if(v == null) return false;
+  /* صيغة قديمة: رقم = until */
+  if(typeof v === "number") return v > Date.now();
+  var until = +v.until || 0, snoozedAt = +v.at || 0;
+  /* تسليم جديد بعد ما قفل البانر → نرجّع نعرض التقييم */
+  if(deliveredAt && +deliveredAt > snoozedAt) return false;
   return until > Date.now();
 }
 function rateSnooze(pid){
   var m = rateSnoozeMap();
-  m[String(pid)] = Date.now() + RATE_SNOOZE_MS;
+  m[String(pid)] = { until: Date.now() + RATE_SNOOZE_MS, at: Date.now() };
   try{ localStorage.setItem(RATE_SNOOZE_KEY, JSON.stringify(m)); }catch(e){}
 }
 function rateBannerEl(){ return document.getElementById("rateBanner"); }
+function rateClearAdvance(){ if(rateAdvanceTimer){ clearTimeout(rateAdvanceTimer); rateAdvanceTimer = null; } }
+function rateAdvance(delay){
+  rateClearAdvance();
+  rateAdvanceTimer = setTimeout(function(){ rateAdvanceTimer = null; showNextRateBanner(); }, delay == null ? 900 : delay);
+}
 function hideRateBanner(immediate){
   var el = rateBannerEl(); if(!el) return;
   if(rateHideTimer){ clearTimeout(rateHideTimer); rateHideTimer = null; }
@@ -8155,14 +8171,24 @@ function hideRateBanner(immediate){
   if(immediate) done(); else setTimeout(done, 320);
 }
 function showNextRateBanner(){
-  if(rateBusy) return;
-  while(rateQueue.length && rateIsSnoozed(rateQueue[0].productId)) rateQueue.shift();
-  if(!rateQueue.length){ hideRateBanner(true); return; }
+  while(rateQueue.length && (rateIsSnoozed(rateQueue[0].productId, rateQueue[0].deliveredAt) || rateSeenSession[String(rateQueue[0].productId)])){
+    rateQueue.shift();
+  }
+  if(!rateQueue.length){
+    if(rateBusy) hideRateBanner(true);
+    schedulePendingRatings(RATE_POLL_MS);
+    return;
+  }
+  if(rateBusy){
+    /* بانر ظاهر دلوقتي — نكمّل الطابور بعد ما يتقفل */
+    return;
+  }
   paintRateBanner(rateQueue.shift());
 }
 function paintRateBanner(item){
   var el = rateBannerEl(); if(!el || !item) return;
   rateBusy = true;
+  rateClearAdvance();
   if(rateHideTimer){ clearTimeout(rateHideTimer); rateHideTimer = null; }
   var p = PRODUCTS.find(function(x){ return String(x.id) === String(item.productId); });
   var title = p ? pName(p) : (item.name || t("منتج"));
@@ -8183,13 +8209,20 @@ function paintRateBanner(item){
   requestAnimationFrame(function(){ el.classList.add("show"); });
   el.onclick = function(e){
     var closeBtn = e.target.closest("[data-rb-close]");
-    if(closeBtn){ rateSnooze(item.productId); hideRateBanner(); setTimeout(showNextRateBanner, 900); return; }
+    if(closeBtn){
+      rateSnooze(item.productId);
+      rateSeenSession[String(item.productId)] = 1;
+      hideRateBanner();
+      rateAdvance(900);
+      return;
+    }
     var starBtn = e.target.closest("[data-rb-star]");
     if(starBtn){ submitQuickRate(item, +starBtn.dataset.rbStar); }
   };
 }
 function paintRateSuccess(item){
   var el = rateBannerEl(); if(!el) return;
+  rateSeenSession[String(item.productId)] = 1;
   var p = PRODUCTS.find(function(x){ return String(x.id) === String(item.productId); });
   var img = p ? (productImages(p)[0] || "") : "";
   var thumb = img
@@ -8204,17 +8237,17 @@ function paintRateSuccess(item){
     + '<button type="button" class="rb-more" data-rb-more>'+t("قول أكتر")+'</button>'
     + '<button type="button" class="rb-close" data-rb-close aria-label="'+t("إغلاق")+'">✕</button>';
   el.onclick = function(e){
-    if(e.target.closest("[data-rb-close]")){ hideRateBanner(); setTimeout(showNextRateBanner, 900); return; }
+    if(e.target.closest("[data-rb-close]")){ hideRateBanner(); rateAdvance(900); return; }
     if(e.target.closest("[data-rb-more]")){
       hideRateBanner(true);
       openProductModal(item.productId);
-      setTimeout(showNextRateBanner, 1200);
+      rateAdvance(1200);
     }
   };
   if(rateHideTimer) clearTimeout(rateHideTimer);
   rateHideTimer = setTimeout(function(){
     hideRateBanner();
-    setTimeout(showNextRateBanner, 1100);
+    rateAdvance(1100);
   }, 4500);
 }
 function submitQuickRate(item, rating){
@@ -8240,32 +8273,66 @@ function submitQuickRate(item, rating){
       if(res.status === 403) showToast("🛍️ "+t("التقييم متاح بعد ما تستلم المنتج اللي اشتريته من المتجر."));
       else showToast(t("حصل خطأ، جرّب تاني."));
       hideRateBanner();
-      setTimeout(showNextRateBanner, 900);
+      rateAdvance(900);
     })
     .catch(function(){
       stars.forEach(function(b){ b.disabled = false; });
       showToast(t("تعذر الاتصال بالسيرفر، تأكد من الإنترنت وجرّب تاني."));
       hideRateBanner();
-      setTimeout(showNextRateBanner, 900);
+      rateAdvance(900);
     });
 }
 function schedulePendingRatings(delay){
   if(rateFetchTimer) clearTimeout(rateFetchTimer);
-  rateFetchTimer = setTimeout(loadPendingRatings, delay == null ? 1800 : delay);
+  rateFetchTimer = setTimeout(loadPendingRatings, delay == null ? 1200 : delay);
+}
+function rateMergeQueue(items){
+  var have = {};
+  rateQueue.forEach(function(it){ have[String(it.productId)] = 1; });
+  var el = rateBannerEl();
+  if(el && !el.hidden && el.dataset.pid) have[String(el.dataset.pid)] = 1;
+  (items || []).forEach(function(it){
+    if(!it || it.productId == null) return;
+    var pid = String(it.productId);
+    if(have[pid] || rateSeenSession[pid] || rateIsSnoozed(pid, it.deliveredAt)) return;
+    have[pid] = 1;
+    rateQueue.push(it);
+  });
 }
 function loadPendingRatings(){
   rateFetchTimer = null;
-  if(!isCustomerAuthed() || isAdminAuthed()){ hideRateBanner(true); rateQueue = []; return; }
-  if(rateBusy) return;
+  if(!isCustomerAuthed() || isAdminAuthed()){
+    hideRateBanner(true); rateQueue = []; rateSeenSession = {};
+    return;
+  }
+  if(rateFetchInFlight){ schedulePendingRatings(2500); return; }
+  if(rateBusy){ schedulePendingRatings(8000); return; }
+  rateFetchInFlight = true;
   fetch("/api/reviews?pending=1", { cache:"no-store", headers: customerAuthHeaders() })
     .then(function(r){ return r.json(); })
     .then(function(res){
-      if(!res || !res.ok || !Array.isArray(res.pending)) return;
-      rateQueue = res.pending.filter(function(it){ return it && it.productId != null && !rateIsSnoozed(it.productId); });
+      rateFetchInFlight = false;
+      if(!res || !res.ok || !Array.isArray(res.pending)){ schedulePendingRatings(RATE_POLL_MS); return; }
+      rateMergeQueue(res.pending);
       showNextRateBanner();
+      if(!rateBusy && !rateQueue.length) schedulePendingRatings(RATE_POLL_MS);
     })
-    .catch(function(){});
+    .catch(function(){ rateFetchInFlight = false; schedulePendingRatings(RATE_POLL_MS); });
 }
+function startRateBannerWatch(){
+  if(ratePollTimer) return;
+  ratePollTimer = setInterval(function(){
+    if(!isCustomerAuthed() || isAdminAuthed()) return;
+    if(document.visibilityState && document.visibilityState !== "visible") return;
+    schedulePendingRatings(200);
+  }, RATE_POLL_MS);
+  document.addEventListener("visibilitychange", function(){
+    if(document.visibilityState === "visible") schedulePendingRatings(600);
+  });
+  window.addEventListener("pageshow", function(){ schedulePendingRatings(600); });
+  window.addEventListener("focus", function(){ schedulePendingRatings(900); });
+}
+startRateBannerWatch();
 
 /* ---------- ربط بإشعارات التطبيق (حالة الطلب والردود) ---------- */
 function v2SyncNativeCustomer(){
@@ -8359,7 +8426,7 @@ function v2SyncNativeCustomer(){
   var _scs = setCustomerSession;
   setCustomerSession = function(){ _scs.apply(this, arguments); v2SyncNativeCustomer(); };
   var _ccp = clearCustomerProfile;
-  clearCustomerProfile = function(){ _ccp(); v2SyncNativeCustomer(); hideRateBanner(true); rateQueue = []; };
+  clearCustomerProfile = function(){ _ccp(); v2SyncNativeCustomer(); hideRateBanner(true); rateQueue = []; rateSeenSession = {}; };
   /* بعد إتمام أي طلب: العنوان بيتحفظ */
   var _osm = showOrderSuccessModal;
   showOrderSuccessModal = function(){ if(V2.lastAddr) v2SaveAddr(V2.lastAddr.gov, V2.lastAddr.addr); return _osm.apply(this, arguments); };
@@ -9827,7 +9894,7 @@ document.getElementById("appTabbar").addEventListener("click", function(e){
   sheetReturn = null; updateBackToAccount();
   if(tab==="me"){ if(appSheet.classList.contains("show")) closeAllPanels(); else { closeAllPanels(); openAppSheet(); } updateAppTabbar(); return; }
   if(tab==="cart"){ closeAllPanels(); renderCartDrawer(); openDrawer(); updateAppTabbar(); return; }
-  if(tab==="home"){ goToView("home"); return; }
+  if(tab==="home"){ goToView("home"); if(typeof schedulePendingRatings === "function") schedulePendingRatings(500); return; }
   state.cat="all"; state.q=""; state.disc=0; state.fship=false;
   state.badge = tab==="wish" ? "wish" : null;
   goToView("products"); renderProductsView();
@@ -13235,6 +13302,13 @@ function preqFetch(cb){
         PREQ.toasted = PREQ.unread;
         if(!preqPanelOpen()) showToast("🔔 "+t("وصلك رد من متجر آل عبده — افتح الجرس اللي فوق"));
       }
+      /* لو وصل إشعار إن الطلب اتسلّم، نحدّث بانر التقييم فورًا */
+      try{
+        var gotDelivered = (PREQ.items || []).some(function(it){
+          return it && (it.status === "delivered" || /وصل|delivered/i.test(String(it.title || "") + " " + String(it.message || "")));
+        });
+        if(gotDelivered && typeof schedulePendingRatings === "function") schedulePendingRatings(700);
+      }catch(e){}
       if(preqPanelOpen()) preqRenderList();
       if(cb) cb();
     })

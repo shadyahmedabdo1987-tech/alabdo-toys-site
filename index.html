@@ -223,8 +223,8 @@ ul{margin:0; padding:0; list-style:none;}
 .topbar li{display:flex; align-items:center; gap:6px; font-weight:700;}
 .topbar svg{width:15px; height:15px; flex:none;}
 
-.site-header{position:sticky; top:0; z-index:60; background:var(--surface); box-shadow:0 1px 0 var(--border);}
-.site-header.is-scrolled{box-shadow:0 6px 18px hsl(var(--shadow)/.10);}
+.site-header{position:sticky; top:0; z-index:60; background:color-mix(in srgb, var(--surface) 92%, transparent); box-shadow:0 1px 0 var(--border); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);}
+.site-header.is-scrolled{box-shadow:0 8px 24px hsl(var(--shadow)/.10);}
 .header-row{display:flex; align-items:center; gap:24px; padding-block:14px;}
 /* من غير order/margin هنا، اللوجو بياخد ترتيبه الطبيعي في الـ DOM (تاني
    عنصر بعد زرار القائمة)، وبما إن الصفحة rtl بتبدأ من اليمين، فده بيخلي
@@ -2061,6 +2061,9 @@ html.app-mode .pg-count{top:calc(14px + env(safe-area-inset-top));}
 .car-dots{position:absolute; bottom:10px; inset-inline:0; z-index:5; display:flex; justify-content:center; gap:6px;}
 .car-dots button{width:8px; height:8px; padding:0; border:0; border-radius:999px; background:rgba(255,255,255,.65); box-shadow:0 1px 3px rgba(0,0,0,.25); cursor:pointer; transition:width .3s ease, background .3s ease;}
 .car-dots button.on{width:22px; background:#fff;}
+/* في الهيرو الكامل: النقط فوق عشان متتغطاش بنص البراند والـ CTA */
+.hero-stage > .hero-banner-wrap > .car-dots{bottom:auto; top:18px;}
+html.app-mode .hero-stage > .hero-banner-wrap > .car-dots{top:auto; bottom:10px;}
 .hero-banner-wrap, .wholesale-discount-banner{touch-action:pan-y;}
 
 /* صف العروض في الرئيسية (في التطبيق بيتسحب بالعرض زي وصل حديثًا) */

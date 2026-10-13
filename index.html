@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+<meta charset="UTF-8">
 <!-- بنطبّق اللغة المحفوظة (لو فيه) قبل أي حاجة تانية عشان الصفحة تفتح على
      شكلها الصح (LTR/إنجليزي) من غير وميض بشكل التاجه القديم لحظة التحميل. -->
 <script>(function(){try{
@@ -70,7 +71,6 @@ fbq('track', 'PageView');
 src="https://www.facebook.com/tr?id=604071008636850&ev=PageView&noscript=1"
 /></noscript>
 <!-- End Meta Pixel Code -->
-<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>متجر آل عبده | ألعاب أطفال أصلية في الإسكندرية — توصيل لكل مصر</title>
 <meta name="description" content="متجر آل عبده لبيع ألعاب الأطفال الأصلية في الإسكندرية، مصر. تشكيلة واسعة من الألعاب التعليمية والسيارات والدمى وألعاب البنات والأولاد، بأسعار مناسبة وتوصيل لكل المحافظات، مع الدفع نقدًا عند الاستلام أو فودافون كاش أو إنستاباي.">
@@ -268,12 +268,12 @@ ul{margin:0; padding:0; list-style:none;}
 
 /* ============ Hero ============ */
 /* هيرو عالمي: صورة كاملة العرض كسطح بصري واحد + براند + عنوان + جملة + CTA */
-.hero{position:relative; overflow:hidden; background:
+.hero{position:relative; overflow:hidden; width:100%; background:
   radial-gradient(120% 90% at 85% 10%, color-mix(in srgb, var(--sky-pale) 70%, transparent), transparent 55%),
   radial-gradient(90% 80% at 10% 90%, color-mix(in srgb, var(--pink-pale) 80%, transparent), transparent 50%),
   linear-gradient(180deg, var(--surface-2), var(--bg));}
-.hero-stage{position:relative; min-height:min(78vh, 720px); display:grid; align-items:end;}
-.hero-banner-wrap{position:absolute; inset:0; width:100%; max-width:none; aspect-ratio:auto; border-radius:0; overflow:hidden; box-shadow:none;}
+.hero-stage{position:relative; min-height:min(78vh, 720px); height:min(78vh, 720px); display:grid; align-items:end;}
+.hero-banner-wrap{position:absolute !important; inset:0 !important; width:100% !important; max-width:none !important; height:100% !important; aspect-ratio:auto !important; border-radius:0 !important; overflow:hidden; box-shadow:none !important;}
 .hero-banner-wrap::after{content:""; position:absolute; inset:0; z-index:3; pointer-events:none; background:
   linear-gradient(180deg, rgba(20,10,30,.18) 0%, rgba(20,10,30,.08) 35%, rgba(20,10,30,.55) 100%),
   linear-gradient(90deg, rgba(20,10,30,.45) 0%, rgba(20,10,30,.15) 48%, rgba(20,10,30,.05) 100%);}
@@ -1567,10 +1567,10 @@ html.app-mode .section-head h2{font-size:17px; gap:6px;}
 html.app-mode .section-head .sub{display:none;}
 html.app-mode .link-more{font-size:13px;}
 html.app-mode .hero{background:none; margin:0 -12px;}
-html.app-mode .hero-stage{min-height:0; display:block;}
-html.app-mode .hero-banner-wrap{position:relative; inset:auto; aspect-ratio:1480/484; border-radius:0; box-shadow:none;}
+html.app-mode .hero-stage{min-height:0; height:auto; display:block;}
+html.app-mode .hero-banner-wrap{position:relative !important; inset:auto !important; width:100% !important; height:auto !important; aspect-ratio:1480/484 !important; border-radius:0 !important; box-shadow:none !important;}
 html.app-mode .hero-banner-wrap::after{display:none;}
-html.app-mode .hero-copy{display:none;}
+html.app-mode .hero-copy{display:none !important;}
 html.app-mode .hero-trust{padding:10px 0 4px;}
 html.app-mode .payment-marquee{border-radius:12px; box-shadow:none;}
 /* بانر الخصومات جوه التطبيق: من غير الإطار الوردي، وبياخد العرض كله زي البانر الرئيسي */

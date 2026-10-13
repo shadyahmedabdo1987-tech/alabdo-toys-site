@@ -8167,10 +8167,11 @@ function v2MaybeAskReview(orders){
   }catch(e){}
 }
 
-/* ---------- بانر تقييم المنتجات بعد التسليم (موقع + تطبيق العميل) ---------- */
-var RATE_SNOOZE_KEY = "aa_rate_snooze_v2";
-var RATE_SNOOZE_MS = 4 * 3600000; /* إخفاء مؤقت 4 ساعات بس، ومش بيلغي تسليم جديد */
+/* ---------- بانر تقييم المنتجات بعد التسليم (موقع + تطبيق العميل) ----------
+   لو العميل قفل البانر من غير ما يقيّم، بيرجع يظهر تاني لحد ما يقيّم فعلاً.
+   الإخفاء بعد ✕ مؤقت ثواني بس عشان منلزقش الشاشة، ومش بيتشال نهائي. */
 var RATE_POLL_MS = 15000;
+var RATE_REDISPLAY_MS = 45000; /* بعد ما يقفل من غير تقييم، نرجّع البانر خلال ~45 ثانية */
 var rateQueue = [];
 var rateBusy = false;
 var rateHideTimer = null;
@@ -8178,29 +8179,25 @@ var rateFetchTimer = null;
 var ratePollTimer = null;
 var rateAdvanceTimer = null;
 var rateFetchInFlight = false;
-var rateSeenSession = {}; /* منتجات اتقيّمت أو اتقفلت في الجلسة دي عشان منكررش البانر فوري */
+var rateDoneSession = {}; /* منتجات اتقيّمت بنجاح في الجلسة دي بس */
+var rateCooldownUntil = {}; /* إخفاء مؤقت بعد ✕: productId -> timestamp */
 var rateRatedMap = {}; /* آخر تقييم محفوظ من السيرفر: productId -> createdAt */
-try{ localStorage.removeItem("aa_rate_snooze"); }catch(e){} /* مسح الإخفاء القديم اللي كان بيمنع الظهور */
-function rateSnoozeMap(){
-  try{ return JSON.parse(localStorage.getItem(RATE_SNOOZE_KEY) || "{}") || {}; }catch(e){ return {}; }
+try{
+  localStorage.removeItem("aa_rate_snooze");
+  localStorage.removeItem("aa_rate_snooze_v2");
+}catch(e){}
+function rateIsDone(pid){ return !!rateDoneSession[String(pid)]; }
+function rateIsCooling(pid){ return (+rateCooldownUntil[String(pid)] || 0) > Date.now(); }
+function rateMarkDone(pid){
+  rateDoneSession[String(pid)] = 1;
+  delete rateCooldownUntil[String(pid)];
 }
-function rateIsSnoozed(pid, deliveredAt){
-  var m = rateSnoozeMap(), v = m[String(pid)];
-  if(v == null) return false;
-  if(typeof v === "number"){
-    /* صيغة قديمة: لو في تسليم معروف، نتجاهل الإخفاء ونرجّع نعرض */
-    if(deliveredAt) return false;
-    return v > Date.now();
-  }
-  var until = +v.until || 0, snoozedAt = +v.at || 0;
-  /* تسليم جديد بعد ما قفل البانر → نرجّع نعرض التقييم */
-  if(deliveredAt && +deliveredAt > snoozedAt) return false;
-  return until > Date.now();
-}
-function rateSnooze(pid){
-  var m = rateSnoozeMap();
-  m[String(pid)] = { until: Date.now() + RATE_SNOOZE_MS, at: Date.now() };
-  try{ localStorage.setItem(RATE_SNOOZE_KEY, JSON.stringify(m)); }catch(e){}
+function rateDismissTemporarily(item){
+  /* قفل من غير تقييم: نرجّع المنتج للطابور بعد تهدئة قصيرة */
+  var pid = String(item.productId);
+  rateCooldownUntil[pid] = Date.now() + RATE_REDISPLAY_MS;
+  var stillQueued = rateQueue.some(function(it){ return String(it.productId) === pid; });
+  if(!stillQueued) rateQueue.push(item);
 }
 function rateDeliveredAtOf(o){
   var hist = Array.isArray(o && o.statusHistory) ? o.statusHistory : [];
@@ -8245,25 +8242,42 @@ function hideRateBanner(immediate){
   if(immediate) done(); else setTimeout(done, 320);
 }
 function showNextRateBanner(){
-  while(rateQueue.length && (rateIsSnoozed(rateQueue[0].productId, rateQueue[0].deliveredAt) || rateSeenSession[String(rateQueue[0].productId)])){
-    rateQueue.shift();
-  }
-  if(!rateQueue.length){
-    if(rateBusy) hideRateBanner(true);
-    schedulePendingRatings(RATE_POLL_MS);
+  var waiting = [];
+  while(rateQueue.length){
+    var next = rateQueue.shift();
+    var pid = String(next.productId);
+    if(rateIsDone(pid)) continue;
+    if(rateIsCooling(pid)){ waiting.push(next); continue; }
+    if(rateBusy){
+      rateQueue.unshift(next);
+      waiting.forEach(function(it){ rateQueue.push(it); });
+      return;
+    }
+    waiting.forEach(function(it){ rateQueue.push(it); });
+    paintRateBanner(next);
     return;
   }
-  if(rateBusy){
-    /* بانر ظاهر دلوقتي — نكمّل الطابور بعد ما يتقفل */
+  waiting.forEach(function(it){ rateQueue.push(it); });
+  if(rateBusy) hideRateBanner(true);
+  /* لو لسه في منتجات متقفلة مؤقتًا، نرجع نعرضها بعد انتهاء التهدئة */
+  var soonest = 0;
+  Object.keys(rateCooldownUntil).forEach(function(pid){
+    if(rateIsDone(pid)) return;
+    var until = +rateCooldownUntil[pid] || 0;
+    if(until > Date.now() && (!soonest || until < soonest)) soonest = until;
+  });
+  if(soonest){
+    schedulePendingRatings(Math.max(800, soonest - Date.now() + 200));
     return;
   }
-  paintRateBanner(rateQueue.shift());
+  schedulePendingRatings(RATE_POLL_MS);
 }
 function paintRateBanner(item){
   var el = rateBannerEl(); if(!el || !item) return;
   rateBusy = true;
   rateClearAdvance();
   if(rateHideTimer){ clearTimeout(rateHideTimer); rateHideTimer = null; }
+  delete rateCooldownUntil[String(item.productId)];
   var p = PRODUCTS.find(function(x){ return String(x.id) === String(item.productId); });
   var title = p ? pName(p) : (item.name || t("منتج"));
   var img = p ? (productImages(p)[0] || "") : "";
@@ -8284,8 +8298,7 @@ function paintRateBanner(item){
   el.onclick = function(e){
     var closeBtn = e.target.closest("[data-rb-close]");
     if(closeBtn){
-      rateSnooze(item.productId);
-      rateSeenSession[String(item.productId)] = 1;
+      rateDismissTemporarily(item);
       hideRateBanner();
       rateAdvance(900);
       return;
@@ -8296,7 +8309,8 @@ function paintRateBanner(item){
 }
 function paintRateSuccess(item){
   var el = rateBannerEl(); if(!el) return;
-  rateSeenSession[String(item.productId)] = 1;
+  rateMarkDone(item.productId);
+  rateRatedMap[String(item.productId)] = Date.now();
   var p = PRODUCTS.find(function(x){ return String(x.id) === String(item.productId); });
   var img = p ? (productImages(p)[0] || "") : "";
   var thumb = img
@@ -8368,7 +8382,7 @@ function rateMergeQueue(items){
   (items || []).forEach(function(it){
     if(!it || it.productId == null) return;
     var pid = String(it.productId);
-    if(have[pid] || rateSeenSession[pid] || rateIsSnoozed(pid, it.deliveredAt)) return;
+    if(have[pid] || rateIsDone(pid)) return;
     have[pid] = 1;
     rateQueue.push(it);
   });
@@ -8376,7 +8390,7 @@ function rateMergeQueue(items){
 function loadPendingRatings(){
   rateFetchTimer = null;
   if(!isCustomerAuthed() || isAdminAuthed()){
-    hideRateBanner(true); rateQueue = []; rateSeenSession = {};
+    hideRateBanner(true); rateQueue = []; rateDoneSession = {}; rateCooldownUntil = {};
     return;
   }
   if(rateFetchInFlight){ schedulePendingRatings(2500); return; }
@@ -8506,7 +8520,7 @@ function v2SyncNativeCustomer(){
   var _scs = setCustomerSession;
   setCustomerSession = function(){ _scs.apply(this, arguments); v2SyncNativeCustomer(); };
   var _ccp = clearCustomerProfile;
-  clearCustomerProfile = function(){ _ccp(); v2SyncNativeCustomer(); hideRateBanner(true); rateQueue = []; rateSeenSession = {}; };
+  clearCustomerProfile = function(){ _ccp(); v2SyncNativeCustomer(); hideRateBanner(true); rateQueue = []; rateDoneSession = {}; rateCooldownUntil = {}; };
   /* بعد إتمام أي طلب: العنوان بيتحفظ */
   var _osm = showOrderSuccessModal;
   showOrderSuccessModal = function(){ if(V2.lastAddr) v2SaveAddr(V2.lastAddr.gov, V2.lastAddr.addr); return _osm.apply(this, arguments); };

@@ -9,6 +9,7 @@ import { getNotes, saveNotes, noteMatches } from "../_notes.js";
         "order" (the store changed the status of one of their orders).
    POST {action:"seen"}               -> marks everything as read
    POST {action:"remove", id}         -> hides one item from their bell
+   POST {action:"clear"}              -> clears every item from their bell
    (ASCII-only comments on purpose, same as _lib.js.) */
 
 function sameCustomer(r, acc){ return String(r.customerId || "").toLowerCase() === String(acc.identifier || "").toLowerCase(); }
@@ -69,6 +70,19 @@ export async function onRequestPost({ request, env }){
     if(next.length === notes.length) return json({ ok:false, error:"not_found" }, 404);
     await saveNotes(env, next);
     return json({ ok:true });
+  }
+  if(action === "clear"){
+    var clearedReqs = false;
+    reqs.forEach(function(r){
+      if(sameCustomer(r, acc) && r.reply && !r.hiddenForCustomer){
+        r.hiddenForCustomer = true; r.seen = true; clearedReqs = true;
+      }
+    });
+    var kept = notes.filter(function(n){ return !noteMatches(n, acc); });
+    var clearedNotes = kept.length !== notes.length;
+    if(clearedReqs) await saveList(env, "productRequests", reqs);
+    if(clearedNotes) await saveNotes(env, kept);
+    return json({ ok:true, cleared: true });
   }
   return json({ ok:false, error:"bad_request" }, 400);
 }

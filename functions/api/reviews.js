@@ -4,19 +4,61 @@ import { json, getList, saveList, requireCustomer, requireAdmin } from "../_lib.
    product plus a computed average and count, so the client can show real
    customer ratings instead of the admin-set seed numbers once any real
    reviews exist. */
-/* "Did this customer really buy it?" - only an order saved on the server
-   counts (orders.js; cancelled orders are deleted there). Orders placed while
-   logged in carry customerId; older guest orders are matched by the last 10
-   digits of the phone number, the same number the account uses. */
+/* "Did this customer really buy it?" - only a delivered order saved on the
+   server counts (orders.js; cancelled orders are deleted there). Orders
+   placed while logged in carry customerId; older guest orders are matched
+   by the last 10 digits of the phone number, the same number the account
+   uses. Rating is only unlocked after the order status is "delivered". */
 function tail10(v){ return String(v || "").replace(/\D/g, "").slice(-10); }
+function orderIsMine(o, customer){
+  var id = String(customer.identifier || "").toLowerCase(), tail = tail10(customer.identifier);
+  return (o.customerId && String(o.customerId).toLowerCase() === id)
+    || (!o.customerId && tail.length >= 9 && tail10(o.phone) === tail);
+}
+function deliveredAtOf(o){
+  var hist = Array.isArray(o.statusHistory) ? o.statusHistory : [];
+  for(var i = hist.length - 1; i >= 0; i--){
+    if(hist[i] && hist[i].s === "delivered") return +hist[i].at || 0;
+  }
+  return +o.createdAt || 0;
+}
 async function hasPurchased(env, customer, productId){
   var orders = await getList(env, "orders");
-  var id = String(customer.identifier || "").toLowerCase(), tail = tail10(customer.identifier);
   return orders.some(function(o){
-    var mine = (o.customerId && String(o.customerId).toLowerCase() === id) || (!o.customerId && tail.length >= 9 && tail10(o.phone) === tail);
-    if(!mine) return false;
+    if((o.status || "new") !== "delivered") return false;
+    if(!orderIsMine(o, customer)) return false;
     return (o.items || []).some(function(it){ return String(it.id) === String(productId); });
   });
+}
+
+/* Products from the customer's delivered orders that they have not rated yet,
+   newest delivery first. Used by the floating quick-rate banner. */
+async function pendingReviews(env, customer){
+  var orders = await getList(env, "orders");
+  var reviews = await getList(env, "reviews");
+  var reviewed = {};
+  reviews.forEach(function(r){
+    if(r.customerId === customer.identifier) reviewed[String(r.productId)] = true;
+  });
+  var delivered = orders.filter(function(o){
+    return (o.status || "new") === "delivered" && orderIsMine(o, customer);
+  }).sort(function(a, b){ return deliveredAtOf(b) - deliveredAtOf(a); });
+  var seen = {}, pending = [];
+  delivered.forEach(function(o){
+    var at = deliveredAtOf(o);
+    (o.items || []).forEach(function(it){
+      var pid = String(it.id);
+      if(!pid || seen[pid] || reviewed[pid]) return;
+      seen[pid] = true;
+      pending.push({
+        productId: it.id,
+        name: it.name || "",
+        orderId: o.id,
+        deliveredAt: at
+      });
+    });
+  });
+  return pending;
 }
 
 export async function onRequestGet({ request, env }){
@@ -28,6 +70,13 @@ export async function onRequestGet({ request, env }){
   if(request.headers.get("X-Admin-User") && await requireAdmin(request, env)){
     return json({ ok:true, reviews: all });
   }
+  /* logged-in customer: products from delivered orders still waiting for a rating */
+  if(url.searchParams.get("pending") === "1"){
+    var pendingCustomer = await requireCustomer(request, env);
+    if(!pendingCustomer) return json({ ok:false, error:"unauthorized" }, 401);
+    var pending = await pendingReviews(env, pendingCustomer);
+    return json({ ok:true, pending: pending });
+  }
   /* public: hidden reviews are left out and the phone number never leaves
      the server */
   var list = all.filter(function(r){ return !r.hidden && (!productId || String(r.productId) === String(productId)); })
@@ -36,7 +85,8 @@ export async function onRequestGet({ request, env }){
   var avg = count ? (list.reduce(function(s, r){ return s + (+r.rating || 0); }, 0) / count) : 0;
   var out = { ok:true, reviews: list, avg: avg, count: count };
   /* a logged-in customer asking about one product also learns whether they
-     may review it (bought it) and gets their own earlier review to edit */
+     may review it (bought it and it was delivered) and gets their own
+     earlier review to edit */
   if(productId && request.headers.get("X-Customer-Id")){
     var customer = await requireCustomer(request, env);
     if(customer){
@@ -49,7 +99,7 @@ export async function onRequestGet({ request, env }){
 }
 
 /* POST /api/reviews - customer only. Body: {productId, rating, comment}.
-   Only accepted when the customer has a recorded order (see orders.js)
+   Only accepted when the customer has a delivered order (see orders.js)
    containing this exact product - this is the actual "did they buy it"
    check. A customer reviewing the same product twice updates their
    existing review instead of adding a duplicate. */

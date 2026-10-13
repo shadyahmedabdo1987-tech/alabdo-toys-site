@@ -610,6 +610,26 @@ html[dir="ltr"] .drawer.show{transform:translateX(0);}
 .toast{position:fixed; bottom:calc(24px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%) translateY(20px); background:var(--ink); color:#fff; padding:12px 22px; border-radius:999px; font-weight:700; font-size:13.5px; display:flex; align-items:center; gap:8px; opacity:0; pointer-events:none; transition:all .25s; z-index:120;}
 .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 
+/* ============ Post-delivery quick-rate banner ============ */
+.rate-banner{position:fixed; inset-inline:16px; bottom:calc(24px + env(safe-area-inset-bottom)); z-index:115; display:flex; align-items:center; gap:12px; background:#fff; color:#111; border-radius:14px; padding:12px; box-shadow:0 10px 28px rgba(15,23,42,.18); transform:translateY(120%); opacity:0; pointer-events:none; transition:transform .35s ease, opacity .28s ease; max-width:520px; margin-inline:auto; left:16px; right:16px; border:1px solid rgba(15,23,42,.06);}
+.rate-banner.show{transform:none; opacity:1; pointer-events:auto;}
+.rate-banner[hidden]{display:none !important;}
+.rate-banner .rb-thumb{width:48px; height:48px; border-radius:10px; object-fit:cover; background:#f3f4f6; flex:none;}
+.rate-banner .rb-thumb.is-emoji{display:flex; align-items:center; justify-content:center; font-size:22px;}
+.rate-banner .rb-body{flex:1; min-width:0; display:flex; flex-direction:column; gap:6px;}
+.rate-banner .rb-title{font-size:13.5px; font-weight:600; color:#111; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.35;}
+.rate-banner .rb-stars{display:flex; gap:4px; align-items:center;}
+.rate-banner .rb-star{appearance:none; border:0; background:none; padding:0; margin:0; cursor:pointer; font-size:22px; line-height:1; color:#d1d5db; -webkit-tap-highlight-color:transparent; transition:color .12s ease, transform .12s ease;}
+.rate-banner .rb-star.on{color:#22c55e;}
+.rate-banner .rb-star:active{transform:scale(1.15);}
+.rate-banner .rb-success{display:flex; align-items:center; gap:8px; min-width:0;}
+.rate-banner .rb-check{width:22px; height:22px; border-radius:50%; background:#22c55e; color:#fff; display:inline-flex; align-items:center; justify-content:center; flex:none; font-size:13px; font-weight:800;}
+.rate-banner .rb-success-msg{font-size:13.5px; color:#111; line-height:1.35; min-width:0;}
+.rate-banner .rb-success-msg b{font-weight:800;}
+.rate-banner .rb-more{appearance:none; border:0; background:#f3f4f6; color:#374151; font:inherit; font-size:12.5px; font-weight:700; padding:8px 12px; border-radius:999px; cursor:pointer; flex:none; white-space:nowrap;}
+.rate-banner .rb-close{appearance:none; border:0; width:32px; height:32px; border-radius:50%; background:#f3f4f6; color:#4b5563; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; flex:none; font-size:16px; line-height:1;}
+html.app-mode .rate-banner{bottom:calc(72px + env(safe-area-inset-bottom));}
+
 /* ============ Views ============ */
 .view{display:none;}
 .view.active{display:block;}
@@ -3795,6 +3815,7 @@ try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("messa
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="rate-banner" id="rateBanner" hidden role="dialog" aria-live="polite" aria-label="تقييم المنتج"></div>
 
 <footer class="site-footer">
   <div class="wrap footer-grid">
@@ -5063,7 +5084,10 @@ var I18N_EN = {
   "آراء العملاء": "Customer reviews",
   "تقييمك للمنتج ده (تقدر تعدّله)": "Your review of this product (you can edit it)",
   "التقييم متاح بس للعملاء اللي اشتروا المنتج ده من المتجر. أول ما تطلبه هتقدر تقيّمه.": "Only customers who bought this product from the store can review it. Order it and you'll be able to review it.",
+  "التقييم متاح بعد ما تستلم المنتج اللي اشتريته من المتجر.": "You can rate this product after your delivered order arrives.",
   "التقييم متاح بس للعملاء اللي اشتروا المنتج ده — سجّل دخولك بالحساب اللي طلبت بيه (من «حسابي»).": "Only customers who bought this product can review it — sign in with the account you ordered with (from «My account»).",
+  "شكرًا! تم حفظ تقييمك": "Shukran! Your rating has been saved",
+  "قول أكتر": "Say more",
   "عدّله المتجر": "Edited by the store",
   "وصلك رد من متجر آل عبده — افتح الجرس اللي فوق": "You got a reply from Al Abdo Toys — open the bell at the top",
   "طلبت توفير": "You asked for",
@@ -8103,6 +8127,146 @@ function v2MaybeAskReview(orders){
   }catch(e){}
 }
 
+/* ---------- بانر تقييم المنتجات بعد التسليم (موقع + تطبيق العميل) ---------- */
+var RATE_SNOOZE_KEY = "aa_rate_snooze";
+var RATE_SNOOZE_MS = 7 * 86400000;
+var rateQueue = [];
+var rateBusy = false;
+var rateHideTimer = null;
+var rateFetchTimer = null;
+function rateSnoozeMap(){
+  try{ return JSON.parse(localStorage.getItem(RATE_SNOOZE_KEY) || "{}") || {}; }catch(e){ return {}; }
+}
+function rateIsSnoozed(pid){
+  var m = rateSnoozeMap(), until = +m[String(pid)] || 0;
+  return until > Date.now();
+}
+function rateSnooze(pid){
+  var m = rateSnoozeMap();
+  m[String(pid)] = Date.now() + RATE_SNOOZE_MS;
+  try{ localStorage.setItem(RATE_SNOOZE_KEY, JSON.stringify(m)); }catch(e){}
+}
+function rateBannerEl(){ return document.getElementById("rateBanner"); }
+function hideRateBanner(immediate){
+  var el = rateBannerEl(); if(!el) return;
+  if(rateHideTimer){ clearTimeout(rateHideTimer); rateHideTimer = null; }
+  el.classList.remove("show");
+  var done = function(){ el.hidden = true; el.innerHTML = ""; rateBusy = false; };
+  if(immediate) done(); else setTimeout(done, 320);
+}
+function showNextRateBanner(){
+  if(rateBusy) return;
+  while(rateQueue.length && rateIsSnoozed(rateQueue[0].productId)) rateQueue.shift();
+  if(!rateQueue.length){ hideRateBanner(true); return; }
+  paintRateBanner(rateQueue.shift());
+}
+function paintRateBanner(item){
+  var el = rateBannerEl(); if(!el || !item) return;
+  rateBusy = true;
+  if(rateHideTimer){ clearTimeout(rateHideTimer); rateHideTimer = null; }
+  var p = PRODUCTS.find(function(x){ return String(x.id) === String(item.productId); });
+  var title = p ? pName(p) : (item.name || t("منتج"));
+  var img = p ? (productImages(p)[0] || "") : "";
+  var thumb = img
+    ? '<img class="rb-thumb" src="'+img+'" alt="" loading="lazy">'
+    : '<span class="rb-thumb is-emoji" aria-hidden="true">'+(p ? categoryIcon(p.cat) : "🧸")+'</span>';
+  el.hidden = false;
+  el.dataset.pid = String(item.productId);
+  el.innerHTML = thumb
+    + '<div class="rb-body">'
+      + '<div class="rb-title">'+escHtml(title)+'</div>'
+      + '<div class="rb-stars" role="group" aria-label="'+t("تقييم")+'">'
+        + [1,2,3,4,5].map(function(n){ return '<button type="button" class="rb-star" data-rb-star="'+n+'" aria-label="'+n+'">☆</button>'; }).join("")
+      + '</div>'
+    + '</div>'
+    + '<button type="button" class="rb-close" data-rb-close aria-label="'+t("إغلاق")+'">✕</button>';
+  requestAnimationFrame(function(){ el.classList.add("show"); });
+  el.onclick = function(e){
+    var closeBtn = e.target.closest("[data-rb-close]");
+    if(closeBtn){ rateSnooze(item.productId); hideRateBanner(); setTimeout(showNextRateBanner, 900); return; }
+    var starBtn = e.target.closest("[data-rb-star]");
+    if(starBtn){ submitQuickRate(item, +starBtn.dataset.rbStar); }
+  };
+}
+function paintRateSuccess(item){
+  var el = rateBannerEl(); if(!el) return;
+  var p = PRODUCTS.find(function(x){ return String(x.id) === String(item.productId); });
+  var img = p ? (productImages(p)[0] || "") : "";
+  var thumb = img
+    ? '<img class="rb-thumb" src="'+img+'" alt="" loading="lazy">'
+    : '<span class="rb-thumb is-emoji" aria-hidden="true">'+(p ? categoryIcon(p.cat) : "🧸")+'</span>';
+  var thanks = t("شكرًا! تم حفظ تقييمك");
+  var thanksHtml = thanks.indexOf("!") > -1
+    ? '<b>'+escHtml(thanks.split("!")[0])+'!</b> '+escHtml(thanks.split("!").slice(1).join("!").trim())
+    : escHtml(thanks);
+  el.innerHTML = thumb
+    + '<div class="rb-body"><div class="rb-success"><span class="rb-check" aria-hidden="true">✓</span><span class="rb-success-msg">'+thanksHtml+'</span></div></div>'
+    + '<button type="button" class="rb-more" data-rb-more>'+t("قول أكتر")+'</button>'
+    + '<button type="button" class="rb-close" data-rb-close aria-label="'+t("إغلاق")+'">✕</button>';
+  el.onclick = function(e){
+    if(e.target.closest("[data-rb-close]")){ hideRateBanner(); setTimeout(showNextRateBanner, 900); return; }
+    if(e.target.closest("[data-rb-more]")){
+      hideRateBanner(true);
+      openProductModal(item.productId);
+      setTimeout(showNextRateBanner, 1200);
+    }
+  };
+  if(rateHideTimer) clearTimeout(rateHideTimer);
+  rateHideTimer = setTimeout(function(){
+    hideRateBanner();
+    setTimeout(showNextRateBanner, 1100);
+  }, 4500);
+}
+function submitQuickRate(item, rating){
+  var el = rateBannerEl(); if(!el || !(rating >= 1 && rating <= 5)) return;
+  var stars = el.querySelectorAll(".rb-star");
+  stars.forEach(function(b){
+    var n = +b.dataset.rbStar;
+    b.textContent = n <= rating ? "★" : "☆";
+    b.classList.toggle("on", n <= rating);
+    b.disabled = true;
+  });
+  fetch("/api/reviews", {
+    method: "POST",
+    headers: Object.assign({ "content-type":"application/json" }, customerAuthHeaders()),
+    body: JSON.stringify({ productId: item.productId, rating: rating, comment: "" })
+  }).then(function(r){ return r.json().then(function(j){ return { status:r.status, body:j }; }); })
+    .then(function(res){
+      if(res.body && res.body.ok){
+        paintRateSuccess(item);
+        return;
+      }
+      stars.forEach(function(b){ b.disabled = false; });
+      if(res.status === 403) showToast("🛍️ "+t("التقييم متاح بعد ما تستلم المنتج اللي اشتريته من المتجر."));
+      else showToast(t("حصل خطأ، جرّب تاني."));
+      hideRateBanner();
+      setTimeout(showNextRateBanner, 900);
+    })
+    .catch(function(){
+      stars.forEach(function(b){ b.disabled = false; });
+      showToast(t("تعذر الاتصال بالسيرفر، تأكد من الإنترنت وجرّب تاني."));
+      hideRateBanner();
+      setTimeout(showNextRateBanner, 900);
+    });
+}
+function schedulePendingRatings(delay){
+  if(rateFetchTimer) clearTimeout(rateFetchTimer);
+  rateFetchTimer = setTimeout(loadPendingRatings, delay == null ? 1800 : delay);
+}
+function loadPendingRatings(){
+  rateFetchTimer = null;
+  if(!isCustomerAuthed() || isAdminAuthed()){ hideRateBanner(true); rateQueue = []; return; }
+  if(rateBusy) return;
+  fetch("/api/reviews?pending=1", { cache:"no-store", headers: customerAuthHeaders() })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if(!res || !res.ok || !Array.isArray(res.pending)) return;
+      rateQueue = res.pending.filter(function(it){ return it && it.productId != null && !rateIsSnoozed(it.productId); });
+      showNextRateBanner();
+    })
+    .catch(function(){});
+}
+
 /* ---------- ربط بإشعارات التطبيق (حالة الطلب والردود) ---------- */
 function v2SyncNativeCustomer(){
   try{
@@ -8195,7 +8359,7 @@ function v2SyncNativeCustomer(){
   var _scs = setCustomerSession;
   setCustomerSession = function(){ _scs.apply(this, arguments); v2SyncNativeCustomer(); };
   var _ccp = clearCustomerProfile;
-  clearCustomerProfile = function(){ _ccp(); v2SyncNativeCustomer(); };
+  clearCustomerProfile = function(){ _ccp(); v2SyncNativeCustomer(); hideRateBanner(true); rateQueue = []; };
   /* بعد إتمام أي طلب: العنوان بيتحفظ */
   var _osm = showOrderSuccessModal;
   showOrderSuccessModal = function(){ if(V2.lastAddr) v2SaveAddr(V2.lastAddr.gov, V2.lastAddr.addr); return _osm.apply(this, arguments); };
@@ -8221,6 +8385,7 @@ function v2SyncNativeCustomer(){
   setTimeout(function(){
     v2SyncNativeCustomer();
     if(AA_V2){ v2RenderDeliverBar(); v2LoadInsights(); setTimeout(v2BootOrdersCheck, 4000); }
+    else setTimeout(function(){ if(typeof schedulePendingRatings === "function") schedulePendingRatings(2500); }, 500);
   }, 0);
 })();
 function v2AdminStatusHtml(o){
@@ -8256,12 +8421,14 @@ function v2LoadOrders(){
       };
       if(V2.openOrderId){ var want = orders.find(function(o){ return o.id === V2.openOrderId; }); V2.openOrderId = null; if(want) showOrderDetailModal(want); }
       v2MaybeAskReview(orders);
+      schedulePendingRatings(800);
     })
     .catch(function(){ var box = document.getElementById("acctDrawerOrders"); if(box) box.innerHTML = '<p style="color:var(--pink-deep); font-size:13px;">'+t("تعذر تحميل الطلبات، جرّب تاني.")+'</p>'; });
 }
 function v2BootOrdersCheck(){
-  if(!isAppMode() || !isCustomerAuthed() || isAdminAuthed()) return;
-  if(!window.AlAbdoNative || typeof window.AlAbdoNative.requestReview !== "function") return;
+  if(!isCustomerAuthed() || isAdminAuthed()) return;
+  schedulePendingRatings(600);
+  if(!isAppMode() || !window.AlAbdoNative || typeof window.AlAbdoNative.requestReview !== "function") return;
   fetch("/api/orders", { headers: customerAuthHeaders(), cache:"no-store" }).then(function(r){ return r.json(); })
     .then(function(res){ if(res && res.ok) v2MaybeAskReview(res.orders || []); }).catch(function(){});
 }
@@ -9305,7 +9472,7 @@ function renderProductReviewsBox(p, data){
       + '<button type="submit" class="btn btn-primary btn-sm" style="align-self:flex-start;">إرسال التقييم</button>'
     + '</form>';
   } else if(isCustomerAuthed() && !data.offline){
-    html += '<p class="rev-locked">🛍️ '+t("التقييم متاح بس للعملاء اللي اشتروا المنتج ده من المتجر. أول ما تطلبه هتقدر تقيّمه.")+'</p>';
+    html += '<p class="rev-locked">🛍️ '+t("التقييم متاح بعد ما تستلم المنتج اللي اشتريته من المتجر.")+'</p>';
   } else if(!isCustomerAuthed()){
     html += '<p style="color:var(--ink-soft); font-size:12.5px;">'+t("التقييم متاح بس للعملاء اللي اشتروا المنتج ده — سجّل دخولك بالحساب اللي طلبت بيه (من «حسابي»).")+'</p>';
   }
@@ -9349,7 +9516,7 @@ function renderProductReviewsBox(p, data){
             loadProductReviews(p);
           } else if(res.status===403){
             msgEl.style.color = "var(--pink-deep)"; msgEl.style.display = "block";
-            msgEl.textContent = t("التقييم متاح بس للعملاء اللي اشتروا المنتج ده من المتجر. أول ما تطلبه هتقدر تقيّمه.");
+            msgEl.textContent = t("التقييم متاح بعد ما تستلم المنتج اللي اشتريته من المتجر.");
           } else {
             msgEl.style.color = "var(--pink-deep)"; msgEl.style.display = "block";
             msgEl.textContent = "حصل خطأ، جرّب تاني.";
@@ -10498,6 +10665,7 @@ function renderAccountModal(){
           updateAccountLabel();
           closeAllPanels();
           showToast(LANG==="en" ? "Welcome "+(res.name || "back")+" 👋" : "أهلاً "+(res.name || "بيك")+" 👋");
+          schedulePendingRatings(1200);
         })
         .catch(function(){
           btn.disabled = false;
@@ -14101,6 +14269,7 @@ function customerResetFromLink(){
             if(typeof updateAccountLabel === "function") updateAccountLabel();
             closeAllPanels();
             showToast("✅ "+t("اتغير الباسورد واتسجل دخولك"));
+            if(typeof schedulePendingRatings === "function") schedulePendingRatings(1200);
           } else if(res && (res.reason==="expired" || res.reason==="bad_link")){ bad(res.reason); }
           else { err.textContent = t("حصلت مشكلة، جرّب تاني."); err.hidden = false; }
         }).catch(function(){ btn.disabled = false; err.textContent = t("تعذر الاتصال بالإنترنت، جرّب تاني."); err.hidden = false; });

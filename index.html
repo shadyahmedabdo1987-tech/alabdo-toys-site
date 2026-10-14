@@ -2016,8 +2016,9 @@ details.adm-sec[open] > .adm-sec-body{margin-top:12px;}
 .adm-sec .image-upload-row + p{display:none;}
 
 .adm-photo-btns{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
-.adm-photo-btn{border:1.5px dashed var(--border); background:var(--surface-3); color:var(--ink); border-radius:16px; padding:16px 8px; display:flex; flex-direction:column; align-items:center; gap:6px; font-weight:800; font-size:13px;}
+.adm-photo-btn{border:1.5px dashed var(--border); background:var(--surface-3); color:var(--ink); border-radius:16px; padding:16px 8px; display:flex; flex-direction:column; align-items:center; gap:4px; font-weight:800; font-size:13px;}
 .adm-photo-btn i{font-style:normal; font-size:26px;}
+.adm-photo-btn small{font-weight:600; font-size:11px; opacity:.85; line-height:1.25;}
 .adm-photo-btn.primary{border-style:solid; border-color:transparent; background:var(--adm-bar); color:#fff;}
 html.admin-app #admFormScreen .image-upload-actions{display:none;}
 html.admin-app #pfImagesPreview{gap:10px !important;}
@@ -3862,6 +3863,8 @@ try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("messa
 <div class="adm-x" id="admSheetBackdrop"></div>
 <aside class="adm-x" id="admSheet" role="dialog" aria-modal="true" aria-label="تعديل سريع" data-i18n-aria></aside>
 <input type="file" id="admCamInput" accept="image/*" capture="environment" hidden>
+<!-- معرض الإدارة: اختيار أكتر من صورة مرة واحدة (برّه أي حاوية مخفية عشان WebView يقرا multiple صح) -->
+<input type="file" id="admGalleryInput" accept="image/*" multiple hidden>
 
 <div class="overlay" id="overlay"></div>
 
@@ -6017,7 +6020,12 @@ var I18N_EN = {
   "الاسم والوصف بالإنجليزي، والتقييم": "English name & description, and rating",
   "صوّر المنتج": "Take a photo",
   "من المعرض": "From gallery",
+  "اختيار صور": "Choose photos",
+  "أكتر من صورة مرة واحدة": "Multiple photos at once",
+  "من المعرض تقدر تختار أكتر من صورة مرة واحدة. دوس على أي صورة عشان تخليها الرئيسية.": "From the gallery you can pick several photos at once. Tap any photo to make it the main one.",
   "دوس على أي صورة عشان تخليها الصورة الرئيسية.": "Tap any photo to make it the main one.",
+  "✅ تم إضافة": "✅ Added",
+  "صور": "photos",
   "حفظ وإضافة تاني": "Save & add another",
   "سجّل دخول تاني عشان التعديلات تتحفظ": "Log in again so your changes can be saved",
   "مستني النت": "Waiting for internet",
@@ -11189,12 +11197,31 @@ document.getElementById("pfImagePickBtn").addEventListener("click", function(){ 
 /* بتضيف صور للمنتج (من المعرض أو من الكاميرا في تطبيق الإدارة) بعد ضغطها */
 function addPfImageFiles(files){
   if(!files.length) return;
-  var remaining = files.length;
-  files.forEach(function(file){
+  /* بعض معارض أندرويد بترجع type فاضي — نقبل الملف لو النوع صورة أو فاضي */
+  var list = [];
+  for(var i = 0; i < files.length; i++){
+    var f = files[i];
+    if(!f) continue;
+    var typ = f.type || "";
+    if(typ && typ.indexOf("image/") !== 0) continue;
+    list.push(f);
+  }
+  if(!list.length) return;
+  var remaining = list.length;
+  var added = 0;
+  list.forEach(function(file){
     readImageAsCompressedDataURL(file, 900, 0.82, function(dataUrl){
-      pfImagesData.push(dataUrl);
+      if(dataUrl){ pfImagesData.push(dataUrl); added++; }
       remaining--;
-      if(remaining===0){ renderPfImagesPreview(); document.getElementById("pfImageInput").value = ""; }
+      if(remaining === 0){
+        renderPfImagesPreview();
+        var pfIn = document.getElementById("pfImageInput"); if(pfIn) pfIn.value = "";
+        var galIn = document.getElementById("admGalleryInput"); if(galIn) galIn.value = "";
+        var camIn = document.getElementById("admCamInput"); if(camIn) camIn.value = "";
+        if(document.documentElement.classList.contains("admin-app") && added > 1){
+          showToast(t("✅ تم إضافة") + " " + added + " " + t("صور"));
+        }
+      }
     });
   });
 }
@@ -15854,10 +15881,10 @@ var ADM = null;
     var sPhotos = sec("📸", "صور المنتج");
     sPhotos.insertAdjacentHTML("beforeend",
       '<div class="adm-photo-btns"><button type="button" class="adm-photo-btn primary" id="admCamBtn"><i>📷</i><span data-i18n>صوّر المنتج</span></button>'
-      + '<button type="button" class="adm-photo-btn" id="admGalleryBtn"><i>🖼️</i><span data-i18n>من المعرض</span></button></div>');
+      + '<button type="button" class="adm-photo-btn" id="admGalleryBtn"><i>🖼️</i><span data-i18n>اختيار صور</span><small data-i18n>أكتر من صورة مرة واحدة</small></button></div>');
     var lbl = imagesField.querySelector("label"); if(lbl) lbl.style.display = "none";
     sPhotos.appendChild(imagesField);
-    sPhotos.insertAdjacentHTML("beforeend", '<p class="adm-hint" data-i18n>دوس على أي صورة عشان تخليها الصورة الرئيسية.</p>');
+    sPhotos.insertAdjacentHTML("beforeend", '<p class="adm-hint" data-i18n>من المعرض تقدر تختار أكتر من صورة مرة واحدة. دوس على أي صورة عشان تخليها الرئيسية.</p>');
 
     var sBasic = sec("📝", "بيانات المنتج");
     sBasic.appendChild(fieldOf("pfName"));
@@ -15884,13 +15911,27 @@ var ADM = null;
     applyI18n();
 
     document.getElementById("admCamBtn").addEventListener("click", function(){ document.getElementById("admCamInput").click(); });
-    document.getElementById("admGalleryBtn").addEventListener("click", function(){ document.getElementById("pfImageInput").click(); });
+    document.getElementById("admGalleryBtn").addEventListener("click", function(){
+      var gal = document.getElementById("admGalleryInput");
+      if(gal){ gal.value = ""; gal.click(); }
+      else document.getElementById("pfImageInput").click();
+    });
     document.getElementById("admCamInput").addEventListener("change", function(){
       var files = Array.prototype.slice.call(this.files || []);
       if(files.length) addPfImageFiles(files);
       this.value = "";
       formDirty = true;
     });
+    var admGal = document.getElementById("admGalleryInput");
+    if(admGal && !admGal.dataset.bound){
+      admGal.dataset.bound = "1";
+      admGal.addEventListener("change", function(){
+        var files = Array.prototype.slice.call(this.files || []);
+        if(files.length) addPfImageFiles(files);
+        this.value = "";
+        formDirty = true;
+      });
+    }
     document.getElementById("pfImageInput").addEventListener("change", function(){ formDirty = true; });
     document.getElementById("pfImagesPreview").addEventListener("click", function(e){
       if(e.target.closest("[data-remove-pf-img]")){ formDirty = true; return; }

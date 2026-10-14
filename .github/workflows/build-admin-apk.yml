@@ -1008,7 +1008,9 @@ jobs:
                   hideSplash();
               }
 
-              /* اختيار صورة (سكرين شوت التحويل مثلاً) من المعرض أو تصويرها بالكاميرا */
+              /* اختيار صورة/صور من المعرض أو تصويرها بالكاميرا.
+                 الاختيار المتعدد (MODE_OPEN_MULTIPLE) بيتفتح مباشرة على مستندات/معرض
+                 من غير createChooser+كاميرا — عشان EXTRA_ALLOW_MULTIPLE يشتغل على أندرويد. */
               private boolean openFileChooser(ValueCallback<Uri[]> callback, WebChromeClient.FileChooserParams params) {
                   if (fileCallback != null) fileCallback.onReceiveValue(null);
                   fileCallback = callback;
@@ -1019,15 +1021,10 @@ jobs:
                           if (t != null && t.length() > 0 && !t.startsWith("image")) { imagesOnly = false; break; }
                       }
                   }
-                  Intent pick = new Intent(Intent.ACTION_GET_CONTENT);
-                  pick.addCategory(Intent.CATEGORY_OPENABLE);
-                  pick.setType(imagesOnly ? "image/*" : "*/*");
-                  if (params.getMode() == WebChromeClient.FileChooserParams.MODE_OPEN_MULTIPLE) {
-                      pick.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-                  }
+                  boolean multi = params.getMode() == WebChromeClient.FileChooserParams.MODE_OPEN_MULTIPLE;
                   Intent camera = null;
                   cameraUri = null;
-                  if (imagesOnly) {
+                  if (imagesOnly && !multi) {
                       try {
                           File dir = new File(getCacheDir(), "camera");
                           if (!dir.exists()) dir.mkdirs();
@@ -1041,7 +1038,18 @@ jobs:
                   Intent launch;
                   if (params.isCaptureEnabled() && camera != null) {
                       launch = camera;
+                  } else if (multi) {
+                      /* اختيار أكتر من صورة مرة واحدة — ACTION_OPEN_DOCUMENT أدق مع ClipData */
+                      Intent pick = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                      pick.addCategory(Intent.CATEGORY_OPENABLE);
+                      pick.setType(imagesOnly ? "image/*" : "*/*");
+                      pick.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+                      if (imagesOnly) pick.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"image/*"});
+                      launch = pick;
                   } else {
+                      Intent pick = new Intent(Intent.ACTION_GET_CONTENT);
+                      pick.addCategory(Intent.CATEGORY_OPENABLE);
+                      pick.setType(imagesOnly ? "image/*" : "*/*");
                       launch = Intent.createChooser(pick, "اختار صورة");
                       if (camera != null) {
                           ArrayList<Intent> extra = new ArrayList<>();
@@ -1052,6 +1060,20 @@ jobs:
                   try {
                       startActivityForResult(launch, REQ_FILE);
                   } catch (ActivityNotFoundException e) {
+                      /* لو OPEN_DOCUMENT مش متاح، نرجع لـ GET_CONTENT مع السماح بالمتعدد */
+                      if (multi) {
+                          try {
+                              Intent fallback = new Intent(Intent.ACTION_GET_CONTENT);
+                              fallback.addCategory(Intent.CATEGORY_OPENABLE);
+                              fallback.setType(imagesOnly ? "image/*" : "*/*");
+                              fallback.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+                              startActivityForResult(fallback, REQ_FILE);
+                              return true;
+                          } catch (ActivityNotFoundException e2) {
+                              fileCallback = null;
+                              return false;
+                          }
+                      }
                       fileCallback = null;
                       return false;
                   }

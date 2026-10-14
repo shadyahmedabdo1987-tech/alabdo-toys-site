@@ -9171,20 +9171,27 @@ menuToggle.addEventListener("click", function(){
 });
 document.getElementById("mobileNavClose").addEventListener("click", closeAllPanels);
 
-/* ميجا منيو الأقسام — فتح/قفل بالضغط (موبايل تاتش + كيبورد)، والهوفر من الـ CSS */
+/* ميجا منيو الأقسام — فتح/قفل بالضغط (تاتش + كيبورد)، والهوفر من الـ CSS على الديسكتوب */
 (function(){
   var item = document.getElementById("navShopItem");
   var btn = document.getElementById("navShopBtn");
-  if(!item || !btn) return;
+  var mega = document.getElementById("webMegaPanel");
+  if(!item || !btn || !mega) return;
+  /* متاح للتشخيص من الكونسول من غير ما نكسر عزل الـ IIFE */
+  try{ window.__aaToggleShopMega = toggleWebMegaMenu; window.__aaCloseShopMega = closeWebMegaMenu; }catch(e){}
   btn.addEventListener("click", function(e){
     e.preventDefault();
     e.stopPropagation();
     toggleWebMegaMenu();
   });
+  /* تأخير بسيط عشان ضغطة الزرار نفسها متتقفلش القائمة فورًا في بعض أدوات الأتمتة */
   document.addEventListener("click", function(e){
-    if(!item.classList.contains("open")) return;
-    if(item.contains(e.target)) return;
-    closeWebMegaMenu();
+    var t = e.target;
+    setTimeout(function(){
+      if(!item.classList.contains("open")) return;
+      if(item.contains(t)) return;
+      closeWebMegaMenu();
+    }, 10);
   });
   item.addEventListener("keydown", function(e){
     if(e.key === "Escape"){ closeWebMegaMenu(); btn.focus(); }

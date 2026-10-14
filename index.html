@@ -2032,7 +2032,9 @@ html.admin-app #admFormScreen .hero-ctas{position:fixed; bottom:0; inset-inline:
   padding:10px 16px calc(10px + env(safe-area-inset-bottom)); background:var(--surface); border-top:1px solid var(--border); box-shadow:0 -6px 18px rgba(27,36,64,.08);}
 html.admin-app #admFormScreen .hero-ctas .btn{flex:1; justify-content:center; min-height:48px; font-size:15px;}
 html.admin-app #admFormScreen #productFormCancel{display:none !important;}
-#admSaveAnother{flex:0 1 auto !important; white-space:nowrap;}
+/* زرارين الحفظ تحت: نفس العرض ويتقسموا الشاشة بالظبط من غير ما يخرجوا برّه */
+html.admin-app #admFormScreen .hero-ctas > .btn{flex:1 1 0 !important; min-width:0 !important; max-width:none; padding:8px 10px; box-shadow:none; white-space:normal; line-height:1.25; text-align:center; border-radius:14px;}
+html.admin-app #admFormScreen .hero-ctas{box-sizing:border-box; width:100%; max-width:100vw; align-items:stretch;}
 #admSaveAnother[hidden]{display:none !important;}
 
 /* ---------- المزيد / الأقسام / الإعدادات ---------- */

@@ -277,14 +277,14 @@ ul{margin:0; padding:0; list-style:none;}
 .nav-item.open > .nav-mega-trigger,
 .nav-item:hover > .nav-mega-trigger{color:var(--pink-deep); background:color-mix(in srgb, var(--pink-pale) 70%, transparent);}
 
-.nav-mega{position:absolute; top:calc(100% + 6px); inset-inline-start:0; width:min(720px, calc(100vw - 32px)); opacity:0; visibility:hidden; pointer-events:none; transform:translateY(8px) scale(.985); transition:opacity .22s ease, transform .22s cubic-bezier(.2,.8,.2,1), visibility .22s; z-index:90; padding-top:0;}
-.nav-item.open .nav-mega,
-.nav-item:focus-within .nav-mega{opacity:1; visibility:visible; pointer-events:auto; transform:none;}
+.nav-mega{position:absolute; top:calc(100% + 6px); inset-inline-start:0; width:min(720px, calc(100vw - 32px)); display:none; z-index:90;}
+.nav-item.open > .nav-mega,
+.nav-mega.is-open{display:block;}
 @media (hover:hover) and (pointer:fine){
-  .nav-item:hover .nav-mega{opacity:1; visibility:visible; pointer-events:auto; transform:none;}
+  .nav-item.has-mega:hover > .nav-mega{display:block;}
 }
 html[dir="ltr"] .nav-mega{inset-inline-start:0; inset-inline-end:auto;}
-.nav-mega-inner{background:var(--surface); border:1px solid var(--border); border-radius:18px; box-shadow:0 18px 48px hsl(var(--shadow)/.16), 0 2px 0 color-mix(in srgb, var(--pink-line) 35%, transparent); overflow:hidden; background-image:radial-gradient(120% 80% at 100% 0%, color-mix(in srgb, var(--pink-pale) 55%, transparent), transparent 55%), radial-gradient(90% 70% at 0% 100%, color-mix(in srgb, var(--sky-pale) 45%, transparent), transparent 50%);}
+.nav-mega-inner{background:var(--surface); border:1px solid var(--border); border-radius:18px; box-shadow:0 18px 48px hsl(var(--shadow)/.16), 0 2px 0 color-mix(in srgb, var(--pink-line) 35%, transparent); overflow:hidden; background-image:radial-gradient(120% 80% at 100% 0%, color-mix(in srgb, var(--pink-pale) 55%, transparent), transparent 55%), radial-gradient(90% 70% at 0% 100%, color-mix(in srgb, var(--sky-pale) 45%, transparent), transparent 50%); transform-origin:top center; animation:megaPop .28s ease both;}
 .nav-mega-head{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 18px; border-bottom:1px solid var(--border);}
 .nav-mega-head strong{font-family:var(--font-display, inherit); font-size:15px; color:var(--ink); font-weight:800;}
 .nav-mega-head a{padding:6px 10px !important; font-size:12.5px !important; font-weight:700 !important; color:var(--pink-deep) !important; background:var(--pink-pale) !important; border-radius:999px !important; box-shadow:none !important;}
@@ -300,9 +300,7 @@ html[dir="ltr"] .nav-mega{inset-inline-start:0; inset-inline-end:auto;}
 .nav-mega-quick a.active{background:var(--pink) !important; color:#fff !important; border-color:transparent; box-shadow:none !important;}
 
 @keyframes mnavIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;}}
-@keyframes megaPop{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;}}
-.nav-item.open .nav-mega-inner,
-.nav-item:focus-within .nav-mega-inner{animation:megaPop .28s ease both;}
+@keyframes megaPop{from{opacity:0; transform:translateY(8px) scale(.985);} to{opacity:1; transform:none;}}
 
 /* ============ Hero ============ */
 /* هيرو عالمي: صورة كاملة العرض كسطح بصري واحد + براند + عنوان + جملة + CTA */
@@ -9350,15 +9348,19 @@ renderWebShopMenus();
 function closeWebMegaMenu(){
   var item = document.getElementById("navShopItem");
   var btn = document.getElementById("navShopBtn");
+  var mega = document.getElementById("webMegaPanel");
   if(item) item.classList.remove("open");
+  if(mega) mega.classList.remove("is-open");
   if(btn) btn.setAttribute("aria-expanded", "false");
 }
 function toggleWebMegaMenu(force){
   var item = document.getElementById("navShopItem");
   var btn = document.getElementById("navShopBtn");
-  if(!item || !btn) return;
+  var mega = document.getElementById("webMegaPanel");
+  if(!item || !btn || !mega) return;
   var open = typeof force === "boolean" ? force : !item.classList.contains("open");
   item.classList.toggle("open", open);
+  mega.classList.toggle("is-open", open);
   btn.setAttribute("aria-expanded", open ? "true" : "false");
 }
 

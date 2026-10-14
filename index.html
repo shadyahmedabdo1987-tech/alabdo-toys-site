@@ -223,7 +223,7 @@ ul{margin:0; padding:0; list-style:none;}
 .topbar li{display:flex; align-items:center; gap:6px; font-weight:700;}
 .topbar svg{width:15px; height:15px; flex:none;}
 
-.site-header{position:sticky; top:0; z-index:60; background:color-mix(in srgb, var(--surface) 92%, transparent); box-shadow:0 1px 0 var(--border); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);}
+.site-header{position:sticky; top:0; z-index:60; background:color-mix(in srgb, var(--surface) 92%, transparent); box-shadow:0 1px 0 var(--border); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); overflow:visible;}
 .site-header.is-scrolled{box-shadow:0 8px 24px hsl(var(--shadow)/.10);}
 .header-row{display:flex; align-items:center; gap:24px; padding-block:14px;}
 /* من غير order/margin هنا، اللوجو بياخد ترتيبه الطبيعي في الـ DOM (تاني
@@ -261,9 +261,9 @@ ul{margin:0; padding:0; list-style:none;}
 .menu-toggle svg{width:22px; height:22px;}
 
 /* ============ قوائم الموقع الاحترافية (الويب فقط — app-mode بيخفي .main-nav) ============ */
-.main-nav{border-top:1px solid var(--border); background:linear-gradient(180deg, color-mix(in srgb, var(--surface) 96%, transparent), color-mix(in srgb, var(--surface-2) 55%, var(--surface)));}
-.main-nav .wrap{display:flex; align-items:stretch; gap:4px; overflow-x:auto; scrollbar-width:none; padding-block:8px; position:relative;}
-.main-nav .wrap::-webkit-scrollbar{display:none;}
+.main-nav{border-top:1px solid var(--border); background:linear-gradient(180deg, color-mix(in srgb, var(--surface) 96%, transparent), color-mix(in srgb, var(--surface-2) 55%, var(--surface))); overflow:visible;}
+/* overflow:visible ضروري عشان الميجا منيو متتقصّش — على الموبايل الويب الـ main-nav متخفي أصلاً */
+.main-nav .wrap{display:flex; align-items:stretch; gap:4px; flex-wrap:wrap; overflow:visible; padding-block:8px; position:relative;}
 .main-nav a,
 .main-nav .nav-mega-trigger{white-space:nowrap; padding:10px 16px; font-weight:800; font-size:14px; color:var(--ink-soft); border-radius:10px; transition:color .18s ease, background .18s ease, transform .18s ease; display:inline-flex; align-items:center; gap:6px; border:0; background:transparent; font-family:inherit; cursor:pointer; line-height:1.2;}
 .main-nav a:hover,
@@ -277,7 +277,7 @@ ul{margin:0; padding:0; list-style:none;}
 .nav-item.open > .nav-mega-trigger,
 .nav-item:hover > .nav-mega-trigger{color:var(--pink-deep); background:color-mix(in srgb, var(--pink-pale) 70%, transparent);}
 
-.nav-mega{position:absolute; top:calc(100% + 8px); inset-inline-start:0; width:min(720px, calc(100vw - 32px)); opacity:0; visibility:hidden; pointer-events:none; transform:translateY(8px) scale(.985); transition:opacity .22s ease, transform .22s cubic-bezier(.2,.8,.2,1), visibility .22s; z-index:70; padding-top:0;}
+.nav-mega{position:absolute; top:calc(100% + 6px); inset-inline-start:0; width:min(720px, calc(100vw - 32px)); opacity:0; visibility:hidden; pointer-events:none; transform:translateY(8px) scale(.985); transition:opacity .22s ease, transform .22s cubic-bezier(.2,.8,.2,1), visibility .22s; z-index:90; padding-top:0;}
 .nav-item.open .nav-mega,
 .nav-item:focus-within .nav-mega{opacity:1; visibility:visible; pointer-events:auto; transform:none;}
 @media (hover:hover) and (pointer:fine){

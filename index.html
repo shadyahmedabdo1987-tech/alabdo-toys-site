@@ -260,33 +260,44 @@ ul{margin:0; padding:0; list-style:none;}
 .menu-toggle:active{transform:scale(.96);}
 .menu-toggle svg{width:22px; height:22px;}
 
-/* ============ قوائم الموقع الاحترافية (الويب فقط — app-mode بيخفي .main-nav) ============ */
-.main-nav{border-top:1px solid var(--border); background:linear-gradient(180deg, color-mix(in srgb, var(--surface) 96%, transparent), color-mix(in srgb, var(--surface-2) 55%, var(--surface))); overflow:visible;}
-/* overflow:visible ضروري عشان الميجا منيو متتقصّش — على الموبايل الويب الـ main-nav متخفي أصلاً */
-.main-nav .wrap{display:flex; align-items:stretch; gap:4px; flex-wrap:wrap; overflow:visible; padding-block:8px; position:relative;}
-.main-nav a,
-.main-nav .nav-mega-trigger{white-space:nowrap; padding:10px 16px; font-weight:800; font-size:14px; color:var(--ink-soft); border-radius:10px; transition:color .18s ease, background .18s ease, transform .18s ease; display:inline-flex; align-items:center; gap:6px; border:0; background:transparent; font-family:inherit; cursor:pointer; line-height:1.2;}
-.main-nav a:hover,
-.main-nav .nav-mega-trigger:hover{color:var(--pink-deep); background:color-mix(in srgb, var(--pink-pale) 70%, transparent);}
-.main-nav a.active{color:var(--pink-deep); background:var(--pink-pale); box-shadow:inset 0 -2px 0 var(--pink);}
-.main-nav a.active:hover{color:var(--pink-deep); background:var(--pink-pale);}
+/* ============ شريط التابات العلوي (الويب — app-mode بيخفيه) ============ */
+.main-nav{border-top:1px solid var(--border); overflow:visible;}
+.main-nav .wrap{display:flex; align-items:stretch; gap:8px; overflow-x:auto; overflow-y:visible; scrollbar-width:none; padding-block:10px; position:relative;}
+.main-nav .wrap::-webkit-scrollbar{display:none;}
+.main-nav > .wrap > a,
+.main-nav .nav-tab{white-space:nowrap; padding:11px 18px; font-weight:800; font-size:14.5px; color:var(--ink-soft); border-radius:12px; transition:transform .15s ease, background .15s ease, color .15s ease; display:inline-flex; align-items:center; gap:6px; border:0; background:transparent; font-family:inherit; cursor:pointer; line-height:1.2; text-decoration:none;}
+.main-nav > .wrap > a:hover,
+.main-nav .nav-tab:hover{color:var(--pink-deep); background:var(--surface-2);}
+.main-nav > .wrap > a.active,
+.main-nav .nav-item.open > .nav-tab,
+.main-nav .nav-item:hover > .nav-tab.active,
+.main-nav .nav-tab.active{color:#fff; background:var(--pink); box-shadow:0 8px 18px color-mix(in srgb, var(--pink) 28%, transparent);}
+.main-nav > .wrap > a.active:hover,
+.main-nav .nav-tab.active:hover{color:#fff; background:var(--pink-deep);}
 .nav-item{position:relative; flex:none; display:flex; align-items:stretch;}
-.nav-chevron{width:14px; height:14px; opacity:.7; transition:transform .22s ease;}
+.nav-chevron{width:14px; height:14px; opacity:.75; transition:transform .2s ease; flex:none;}
 .nav-item.open .nav-chevron,
 .nav-item:hover .nav-chevron{transform:rotate(180deg);}
-.nav-item.open > .nav-mega-trigger,
-.nav-item:hover > .nav-mega-trigger{color:var(--pink-deep); background:color-mix(in srgb, var(--pink-pale) 70%, transparent);}
+.nav-item:hover > .nav-tab:not(.active),
+.nav-item.open > .nav-tab:not(.active){color:var(--pink-deep); background:var(--surface-2);}
 
-.nav-mega{position:absolute; top:calc(100% + 6px); inset-inline-start:0; width:min(720px, calc(100vw - 32px)); display:none; z-index:90;}
-.nav-item.open > .nav-mega,
-.nav-mega.is-open{display:block;}
+/* أي تاب فيه قائمة منسدلة: تفتح بمجرد الـ hover على كل تابات الشريط */
+.nav-drop{position:absolute; top:calc(100% + 6px); inset-inline-start:0; min-width:220px; width:max-content; max-width:min(720px, calc(100vw - 24px)); display:none; z-index:90;}
+.nav-item.open > .nav-drop,
+.nav-drop.is-open{display:block;}
 @media (hover:hover) and (pointer:fine){
-  .nav-item.has-mega:hover > .nav-mega{display:block;}
+  .main-nav .nav-item.has-drop:hover > .nav-drop{display:block;}
 }
-html[dir="ltr"] .nav-mega{inset-inline-start:0; inset-inline-end:auto;}
-.nav-mega-inner{background:var(--surface); border:1px solid var(--border); border-radius:18px; box-shadow:0 18px 48px hsl(var(--shadow)/.16), 0 2px 0 color-mix(in srgb, var(--pink-line) 35%, transparent); overflow:hidden; background-image:radial-gradient(120% 80% at 100% 0%, color-mix(in srgb, var(--pink-pale) 55%, transparent), transparent 55%), radial-gradient(90% 70% at 0% 100%, color-mix(in srgb, var(--sky-pale) 45%, transparent), transparent 50%); transform-origin:top center; animation:megaPop .28s ease both;}
+html[dir="ltr"] .nav-drop{inset-inline-start:0; inset-inline-end:auto;}
+.nav-drop-inner{background:var(--surface); border:1px solid var(--border); border-radius:16px; box-shadow:0 16px 40px hsl(var(--shadow)/.14); overflow:hidden; animation:megaPop .22s ease both;}
+.nav-drop-links{display:flex; flex-direction:column; padding:8px; gap:2px;}
+.nav-drop-links a{display:block !important; padding:11px 14px !important; border-radius:12px !important; font-weight:700 !important; font-size:13.5px !important; color:var(--ink) !important; background:transparent !important; box-shadow:none !important; white-space:nowrap !important;}
+.nav-drop-links a:hover{background:var(--pink-pale) !important; color:var(--pink-deep) !important;}
+.nav-drop-links a.active{background:var(--pink-pale) !important; color:var(--pink-deep) !important;}
+.nav-mega{width:min(720px, calc(100vw - 32px));}
+.nav-mega-inner{background:var(--surface); border:1px solid var(--border); border-radius:18px; box-shadow:0 18px 48px hsl(var(--shadow)/.16); overflow:hidden; background-image:radial-gradient(120% 80% at 100% 0%, color-mix(in srgb, var(--pink-pale) 55%, transparent), transparent 55%), radial-gradient(90% 70% at 0% 100%, color-mix(in srgb, var(--sky-pale) 45%, transparent), transparent 50%); animation:megaPop .22s ease both;}
 .nav-mega-head{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 18px; border-bottom:1px solid var(--border);}
-.nav-mega-head strong{font-family:var(--font-display, inherit); font-size:15px; color:var(--ink); font-weight:800;}
+.nav-mega-head strong{font-size:15px; color:var(--ink); font-weight:800;}
 .nav-mega-head a{padding:6px 10px !important; font-size:12.5px !important; font-weight:700 !important; color:var(--pink-deep) !important; background:var(--pink-pale) !important; border-radius:999px !important; box-shadow:none !important;}
 .nav-mega-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:8px; padding:14px 16px;}
 .nav-mega-cat{display:flex !important; align-items:center; gap:10px; padding:10px 12px !important; border-radius:14px !important; background:color-mix(in srgb, var(--surface) 80%, var(--surface-2)); border:1px solid transparent; color:var(--ink) !important; font-weight:700 !important; font-size:13.5px !important; white-space:normal !important; text-align:start; transition:transform .15s ease, border-color .15s ease, background .15s ease, box-shadow .15s ease !important;}
@@ -294,10 +305,6 @@ html[dir="ltr"] .nav-mega{inset-inline-start:0; inset-inline-end:auto;}
 .nav-mega-cat .ic{flex:none; width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:18px; box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--border) 70%, transparent);}
 .nav-mega-cat .ic svg{width:22px; height:22px;}
 .nav-mega-cat span:last-child{min-width:0; line-height:1.35;}
-.nav-mega-quick{display:flex; flex-wrap:wrap; gap:8px; padding:0 16px 16px; border-top:0;}
-.nav-mega-quick a{padding:8px 12px !important; font-size:12.5px !important; border-radius:999px !important; background:var(--surface-2) !important; border:1px solid var(--border); color:var(--ink-soft) !important; box-shadow:none !important;}
-.nav-mega-quick a:hover{border-color:var(--pink-line); color:var(--pink-deep) !important; background:var(--pink-pale) !important;}
-.nav-mega-quick a.active{background:var(--pink) !important; color:#fff !important; border-color:transparent; box-shadow:none !important;}
 
 @keyframes mnavIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;}}
 @keyframes megaPop{from{opacity:0; transform:translateY(8px) scale(.985);} to{opacity:1; transform:none;}}
@@ -869,8 +876,6 @@ html[dir="ltr"] .mobile-nav.show{transform:translateX(0);}
 @media (max-width:640px){
   .header-search{display:none;}
   .menu-toggle{display:flex;}
-  /* على موبايل الويب القائمة الجانبية هي الأساس — شريط التنقل العلوي بيتخفى */
-  html:not(.app-mode) .main-nav{display:none;}
   .brand-text .tag{display:none;}
   .header-row{gap:10px;}
   .brand{flex:1 1 auto; min-width:0; gap:8px;}
@@ -2729,33 +2734,78 @@ try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("messa
     </div>
     <nav class="main-nav" aria-label="التنقل الرئيسي">
       <div class="wrap" id="navLinks">
-        <a href="#home" data-view-link="home" data-i18n>الرئيسية</a>
-        <div class="nav-item has-mega" id="navShopItem">
-          <button type="button" class="nav-mega-trigger" id="navShopBtn" aria-expanded="false" aria-controls="webMegaPanel" aria-haspopup="true">
-            <span data-i18n>تسوق حسب القسم</span>
-            <svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-          </button>
-          <div class="nav-mega" id="webMegaPanel" role="region" aria-label="أقسام المتجر">
+        <div class="nav-item has-drop" data-nav-drop>
+          <a href="#home" class="nav-tab" data-view-link="home" aria-haspopup="true" aria-expanded="false"><span data-i18n>الرئيسية</span><svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></a>
+          <div class="nav-drop" role="region">
+            <div class="nav-drop-inner nav-drop-links">
+              <a href="#home" data-view-link="home" data-i18n>الرئيسية</a>
+              <a href="#products" data-view-link="products" data-i18n>جميع المنتجات</a>
+              <a href="#products" data-view-link="products" data-badge="new" data-i18n>وصل حديثاً</a>
+            </div>
+          </div>
+        </div>
+        <div class="nav-item has-drop" data-nav-drop>
+          <a href="#products" class="nav-tab" data-view-link="products" aria-haspopup="true" aria-expanded="false"><span data-i18n>جميع المنتجات</span><svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></a>
+          <div class="nav-drop nav-mega" id="webMegaPanel" role="region" aria-label="أقسام المتجر">
             <div class="nav-mega-inner">
               <div class="nav-mega-head">
                 <strong data-i18n>أقسام المتجر</strong>
                 <a href="#products" data-view-link="products" data-i18n>عرض كل المنتجات</a>
               </div>
               <div class="nav-mega-grid" id="webMegaCats"></div>
-              <div class="nav-mega-quick">
-                <a href="#products" data-view-link="products" data-badge="new" data-i18n>وصل حديثاً</a>
-                <a href="#products" data-view-link="products" data-badge="sale" data-i18n>عروض خاصة</a>
-                <a href="#products" data-view-link="products" data-badge="wish" data-i18n>المفضلة ❤️</a>
-              </div>
             </div>
           </div>
         </div>
-        <a href="#products" data-view-link="products" data-i18n>جميع المنتجات</a>
-        <a href="#products" data-view-link="products" data-badge="new" data-i18n>وصل حديثاً</a>
-        <a href="#products" data-view-link="products" data-badge="sale" data-i18n>عروض خاصة</a>
-        <a href="#products" data-view-link="products" data-badge="wish" data-i18n>المفضلة ❤️</a>
-        <a href="#about" data-view-link="about" data-i18n>من نحن</a>
-        <a href="#contact" data-view-link="contact" data-i18n>تواصل معنا</a>
+        <div class="nav-item has-drop" data-nav-drop>
+          <a href="#products" class="nav-tab" data-view-link="products" data-badge="new" aria-haspopup="true" aria-expanded="false"><span data-i18n>وصل حديثاً</span><svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></a>
+          <div class="nav-drop" role="region">
+            <div class="nav-drop-inner nav-drop-links">
+              <a href="#products" data-view-link="products" data-badge="new" data-i18n>وصل حديثاً</a>
+              <a href="#products" data-view-link="products" data-i18n>جميع المنتجات</a>
+              <a href="#products" data-view-link="products" data-badge="sale" data-i18n>عروض خاصة</a>
+            </div>
+          </div>
+        </div>
+        <div class="nav-item has-drop" data-nav-drop>
+          <a href="#products" class="nav-tab" data-view-link="products" data-badge="sale" aria-haspopup="true" aria-expanded="false"><span data-i18n>عروض خاصة</span><svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></a>
+          <div class="nav-drop" role="region">
+            <div class="nav-drop-inner nav-drop-links">
+              <a href="#products" data-view-link="products" data-badge="sale" data-i18n>عروض خاصة</a>
+              <a href="#products" data-view-link="products" data-badge="new" data-i18n>وصل حديثاً</a>
+              <a href="#products" data-view-link="products" data-i18n>جميع المنتجات</a>
+            </div>
+          </div>
+        </div>
+        <div class="nav-item has-drop" data-nav-drop>
+          <a href="#products" class="nav-tab" data-view-link="products" data-badge="wish" aria-haspopup="true" aria-expanded="false"><span data-i18n>المفضلة ❤️</span><svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></a>
+          <div class="nav-drop" role="region">
+            <div class="nav-drop-inner nav-drop-links">
+              <a href="#products" data-view-link="products" data-badge="wish" data-i18n>المفضلة ❤️</a>
+              <a href="#products" data-view-link="products" data-i18n>جميع المنتجات</a>
+              <a href="#products" data-view-link="products" data-badge="new" data-i18n>وصل حديثاً</a>
+            </div>
+          </div>
+        </div>
+        <div class="nav-item has-drop" data-nav-drop>
+          <a href="#about" class="nav-tab" data-view-link="about" aria-haspopup="true" aria-expanded="false"><span data-i18n>من نحن</span><svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></a>
+          <div class="nav-drop" role="region">
+            <div class="nav-drop-inner nav-drop-links">
+              <a href="#about" data-view-link="about" data-i18n>من نحن</a>
+              <a href="#contact" data-view-link="contact" data-i18n>تواصل معنا</a>
+              <a href="#terms" data-view-link="terms" data-i18n>الشروط والأحكام</a>
+            </div>
+          </div>
+        </div>
+        <div class="nav-item has-drop" data-nav-drop>
+          <a href="#contact" class="nav-tab" data-view-link="contact" aria-haspopup="true" aria-expanded="false"><span data-i18n>تواصل معنا</span><svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></a>
+          <div class="nav-drop" role="region">
+            <div class="nav-drop-inner nav-drop-links">
+              <a href="#contact" data-view-link="contact" data-i18n>تواصل معنا</a>
+              <a href="#about" data-view-link="about" data-i18n>من نحن</a>
+              <a href="#privacy" data-view-link="privacy" data-i18n>سياسة الخصوصية</a>
+            </div>
+          </div>
+        </div>
       </div>
     </nav>
   </div>
@@ -9171,30 +9221,47 @@ menuToggle.addEventListener("click", function(){
 });
 document.getElementById("mobileNavClose").addEventListener("click", closeAllPanels);
 
-/* ميجا منيو الأقسام — فتح/قفل بالضغط (تاتش + كيبورد)، والهوفر من الـ CSS على الديسكتوب */
+/* قوائم الشريط العلوي: على الديسكتوب تفتح بالـ hover (CSS)،
+   وعلى التاتش/الكيبورد بالضغط. ينطبق على كل تاب فيه data-nav-drop. */
 (function(){
-  var item = document.getElementById("navShopItem");
-  var btn = document.getElementById("navShopBtn");
-  var mega = document.getElementById("webMegaPanel");
-  if(!item || !btn || !mega) return;
-  /* متاح للتشخيص من الكونسول من غير ما نكسر عزل الـ IIFE */
-  try{ window.__aaToggleShopMega = toggleWebMegaMenu; window.__aaCloseShopMega = closeWebMegaMenu; }catch(e){}
-  btn.addEventListener("click", function(e){
-    e.preventDefault();
-    e.stopPropagation();
-    toggleWebMegaMenu();
+  var items = Array.prototype.slice.call(document.querySelectorAll(".main-nav [data-nav-drop]"));
+  if(!items.length) return;
+  try{ window.__aaCloseShopMega = closeWebMegaMenu; }catch(e){}
+  var fineHover = window.matchMedia && window.matchMedia("(hover:hover) and (pointer:fine)").matches;
+  items.forEach(function(item){
+    var tab = item.querySelector(".nav-tab");
+    var drop = item.querySelector(".nav-drop");
+    if(!tab || !drop) return;
+    tab.addEventListener("click", function(e){
+      /* على أجهزة الـ hover القائمة بتفتح لوحدها؛ الضغطة بتنقّل عادي.
+         على التاتش: أول ضغطة تفتح القائمة، والتانية (أو لينك جوه) بتنقّل. */
+      if(fineHover) return;
+      if(!item.classList.contains("open")){
+        e.preventDefault();
+        e.stopPropagation();
+        closeWebMegaMenu();
+        item.classList.add("open");
+        drop.classList.add("is-open");
+        tab.setAttribute("aria-expanded", "true");
+      }
+    });
+    item.addEventListener("keydown", function(e){
+      if(e.key === "Escape"){ closeWebMegaMenu(); tab.focus(); }
+    });
   });
-  /* تأخير بسيط عشان ضغطة الزرار نفسها متتقفلش القائمة فورًا في بعض أدوات الأتمتة */
   document.addEventListener("click", function(e){
     var t = e.target;
     setTimeout(function(){
-      if(!item.classList.contains("open")) return;
-      if(item.contains(t)) return;
-      closeWebMegaMenu();
+      items.forEach(function(item){
+        if(!item.classList.contains("open")) return;
+        if(item.contains(t)) return;
+        item.classList.remove("open");
+        var d = item.querySelector(".nav-drop");
+        var tab = item.querySelector(".nav-tab");
+        if(d) d.classList.remove("is-open");
+        if(tab) tab.setAttribute("aria-expanded", "false");
+      });
     }, 10);
-  });
-  item.addEventListener("keydown", function(e){
-    if(e.key === "Escape"){ closeWebMegaMenu(); btn.focus(); }
   });
 })();
 
@@ -9353,22 +9420,13 @@ function renderWebShopMenus(){
 /* أول رسم من الأقسام الافتراضية قبل ما الكاتالوج يوصل من السيرفر */
 renderWebShopMenus();
 function closeWebMegaMenu(){
-  var item = document.getElementById("navShopItem");
-  var btn = document.getElementById("navShopBtn");
-  var mega = document.getElementById("webMegaPanel");
-  if(item) item.classList.remove("open");
-  if(mega) mega.classList.remove("is-open");
-  if(btn) btn.setAttribute("aria-expanded", "false");
-}
-function toggleWebMegaMenu(force){
-  var item = document.getElementById("navShopItem");
-  var btn = document.getElementById("navShopBtn");
-  var mega = document.getElementById("webMegaPanel");
-  if(!item || !btn || !mega) return;
-  var open = typeof force === "boolean" ? force : !item.classList.contains("open");
-  item.classList.toggle("open", open);
-  mega.classList.toggle("is-open", open);
-  btn.setAttribute("aria-expanded", open ? "true" : "false");
+  document.querySelectorAll(".main-nav [data-nav-drop]").forEach(function(item){
+    item.classList.remove("open");
+    var drop = item.querySelector(".nav-drop");
+    var tab = item.querySelector(".nav-tab");
+    if(drop) drop.classList.remove("is-open");
+    if(tab) tab.setAttribute("aria-expanded", "false");
+  });
 }
 
 /* ---------- Product Modal (gallery + live reviews) ---------- */

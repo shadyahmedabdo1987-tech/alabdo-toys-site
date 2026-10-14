@@ -255,16 +255,54 @@ ul{margin:0; padding:0; list-style:none;}
 .icon-btn:active{transform:translateY(1px); box-shadow:0 2px 8px hsl(var(--shadow)/.08);}
 .icon-btn svg{width:23px; height:23px;}
 .cart-count{position:absolute; top:-2px; inset-inline-end:2px; background:var(--pink); color:#fff; font-size:11px; font-weight:800; min-width:18px; height:18px; border-radius:999px; display:flex; align-items:center; justify-content:center; padding:0 4px; box-shadow:0 2px 6px color-mix(in srgb, var(--pink) 40%, transparent);}
-.menu-toggle{display:none; background:none; border:0; color:var(--ink); padding:8px;}
-.menu-toggle svg{width:26px; height:26px;}
+.menu-toggle{display:none; align-items:center; justify-content:center; background:var(--surface); border:1.5px solid var(--border); color:var(--ink); width:42px; height:42px; padding:0; border-radius:12px; box-shadow:0 4px 12px hsl(var(--shadow)/.06); transition:border-color .15s ease, background .15s ease, transform .15s ease;}
+.menu-toggle:hover{border-color:var(--pink-line); background:var(--pink-pale); color:var(--pink-deep);}
+.menu-toggle:active{transform:scale(.96);}
+.menu-toggle svg{width:22px; height:22px;}
 
-.main-nav{border-top:1px solid var(--border);}
-.main-nav .wrap{display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; padding-block:10px;}
+/* ============ قوائم الموقع الاحترافية (الويب فقط — app-mode بيخفي .main-nav) ============ */
+.main-nav{border-top:1px solid var(--border); background:linear-gradient(180deg, color-mix(in srgb, var(--surface) 96%, transparent), color-mix(in srgb, var(--surface-2) 55%, var(--surface)));}
+.main-nav .wrap{display:flex; align-items:stretch; gap:4px; overflow-x:auto; scrollbar-width:none; padding-block:8px; position:relative;}
 .main-nav .wrap::-webkit-scrollbar{display:none;}
-.main-nav a{white-space:nowrap; padding:11px 18px; font-weight:800; font-size:14.5px; color:var(--ink-soft); border-radius:12px; transition:transform .15s ease, background .15s ease, color .15s ease;}
-.main-nav a:hover{color:var(--pink-deep); background:var(--surface-2);}
-.main-nav a.active{color:#fff; background:var(--pink); box-shadow:0 8px 18px color-mix(in srgb, var(--pink) 28%, transparent);}
-.main-nav a.active:hover{color:#fff; background:var(--pink-deep);}
+.main-nav a,
+.main-nav .nav-mega-trigger{white-space:nowrap; padding:10px 16px; font-weight:800; font-size:14px; color:var(--ink-soft); border-radius:10px; transition:color .18s ease, background .18s ease, transform .18s ease; display:inline-flex; align-items:center; gap:6px; border:0; background:transparent; font-family:inherit; cursor:pointer; line-height:1.2;}
+.main-nav a:hover,
+.main-nav .nav-mega-trigger:hover{color:var(--pink-deep); background:color-mix(in srgb, var(--pink-pale) 70%, transparent);}
+.main-nav a.active{color:var(--pink-deep); background:var(--pink-pale); box-shadow:inset 0 -2px 0 var(--pink);}
+.main-nav a.active:hover{color:var(--pink-deep); background:var(--pink-pale);}
+.nav-item{position:relative; flex:none; display:flex; align-items:stretch;}
+.nav-chevron{width:14px; height:14px; opacity:.7; transition:transform .22s ease;}
+.nav-item.open .nav-chevron,
+.nav-item:hover .nav-chevron{transform:rotate(180deg);}
+.nav-item.open > .nav-mega-trigger,
+.nav-item:hover > .nav-mega-trigger{color:var(--pink-deep); background:color-mix(in srgb, var(--pink-pale) 70%, transparent);}
+
+.nav-mega{position:absolute; top:calc(100% + 8px); inset-inline-start:0; width:min(720px, calc(100vw - 32px)); opacity:0; visibility:hidden; pointer-events:none; transform:translateY(8px) scale(.985); transition:opacity .22s ease, transform .22s cubic-bezier(.2,.8,.2,1), visibility .22s; z-index:70; padding-top:0;}
+.nav-item.open .nav-mega,
+.nav-item:focus-within .nav-mega{opacity:1; visibility:visible; pointer-events:auto; transform:none;}
+@media (hover:hover) and (pointer:fine){
+  .nav-item:hover .nav-mega{opacity:1; visibility:visible; pointer-events:auto; transform:none;}
+}
+html[dir="ltr"] .nav-mega{inset-inline-start:0; inset-inline-end:auto;}
+.nav-mega-inner{background:var(--surface); border:1px solid var(--border); border-radius:18px; box-shadow:0 18px 48px hsl(var(--shadow)/.16), 0 2px 0 color-mix(in srgb, var(--pink-line) 35%, transparent); overflow:hidden; background-image:radial-gradient(120% 80% at 100% 0%, color-mix(in srgb, var(--pink-pale) 55%, transparent), transparent 55%), radial-gradient(90% 70% at 0% 100%, color-mix(in srgb, var(--sky-pale) 45%, transparent), transparent 50%);}
+.nav-mega-head{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 18px; border-bottom:1px solid var(--border);}
+.nav-mega-head strong{font-family:var(--font-display, inherit); font-size:15px; color:var(--ink); font-weight:800;}
+.nav-mega-head a{padding:6px 10px !important; font-size:12.5px !important; font-weight:700 !important; color:var(--pink-deep) !important; background:var(--pink-pale) !important; border-radius:999px !important; box-shadow:none !important;}
+.nav-mega-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:8px; padding:14px 16px;}
+.nav-mega-cat{display:flex !important; align-items:center; gap:10px; padding:10px 12px !important; border-radius:14px !important; background:color-mix(in srgb, var(--surface) 80%, var(--surface-2)); border:1px solid transparent; color:var(--ink) !important; font-weight:700 !important; font-size:13.5px !important; white-space:normal !important; text-align:start; transition:transform .15s ease, border-color .15s ease, background .15s ease, box-shadow .15s ease !important;}
+.nav-mega-cat:hover{transform:translateY(-2px); border-color:var(--pink-line) !important; background:var(--surface) !important; box-shadow:0 8px 18px hsl(var(--shadow)/.10); color:var(--pink-deep) !important;}
+.nav-mega-cat .ic{flex:none; width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:18px; box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--border) 70%, transparent);}
+.nav-mega-cat .ic svg{width:22px; height:22px;}
+.nav-mega-cat span:last-child{min-width:0; line-height:1.35;}
+.nav-mega-quick{display:flex; flex-wrap:wrap; gap:8px; padding:0 16px 16px; border-top:0;}
+.nav-mega-quick a{padding:8px 12px !important; font-size:12.5px !important; border-radius:999px !important; background:var(--surface-2) !important; border:1px solid var(--border); color:var(--ink-soft) !important; box-shadow:none !important;}
+.nav-mega-quick a:hover{border-color:var(--pink-line); color:var(--pink-deep) !important; background:var(--pink-pale) !important;}
+.nav-mega-quick a.active{background:var(--pink) !important; color:#fff !important; border-color:transparent; box-shadow:none !important;}
+
+@keyframes mnavIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;}}
+@keyframes megaPop{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;}}
+.nav-item.open .nav-mega-inner,
+.nav-item:focus-within .nav-mega-inner{animation:megaPop .28s ease both;}
 
 /* ============ Hero ============ */
 /* هيرو عالمي: صورة كاملة العرض كسطح بصري واحد + براند + عنوان + جملة + CTA */
@@ -780,15 +818,40 @@ html.app-mode .rate-banner{bottom:calc(72px + env(safe-area-inset-bottom));}
 /* عشان لوحة التحكم متعرضش أكتر من الشاشة على الموبايل (العنصر جوه الـ grid ميكبّرش العمود). */
 .admin-grid > *, .field-row > *{min-width:0;}
 
-/* mobile nav drawer */
-.mobile-nav{position:fixed; top:0; inset-inline-start:0; bottom:0; width:min(300px,84vw); background:var(--surface); z-index:100; transform:translateX(105%); transition:transform .25s; padding:calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)); overflow-y:auto;}
+/* mobile nav drawer — لموقع الموبايل فقط (التطبيق بيستخدم app-sheet) */
+.mobile-nav{position:fixed; top:0; inset-inline-start:0; bottom:0; width:min(340px,88vw); background:var(--surface); z-index:100; transform:translateX(105%); transition:transform .28s cubic-bezier(.2,.8,.2,1); padding:0; overflow-y:auto; box-shadow:0 0 0 1px var(--border), -12px 0 40px hsl(var(--shadow)/.18); background-image:linear-gradient(180deg, color-mix(in srgb, var(--pink-pale) 40%, var(--surface)) 0%, var(--surface) 140px);}
 .mobile-nav.show{transform:translateX(0);}
 /* نفس فكرة الدرج: بما إن inset-inline-start بيتحول لجهة مختلفة مع تغيّر
    الاتجاه، اتجاه إخفاء القائمة الجانبية لازم يتقلب معاها في وضع LTR. */
-html[dir="ltr"] .mobile-nav{transform:translateX(-105%);}
+html[dir="ltr"] .mobile-nav{transform:translateX(-105%); box-shadow:0 0 0 1px var(--border), 12px 0 40px hsl(var(--shadow)/.18);}
 html[dir="ltr"] .mobile-nav.show{transform:translateX(0);}
-.mobile-nav a{display:block; padding:13px 16px; font-weight:800; border-radius:13px; margin-block:5px; background:var(--surface-2); border:1px solid var(--border); box-shadow:none; transition:transform .12s ease, background .12s ease, border-color .12s ease;}
-.mobile-nav a:active{transform:scale(.98); background:var(--pink-pale); border-color:var(--pink-line);}
+.mnav-head{display:flex; justify-content:space-between; align-items:center; gap:12px; padding:calc(18px + env(safe-area-inset-top)) 18px 12px;}
+.mnav-brand{display:flex; align-items:center; gap:10px; min-width:0;}
+.mnav-brand img{width:40px; height:40px; border-radius:12px; object-fit:cover; box-shadow:0 4px 12px color-mix(in srgb, var(--pink) 25%, transparent);}
+.mnav-brand strong{display:block; font-size:15px; color:var(--pink-deep); font-weight:800; line-height:1.2;}
+.mnav-brand span{display:block; font-size:11.5px; color:var(--ink-soft); margin-top:2px;}
+.mnav-search{padding:0 18px 14px;}
+.mnav-search input{width:100%; padding:12px 14px; border-radius:14px; border:1.5px solid var(--border); background:var(--surface-3); color:var(--ink); font-size:14px;}
+.mnav-search input:focus{border-color:color-mix(in srgb, var(--pink) 55%, var(--border)); box-shadow:0 0 0 4px color-mix(in srgb, var(--pink) 14%, transparent); outline:none;}
+.mnav-body{padding:0 14px calc(24px + env(safe-area-inset-bottom));}
+.mnav-section{margin-bottom:18px; animation:mnavIn .35s ease both;}
+.mnav-section:nth-child(2){animation-delay:.04s;}
+.mnav-section:nth-child(3){animation-delay:.08s;}
+.mnav-section:nth-child(4){animation-delay:.12s;}
+.mnav-label{font-size:11px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-soft); margin:0 4px 8px; opacity:.85;}
+.mnav-links{display:flex; flex-direction:column; gap:4px;}
+.mobile-nav a.mnav-link,
+.mobile-nav .mnav-link{display:flex; align-items:center; gap:10px; padding:12px 14px; font-weight:800; border-radius:14px; background:transparent; border:1px solid transparent; color:var(--ink); transition:transform .12s ease, background .12s ease, border-color .12s ease; text-decoration:none;}
+.mobile-nav a.mnav-link:hover,
+.mobile-nav a.mnav-link:active{transform:scale(.985); background:var(--pink-pale); border-color:var(--pink-line); color:var(--pink-deep);}
+.mobile-nav a.mnav-link.active{background:var(--pink-pale); border-color:var(--pink-line); color:var(--pink-deep);}
+.mnav-cats{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+.mnav-cat{display:flex; flex-direction:column; align-items:flex-start; gap:8px; padding:12px; border-radius:16px; background:var(--surface); border:1px solid var(--border); text-decoration:none; color:var(--ink); font-weight:700; font-size:12.5px; line-height:1.35; transition:transform .12s ease, border-color .12s ease, box-shadow .12s ease;}
+.mnav-cat:active{transform:scale(.97); border-color:var(--pink-line); box-shadow:0 6px 14px hsl(var(--shadow)/.10);}
+.mnav-cat .ic{width:36px; height:36px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:17px;}
+.mnav-cat .ic svg{width:20px; height:20px;}
+.mnav-foot{display:flex; flex-direction:column; gap:6px; padding-top:4px; border-top:1px solid var(--border); margin-top:4px;}
+.mnav-foot a{font-size:13.5px !important; font-weight:700 !important;}
 
 
 /* ============ Responsive ============ */
@@ -808,6 +871,8 @@ html[dir="ltr"] .mobile-nav.show{transform:translateX(0);}
 @media (max-width:640px){
   .header-search{display:none;}
   .menu-toggle{display:flex;}
+  /* على موبايل الويب القائمة الجانبية هي الأساس — شريط التنقل العلوي بيتخفى */
+  html:not(.app-mode) .main-nav{display:none;}
   .brand-text .tag{display:none;}
   .header-row{gap:10px;}
   .brand{flex:1 1 auto; min-width:0; gap:8px;}
@@ -832,6 +897,10 @@ html[dir="ltr"] .mobile-nav.show{transform:translateX(0);}
   .modal-media{min-height:180px; font-size:80px;}
   .stat-row{grid-template-columns:repeat(2,1fr);}
   .topbar .wrap{gap:16px; font-size:11.5px;}
+}
+@media (max-width:980px) and (min-width:641px){
+  .nav-mega{width:min(640px, calc(100vw - 40px));}
+  .nav-mega-grid{grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));}
 }
 
 /* ---------- من نحن: موشن حوالين اللوجو ----------
@@ -1595,7 +1664,8 @@ a[href="/alabdo-toys.apk"]{display:none !important;}
 /* تطبيق الإدارة: من غير أزرار "حمّل تطبيق أندرويد" */
 html.admin-app .web-only{display:none !important;}
 html.app-mode .topbar, html.app-mode .main-nav, html.app-mode .site-footer,
-html.app-mode .menu-toggle, html.app-mode .header-actions, html.app-mode .skip-link{display:none !important;}
+html.app-mode .menu-toggle, html.app-mode .header-actions, html.app-mode .skip-link,
+html.app-mode .mobile-nav, html.app-mode .nav-mega{display:none !important;}
 html.app-mode body{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
 html.app-mode .wrap{padding-inline:12px;}
 
@@ -2662,6 +2732,26 @@ try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("messa
     <nav class="main-nav" aria-label="التنقل الرئيسي">
       <div class="wrap" id="navLinks">
         <a href="#home" data-view-link="home" data-i18n>الرئيسية</a>
+        <div class="nav-item has-mega" id="navShopItem">
+          <button type="button" class="nav-mega-trigger" id="navShopBtn" aria-expanded="false" aria-controls="webMegaPanel" aria-haspopup="true">
+            <span data-i18n>تسوق حسب القسم</span>
+            <svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="nav-mega" id="webMegaPanel" role="region" aria-label="أقسام المتجر">
+            <div class="nav-mega-inner">
+              <div class="nav-mega-head">
+                <strong data-i18n>أقسام المتجر</strong>
+                <a href="#products" data-view-link="products" data-i18n>عرض كل المنتجات</a>
+              </div>
+              <div class="nav-mega-grid" id="webMegaCats"></div>
+              <div class="nav-mega-quick">
+                <a href="#products" data-view-link="products" data-badge="new" data-i18n>وصل حديثاً</a>
+                <a href="#products" data-view-link="products" data-badge="sale" data-i18n>عروض خاصة</a>
+                <a href="#products" data-view-link="products" data-badge="wish" data-i18n>المفضلة ❤️</a>
+              </div>
+            </div>
+          </div>
+        </div>
         <a href="#products" data-view-link="products" data-i18n>جميع المنتجات</a>
         <a href="#products" data-view-link="products" data-badge="new" data-i18n>وصل حديثاً</a>
         <a href="#products" data-view-link="products" data-badge="sale" data-i18n>عروض خاصة</a>
@@ -2673,21 +2763,43 @@ try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("messa
   </div>
 </header>
 
-<div class="mobile-nav" id="mobileNav">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-    <strong class="display" style="color:var(--pink-deep)" data-i18n>القائمة</strong>
+<div class="mobile-nav" id="mobileNav" aria-hidden="true">
+  <div class="mnav-head">
+    <div class="mnav-brand">
+      <img src="logo.png" alt="" width="40" height="40">
+      <div>
+        <strong data-i18n>القائمة</strong>
+        <span data-i18n>متجر آل عبده</span>
+      </div>
+    </div>
     <button class="drawer-close" id="mobileNavClose" aria-label="إغلاق" data-i18n-aria><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   </div>
-  <form id="mobileSearchForm" style="margin:10px 0 16px;">
-    <input type="search" id="mobileSearchInput" placeholder="ابحث عن أي لعبة …" data-i18n-placeholder style="width:100%;padding:11px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-3);color:var(--ink);">
+  <form class="mnav-search" id="mobileSearchForm" role="search">
+    <label for="mobileSearchInput" class="visually-hidden" data-i18n>ابحث عن لعبة</label>
+    <input type="search" id="mobileSearchInput" placeholder="ابحث عن أي لعبة …" data-i18n-placeholder>
   </form>
-  <a href="#home" data-view-link="home" data-i18n>الرئيسية</a>
-  <a href="#products" data-view-link="products" data-i18n>جميع المنتجات</a>
-  <a href="#products" data-view-link="products" data-badge="wish" data-i18n>المفضلة ❤️</a>
-  <a href="#about" data-view-link="about" data-i18n>من نحن</a>
-  <a href="#contact" data-view-link="contact" data-i18n>تواصل معنا</a>
-  <a href="#" data-preq-open="" data-i18n>🧸 اطلب منتج مش موجود</a>
-  <a href="/alabdo-toys.apk" class="web-only" download data-i18n>📱 حمّل تطبيق أندرويد</a>
+  <div class="mnav-body">
+    <div class="mnav-section">
+      <p class="mnav-label" data-i18n>التنقل</p>
+      <div class="mnav-links">
+        <a class="mnav-link" href="#home" data-view-link="home" data-i18n>الرئيسية</a>
+        <a class="mnav-link" href="#products" data-view-link="products" data-i18n>جميع المنتجات</a>
+        <a class="mnav-link" href="#products" data-view-link="products" data-badge="new" data-i18n>وصل حديثاً</a>
+        <a class="mnav-link" href="#products" data-view-link="products" data-badge="sale" data-i18n>عروض خاصة</a>
+        <a class="mnav-link" href="#products" data-view-link="products" data-badge="wish" data-i18n>المفضلة ❤️</a>
+        <a class="mnav-link" href="#about" data-view-link="about" data-i18n>من نحن</a>
+        <a class="mnav-link" href="#contact" data-view-link="contact" data-i18n>تواصل معنا</a>
+      </div>
+    </div>
+    <div class="mnav-section">
+      <p class="mnav-label" data-i18n>تسوق حسب القسم</p>
+      <div class="mnav-cats" id="mobileNavCats"></div>
+    </div>
+    <div class="mnav-section mnav-foot">
+      <a class="mnav-link" href="#" data-preq-open="">🧸 <span data-i18n>اطلب منتج مش موجود</span></a>
+      <a class="mnav-link web-only" href="/alabdo-toys.apk" download>📱 <span data-i18n>حمّل تطبيق أندرويد</span></a>
+    </div>
+  </div>
 </div>
 
 <main id="main">
@@ -5254,6 +5366,11 @@ var I18N_EN = {
   "الرئيسية": "Home",
   "جميع المنتجات": "All Products",
   "كل المنتجات": "All Products",
+  "تسوق حسب القسم": "Shop by category",
+  "أقسام المتجر": "Store categories",
+  "عرض كل المنتجات": "View all products",
+  "التنقل": "Navigate",
+  "حمّل تطبيق أندرويد": "Download Android app",
   "وصل حديثاً": "New Arrivals",
   "عروض خاصة": "Special Offers",
   "المفضلة ❤️": "Favorites ❤️",
@@ -9023,10 +9140,13 @@ function closeAllPanels(){
   cartDrawer.classList.remove("show");
   acctDrawer.classList.remove("show");
   mobileNav.classList.remove("show");
+  if(mobileNav) mobileNav.setAttribute("aria-hidden", "true");
   modalBackdrop.classList.remove("show");
   document.getElementById("modalCard").classList.remove("acct-card");
   overlay.classList.remove("show");
   document.body.style.overflow="";
+  if(menuToggle) menuToggle.setAttribute("aria-expanded", "false");
+  closeWebMegaMenu();
 }
 /* بيقفل مودال تفاصيل الطلب بس (المفتوح فوق قائمة "حسابي") من غير ما يقفل
    القائمة الجانبية نفسها - العميل هو اللي يقفلها بنفسه من زرار الإغلاق
@@ -9049,8 +9169,29 @@ var menuToggle = document.getElementById("menuToggle");
 menuToggle.addEventListener("click", function(){
   mobileNav.classList.add("show"); overlay.classList.add("show"); document.body.style.overflow="hidden";
   menuToggle.setAttribute("aria-expanded","true");
+  mobileNav.setAttribute("aria-hidden", "false");
 });
 document.getElementById("mobileNavClose").addEventListener("click", closeAllPanels);
+
+/* ميجا منيو الأقسام — فتح/قفل بالضغط (موبايل تاتش + كيبورد)، والهوفر من الـ CSS */
+(function(){
+  var item = document.getElementById("navShopItem");
+  var btn = document.getElementById("navShopBtn");
+  if(!item || !btn) return;
+  btn.addEventListener("click", function(e){
+    e.preventDefault();
+    e.stopPropagation();
+    toggleWebMegaMenu();
+  });
+  document.addEventListener("click", function(e){
+    if(!item.classList.contains("open")) return;
+    if(item.contains(e.target)) return;
+    closeWebMegaMenu();
+  });
+  item.addEventListener("keydown", function(e){
+    if(e.key === "Escape"){ closeWebMegaMenu(); btn.focus(); }
+  });
+})();
 
 /* ---------- Product card / grid rendering ---------- */
 /* showCartActions=true بيظهر زرار "أضف للسلة" (+عداد الكمية جمبه لو
@@ -9182,6 +9323,43 @@ function renderCategoryRow(){
   document.getElementById("categoryRow").innerHTML = CATS.map(function(c){
     return '<button class="cat-chip" data-goto-cat="'+c.id+'"><span class="ic" style="background:'+c.color+'">'+categoryIcon(c.id)+'</span>'+catName(c.id)+'</button>';
   }).join("");
+  renderWebShopMenus();
+}
+
+/* قوائم الموقع الاحترافية (ميجا منيو + درج الموبايل) — الويب فقط.
+   تطبيق الموبايل (app-mode) بيستخدم app-tabbar / app-sheet ومش بيظهر الـ main-nav. */
+function renderWebShopMenus(){
+  var mega = document.getElementById("webMegaCats");
+  var mnav = document.getElementById("mobileNavCats");
+  if(!mega && !mnav) return;
+  var megaHtml = CATS.map(function(c){
+    return '<a class="nav-mega-cat" href="#products" data-view-link="products" data-goto-cat="'+escHtml(c.id)+'">'
+      + '<span class="ic" style="background:'+escHtml(c.color||"var(--pink-pale)")+'">'+categoryIcon(c.id)+'</span>'
+      + '<span>'+escHtml(catName(c.id))+'</span></a>';
+  }).join("");
+  var mnavHtml = CATS.map(function(c){
+    return '<a class="mnav-cat" href="#products" data-view-link="products" data-goto-cat="'+escHtml(c.id)+'">'
+      + '<span class="ic" style="background:'+escHtml(c.color||"var(--pink-pale)")+'">'+categoryIcon(c.id)+'</span>'
+      + '<span>'+escHtml(catName(c.id))+'</span></a>';
+  }).join("");
+  if(mega) mega.innerHTML = megaHtml;
+  if(mnav) mnav.innerHTML = mnavHtml;
+}
+/* أول رسم من الأقسام الافتراضية قبل ما الكاتالوج يوصل من السيرفر */
+renderWebShopMenus();
+function closeWebMegaMenu(){
+  var item = document.getElementById("navShopItem");
+  var btn = document.getElementById("navShopBtn");
+  if(item) item.classList.remove("open");
+  if(btn) btn.setAttribute("aria-expanded", "false");
+}
+function toggleWebMegaMenu(force){
+  var item = document.getElementById("navShopItem");
+  var btn = document.getElementById("navShopBtn");
+  if(!item || !btn) return;
+  var open = typeof force === "boolean" ? force : !item.classList.contains("open");
+  item.classList.toggle("open", open);
+  btn.setAttribute("aria-expanded", open ? "true" : "false");
 }
 
 /* ---------- Product Modal (gallery + live reviews) ---------- */

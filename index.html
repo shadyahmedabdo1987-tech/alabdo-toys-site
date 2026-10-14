@@ -6592,7 +6592,17 @@ function addToCart(id, qty, colorName, sizeLabel){
   /* إضافة سريعة من الكارت: الصورة بتطير للسلة ورسالة صغيرة، من غير ما السلة تتفتح */
   if(window.__aaQuickAdd){
     var qImg = null;
-    try{ var qb = document.querySelector('[data-qadd="'+id+'"]'); var qm = qb && qb.closest(".card-media"); qImg = qm ? (qm.querySelector(".card-photo.active") || qm.querySelector("img")) : null; }catch(e){}
+    /* الصورة اللي بتطير هي صورة الكارت اللي العميل داس عليه فعلاً (في أي قايمة:
+       الرئيسية، كل المنتجات، قسم، بحث، المفضلة...). قبل كده كان بياخد أول
+       كارت للمنتج في الصفحة، وده ساعات بيكون في الرئيسية المخفية فالحركة مكانتش بتظهر. */
+    try{
+      var qb = window.__aaQuickBtn;
+      if(!qb || !qb.isConnected || !qb.getBoundingClientRect().width){
+        qb = Array.prototype.find.call(document.querySelectorAll('[data-qadd="'+id+'"]'), function(x){ return x.getBoundingClientRect().width > 0; }) || null;
+      }
+      var qm = qb && qb.closest(".card-media");
+      qImg = qm ? (qm.querySelector(".card-photo.active") || qm.querySelector("img")) : null;
+    }catch(e){}
     flyToCart(qImg);
     return;
   }
@@ -7814,8 +7824,8 @@ document.addEventListener("click", function(e){
     if(v2NeedsChoice(p)){ openProductModal(p.id); if(!v2CartQtyOf(p)) showToast(t("👆 اختار اللون أو الحجم الأول")); return; }
     if(cart[String(p.id)] > 0){ v2OpenStepper(b, p); return; }
     var media0 = b.closest(".card-media");
-    window.__aaQuickAdd = true;
-    try{ addToCart(p.id, 1); } finally { window.__aaQuickAdd = false; }
+    window.__aaQuickAdd = true; window.__aaQuickBtn = b;
+    try{ addToCart(p.id, 1); } finally { window.__aaQuickAdd = false; window.__aaQuickBtn = null; }
     /* زي نون: بعد الإضافة العداد بيفتح (🗑 1 +) وبعد ثواني بيتقفل لسلة عليها العدد */
     if(cart[String(p.id)] > 0 && media0) setTimeout(function(){ var nb = media0.querySelector("[data-qadd]"); if(nb) v2OpenStepper(nb, p); }, 30);
     return;

@@ -1620,6 +1620,8 @@ html.app-mode .skeleton-card .card-media{background:linear-gradient(90deg,var(--
 .app-dl-btn small{font-size:11px; opacity:.85;}
 .app-dl-btn strong{font-size:16px;}
 html.app-mode .web-only, html.app-mode .app-hide{display:none !important;}
+/* الموقع: شيل «تسوق حسب القسم» من الرئيسية (موجودة في القائمة الجانبية) */
+html:not(.app-mode) .home-cats-section{display:none !important;}
 /* لينكات تنزيل تطبيق أندرويد (APK) مخفية مؤقتًا لحد نسخة جوجل بلاي الرسمية.
    عشان ترجع تظهر: امسح السطر اللي تحت ده بس. */
 a[href="/alabdo-toys.apk"]{display:none !important;}
@@ -2809,7 +2811,8 @@ try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("messa
     </div>
   </section>
 
-  <section class="section reveal">
+  <!-- على الموقع العادي الأقسام في القائمة الجانبية؛ القسم ده ظاهر في التطبيق بس -->
+  <section class="section reveal home-cats-section" id="homeCatsSection">
     <div class="wrap">
       <div class="section-head"><h2 data-i18n>🧭 تسوق حسب القسم</h2></div>
       <div class="cat-row" id="categoryRow"></div>

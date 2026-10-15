@@ -8314,8 +8314,10 @@ function v2MaybeAskReview(orders){
 }
 
 /* ---------- بانر تقييم المنتجات بعد التسليم (موقع + تطبيق العميل) ----------
-   لو العميل قفل البانر من غير ما يقيّم، بيرجع يظهر تاني لحد ما يقيّم فعلاً.
-   الإخفاء بعد ✕ مؤقت ثواني بس عشان منلزقش الشاشة، ومش بيتشال نهائي. */
+   البانر بيفضل يظهر (حتى بعد ما يقفل التطبيق ويفتحه) لحد ما العميل يقيّم
+   أو يدوس ✕. لو داس ✕ من غير تقييم، البانر ده مش بيظهر تاني للمنتج ده
+   خالص (إلا لو اشتراه تاني واستلمه). ولو حب يقيّم بعد كده، بيقيّم بنفسه
+   من صفحة المنتج (متاح بس للي اشترى المنتج واستلمه وعنده حساب). */
 var RATE_POLL_MS = 15000;
 var RATE_REDISPLAY_MS = 45000; /* بعد ما يقفل من غير تقييم، نرجّع البانر خلال ~45 ثانية */
 var rateQueue = [];
@@ -8333,6 +8335,24 @@ try{
   localStorage.removeItem("aa_rate_snooze_v2");
 }catch(e){}
 function rateIsDone(pid){ return !!rateDoneSession[String(pid)]; }
+/* المنتجات اللي العميل قفل تقييمها بـ ✕ (محفوظة على الموبايل، لكل حساب لوحده) */
+var RATE_CLOSED_KEY = "aa_rate_closed_v3";
+function rateCustKey(){ try{ var c = getCustomerProfile(); return c && c.identifier ? String(c.identifier) : "_"; }catch(e){ return "_"; } }
+function rateClosedAll(){ try{ return JSON.parse(localStorage.getItem(RATE_CLOSED_KEY) || "{}") || {}; }catch(e){ return {}; } }
+function rateIsClosed(item){
+  var m = rateClosedAll()[rateCustKey()] || {}, at = m[String(item.productId)];
+  if(at == null) return false;
+  /* اشتراه تاني واستلمه بعد ما قفل التقييم → يظهر تاني */
+  return !(item.deliveredAt && +item.deliveredAt > +at);
+}
+function rateCloseForever(item){
+  var all = rateClosedAll(), k = rateCustKey();
+  all[k] = all[k] || {};
+  all[k][String(item.productId)] = Date.now();
+  try{ localStorage.setItem(RATE_CLOSED_KEY, JSON.stringify(all)); }catch(e){}
+  rateQueue = rateQueue.filter(function(it){ return String(it.productId) !== String(item.productId); });
+  delete rateCooldownUntil[String(item.productId)];
+}
 function rateIsCooling(pid){ return (+rateCooldownUntil[String(pid)] || 0) > Date.now(); }
 function rateMarkDone(pid){
   rateDoneSession[String(pid)] = 1;
@@ -8392,7 +8412,7 @@ function showNextRateBanner(){
   while(rateQueue.length){
     var next = rateQueue.shift();
     var pid = String(next.productId);
-    if(rateIsDone(pid)) continue;
+    if(rateIsDone(pid) || rateIsClosed(next)) continue;
     if(rateIsCooling(pid)){ waiting.push(next); continue; }
     if(rateBusy){
       rateQueue.unshift(next);
@@ -8444,7 +8464,7 @@ function paintRateBanner(item){
   el.onclick = function(e){
     var closeBtn = e.target.closest("[data-rb-close]");
     if(closeBtn){
-      rateDismissTemporarily(item);
+      rateCloseForever(item);
       hideRateBanner();
       rateAdvance(900);
       return;
@@ -8528,7 +8548,7 @@ function rateMergeQueue(items){
   (items || []).forEach(function(it){
     if(!it || it.productId == null) return;
     var pid = String(it.productId);
-    if(have[pid] || rateIsDone(pid)) return;
+    if(have[pid] || rateIsDone(pid) || rateIsClosed(it)) return;
     have[pid] = 1;
     rateQueue.push(it);
   });

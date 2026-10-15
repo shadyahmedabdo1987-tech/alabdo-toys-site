@@ -15,6 +15,7 @@
 # offers: check on every app open + keep offers while notifications are off
 # v2 (AlAbdoApp/5): order-status notifications, Play in-app review, app shortcuts
 # notifications: red accent color + round store-badge status-bar icon
+# orders: order-status / replies pop up at the top (high-importance channel), checked every minute while the app is open and every 30 min when closed
 name: Build Android APK
 
 on:
@@ -779,10 +780,23 @@ jobs:
                   requestPermissions(new String[]{ Manifest.permission.POST_NOTIFICATIONS }, 2001);
               }
 
+              /* والتطبيق مفتوح: كل دقيقة بنشيّك على تحديثات الطلب والردود، فالإشعار
+                 بيظهر فوق على طول من غير ما العميل يستنى */
+              private final Handler notesPoll = new Handler(Looper.getMainLooper());
+              private final Runnable notesTick = new Runnable() {
+                  @Override public void run() {
+                      if (!foreground) return;
+                      OffersJob.checkNotesAsync(getApplicationContext());
+                      notesPoll.postDelayed(this, 60L * 1000L);
+                  }
+              };
+
               @Override
               protected void onStart() {
                   super.onStart();
                   foreground = true;
+                  notesPoll.removeCallbacks(notesTick);
+                  notesPoll.postDelayed(notesTick, 60L * 1000L);
                   CartReminderJob.cancelAll(this);
                   /* أول ما العميل يفتح التطبيق بنشيّك على العروض الجديدة على طول
                      (من غير ما نستنى معاد الفحص اللي كل ساعتين) */
@@ -804,6 +818,7 @@ jobs:
               @Override
               protected void onStop() {
                   foreground = false;
+                  notesPoll.removeCallbacks(notesTick);
                   CartReminderJob.scheduleReminders(this);
                   super.onStop();
               }
@@ -1218,17 +1233,23 @@ jobs:
               static final int JOB_ID = 201;
               static final String CHANNEL = "offers";
               static final String API = "https://alabdo-toys.com/api/broadcast?since=";
+              /* فحص الخلفية كل نص ساعة (أقل حاجة أندرويد بيسمح بيها 15 دقيقة) */
+              static final long PERIOD = 30L * 60L * 1000L;
+              /* قناة تحديثات الطلب والردود: بتظهر فوق الشاشة بصوت */
+              static final String CH_ORDERS = "orders_v1";
 
               static void ensureScheduled(Context c) {
                   JobScheduler js = (JobScheduler) c.getSystemService(Context.JOB_SCHEDULER_SERVICE);
                   if (js == null) return;
-                  if (js.getPendingJob(JOB_ID) != null) return;
+                  JobInfo pend = js.getPendingJob(JOB_ID);
+                  if (pend != null && pend.getIntervalMillis() == PERIOD) return;
+                  if (pend != null) { try { js.cancel(JOB_ID); } catch (Exception e) { /* ignore */ } }
                   SharedPreferences sp = c.getSharedPreferences(PREFS, MODE_PRIVATE);
                   /* أول تشغيل: نعرض بس العروض اللي اتبعتت آخر يوم */
                   if (sp.getLong("since", 0L) == 0L) sp.edit().putLong("since", System.currentTimeMillis() - 24L * 60L * 60L * 1000L).apply();
                   JobInfo.Builder b = new JobInfo.Builder(JOB_ID, new ComponentName(c, OffersJob.class))
                       .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                      .setPeriodic(2L * 60L * 60L * 1000L)
+                      .setPeriodic(PERIOD)
                       .setPersisted(true);
                   try { js.schedule(b.build()); } catch (Exception e) { /* ignore */ }
               }
@@ -1237,6 +1258,16 @@ jobs:
 
               /* فحص فوري (لما التطبيق يتفتح / لما الإشعارات تتفعّل) - مش أكتر من
                  مرة كل 3 دقايق عشان ما نضغطش على السيرفر */
+              /* فحص سريع لتحديثات الطلب والردود بس (والتطبيق مفتوح، كل دقيقة) */
+              static void checkNotesAsync(final Context c) {
+                  if (!notifOn(c)) return;
+                  new Thread(new Runnable() {
+                      @Override public void run() {
+                          try { checkNotes(c); } catch (Exception e) { /* ignore */ }
+                      }
+                  }).start();
+              }
+
               static void checkNowAsync(final Context c, boolean force) {
                   long now = System.currentTimeMillis();
                   if (!force && now - lastCheck < 3L * 60L * 1000L) return;
@@ -1250,6 +1281,14 @@ jobs:
 
               /* الإشعارات مسموحة؟ (إذن أندرويد 13 + إن العميل ما قفلش إشعارات
                  التطبيق أو قناة العروض من الإعدادات) */
+              /* الإشعارات مفتوحة للتطبيق عمومًا (من غير ما نبص على قناة العروض) */
+              static boolean notifOn(Context c) {
+                  NotificationManager nm = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
+                  if (nm == null) return false;
+                  if (Build.VERSION.SDK_INT >= 24 && !nm.areNotificationsEnabled()) return false;
+                  return true;
+              }
+
               static boolean canNotify(Context c) {
                   NotificationManager nm = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
                   if (nm == null) return false;
@@ -1280,7 +1319,9 @@ jobs:
                   /* لو الإشعارات مقفولة ما بنسألش السيرفر خالص وما بنحرّكش "since"،
                      فالعروض ما بتضيعش وبتوصل أول ما الإشعارات تتفعّل (بس اللي
                      اتبعتت آخر 3 أيام، عشان ما يوصلوش عروض قديمة خلصت). */
-                  if (!canNotify(c)) return;
+                  if (!notifOn(c)) return;
+                  /* قناة العروض مقفولة؟ نكمّل على تحديثات الطلب بس */
+                  if (!canNotify(c)) { try { checkNotes(c); } catch (Exception e) { /* ignore */ } return; }
                   SharedPreferences sp = c.getSharedPreferences(PREFS, MODE_PRIVATE);
                   long since = sp.getLong("since", 0L);
                   long floor = System.currentTimeMillis() - 3L * 24L * 60L * 60L * 1000L;
@@ -1331,7 +1372,7 @@ jobs:
               }
 
               /* إشعارات العميل نفسه: حالة طلبه (اتجهز/خرج للشحن/وصل) وردود المتجر */
-              static void checkNotes(Context c) throws Exception {
+              static synchronized void checkNotes(Context c) throws Exception {
                   SharedPreferences sp = c.getSharedPreferences(PREFS, MODE_PRIVATE);
                   String cid = sp.getString("cid", ""), cpass = sp.getString("cpass", "");
                   if (cid.length() == 0 || cpass.length() == 0) return;
@@ -1385,7 +1426,7 @@ jobs:
                               title = "💬 رد على استفسارك";
                               body = it.optString("message", "");
                           }
-                          show(c, it.optString("id", "" + at), title, body.length() > 0 ? body : "متجر آل عبده", link);
+                          show(c, it.optString("id", "" + at), title, body.length() > 0 ? body : "متجر آل عبده", link, !"stock".equals(kind));
                           shown++;
                       }
                   }
@@ -1393,7 +1434,9 @@ jobs:
               }
 
               @SuppressWarnings("deprecation")
-              static void show(Context c, String id, String title, String body, String link) {
+              static void show(Context c, String id, String title, String body, String link) { show(c, id, title, body, link, false); }
+
+              static void show(Context c, String id, String title, String body, String link, boolean personal) {
                   NotificationManager nm = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
                   if (nm == null) return;
                   if (Build.VERSION.SDK_INT >= 26 && nm.getNotificationChannel(CHANNEL) == null) {
@@ -1401,13 +1444,19 @@ jobs:
                       ch.setDescription("عروض وخصومات وألعاب جديدة من متجر آل عبده");
                       nm.createNotificationChannel(ch);
                   }
+                  if (personal && Build.VERSION.SDK_INT >= 26 && nm.getNotificationChannel(CH_ORDERS) == null) {
+                      NotificationChannel ch2 = new NotificationChannel(CH_ORDERS, "طلباتك وردودنا", NotificationManager.IMPORTANCE_HIGH);
+                      ch2.setDescription("حالة طلبك (اتسجل، بيتجهز، خرج للشحن، وصل) وردودنا على رسايلك");
+                      ch2.enableVibration(true);
+                      nm.createNotificationChannel(ch2);
+                  }
                   String go = "go:" + (link == null || !link.matches("[A-Za-z0-9:_-]{1,60}") ? "home" : link);
                   int req = 7000 + (id.hashCode() & 0x3ff);
                   Intent i = new Intent(c, MainActivity.class);
                   i.putExtra("aa_open", go);
                   i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                   PendingIntent pi = PendingIntent.getActivity(c, req, i, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-                  Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(c, CHANNEL) : new Notification.Builder(c);
+                  Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(c, personal ? CH_ORDERS : CHANNEL) : new Notification.Builder(c);
                   b.setSmallIcon(R.drawable.ic_stat_notify)
                       .setColor(0xFFE4002B)
                       .setLargeIcon(android.graphics.BitmapFactory.decodeResource(c.getResources(), R.drawable.notif_logo))
@@ -1416,8 +1465,9 @@ jobs:
                       .setStyle(new Notification.BigTextStyle().bigText(body))
                       .setAutoCancel(true)
                       .setContentIntent(pi)
-                      .addAction(new Notification.Action.Builder(null, "شوف العرض", pi).build());
-                  if (Build.VERSION.SDK_INT < 26) b.setPriority(Notification.PRIORITY_DEFAULT);
+                      .addAction(new Notification.Action.Builder(null, personal ? ("orders".equals(link) ? "تابع طلبك" : "افتح") : "شوف العرض", pi).build());
+                  if (personal) b.setCategory(Notification.CATEGORY_STATUS);
+                  if (Build.VERSION.SDK_INT < 26) { b.setPriority(personal ? Notification.PRIORITY_HIGH : Notification.PRIORITY_DEFAULT); if (personal) b.setDefaults(Notification.DEFAULT_ALL); }
                   try { nm.notify(req, b.build()); } catch (SecurityException e) { /* notifications not allowed */ }
               }
           }

@@ -719,6 +719,14 @@ html.app-mode .rate-banner{bottom:calc(72px + env(safe-area-inset-bottom));}
 .contact-card h4{font-size:14.5px;}
 .contact-card p{font-size:13.5px; color:var(--ink-soft); margin-top:3px;}
 .contact-form{background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:24px; display:flex; flex-direction:column; gap:14px;}
+.contact-fields{display:flex; flex-direction:column; gap:14px;}
+.contact-fields[hidden], .contact-guest[hidden]{display:none;}
+.contact-hint{margin:-4px 0 0; font-size:12.5px; color:var(--ink-soft);}
+.contact-guest{display:flex; flex-direction:column; align-items:center; text-align:center; gap:8px; padding:18px 14px; border-radius:16px; background:var(--surface-2); border:1px dashed var(--pink-line);}
+.contact-guest .cg-ic{font-size:30px;}
+.contact-guest b{font-size:15.5px;}
+.contact-guest p{margin:0; font-size:13px; color:var(--ink-soft); line-height:1.7; max-width:34ch;}
+.contact-guest .cg-btns{display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:4px;}
 .field label{font-size:13px; font-weight:800; display:block; margin-bottom:6px;}
 .field input, .field textarea{width:100%; padding:11px 14px; border-radius:12px; border:1.5px solid var(--border); background:var(--surface-3); color:var(--ink); font-family:inherit; font-size:14px;}
 .field textarea{min-height:110px; resize:vertical;}
@@ -3326,9 +3334,17 @@ try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("messa
 
         <form class="contact-form" id="contactForm">
           <h3 style="font-size:16px;" data-i18n>اكتب رسالتك وحنرد عليك</h3>
+          <div class="contact-guest" id="contactGuest" hidden>
+            <span class="cg-ic" aria-hidden="true">🔔</span>
+            <b data-i18n>سجّل دخولك عشان تبعتلنا</b>
+            <p data-i18n>الرد بيوصلك هنا في الإشعارات جوه الموقع والتطبيق، فمحتاجين نعرف حسابك.</p>
+            <div class="cg-btns"><button type="button" class="btn btn-primary" id="contactLogin" data-i18n>تسجيل الدخول</button><button type="button" class="btn btn-outline" id="contactRegister" data-i18n>حساب جديد</button></div>
+          </div>
+          <div class="contact-fields" id="contactFields">
           <div class="field"><label for="cName" data-i18n>الاسم</label><input id="cName" required placeholder="اسمك بالكامل" data-i18n-placeholder></div>
-          <div class="field"><label for="cPhone" data-i18n>رقم الموبايل</label><input id="cPhone" required type="tel" inputmode="numeric" placeholder="01xxxxxxxxx"></div>
           <div class="field"><label for="cMsg" data-i18n>رسالتك</label><textarea id="cMsg" required placeholder="اكتب استفسارك هنا…" data-i18n-placeholder></textarea></div>
+          <p class="contact-hint" data-i18n>🔔 الرد هيوصلك في الإشعارات (الجرس) جوه الموقع والتطبيق.</p>
+          </div>
           <button type="button" class="btn btn-primary btn-block" id="contactSubmit">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7Z"/></svg>
             <span data-i18n>إرسال</span>
@@ -5273,6 +5289,11 @@ var I18N_EN = {
   "✅ اتمسحت كل الإشعارات": "✅ All notifications cleared",
   "🧸 اطلب منتج مش موجود": "🧸 Request a product we don't have",
   "الإشعارات": "Notifications",
+  "سجّل دخولك عشان تبعتلنا": "Sign in to message us",
+  "الرد بيوصلك هنا في الإشعارات جوه الموقع والتطبيق، فمحتاجين نعرف حسابك.": "Our reply arrives in your notifications on the site and app, so we need your account.",
+  "حساب جديد": "Create account",
+  "🔔 الرد هيوصلك في الإشعارات (الجرس) جوه الموقع والتطبيق.": "🔔 You'll get our reply in your notifications (the bell) on the site and app.",
+  "✅ رسالتك وصلت — هنرد عليك في الإشعارات 🔔": "✅ Message sent — we'll reply in your notifications 🔔",
   "النهارده": "Today",
   "امبارح": "Yesterday",
   "وصلك رد على طلب توفير منتج — افتح الجرس اللي فوق": "You got a reply to your product request — open the bell at the top",
@@ -10254,23 +10275,43 @@ document.getElementById("appTabbar").addEventListener("click", function(e){
    بتبعت رسالة "تواصل معنا" للسيرفر وبتتخزن في قائمة "استفسارات العملاء"
    اللي صاحب المتجر بيشوفها في لوحة التحكم مباشرة (مفيش واتساب أو إيميل
    خارجي هنا خالص). */
+/* "تواصل معنا": من غير رقم موبايل ولا واتساب — العميل لازم يكون مسجّل دخول،
+   والرد بيوصله في الإشعارات (الجرس) على حسابه. */
+function contactRefresh(){
+  var authed = isCustomerAuthed() && !isAdminAuthed();
+  var g = document.getElementById("contactGuest"), f = document.getElementById("contactFields"), b = document.getElementById("contactSubmit");
+  if(!g || !f || !b) return;
+  g.hidden = authed; f.hidden = !authed; b.style.display = authed ? "" : "none";
+  var m = document.getElementById("contactMsg"); if(m && !authed) m.style.display = "none";
+  var c = getCustomerProfile(), nm = document.getElementById("cName");
+  if(authed && c && c.name && nm && !nm.value) nm.value = c.name;
+}
+document.getElementById("contactLogin").addEventListener("click", function(){ openAccountModal(); });
+document.getElementById("contactRegister").addEventListener("click", function(){
+  acctState = { tab:"register", registerResult:null, resetFlow:null };
+  document.getElementById("modalCard").classList.add("acct-card");
+  renderAccountModal();
+  modalBackdrop.classList.add("show"); overlay.classList.add("show"); document.body.style.overflow="hidden";
+});
+setTimeout(contactRefresh, 0);
 document.getElementById("contactSubmit").addEventListener("click", function(){
   var form = document.getElementById("contactForm");
   var msgEl = document.getElementById("contactMsg");
+  if(!isCustomerAuthed() || isAdminAuthed()){ contactRefresh(); return; }
   if(!form.checkValidity()){ form.reportValidity(); return; }
-  var name=document.getElementById("cName").value, phone=document.getElementById("cPhone").value, msg=document.getElementById("cMsg").value;
+  var name=document.getElementById("cName").value, msg=document.getElementById("cMsg").value;
   var btn = this;
   btn.disabled = true;
   fetch("/api/inquiries", {
     method: "POST",
     headers: Object.assign({ "content-type":"application/json" }, customerAuthHeaders()),
-    body: JSON.stringify({ name:name, phone:phone, message:msg })
+    body: JSON.stringify({ name:name, message:msg })
   }).then(function(r){ return r.json(); }).then(function(res){
     btn.disabled = false;
     if(res && res.ok){
       msgEl.style.display = "none";
-      showToast(t("✅ تم إرسال رسالتك وجاري التواصل معكم"));
-      form.reset();
+      showToast(t("✅ رسالتك وصلت — هنرد عليك في الإشعارات 🔔"));
+      document.getElementById("cMsg").value = "";
     } else {
       msgEl.style.display = "block";
       msgEl.style.color = "var(--pink-deep)";
@@ -10712,6 +10753,7 @@ function customerAuthHeaders(){
 
 function updateAccountLabel(){
   if(typeof preqCheckAuth === "function") setTimeout(preqCheckAuth, 0);
+  if(typeof contactRefresh === "function") setTimeout(contactRefresh, 0);
   var lbl = document.getElementById("accountLabel");
   if(!lbl) return;
   if(isAdminAuthed()){ lbl.textContent = t("لوحة التحكم"); return; }

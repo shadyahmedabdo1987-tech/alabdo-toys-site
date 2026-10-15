@@ -18,12 +18,14 @@ export async function onRequestGet({ request, env }){
 export async function onRequestPost({ request, env }){
   var body;
   try{ body = await request.json(); }catch(e){ return json({ ok:false, error:"bad_json" }, 400); }
-  var name = (body && body.name || "").trim();
-  var phone = (body && body.phone || "").trim();
-  var message = (body && body.message || "").trim();
-  if(!phone || !message){ return json({ ok:false, error:"bad_request" }, 400); }
-
+  var name = (body && body.name || "").trim().slice(0, 80);
+  var message = (body && body.message || "").trim().slice(0, 2000);
   var cust = request.headers.get("X-Customer-Id") ? await requireCustomer(request, env) : null;
+  /* "تواصل معنا" من غير رقم موبايل: الرقم بييجي من حساب العميل نفسه، والرد
+     بيوصله في الإشعارات. (النسخ القديمة من الصفحة لسه بتبعت phone.) */
+  var phone = cust ? String(cust.identifier || "") : String(body && body.phone || "").trim();
+  if(cust && !name) name = cust.name || "";
+  if(!phone || !message){ return json({ ok:false, error: cust || (body && body.phone) ? "bad_request" : "login_required" }, 400); }
   var item = {
     id: "inq_" + Date.now().toString(36) + Math.floor(Math.random() * 999),
     name: name,

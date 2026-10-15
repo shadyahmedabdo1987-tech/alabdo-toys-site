@@ -2387,6 +2387,34 @@ html.v2 #modalAddBtn.is-loading::after{content:""; position:absolute; top:50%; l
 .v2-as-cont{background:var(--surface); color:var(--pink-deep); border:1.5px solid var(--pink-deep);}
 .v2-as-view{background:#d6155f; color:#fff; border:0; box-shadow:0 3px 0 hsl(var(--shadow)/.25);}
 @media (prefers-reduced-motion: reduce){ .v2-as, .v2-as-ov{transition:none;} .v2-as-ov.show .v2-as-ring circle, .v2-as-ov.show .v2-as-ok, .v2-as-ov.show .v2-as-info{animation-duration:.01s; animation-delay:0s;} }
+/* ---------- شاشة "تم استلام طلبك بنجاح" ---------- */
+.ook-ov{position:fixed; inset:0; z-index:9300; display:flex; align-items:center; justify-content:center; padding:24px 18px; background:rgba(20,14,32,.5); opacity:0; transition:opacity .25s ease;}
+.ook-ov.show{opacity:1;}
+.ook-card{position:relative; width:100%; max-width:380px; margin-top:56px; background:var(--surface); color:var(--ink); border-radius:28px; padding:76px 22px 22px; text-align:center; box-shadow:0 24px 60px rgba(0,0,0,.25); transform:translateY(24px) scale(.94); transition:transform .38s cubic-bezier(.2,1.25,.4,1);}
+.ook-ov.show .ook-card{transform:none;}
+.ook-badge{position:absolute; top:-64px; left:50%; width:128px; height:128px; margin-left:-64px; border-radius:50%; background:var(--surface); display:grid; place-items:center;}
+.ook-badge svg{width:108px; height:108px; overflow:visible; filter:drop-shadow(0 6px 10px rgba(58,166,61,.35)); transform:scale(0) rotate(-40deg);}
+.ook-ov.show .ook-badge svg{animation:ookPop .55s .15s cubic-bezier(.3,1.5,.5,1) forwards;}
+@keyframes ookPop{to{transform:none;}}
+.ook-tick{stroke-dasharray:62; stroke-dashoffset:62;}
+.ook-ov.show .ook-tick{animation:ookTick .35s .55s ease-out forwards;}
+@keyframes ookTick{to{stroke-dashoffset:0;}}
+.ook-sp{position:absolute; left:50%; top:50%; width:7px; height:20px; margin:-10px 0 0 -3.5px; border-radius:6px; background:#4cbf4c; opacity:0; transform:rotate(var(--a)) translateY(-62px) scaleY(.2);}
+.ook-ov.show .ook-sp{animation:ookSp .5s .6s cubic-bezier(.2,1.4,.4,1) forwards;}
+@keyframes ookSp{to{opacity:1; transform:rotate(var(--a)) translateY(-74px) scaleY(1);}}
+.ook-sp.s1{--a:-38deg;} .ook-sp.s2{--a:-62deg; height:12px;} .ook-sp.s3{--a:38deg;} .ook-sp.s4{--a:62deg; height:12px;} .ook-sp.s5{--a:-128deg; height:12px;} .ook-sp.s6{--a:135deg; height:12px;}
+.ook-x{position:absolute; top:16px; inset-inline-start:16px; width:38px; height:38px; border:0; border-radius:50%; background:transparent; color:var(--ink); display:grid; place-items:center; cursor:pointer;}
+.ook-x svg{width:24px; height:24px;}
+.ook-card h3{margin:0 0 10px; font-size:24px; font-weight:900; line-height:1.35; text-wrap:balance;}
+.ook-sub{margin:0; color:var(--ink-soft); font-size:14.5px; line-height:1.75;}
+.ook-eta{display:flex; align-items:center; gap:10px; margin:16px 0 0; padding:12px 14px; border-radius:16px; background:color-mix(in srgb, #3aa63d 10%, var(--surface)); text-align:start;}
+.ook-eta > span:first-child{font-size:24px;}
+.ook-eta b{display:block; font-size:14.5px; color:var(--ink);}
+.ook-eta small{display:block; margin-top:2px; font-size:12.5px; color:var(--ink-soft);}
+.ook-btn{display:block; width:100%; min-height:54px; margin-top:20px; border:0; border-radius:16px; background:linear-gradient(180deg,#5cc95a,#3aa63d); color:#fff; font:inherit; font-size:17px; font-weight:900; cursor:pointer; box-shadow:0 8px 18px rgba(58,166,61,.32);}
+.ook-btn:active{transform:scale(.98);}
+.ook-x:focus-visible, .ook-btn:focus-visible{outline:3px solid #3aa63d; outline-offset:3px;}
+@media (prefers-reduced-motion: reduce){ .ook-card, .ook-ov{transition:none;} .ook-ov.show .ook-badge svg, .ook-ov.show .ook-tick, .ook-ov.show .ook-sp{animation-duration:.01s; animation-delay:0s;} }
 /* شيت من تحت */
 .v2-sheet{position:fixed; inset:0; z-index:9000; background:rgba(15,10,25,.45); display:flex; align-items:flex-end; justify-content:center; opacity:0; transition:opacity .2s ease;}
 .v2-sheet.show{opacity:1;}
@@ -5489,6 +5517,7 @@ var I18N_EN = {
   "من فضلك اختار وسيلة الدفع.": "Please choose a payment method.",
   "من فضلك ارفق سكرين شوت التحويل عشان نقدر نأكد الطلب.": "Please attach the transfer screenshot so we can confirm the order.",
   "استلام طلبك بنجاح": "Your order was received successfully",
+  "تم استلام طلبك بنجاح": "Your order was received successfully",
   "جاري مراجعة بياناتك وتجهيز منتجك الآن.": "We're reviewing your details and preparing your product now.",
   "سعداء بتعاملكم معنا،": "We're happy to serve you,",
   "معلش، حصل خطأ وإحنا بنسجل طلبك. جرّب تاني.": "Sorry, something went wrong while saving your order. Please try again.",
@@ -7169,28 +7198,46 @@ function updateGovShipLine(){
    تاني من على الموقع إلا لو سجّل حساب بعدين. */
 function showOrderSuccessModal(phone){
   haptic("success");
-  var html = '<button class="modal-close" id="modalCloseBtn" aria-label="إغلاق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
-    + '<div class="modal-info" style="padding:44px 28px; text-align:center; align-items:center;">'
-      + '<span style="font-size:48px;">✅</span>'
-      + '<h3 style="margin-top:8px;">'+t("استلام طلبك بنجاح")+'</h3>'
-      + '<p style="color:var(--ink-soft); font-size:14.5px; margin-top:2px; line-height:1.7;">'+t("جاري مراجعة بياناتك وتجهيز منتجك الآن.")+'<br>'+t("سعداء بتعاملكم معنا،")+'</p>'
-      + (function(){
-          /* مدة التوصيل: من 3 لـ 5 أيام من النهارده */
-          var loc = LANG==="en" ? "en-US" : "ar-EG", d1 = new Date(), d2 = new Date();
-          d1.setDate(d1.getDate()+3); d2.setDate(d2.getDate()+5);
-          var o = { weekday:"long", day:"numeric", month:"long" };
-          return '<div class="order-eta"><span class="order-eta-ic" aria-hidden="true">🚚</span><span><b>'+t("طلبك هيوصلك خلال 3 لـ 5 أيام")+'</b><small>'+t("متوقع بين")+' '+escHtml(d1.toLocaleDateString(loc, o))+(LANG==="en" ? " and " : " و")+escHtml(d2.toLocaleDateString(loc, o))+'</small></span></div>';
-        })()
-    + '</div>';
-  document.getElementById("modalCard").classList.add("acct-card");
-  document.getElementById("modalCard").innerHTML = html;
-  cartDrawer.classList.remove("show");
-  modalBackdrop.classList.add("show");
-  overlay.classList.add("show");
+  /* شاشة "تم استلام طلبك" بالتصميم الجديد: كارت أبيض فوقه علامة ✓ خضرا متموّجة
+     بتنط وحواليها لمعات، وتحتها البيانات وزرار أخضر «تمام» بيرجّع للرئيسية. */
+  var old = document.getElementById("aaOrderOk"); if(old) old.remove();
+  closeAllPanels();
+  var loc = LANG==="en" ? "en-US" : "ar-EG", d1 = new Date(), d2 = new Date();
+  d1.setDate(d1.getDate()+3); d2.setDate(d2.getDate()+5);
+  var dOpt = { weekday:"long", day:"numeric", month:"long" };
+  /* شكل الختم المتموّج (12 موجة) */
+  var pts = [], N = 12, R = 44, A = 4.2;
+  for(var i = 0; i <= 120; i++){ var th = i / 120 * Math.PI * 2, r = R + A * Math.cos(N * th); pts.push((50 + r * Math.cos(th)).toFixed(2)+","+(50 + r * Math.sin(th)).toFixed(2)); }
+  var ov = document.createElement("div"); ov.id = "aaOrderOk"; ov.className = "ook-ov";
+  ov.innerHTML = '<div class="ook-card" role="dialog" aria-modal="true" aria-labelledby="ookTitle">'
+    + '<div class="ook-badge" aria-hidden="true">'
+      + '<i class="ook-sp s1"></i><i class="ook-sp s2"></i><i class="ook-sp s3"></i><i class="ook-sp s4"></i><i class="ook-sp s5"></i><i class="ook-sp s6"></i>'
+      + '<svg viewBox="0 0 100 100"><defs><linearGradient id="ookG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6fd36c"/><stop offset="1" stop-color="#3aa63d"/></linearGradient></defs>'
+        + '<polygon class="ook-seal" points="'+pts.join(" ")+'" fill="url(#ookG)"/>'
+        + '<path class="ook-tick" d="M31 51.5 L44.5 64.5 L70 37" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    + '</div>'
+    + '<button type="button" class="ook-x" data-ook-close aria-label="'+t("إغلاق")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
+    + '<h3 id="ookTitle">'+t("تم استلام طلبك بنجاح")+'</h3>'
+    + '<p class="ook-sub">'+t("جاري مراجعة بياناتك وتجهيز منتجك الآن.")+'<br>'+t("سعداء بتعاملكم معنا،")+'</p>'
+    + '<div class="ook-eta"><span aria-hidden="true">🚚</span><span><b>'+t("طلبك هيوصلك خلال 3 لـ 5 أيام")+'</b><small>'+t("متوقع بين")+' '+escHtml(d1.toLocaleDateString(loc, dOpt))+(LANG==="en" ? " and " : " و")+escHtml(d2.toLocaleDateString(loc, dOpt))+'</small></span></div>'
+    + '<button type="button" class="ook-btn" data-ook-close>'+t("تمام")+'</button>'
+  + '</div>';
+  document.body.appendChild(ov);
   document.body.style.overflow = "hidden";
-  var goHome = function(){ closeAllPanels(); goToView("home"); };
-  document.getElementById("modalCloseBtn").addEventListener("click", goHome);
-  setTimeout(goHome, 6000);
+  void ov.offsetWidth; ov.classList.add("show");
+  var opened = Date.now(), done = false, timer;
+  var finish = function(){
+    if(done) return; done = true; clearTimeout(timer);
+    window.removeEventListener("popstate", onPop);
+    ov.classList.remove("show");
+    setTimeout(function(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }, 260);
+    document.body.style.overflow = "";
+    closeAllPanels(); goToView("home");
+  };
+  var onPop = function(){ if(Date.now() - opened > 700) finish(); };
+  window.addEventListener("popstate", onPop);
+  ov.addEventListener("click", function(e){ if(e.target === ov || e.target.closest("[data-ook-close]")) finish(); });
+  timer = setTimeout(finish, 12000);
 }
 function handlePaymentSubmit(e){
   if(e && e.preventDefault) e.preventDefault();

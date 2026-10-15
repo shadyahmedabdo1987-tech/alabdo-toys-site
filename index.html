@@ -2609,6 +2609,19 @@ html[data-theme="dark"] .os-pill{filter:brightness(.9) saturate(1.2);}
 .bc-prev b{font-size:14.5px; color:var(--ink);}
 .bc-prev p{margin:0; font-size:13px; color:var(--ink-soft); line-height:1.55;}
 .bc-h{font-size:16px; margin:6px 0 10px;}
+.bc-rep{display:flex; gap:6px; padding:4px; border-radius:14px; background:var(--surface-3); border:1.5px solid var(--border);}
+.bc-rep button{flex:1; border:0; background:none; color:var(--ink-soft); font:inherit; font-size:13.5px; font-weight:800; padding:9px 8px; border-radius:10px; cursor:pointer;}
+.bc-rep button.on{background:var(--surface); color:var(--pink-deep); box-shadow:0 2px 8px hsl(var(--shadow)/.12);}
+.bc-daily{display:flex; flex-direction:column; gap:10px; padding:12px; border-radius:14px; background:color-mix(in srgb, var(--pink) 6%, var(--surface)); border:1px dashed var(--pink-line);}
+.bc-daily[hidden]{display:none;}
+.bc-sched{display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:4px;}
+.bc-pill{display:inline-flex; align-items:center; gap:4px; font-size:11.5px; font-weight:800; padding:3px 9px; border-radius:999px; background:var(--surface-2); color:var(--ink-soft);}
+.bc-pill.is-on{background:#e8f7ec; color:#1d7a3e;}
+.bc-pill.is-off{background:#fff3e0; color:#a65b00;}
+.bc-pill.is-end{background:var(--surface-3); color:var(--ink-faint);}
+.bc-acts{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;}
+.bc-acts button, .bc-acts label{display:inline-flex; align-items:center; gap:5px; border:1.5px solid var(--border); background:var(--surface); color:var(--ink); font:inherit; font-size:12.5px; font-weight:800; padding:5px 10px; border-radius:999px; cursor:pointer;}
+.bc-acts input[type="time"]{border:0; background:none; color:inherit; font:inherit; font-size:12.5px; padding:0; width:auto;}
 .bc-item{display:flex; gap:10px; align-items:flex-start; padding:12px 14px; border-radius:14px; background:var(--surface); border:1px solid var(--border); margin-bottom:8px;}
 .bc-item-main{flex:1; min-width:0; display:flex; flex-direction:column; gap:3px;}
 .bc-item-main b{font-size:14px;}
@@ -3710,6 +3723,14 @@ try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("messa
           <label class="bc-field"><span><b data-i18n>عنوان الإشعار</b><i id="bcTitleCnt">0/70</i></span><input id="bcTitle" maxlength="70" placeholder="مثلاً: 🔥 خصم 20% على العرايس" data-i18n-placeholder autocomplete="off"></label>
           <label class="bc-field"><span><b data-i18n>الرسالة</b><i id="bcBodyCnt">0/220</i></span><textarea id="bcBody" rows="3" maxlength="220" placeholder="اكتب تفاصيل العرض في سطر أو اتنين" data-i18n-placeholder></textarea></label>
           <label class="bc-field"><span><b data-i18n>لما العميل يدوس على الإشعار يفتح</b></span><select id="bcLink"></select></label>
+          <div class="bc-field"><span><b data-i18n>يتبعت إمتى</b></span>
+            <div class="bc-rep" id="bcRepeat" role="radiogroup"><button type="button" data-rep="once" class="on" role="radio" aria-checked="true" data-i18n>مرة واحدة دلوقتي</button><button type="button" data-rep="daily" role="radio" aria-checked="false" data-i18n>🔁 كل يوم</button></div>
+          </div>
+          <div class="bc-daily" id="bcDailyBox" hidden>
+            <label class="bc-field"><span><b data-i18n>الساعة كام كل يوم</b></span><input type="time" id="bcTime" value="19:00"></label>
+            <label class="bc-field"><span><b data-i18n>لحد يوم</b><i data-i18n>اختياري — فاضي يعني لحد ما توقفه</i></span><input type="date" id="bcUntil"></label>
+            <p class="apr-note" data-i18n>أول مرة بيتبعت دلوقتي، وبعد كده كل يوم في المعاد ده (بتوقيت مصر). العميل اللي فاتح التطبيق بيوصله على طول، واللي قافله بيوصله خلال ساعتين تقريبًا من المعاد. تقدر توقفه أو تشغّله أو تغيّر معاده أو تمسحه من «اللي اتبعت قبل كده» تحت.</p>
+          </div>
           <div class="bc-prev" aria-hidden="true">
             <div class="bc-prev-app"><img src="logo.png" alt=""><span data-i18n>متجر آل عبده</span><i data-i18n>دلوقتي</i></div>
             <b id="bcPrevTitle"></b><p id="bcPrevBody"></p>
@@ -12917,19 +12938,64 @@ function renderAdminBroadcastPage(){
     })
     .catch(function(e){ box.innerHTML = '<p class="apr-note is-err">'+(e === "missing" ? t("⚠️ ارفع ملف broadcast.js الأول") : t("تعذر تحميل الإشعارات."))+'</p>'; });
 }
+/* "19:00" → "7:00 م" */
+function bcTimeLabel(hm){
+  var m = /^(\d{2}):(\d{2})$/.exec(String(hm || "")); if(!m) return hm || "";
+  var d = new Date(2000, 0, 1, +m[1], +m[2]);
+  return d.toLocaleTimeString(LANG==="en" ? "en-US" : "ar-EG", { hour:"numeric", minute:"2-digit" });
+}
+function bcWhen(ms){
+  var loc = LANG==="en" ? "en-US" : "ar-EG", d = new Date(ms);
+  return d.toLocaleDateString(loc, { weekday:"short", day:"numeric", month:"short" })+" · "+d.toLocaleTimeString(loc, { hour:"numeric", minute:"2-digit" });
+}
 function bcDrawHistory(){
   var box = document.getElementById("bcHistory"), list = ADMIN_BC.list || [];
   if(!list.length){ box.innerHTML = '<p class="apr-note">'+t("لسه مابعتش أي إشعار.")+'</p>'; return; }
   var loc = LANG==="en" ? "en-US" : "ar-EG";
   box.innerHTML = list.map(function(b){
     var d = new Date(b.at || Date.now());
+    var daily = b.repeat === "daily", sched = "", acts = "";
+    if(daily){
+      var st = b.ended ? "end" : (b.active === false ? "off" : "on");
+      sched = '<div class="bc-sched">'
+        + '<span class="bc-pill">🔁 '+t("كل يوم الساعة")+' '+escHtml(bcTimeLabel(b.time))+'</span>'
+        + '<span class="bc-pill is-'+st+'">'+(st === "on" ? "● "+t("شغال") : st === "off" ? "⏸ "+t("موقوف") : "✓ "+t("خلص"))+'</span>'
+        + (b.until ? '<span class="bc-pill">📆 '+t("لحد")+' '+escHtml(new Date(b.until).toLocaleDateString(loc, { day:"numeric", month:"short" }))+'</span>' : '')
+        + (st === "on" && b.nextAt ? '<span class="bc-pill">⏭ '+t("الجاي")+': '+escHtml(bcWhen(b.nextAt))+'</span>' : '')
+        + (b.sentCount ? '<span class="bc-pill">📨 '+t("اتبعت")+' '+fmt(b.sentCount)+' '+t("مرة")+'</span>' : '')
+      + '</div>';
+      acts = '<div class="bc-acts">'
+        + (st === "on" ? '<button type="button" data-bc-pause>⏸ '+t("إيقاف")+'</button>' : '<button type="button" data-bc-resume>▶️ '+t("تشغيل")+'</button>')
+        + '<label>🕖 '+t("المعاد")+' <input type="time" data-bc-time value="'+escHtml(b.time || "19:00")+'"></label>'
+      + '</div>';
+    } else {
+      acts = '<div class="bc-acts"><button type="button" data-bc-repeat>🔁 '+t("خليه يتبعت كل يوم")+'</button></div>';
+    }
     return '<div class="bc-item" data-bc-id="'+escHtml(b.id)+'">'
       + '<div class="bc-item-main"><b>'+escHtml(b.title)+'</b><p>'+escHtml(b.body)+'</p>'
-      + '<small>📅 '+escHtml(d.toLocaleDateString(loc, { day:"numeric", month:"short" })+" · "+d.toLocaleTimeString(loc, { hour:"numeric", minute:"2-digit" }))+' · 🔗 '+escHtml(bcLinkLabel(b.link))+'</small></div>'
+      + '<small>📅 '+escHtml(d.toLocaleDateString(loc, { day:"numeric", month:"short" })+" · "+d.toLocaleTimeString(loc, { hour:"numeric", minute:"2-digit" }))+' · 🔗 '+escHtml(bcLinkLabel(b.link))+'</small>'
+      + sched + acts + '</div>'
       + '<button type="button" class="apr-del" data-bc-del aria-label="'+t("مسح")+'">🗑️</button>'
     + '</div>';
   }).join("");
 }
+/* تعديل إشعار متكرر (إيقاف / تشغيل / تغيير المعاد / تحويله لكل يوم) */
+function bcPatch(id, data, okMsg){
+  return fetch("/api/broadcast", { method:"PATCH", headers: Object.assign({ "content-type":"application/json" }, adminAuthHeaders()), body: JSON.stringify(Object.assign({ id:id }, data)) })
+    .then(function(r){ return r.json().then(function(j){ return { status:r.status, body:j }; }); })
+    .then(function(res){
+      if(res.body && res.body.ok){ showToast("✅ "+okMsg); renderAdminBroadcastPage(); }
+      else if(res.status === 405) showToast(t("⚠️ ارفع ملف broadcast.js الجديد الأول"));
+      else showToast(t("⚠️ تعذر الحفظ، جرّب تاني."));
+    })
+    .catch(function(){ showToast(t("⚠️ تعذر الحفظ، جرّب تاني.")); });
+}
+document.getElementById("bcRepeat").addEventListener("click", function(e){
+  var b = e.target.closest("[data-rep]"); if(!b) return;
+  Array.prototype.forEach.call(this.querySelectorAll("[data-rep]"), function(x){ var on = x === b; x.classList.toggle("on", on); x.setAttribute("aria-checked", on ? "true" : "false"); });
+  document.getElementById("bcDailyBox").hidden = b.dataset.rep !== "daily";
+  document.getElementById("bcSend").textContent = b.dataset.rep === "daily" ? "📣 "+t("ابعته دلوقتي وكرّره كل يوم") : t("📣 ابعت الإشعار لكل العملاء");
+});
 document.getElementById("bcTemplates").addEventListener("click", function(e){
   var b = e.target.closest("[data-bc-tpl]"); if(!b) return;
   var tp = BC_TEMPLATES[+b.dataset.bcTpl]; if(!tp) return;
@@ -12943,17 +13009,23 @@ document.getElementById("bcBody").addEventListener("input", bcPreview);
 document.getElementById("bcSend").addEventListener("click", function(){
   var tt = document.getElementById("bcTitle").value.trim(), bb = document.getElementById("bcBody").value.trim(), link = document.getElementById("bcLink").value;
   if(tt.length < 2 || bb.length < 2){ showToast(t("⚠️ اكتب عنوان ورسالة الإشعار الأول")); return; }
-  appConfirm({ icon:"📣", title:t("تبعت الإشعار لكل العملاء؟"), message:"«"+tt+"»\n"+bb+"\n\n"+t("بيفتح")+": "+bcLinkLabel(link), ok:t("ابعت") }).then(function(ok){
+  var repEl = document.querySelector("#bcRepeat .on"), daily = !!(repEl && repEl.dataset.rep === "daily");
+  var tm = document.getElementById("bcTime").value, until = document.getElementById("bcUntil").value;
+  if(daily && !/^\d{2}:\d{2}$/.test(tm)){ showToast(t("⚠️ اختار الساعة اللي يتبعت فيها كل يوم")); return; }
+  var schedTxt = daily ? "\n🔁 "+t("وبعد كده كل يوم الساعة")+" "+bcTimeLabel(tm)+(until ? " "+t("لحد")+" "+until : " "+t("لحد ما توقفه")) : "";
+  appConfirm({ icon:"📣", title:t("تبعت الإشعار لكل العملاء؟"), message:"«"+tt+"»\n"+bb+"\n\n"+t("بيفتح")+": "+bcLinkLabel(link)+schedTxt, ok:t("ابعت") }).then(function(ok){
     if(!ok) return;
     var btn = document.getElementById("bcSend"); btn.disabled = true;
-    fetch("/api/broadcast", { method:"POST", headers: Object.assign({ "content-type":"application/json" }, adminAuthHeaders()), body: JSON.stringify({ title:tt, body:bb, link:link }) })
+    fetch("/api/broadcast", { method:"POST", headers: Object.assign({ "content-type":"application/json" }, adminAuthHeaders()), body: JSON.stringify(daily ? { title:tt, body:bb, link:link, repeat:"daily", time:tm, until:until || null } : { title:tt, body:bb, link:link }) })
       .then(function(r){ return r.json().then(function(j){ return { status:r.status, body:j }; }); })
       .then(function(res){
         btn.disabled = false;
         if(res.body && res.body.ok){
           showToast("✅ "+t("الإشعار اتبعت — بيوصل للعميل أول ما يفتح التطبيق، أو خلال ساعتين تقريبًا لو التطبيق مقفول"));
           document.getElementById("bcTitle").value = ""; document.getElementById("bcBody").value = ""; bcPreview();
-          (ADMIN_BC.list = ADMIN_BC.list || []).unshift(res.body.item); bcDrawHistory();
+          var once = document.querySelector('#bcRepeat [data-rep="once"]'); if(once) once.click();
+          document.getElementById("bcUntil").value = "";
+          renderAdminBroadcastPage();
         } else if(res.status === 429) showToast(t("⚠️ استنى دقيقة قبل ما تبعت إشعار تاني"));
         else if(res.status === 404 || res.status === 405) showToast(t("⚠️ ارفع ملف broadcast.js الأول"));
         else showToast(t("⚠️ تعذر الإرسال، جرّب تاني."));
@@ -12961,10 +13033,26 @@ document.getElementById("bcSend").addEventListener("click", function(){
       .catch(function(){ btn.disabled = false; showToast(t("⚠️ تعذر الإرسال، جرّب تاني.")); });
   });
 });
+document.getElementById("bcHistory").addEventListener("change", function(e){
+  var inp = e.target.closest("[data-bc-time]"); if(!inp || !/^\d{2}:\d{2}$/.test(inp.value)) return;
+  bcPatch(inp.closest("[data-bc-id]").dataset.bcId, { time: inp.value }, t("المعاد اتغيّر — هيتبعت كل يوم الساعة")+" "+bcTimeLabel(inp.value));
+});
 document.getElementById("bcHistory").addEventListener("click", function(e){
+  var it = e.target.closest("[data-bc-id]");
+  if(it && e.target.closest("[data-bc-pause]")){
+    appConfirm({ icon:"⏸", title:t("توقف الإشعار ده؟"), message:t("مش هيتبعت تاني للعملاء لحد ما تدوس تشغيل."), ok:t("إيقاف") }).then(function(ok){ if(ok) bcPatch(it.dataset.bcId, { active:false }, t("الإشعار اتوقف")); });
+    return;
+  }
+  if(it && e.target.closest("[data-bc-resume]")){ bcPatch(it.dataset.bcId, { active:true }, t("الإشعار رجع يشتغل كل يوم")); return; }
+  if(it && e.target.closest("[data-bc-repeat]")){
+    var b0 = (ADMIN_BC.list || []).find(function(x){ return x.id === it.dataset.bcId; });
+    var d0 = new Date(b0 && b0.at || Date.now()), hm = String(d0.getHours()).padStart(2, "0")+":"+String(d0.getMinutes()).padStart(2, "0");
+    appConfirm({ icon:"🔁", title:t("تكرّره كل يوم؟"), message:t("هيتبعت للعملاء كل يوم الساعة")+" "+bcTimeLabel(hm)+" "+t("لحد ما توقفه. تقدر تغيّر المعاد بعد كده."), ok:t("كرّره") }).then(function(ok){ if(ok) bcPatch(it.dataset.bcId, { repeat:"daily", time:hm }, t("الإشعار هيتبعت كل يوم")); });
+    return;
+  }
   var del = e.target.closest("[data-bc-del]"); if(!del) return;
   var id = del.closest("[data-bc-id]").dataset.bcId;
-  appConfirm({ icon:"🗑️", title:t("مسح الإشعار"), message:t("العملاء اللي لسه ماوصلهمش مش هيوصلهم."), ok:t("مسح") }).then(function(ok){
+  appConfirm({ icon:"🗑️", title:t("مسح الإشعار"), message:t("العملاء اللي لسه ماوصلهمش مش هيوصلهم، ولو متكرر مش هيتبعت تاني خالص."), ok:t("مسح") }).then(function(ok){
     if(!ok) return;
     fetch("/api/broadcast", { method:"DELETE", headers: Object.assign({ "content-type":"application/json" }, adminAuthHeaders()), body: JSON.stringify({ id:id }) })
       .then(function(r){ return r.json(); })

@@ -8257,6 +8257,7 @@ function v2Reorder(order){
     if(cartCount() > before) added++; else skipped.push(it.name);
   });
   if(added){
+    if(typeof sheetReturn !== "undefined") sheetReturn = null; /* منرجّعش قائمة "حسابي" فوق السلة */
     closeAllPanels();
     setTimeout(function(){ renderCartDrawer(); openDrawer(); }, 150);
     showToast("🔁 "+t("اتضاف للسلة")+" "+fmt(added)+" "+(added === 1 ? t("صنف") : t("أصناف"))+(skipped.length ? " — "+t("وفي")+" "+fmt(skipped.length)+" "+t("مش متوفر") : ""));
@@ -9171,6 +9172,10 @@ var modalBackdrop = document.getElementById("modalBackdrop");
 var appSheet = document.getElementById("appSheet");
 
 function openDrawer(){
+  /* السلة بتتفتح لوحدها: لو قائمة "حسابي" مفتوحة أو مستنية ترجع (مثلاً بعد
+     «اطلبه تاني» من طلباتي) بنقفلها عشان متفضلش معلّقة فوق السلة. */
+  if(typeof sheetReturn !== "undefined") sheetReturn = null;
+  if(appSheet && appSheet.classList.contains("show")) appSheet.classList.remove("show");
   cartDrawer.classList.add("show"); overlay.classList.add("show"); document.body.style.overflow="hidden";
   var nameInput = document.getElementById("checkoutName");
   var phoneInput = document.getElementById("checkoutPhone");

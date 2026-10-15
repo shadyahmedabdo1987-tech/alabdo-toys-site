@@ -5638,6 +5638,7 @@ var I18N_EN = {
   "اختار رقمك السري الجديد": "Choose your new password",
   "كود التحقق": "Verification Code",
   "نسخ الكود": "Copy code",
+  "متأكد إنك عايز تحذف الطلب ده نهائيًا؟ إشعاراته اللي عند العميل هتتمسح كمان، والخطوة دي مش هترجع.": "Delete this order permanently? Its notifications will also be removed from the customer's bell. This can't be undone.",
   "اتنسخ ✓": "Copied ✓",
   "اتنسخ الكود": "Code copied",
   "مقدرناش ننسخ — اكتب الكود بإيدك": "Couldn't copy — please type the code",
@@ -12019,7 +12020,7 @@ function aoeApplyStock(st){
 function deleteAdminOrder(order, confirmed){
   if(!order) return;
   if(!confirmed){
-    appConfirm({ icon:"🗑️", title:t("حذف الطلب"), message:t("متأكد إنك عايز تحذف الطلب ده نهائيًا؟ الخطوة دي مش هترجع."), ok:t("احذف"), danger:true })
+    appConfirm({ icon:"🗑️", title:t("حذف الطلب"), message:t("متأكد إنك عايز تحذف الطلب ده نهائيًا؟ إشعاراته اللي عند العميل هتتمسح كمان، والخطوة دي مش هترجع."), ok:t("احذف"), danger:true })
       .then(function(ok){ if(ok) deleteAdminOrder(order, true); });
     return;
   }

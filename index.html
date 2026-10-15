@@ -619,6 +619,9 @@ html[dir="ltr"] .drawer.show{transform:translateX(0);}
 .seg-tabs button.active{background:var(--surface); color:var(--pink-deep); box-shadow:0 2px 6px hsl(var(--shadow)/.14);}
 .pass-reveal{background:var(--pink-pale); border:1.5px dashed var(--pink-line); border-radius:14px; padding:16px; text-align:center; margin-top:6px;}
 .pass-reveal .code{font-size:26px; font-weight:800; letter-spacing:4px; color:var(--pink-deep); font-variant-numeric:tabular-nums; direction:ltr; display:block;}
+/* خانات الرقم السري الجديد جوه التطبيقات: بتتكتب نقط من غير ما تبقى "password"،
+   عشان خدمة حفظ كلمات السر في الموبايل متطلعش وتقفل الكيبورد كل شوية */
+.pw-mask{-webkit-text-security:disc; text-security:disc;}
 /* زرار «نسخ الكود» الصغير جنب كود التحقق */
 .pass-reveal.has-copy{display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap;}
 .pass-reveal.has-copy .code{display:inline-block;}
@@ -5692,6 +5695,8 @@ var I18N_EN = {
   "الرقم السري وتأكيده مش متطابقين.": "The password and its confirmation don't match.",
   "الكود ده منتهي أو مش صحيح، جرّب تطلب استرجاع تاني من الأول.": "This code is expired or incorrect, please request a new recovery from the start.",
   "تم تغيير الرقم السري بنجاح": "Password changed successfully",
+  "دلوقتي سجّل دخولك برقم الموبايل ورقمك السري الجديد.": "Now sign in with your phone number and your new password.",
+  "اتحفظت بياناتك ورقمك السري الجديد. المرة الجاية سجّل دخولك بيه.": "Your details and new password are saved. Use it next time you sign in.",
   "دلوقتي سجّل دخولك برقم الموبايل أو الإيميل ورقمك السري الجديد:": "Now log in with your phone number or email and your new password:",
   "تسجيل الدخول الآن": "Log In Now",
   "تم التسجيل": "Registration complete",
@@ -7261,16 +7266,12 @@ function updateGovShipLine(){
    يترابط بأي حساب (customerId = null)، وبيتبعت فورًا لإيميل صاحب المتجر
    (functions/api/orders.js) عشان محدش يتأخر عليه - بس مش هيقدر يشوفه
    تاني من على الموقع إلا لو سجّل حساب بعدين. */
-function showOrderSuccessModal(phone){
-  haptic("success");
-  /* شاشة "تم استلام طلبك" بالتصميم الجديد: كارت أبيض فوقه علامة ✓ خضرا متموّجة
-     بتنط وحواليها لمعات، وتحتها البيانات وزرار أخضر «تمام» بيرجّع للرئيسية. */
+/* شاشة نجاح بنفس تصميم "تم استلام طلبك": كارت أبيض فوقه ختم أخضر متموّج
+   فيه ✓ وحواليه لمعات، وتحته العنوان والكلام وزرار أخضر.
+   o = { title, sub, extraHtml, btn, onDone(fromButton), autoMs } */
+function aaSuccessPop(o){
+  o = o || {};
   var old = document.getElementById("aaOrderOk"); if(old) old.remove();
-  closeAllPanels();
-  var loc = LANG==="en" ? "en-US" : "ar-EG", d1 = new Date(), d2 = new Date();
-  d1.setDate(d1.getDate()+3); d2.setDate(d2.getDate()+5);
-  var dOpt = { weekday:"long", day:"numeric", month:"long" };
-  /* شكل الختم المتموّج (12 موجة) */
   var pts = [], N = 12, R = 44, A = 4.2;
   for(var i = 0; i <= 120; i++){ var th = i / 120 * Math.PI * 2, r = R + A * Math.cos(N * th); pts.push((50 + r * Math.cos(th)).toFixed(2)+","+(50 + r * Math.sin(th)).toFixed(2)); }
   var ov = document.createElement("div"); ov.id = "aaOrderOk"; ov.className = "ook-ov";
@@ -7282,27 +7283,48 @@ function showOrderSuccessModal(phone){
         + '<path class="ook-tick" d="M31 51.5 L44.5 64.5 L70 37" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/></svg>'
     + '</div>'
     + '<button type="button" class="ook-x" data-ook-close aria-label="'+t("إغلاق")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
-    + '<h3 id="ookTitle">'+t("تم استلام طلبك بنجاح")+'</h3>'
-    + '<p class="ook-sub">'+t("جاري مراجعة بياناتك وتجهيز منتجك الآن.")+'<br>'+t("سعداء بتعاملكم معنا،")+'</p>'
-    + '<div class="ook-eta"><span aria-hidden="true">🚚</span><span><b>'+t("طلبك هيوصلك خلال 3 لـ 5 أيام")+'</b><small>'+t("متوقع بين")+' '+escHtml(d1.toLocaleDateString(loc, dOpt))+(LANG==="en" ? " and " : " و")+escHtml(d2.toLocaleDateString(loc, dOpt))+'</small></span></div>'
-    + '<button type="button" class="ook-btn" data-ook-close>'+t("تمام")+'</button>'
+    + '<h3 id="ookTitle">'+escHtml(o.title || "")+'</h3>'
+    + (o.sub ? '<p class="ook-sub">'+o.sub+'</p>' : '')
+    + (o.extraHtml || '')
+    + '<button type="button" class="ook-btn" data-ook-go>'+escHtml(o.btn || t("تمام"))+'</button>'
   + '</div>';
   document.body.appendChild(ov);
   document.body.style.overflow = "hidden";
   void ov.offsetWidth; ov.classList.add("show");
   var opened = Date.now(), done = false, timer;
-  var finish = function(){
+  var finish = function(fromBtn){
     if(done) return; done = true; clearTimeout(timer);
     window.removeEventListener("popstate", onPop);
     ov.classList.remove("show");
     setTimeout(function(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }, 260);
     document.body.style.overflow = "";
-    closeAllPanels(); goToView("home");
+    if(o.onDone) o.onDone(!!fromBtn);
   };
-  var onPop = function(){ if(Date.now() - opened > 700) finish(); };
+  var onPop = function(){ if(Date.now() - opened > 700) finish(false); };
   window.addEventListener("popstate", onPop);
-  ov.addEventListener("click", function(e){ if(e.target === ov || e.target.closest("[data-ook-close]")) finish(); });
-  timer = setTimeout(finish, 12000);
+  ov.addEventListener("click", function(e){
+    if(e.target.closest("[data-ook-go]")) finish(true);
+    else if(e.target === ov || e.target.closest("[data-ook-close]")) finish(false);
+  });
+  if(o.autoMs) timer = setTimeout(function(){ finish(false); }, o.autoMs);
+  return ov;
+}
+function showOrderSuccessModal(phone){
+  haptic("success");
+  /* شاشة "تم استلام طلبك" بالتصميم الجديد: كارت أبيض فوقه علامة ✓ خضرا متموّجة
+     بتنط وحواليها لمعات، وتحتها البيانات وزرار أخضر «تمام» بيرجّع للرئيسية. */
+  closeAllPanels();
+  var loc = LANG==="en" ? "en-US" : "ar-EG", d1 = new Date(), d2 = new Date();
+  d1.setDate(d1.getDate()+3); d2.setDate(d2.getDate()+5);
+  var dOpt = { weekday:"long", day:"numeric", month:"long" };
+  aaSuccessPop({
+    title: t("تم استلام طلبك بنجاح"),
+    sub: escHtml(t("جاري مراجعة بياناتك وتجهيز منتجك الآن."))+'<br>'+escHtml(t("سعداء بتعاملكم معنا،")),
+    extraHtml: '<div class="ook-eta"><span aria-hidden="true">🚚</span><span><b>'+t("طلبك هيوصلك خلال 3 لـ 5 أيام")+'</b><small>'+t("متوقع بين")+' '+escHtml(d1.toLocaleDateString(loc, dOpt))+(LANG==="en" ? " and " : " و")+escHtml(d2.toLocaleDateString(loc, dOpt))+'</small></span></div>',
+    btn: t("تمام"),
+    autoMs: 12000,
+    onDone: function(){ closeAllPanels(); goToView("home"); }
+  });
 }
 function handlePaymentSubmit(e){
   if(e && e.preventDefault) e.preventDefault();
@@ -10933,13 +10955,17 @@ function renderAccountModal(){
   if(acctState.registerResult){
     var r = acctState.registerResult;
     if(r.kind==="reset"){
-      html += '<div class="modal-info" style="padding:30px 24px;">'
-        + '<span style="font-size:34px;">✅</span>'
-        + '<h3>'+t("تم تغيير الرقم السري بنجاح")+'</h3>'
-        + '<p style="color:var(--ink-soft); font-size:13.5px;">'+t("دلوقتي سجّل دخولك برقم الموبايل أو الإيميل ورقمك السري الجديد:")+'</p>'
-        + '<div class="hero-ctas" style="margin-top:16px; justify-content:flex-start;">'
-          + '<button class="btn btn-primary" id="acctContinue" type="button">'+t("تسجيل الدخول الآن")+'</button>'
-        + '</div></div>';
+      /* نفس تصميم شاشة "تم استلام طلبك" */
+      haptic("success");
+      acctState = { tab:"login", registerResult:null, resetFlow:null };
+      closeAllPanels();
+      aaSuccessPop({
+        title: t("تم تغيير الرقم السري بنجاح"),
+        sub: escHtml(t("دلوقتي سجّل دخولك برقم الموبايل ورقمك السري الجديد.")),
+        btn: t("تسجيل الدخول الآن"),
+        onDone: function(go){ if(!go) return; acctState = { tab:"login", registerResult:null, resetFlow:null }; openAccountModal(); }
+      });
+      return;
     } else {
       html += '<div class="modal-info" style="padding:30px 24px;">'
         + '<span style="font-size:34px;">🎉</span>'
@@ -11179,7 +11205,10 @@ function openProfileModal(){
           Object.keys(fill).forEach(function(id){ var el = document.getElementById(id); if(el) el.value = fill[id] || ""; });
           updateAccountLabel();
           closeAllPanels();
-          showToast(t("✅ اتحفظت بياناتك"));
+          if(pass){
+            haptic("success");
+            aaSuccessPop({ title: t("تم تغيير الرقم السري بنجاح"), sub: escHtml(t("اتحفظت بياناتك ورقمك السري الجديد. المرة الجاية سجّل دخولك بيه.")), btn: t("تمام") });
+          } else showToast(t("✅ اتحفظت بياناتك"));
           return;
         }
         if(res.status===409) showErr(t("الإيميل ده مسجّل بيه حساب تاني."));
@@ -14374,6 +14403,46 @@ function copyText(txt){
   }
   return Promise.resolve(fallback());
 }
+/* ---------- الكيبورد بيقفل لوحده في خانات الرقم السري (جوه التطبيق) ----------
+   في بعض الموبايلات (زي هواوي) خدمة حفظ كلمات السر بتظهر أول ما تدوس على خانة
+   "رقم سري جديد" وبتاخد التركيز، فالكيبورد يقفل كل ما يفتح. جوه التطبيق بس بنخلي
+   الخانات دي نص عادي بيتكتب نقط (•••)، فالخدمة دي متشتغلش عليها. خانات تسجيل
+   الدخول نفسها بتفضل زي ما هي. زراير "إظهار الرقم السري" بتفضل شغالة عادي. */
+(function(){
+  var html = document.documentElement;
+  if(!(html.classList.contains("app-mode") || html.classList.contains("admin-app") || /AlAbdo(App|Admin)\//.test(navigator.userAgent))) return;
+  var SKIP = { adminPassInput:1, acctLoginPassword:1 };
+  function mask(inp){
+    if(inp.dataset.pwmask || SKIP[inp.id]) return;
+    inp.dataset.pwmask = "1";
+    inp.setAttribute("type", "text");
+    inp.classList.add("pw-mask");
+    inp.setAttribute("autocomplete", "off");
+    inp.setAttribute("autocapitalize", "off");
+    inp.setAttribute("autocorrect", "off");
+    inp.setAttribute("spellcheck", "false");
+    inp.setAttribute("data-lpignore", "true");
+    /* الكود اللي بيكتب input.type = "password"/"text" (إظهار/إخفاء) بيتحول لإخفاء/إظهار النقط */
+    try{
+      Object.defineProperty(inp, "type", {
+        configurable: true,
+        get: function(){ return inp.classList.contains("pw-mask") ? "password" : "text"; },
+        set: function(v){ inp.classList.toggle("pw-mask", String(v) === "password"); }
+      });
+    }catch(e){}
+  }
+  function scan(root){
+    if(!root || !root.querySelectorAll) return;
+    if(root.matches && root.matches('input[type="password"]')) mask(root);
+    Array.prototype.forEach.call(root.querySelectorAll('input[type="password"]'), mask);
+  }
+  function start(){
+    scan(document.body);
+    new MutationObserver(function(ms){ ms.forEach(function(m){ Array.prototype.forEach.call(m.addedNodes, function(n){ if(n.nodeType === 1) scan(n); }); }); })
+      .observe(document.body, { childList:true, subtree:true });
+  }
+  if(document.body) start(); else document.addEventListener("DOMContentLoaded", start);
+})();
 var COPY_SVG_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
 /* زرار «نسخ الكود»: بينسخ كود التحقق عشان العميل يلزقه في الخانة اللي بعدها */
 document.addEventListener("click", function(e){

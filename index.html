@@ -2197,6 +2197,11 @@ html.app-mode .modal-backdrop.show > .modal-card:not(.acct-card){animation:aaPag
 @keyframes aaPageIn{from{opacity:0; transform:translateY(28px)} to{opacity:1; transform:none}}
 html.app-mode .modal-backdrop.show > .modal-card.acct-card{animation:aaSheetUp .32s cubic-bezier(.2,.8,.2,1);}
 @keyframes aaSheetUp{from{transform:translateY(60px); opacity:0} to{transform:none; opacity:1}}
+/* الإشعارات (الجرس) في التطبيق: بتنزل من فوق بدل ما تطلع من تحت */
+html.app-mode .modal-backdrop:has(> .modal-card.acct-card .preq-wrap.is-notif){align-items:flex-start;}
+html.app-mode .modal-card.acct-card:has(.preq-wrap.is-notif){border-radius:0 0 22px 22px; max-height:88vh; padding-top:env(safe-area-inset-top); padding-bottom:0; box-shadow:0 14px 40px rgba(0,0,0,.25);}
+html.app-mode .modal-backdrop.show > .modal-card.acct-card:has(.preq-wrap.is-notif){animation:aaSheetDown .34s cubic-bezier(.2,.8,.2,1);}
+@keyframes aaSheetDown{from{transform:translateY(-100%); opacity:.4} to{transform:none; opacity:1}}
 
 /* لوحة البحث */
 .srch-panel{position:absolute; top:calc(100% + 8px); inset-inline:0; z-index:90; background:var(--surface); border:1px solid var(--border); border-radius:18px; box-shadow:0 16px 40px hsl(var(--shadow)/.2); padding:12px 14px 14px; display:flex; flex-direction:column; gap:10px; text-align:start;}

@@ -26,8 +26,15 @@ export async function onRequestGet({ request, env }){
       reply: r.reply
     });
   });
-  (await getNotes(env)).forEach(function(n){
-    if(!noteMatches(n, acc)) return;
+  var myNotes = (await getNotes(env)).filter(function(n){ return noteMatches(n, acc); });
+  /* Order notes whose order was deleted by the admin are hidden too
+     (covers orders deleted before the delete endpoint started purging them). */
+  if(myNotes.some(function(n){ return n.type === "order" && n.orderId; })){
+    var liveIds = {};
+    (await getList(env, "orders")).forEach(function(o){ if(o && o.id) liveIds[String(o.id)] = 1; });
+    myNotes = myNotes.filter(function(n){ return !(n.type === "order" && n.orderId && !liveIds[String(n.orderId)]); });
+  }
+  myNotes.forEach(function(n){
     items.push({
       id: n.id, kind: n.type, at: n.at, seen: n.seen !== false,
       title: n.title || "", quote: n.quote || "", message: n.message || "",

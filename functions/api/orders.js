@@ -2,6 +2,7 @@ import { json, getList, saveList, requireAdmin, requireCustomer, getCatalog, sav
 import { getCoupons, saveCoupons, findCoupon, couponState, usedBy, perCustomerLimit, normPhone } from "../_coupons.js";
 import { dataUrlToBytes, sha256Bytes, checkReceipt, normRef } from "../_payproof.js";
 import { getTierConfig, activeTiers, pickTier, tierAmount } from "../_tiers.js";
+import { getNotes, saveNotes } from "../_notes.js";
 
 /* GET /api/orders - admin headers return every order (for the admin
    dashboard's order list); customer headers return only that customer's
@@ -481,7 +482,15 @@ export async function onRequestDelete({ request, env }){
   }
   /* حذف سكرين التحويل المتخزن لوحده مع الطلب */
   try{ await env.STORE_KV.delete("proof:" + id); }catch(e){}
-  return json({ ok:true });
+  /* إشعارات الطلب ده (اتسجل / بيتجهز / خرج للشحن...) بتتمسح من جرس العميل كمان */
+  var notesRemoved = 0;
+  try{
+    var notes = await getNotes(env);
+    var keptNotes = notes.filter(function(n){ return !(n && n.orderId && String(n.orderId) === String(id)); });
+    notesRemoved = notes.length - keptNotes.length;
+    if(notesRemoved) await saveNotes(env, keptNotes);
+  }catch(e){}
+  return json({ ok:true, notesRemoved: notesRemoved });
 }
 
 /* بيبعت إشعار إيميل فوري لصاحب المتجر (shady.ahmed.abdo.1987@gmail.com)

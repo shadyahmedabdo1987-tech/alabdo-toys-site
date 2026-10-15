@@ -2197,10 +2197,13 @@ html.app-mode .modal-backdrop.show > .modal-card:not(.acct-card){animation:aaPag
 @keyframes aaPageIn{from{opacity:0; transform:translateY(28px)} to{opacity:1; transform:none}}
 html.app-mode .modal-backdrop.show > .modal-card.acct-card{animation:aaSheetUp .32s cubic-bezier(.2,.8,.2,1);}
 @keyframes aaSheetUp{from{transform:translateY(60px); opacity:0} to{transform:none; opacity:1}}
-/* الإشعارات (الجرس) في التطبيق: بتنزل من فوق بدل ما تطلع من تحت */
-html.app-mode .modal-backdrop:has(> .modal-card.acct-card .preq-wrap.is-notif){align-items:flex-start;}
-html.app-mode .modal-card.acct-card:has(.preq-wrap.is-notif){border-radius:0 0 22px 22px; max-height:88vh; padding-top:env(safe-area-inset-top); padding-bottom:0; box-shadow:0 14px 40px rgba(0,0,0,.25);}
-html.app-mode .modal-backdrop.show > .modal-card.acct-card:has(.preq-wrap.is-notif){animation:aaSheetDown .34s cubic-bezier(.2,.8,.2,1);}
+/* الإشعارات (الجرس) وتفاصيل الطلب في التطبيق: بينزلوا من فوق بدل ما يطلعوا من تحت */
+html.app-mode .modal-backdrop:has(> .modal-card.acct-card .preq-wrap.is-notif),
+html.app-mode .modal-backdrop:has(> .modal-card.acct-card .od-sheet){align-items:flex-start;}
+html.app-mode .modal-card.acct-card:has(.preq-wrap.is-notif),
+html.app-mode .modal-card.acct-card:has(.od-sheet){border-radius:0 0 22px 22px; max-height:88vh; padding-top:env(safe-area-inset-top); padding-bottom:0; box-shadow:0 14px 40px rgba(0,0,0,.25);}
+html.app-mode .modal-backdrop.show > .modal-card.acct-card:has(.preq-wrap.is-notif),
+html.app-mode .modal-backdrop.show > .modal-card.acct-card:has(.od-sheet){animation:aaSheetDown .34s cubic-bezier(.2,.8,.2,1);}
 @keyframes aaSheetDown{from{transform:translateY(-100%); opacity:.4} to{transform:none; opacity:1}}
 
 /* لوحة البحث */
@@ -11193,7 +11196,7 @@ document.getElementById("acctDrawerClose").addEventListener("click", closeAllPan
    (زرار الإغلاق أو الدوس برّه الكارت) بيرجّع لنفس القائمة، من غير ما يقفلها. */
 function showOrderDetailModal(order){
   var html = '<button class="modal-close" id="modalCloseBtn" aria-label="إغلاق"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
-    + '<div class="modal-info" style="padding:30px 24px;">'
+    + '<div class="modal-info od-sheet" style="padding:30px 24px;">'
       + '<h3 style="margin-bottom:4px;">'+t("تفاصيل الطلب")+'</h3>'
       + orderInvoiceHtml(order)
     + '</div>';

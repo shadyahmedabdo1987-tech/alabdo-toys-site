@@ -2619,6 +2619,9 @@ html[data-theme="dark"] .os-pill{filter:brightness(.9) saturate(1.2);}
 .bc-prev b{font-size:14.5px; color:var(--ink);}
 .bc-prev p{margin:0; font-size:13px; color:var(--ink-soft); line-height:1.55;}
 .bc-h{font-size:16px; margin:6px 0 10px;}
+.push-st{display:flex; flex-wrap:wrap; gap:6px; align-items:center;}
+.push-test{display:flex; gap:8px; align-items:center;}
+.push-test input{flex:1; min-width:0; padding:9px 12px; border-radius:12px; border:1.5px solid var(--border); background:var(--surface-3); color:var(--ink); font:inherit; font-size:14px; direction:ltr; text-align:start;}
 .bc-rep{display:flex; gap:6px; padding:4px; border-radius:14px; background:var(--surface-3); border:1.5px solid var(--border);}
 .bc-rep button{flex:1; border:0; background:none; color:var(--ink-soft); font:inherit; font-size:13.5px; font-weight:800; padding:9px 8px; border-radius:10px; cursor:pointer;}
 .bc-rep button.on{background:var(--surface); color:var(--pink-deep); box-shadow:0 2px 8px hsl(var(--shadow)/.12);}
@@ -3755,6 +3758,12 @@ try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("messa
           </div>
           <button type="button" class="btn btn-primary" id="bcSend" data-i18n>📣 ابعت الإشعار لكل العملاء</button>
           <p class="apr-note" data-i18n>الإشعار بيوصل للعميل أول ما يفتح التطبيق (نسخة 2.0.20 وبعد كده)، ولو التطبيق مقفول بيوصله خلال ساعتين تقريبًا. العميل لازم يكون موافق على الإشعارات في موبايله.</p>
+        </div>
+        <h3 class="bc-h" data-i18n>⚡ الإشعارات الفورية (حالة الطلب)</h3>
+        <div class="admin-card bc-card" id="pushCard">
+          <div class="push-st" id="pushStatus"><span class="bc-pill" data-i18n>جاري التحميل...</span></div>
+          <p class="apr-note" data-i18n>لما تغيّر حالة طلب أو ترد على عميل، الإشعار بيوصل لموبايله في ثواني حتى لو التطبيق مقفول. جرّب: اكتب رقم موبايل عميل (أو رقمك لو عامل حساب عميل على موبايلك) وابعتله إشعار تجربة.</p>
+          <div class="push-test"><input type="tel" id="pushTestPhone" inputmode="numeric" placeholder="01xxxxxxxxx" autocomplete="off"><button type="button" class="btn btn-outline btn-sm" id="pushTestBtn" data-i18n>🔔 ابعت إشعار تجربة</button></div>
         </div>
         <h3 class="bc-h" data-i18n>🖼️ إعلان على الشاشة الرئيسية</h3>
         <div class="admin-card bc-card">
@@ -13000,8 +13009,39 @@ function bcPreview(){
   document.getElementById("bcTitleCnt").textContent = fmt(tt.length)+"/70";
   document.getElementById("bcBodyCnt").textContent = fmt(bb.length)+"/220";
 }
+/* حالة الإشعارات الفورية (Firebase) + إشعار تجربة */
+function pushStatusLoad(){
+  var box = document.getElementById("pushStatus"); if(!box) return;
+  fetch("/api/push-token?status=1", { headers: adminAuthHeaders(), cache:"no-store" })
+    .then(function(r){ if(r.status === 404 || r.status === 405) throw "missing"; return r.json(); })
+    .then(function(res){
+      if(!res || !res.ok) throw 0;
+      box.innerHTML = (res.configured
+          ? '<span class="bc-pill is-on">● '+t("شغالة")+'</span>'
+          : '<span class="bc-pill is-off">⏸ '+t("مستنية إعداد Firebase")+'</span>')
+        + '<span class="bc-pill">📱 '+fmt(res.devices || 0)+' '+t("موبايل متسجّل")+'</span>'
+        + '<span class="bc-pill">👤 '+fmt(res.customers || 0)+' '+t("عميل")+'</span>';
+    })
+    .catch(function(e){ box.innerHTML = '<span class="bc-pill is-off">'+(e === "missing" ? t("⚠️ ارفع ملف push-token.js الأول") : t("تعذر التحميل."))+'</span>'; });
+}
+document.getElementById("pushTestBtn").addEventListener("click", function(){
+  var ph = document.getElementById("pushTestPhone").value.trim(), btn = this;
+  if(ph.replace(/\D/g, "").length < 9){ showToast(t("⚠️ اكتب رقم موبايل العميل")); return; }
+  btn.disabled = true;
+  fetch("/api/push-token", { method:"PUT", headers: Object.assign({ "content-type":"application/json" }, adminAuthHeaders()), body: JSON.stringify({ phone: ph }) })
+    .then(function(r){ return r.json().then(function(j){ return { status:r.status, body:j }; }); })
+    .then(function(res){
+      btn.disabled = false;
+      var b = res.body || {};
+      if(b.ok) showToast("✅ "+t("اتبعت — بص على الموبايل"));
+      else if(b.error === "not_configured") showToast(t("⚠️ الإشعارات الفورية لسه مستنية إعداد Firebase"));
+      else if(b.error === "no_devices") showToast(t("⚠️ الرقم ده مفيش عليه موبايل متسجّل — العميل يفتح التطبيق بحسابه الأول"));
+      else showToast(t("⚠️ تعذر الإرسال، جرّب تاني."));
+    })
+    .catch(function(){ btn.disabled = false; showToast(t("⚠️ تعذر الإرسال، جرّب تاني.")); });
+});
 function renderAdminBroadcastPage(){
-  bcFillLinkOptions(); bcPreview(); renderAdminPromo(); renderAdminBanners();
+  bcFillLinkOptions(); bcPreview(); renderAdminPromo(); renderAdminBanners(); pushStatusLoad();
   var box = document.getElementById("bcHistory");
   if(!ADMIN_BC.list) box.innerHTML = '<p class="apr-note">'+t("جاري التحميل...")+'</p>';
   fetch("/api/broadcast?all=1", { headers: adminAuthHeaders(), cache:"no-store" })

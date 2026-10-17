@@ -16,6 +16,7 @@
 # v2 (AlAbdoApp/5): order-status notifications, Play in-app review, app shortcuts
 # notifications: red accent color + round store-badge status-bar icon
 # orders: order-status / replies pop up at the top (high-importance channel), checked every minute while the app is open and every 30 min when closed
+# push: instant notifications through Firebase Cloud Messaging (reads .github/firebase/google-services.json; polling stays as a fallback)
 name: Build Android APK
 
 on:
@@ -24,6 +25,7 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/build-apk.yml"
+      - ".github/firebase/google-services.json"
 
 permissions:
   contents: write
@@ -129,6 +131,8 @@ jobs:
           dependencies {
               implementation 'androidx.core:core:1.13.1'
               implementation 'com.google.android.play:review:2.0.2'
+              implementation platform('com.google.firebase:firebase-bom:33.7.0')
+              implementation 'com.google.firebase:firebase-messaging'
           }
           EOF
 
@@ -184,6 +188,21 @@ jobs:
                       android:name=".OffersJob"
                       android:permission="android.permission.BIND_JOB_SERVICE"
                       android:exported="false" />
+
+                  <!-- إشعارات فورية من Firebase (حالة الطلب والردود) -->
+                  <service
+                      android:name=".PushService"
+                      android:exported="false">
+                      <intent-filter>
+                          <action android:name="com.google.firebase.MESSAGING_EVENT" />
+                      </intent-filter>
+                  </service>
+                  <meta-data
+                      android:name="com.google.firebase.messaging.default_notification_channel_id"
+                      android:value="orders_v1" />
+                  <meta-data
+                      android:name="com.google.firebase.messaging.default_notification_icon"
+                      android:resource="@drawable/ic_stat_notify" />
 
                   <provider
                       android:name="androidx.core.content.FileProvider"
@@ -424,6 +443,8 @@ jobs:
                   }, 15000);
                   /* إشعارات العروض: بنسأل السيرفر كل كام ساعة لو فيه عرض جديد */
                   try { OffersJob.ensureScheduled(this); } catch (Exception e) { /* ignore */ }
+                  /* الإشعارات الفورية: نسجّل "عنوان" الموبايل على حساب العميل */
+                  try { Push.sync(this); } catch (Throwable e) { /* ignore */ }
                   /* أول مرة يفتح التطبيق: نطلب إذن الإشعارات (أندرويد 13+) بعد ما يشوف المتجر */
                   new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                       @Override public void run() { askNotificationPermissionOnce(); }
@@ -699,6 +720,10 @@ jobs:
                   @JavascriptInterface
                   public void setCustomer(String id, String pass) {
                       OffersJob.setCustomer(getApplicationContext(), id, pass);
+                      /* العميل سجّل دخول: نطلب إذن الإشعارات عشان حالة طلبه توصله */
+                      if (id != null && id.length() > 0) runOnUiThread(new Runnable() {
+                          @Override public void run() { askNotificationPermissionOnce(); }
+                      });
                   }
                   /* تقييم التطبيق على جوجل بلاي من جوه التطبيق */
                   @JavascriptInterface
@@ -1360,15 +1385,36 @@ jobs:
               /* حساب العميل اللي في التطبيق (بتتبعته الصفحة) */
               static void setCustomer(Context c, String id, String pass) {
                   SharedPreferences sp = c.getSharedPreferences(PREFS, MODE_PRIVATE);
-                  String old = sp.getString("cid", "");
+                  String old = sp.getString("cid", ""), oldPass = sp.getString("cpass", "");
                   SharedPreferences.Editor ed = sp.edit();
                   if (id == null || id.length() == 0 || pass == null || pass.length() == 0) {
                       ed.remove("cid").remove("cpass").remove("notes_since").apply();
+                      /* خرج من حسابه: الموبايل ده ميوصلهوش إشعارات الحساب تاني */
+                      if (old.length() > 0) { try { Push.unregister(c, old, oldPass); } catch (Throwable e) { /* ignore */ } }
                       return;
                   }
                   ed.putString("cid", id).putString("cpass", pass);
                   if (!id.equals(old)) ed.putLong("notes_since", System.currentTimeMillis());
                   ed.apply();
+                  if (old.length() > 0 && !old.equals(id)) { try { Push.unregister(c, old, oldPass); } catch (Throwable e) { /* ignore */ } }
+                  try { Push.sync(c); } catch (Throwable e) { /* ignore */ }
+              }
+
+              /* إشعار اتعرض قبل كده (من Firebase أو من الفحص)؟ عشان ميتكررش مرتين */
+              static synchronized boolean markShown(Context c, String id) {
+                  if (id == null || id.length() == 0) return true;
+                  SharedPreferences sp = c.getSharedPreferences(PREFS, MODE_PRIVATE);
+                  String s = sp.getString("shown_ids", "");
+                  if (("|" + s + "|").contains("|" + id + "|")) return false;
+                  String n = s.length() == 0 ? id : s + "|" + id;
+                  String[] parts = n.split("\\|");
+                  if (parts.length > 80) {
+                      StringBuilder sb = new StringBuilder();
+                      for (int i = parts.length - 80; i < parts.length; i++) { if (sb.length() > 0) sb.append('|'); sb.append(parts[i]); }
+                      n = sb.toString();
+                  }
+                  sp.edit().putString("shown_ids", n).apply();
+                  return true;
               }
 
               /* إشعارات العميل نفسه: حالة طلبه (اتجهز/خرج للشحن/وصل) وردود المتجر */
@@ -1426,7 +1472,10 @@ jobs:
                               title = "💬 رد على استفسارك";
                               body = it.optString("message", "");
                           }
-                          show(c, it.optString("id", "" + at), title, body.length() > 0 ? body : "متجر آل عبده", link, !"stock".equals(kind));
+                          String sid = it.optString("id", "" + at);
+                          if ("preq".equals(kind)) sid = sid + "@" + at;
+                          if (!markShown(c, sid)) continue;
+                          show(c, sid, title, body.length() > 0 ? body : "متجر آل عبده", link, !"stock".equals(kind));
                           shown++;
                       }
                   }
@@ -1473,6 +1522,135 @@ jobs:
           }
           EOF
 
+          cat > $P/app/src/main/java/com/alabdotoys/app/Push.java <<'EOF'
+          package com.alabdotoys.app;
+
+          import android.content.Context;
+          import android.content.SharedPreferences;
+
+          import com.google.firebase.FirebaseApp;
+          import com.google.firebase.messaging.FirebaseMessaging;
+
+          import java.io.OutputStream;
+          import java.net.HttpURLConnection;
+          import java.net.URL;
+
+          import org.json.JSONObject;
+
+          /* الإشعارات الفورية (Firebase Cloud Messaging): جوجل بتدي الموبايل "عنوان"
+             (token)، وإحنا بنسجّله على حساب العميل في السيرفر. لما حالة طلبه تتغير
+             السيرفر بيبعت الإشعار للعنوان ده على طول، حتى لو التطبيق مقفول.
+             لو ملف إعدادات Firebase مش موجود في البناء، الحاجات دي كلها بتتجاهل
+             والتطبيق بيكمّل على الفحص الدوري زي الأول. */
+          public class Push {
+              static final String API = "https://alabdo-toys.com/api/push-token";
+
+              static boolean ready(Context c) {
+                  try { return !FirebaseApp.getApps(c).isEmpty(); } catch (Throwable t) { return false; }
+              }
+
+              static void sync(final Context c) {
+                  if (!ready(c)) return;
+                  final Context app = c.getApplicationContext();
+                  try {
+                      FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
+                          if (task.isSuccessful() && task.getResult() != null) register(app, task.getResult(), false);
+                      });
+                  } catch (Throwable t) { /* ignore */ }
+              }
+
+              static void register(final Context c, final String token, boolean force) {
+                  SharedPreferences sp = c.getSharedPreferences(OffersJob.PREFS, Context.MODE_PRIVATE);
+                  final String cid = sp.getString("cid", ""), cpass = sp.getString("cpass", "");
+                  if (cid.length() == 0 || cpass.length() == 0 || token == null || token.length() == 0) return;
+                  long last = sp.getLong("push_reg_at", 0L);
+                  if (!force && (cid + "|" + token).equals(sp.getString("push_reg", ""))
+                          && System.currentTimeMillis() - last < 3L * 24L * 60L * 60L * 1000L) return;
+                  new Thread(() -> {
+                      if (call("register", cid, cpass, token)) {
+                          c.getSharedPreferences(OffersJob.PREFS, Context.MODE_PRIVATE).edit()
+                              .putString("push_reg", cid + "|" + token)
+                              .putLong("push_reg_at", System.currentTimeMillis()).apply();
+                      }
+                  }).start();
+              }
+
+              static void unregister(final Context c, final String cid, final String cpass) {
+                  if (cid == null || cid.length() == 0) return;
+                  c.getSharedPreferences(OffersJob.PREFS, Context.MODE_PRIVATE).edit().remove("push_reg").remove("push_reg_at").apply();
+                  if (!ready(c)) return;
+                  try {
+                      FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
+                          if (task.isSuccessful() && task.getResult() != null) {
+                              final String tok = task.getResult();
+                              new Thread(() -> call("remove", cid, cpass, tok)).start();
+                          }
+                      });
+                  } catch (Throwable t) { /* ignore */ }
+              }
+
+              static boolean call(String action, String cid, String cpass, String token) {
+                  HttpURLConnection con = null;
+                  try {
+                      con = (HttpURLConnection) new URL(API).openConnection();
+                      con.setRequestMethod("POST");
+                      con.setConnectTimeout(15000);
+                      con.setReadTimeout(15000);
+                      con.setDoOutput(true);
+                      con.setRequestProperty("Content-Type", "application/json");
+                      con.setRequestProperty("User-Agent", "AlAbdoApp/5 push");
+                      con.setRequestProperty("X-Customer-Id", cid);
+                      con.setRequestProperty("X-Customer-Pass", cpass);
+                      JSONObject b = new JSONObject();
+                      b.put("token", token);
+                      b.put("action", action);
+                      b.put("platform", "android");
+                      OutputStream os = con.getOutputStream();
+                      os.write(b.toString().getBytes("UTF-8"));
+                      os.close();
+                      return con.getResponseCode() == 200;
+                  } catch (Exception e) {
+                      return false;
+                  } finally {
+                      if (con != null) con.disconnect();
+                  }
+              }
+          }
+          EOF
+
+          cat > $P/app/src/main/java/com/alabdotoys/app/PushService.java <<'EOF'
+          package com.alabdotoys.app;
+
+          import com.google.firebase.messaging.FirebaseMessagingService;
+          import com.google.firebase.messaging.RemoteMessage;
+
+          import java.util.Map;
+
+          /* بيستقبل الإشعار الفوري من Firebase ويعرضه فوق الشاشة (قناة "طلباتك وردودنا") */
+          public class PushService extends FirebaseMessagingService {
+              @Override
+              public void onMessageReceived(RemoteMessage msg) {
+                  Map<String, String> d = msg.getData();
+                  if (d == null || d.isEmpty()) return;
+                  String id = d.get("id");
+                  String kind = d.get("kind") == null ? "" : d.get("kind");
+                  String title = d.get("title") == null ? "متجر آل عبده" : d.get("title");
+                  String body = d.get("body") == null ? "" : d.get("body");
+                  String link = d.get("link") == null ? "home" : d.get("link");
+                  if (id == null || id.length() == 0) id = "push" + System.currentTimeMillis();
+                  if ("preq".equals(kind) && d.get("at") != null) id = id + "@" + d.get("at");
+                  if (!OffersJob.notifOn(this)) return;
+                  if (!OffersJob.markShown(this, id)) return;
+                  OffersJob.show(this, id, title, body.length() > 0 ? body : "متجر آل عبده", link, !"stock".equals(kind));
+              }
+
+              @Override
+              public void onNewToken(String token) {
+                  Push.register(getApplicationContext(), token, true);
+              }
+          }
+          EOF
+
       - name: Generate icons from the site's icons
         run: |
           pip install --quiet pillow
@@ -1515,6 +1693,37 @@ jobs:
           Image.open("icon-512.png").convert("RGBA").resize((256, 256), Image.LANCZOS).save(os.path.join(nd, "notif_logo.png"))
           print("notification icons ok")
           print("icons ok")
+          EOF
+
+      - name: Firebase config (instant notifications)
+        run: |
+          python3 - <<'EOF'
+          import json, os
+          src = ".github/firebase/google-services.json"
+          res = os.path.join(os.environ["P"], "app/src/main/res/values")
+          if not os.path.exists(src):
+              print("no google-services.json - building without instant notifications")
+              raise SystemExit(0)
+          g = json.load(open(src, encoding="utf-8"))
+          pi = g.get("project_info", {})
+          cl = [c for c in g.get("client", []) if c.get("client_info", {}).get("android_client_info", {}).get("package_name") == "com.alabdotoys.app"]
+          if not cl:
+              print("google-services.json has no client for com.alabdotoys.app - skipping")
+              raise SystemExit(0)
+          c = cl[0]
+          key = (c.get("api_key") or [{}])[0].get("current_key", "")
+          vals = {
+              "google_app_id": c["client_info"]["mobilesdk_app_id"],
+              "gcm_defaultSenderId": pi.get("project_number", ""),
+              "google_api_key": key,
+              "google_crash_reporting_api_key": key,
+              "project_id": pi.get("project_id", ""),
+              "google_storage_bucket": pi.get("storage_bucket", ""),
+          }
+          from xml.sax.saxutils import escape
+          out = '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n' + "".join('    <string name="%s" translatable="false">%s</string>\n' % (k, escape(str(v))) for k, v in vals.items() if v) + "</resources>\n"
+          open(os.path.join(res, "firebase_config.xml"), "w", encoding="utf-8").write(out)
+          print("firebase config ok for project", vals["project_id"])
           EOF
 
       - name: Build APK + AAB (unsigned)

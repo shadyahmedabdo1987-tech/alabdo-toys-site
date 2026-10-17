@@ -21,6 +21,11 @@ export async function onRequestPost({ request, env }){
   var acc = await requireCustomer(request, env);
   if(!acc) return json({ ok:false, error:"unauthorized" }, 401);
   var b = await bodyOf(request);
+  /* the app page says "I'm open" (for the admin card history) */
+  if(b && b.action === "ping"){
+    await logPush(env, { a: "open", cid: String(acc.identifier).toLowerCase(), nat: String(b.nat || "").slice(0, 20) });
+    return json({ ok:true });
+  }
   var token = String(b && b.token || "");
   if(!TOKEN_RE.test(token)) return json({ ok:false, error:"bad_token" }, 400);
   /* logout from the app: {token, action:"remove"} (POST, because some phones

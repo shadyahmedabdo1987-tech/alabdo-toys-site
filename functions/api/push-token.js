@@ -11,7 +11,7 @@
                                            customer's devices
    (ASCII-only comments on purpose, same as _lib.js.) */
 import { json, requireAdmin, requireCustomer, getList } from "../_lib.js";
-import { addToken, removeToken, getTokens, tokensFor, sendPush, pushConfigured, pushInfo } from "../_push.js";
+import { addToken, removeToken, getTokens, tokensFor, sendPush, pushConfigured, pushInfo, logPush, getPushLog } from "../_push.js";
 
 var TOKEN_RE = /^[\w:\-.]{20,4096}$/;
 
@@ -27,9 +27,11 @@ export async function onRequestPost({ request, env }){
      can't send a body with DELETE) */
   if(b && b.action === "remove"){
     var gone = await removeToken(env, acc.identifier, token);
+    await logPush(env, { a: "remove", cid: String(acc.identifier).toLowerCase(), n: gone, tk: token.slice(-6) });
     return json({ ok:true, removed: gone });
   }
   var n = await addToken(env, acc.identifier, token);
+  await logPush(env, { a: "register", cid: String(acc.identifier).toLowerCase(), n: n, tk: token.slice(-6) });
   return json({ ok:true, devices: n, configured: pushConfigured(env) });
 }
 
@@ -40,6 +42,7 @@ export async function onRequestDelete({ request, env }){
   var token = String(b && b.token || "");
   if(!TOKEN_RE.test(token)) return json({ ok:false, error:"bad_token" }, 400);
   var removed = await removeToken(env, acc.identifier, token);
+  await logPush(env, { a: "remove", cid: String(acc.identifier).toLowerCase(), n: removed, tk: token.slice(-6) });
   return json({ ok:true, removed: removed });
 }
 
@@ -58,7 +61,8 @@ export async function onRequestGet({ request, env }){
   var people = Object.keys(by).map(function(k){ var e = by[k]; e.name = names[k] || ""; return e; })
     .sort(function(a, b){ return b.at - a.at; }).slice(0, 50);
   var info = await pushInfo(env);
-  return json({ ok:true, configured: pushConfigured(env), devices: list.length, customers: people.length, people: people, project: info.project, keyOk: info.keyOk, last: info.last });
+  var log = (await getPushLog(env)).slice(-8).reverse();
+  return json({ ok:true, configured: pushConfigured(env), devices: list.length, customers: people.length, people: people, project: info.project, keyOk: info.keyOk, last: info.last, log: log });
 }
 
 export async function onRequestPut({ request, env }){

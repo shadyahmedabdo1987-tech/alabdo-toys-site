@@ -4,12 +4,14 @@
    - POST   (customer headers) {token}  -> save this device for the account
    - POST   (customer headers) {token, action:"remove"} or DELETE {token}
                                         -> forget it (logout)
-   - GET    ?status=1 (admin)           -> {configured, devices, customers}
+   - GET    ?status=1 (admin)           -> {configured, devices, customers,
+                                           people:[{id,name,devices,at}],
+                                           project, last send result}
    - PUT    (admin) {phone}             -> send a test notification to that
                                            customer's devices
    (ASCII-only comments on purpose, same as _lib.js.) */
-import { json, requireAdmin, requireCustomer } from "../_lib.js";
-import { addToken, removeToken, getTokens, tokensFor, sendPush, pushConfigured } from "../_push.js";
+import { json, requireAdmin, requireCustomer, getList } from "../_lib.js";
+import { addToken, removeToken, getTokens, tokensFor, sendPush, pushConfigured, pushInfo } from "../_push.js";
 
 var TOKEN_RE = /^[\w:\-.]{20,4096}$/;
 
@@ -44,9 +46,19 @@ export async function onRequestDelete({ request, env }){
 export async function onRequestGet({ request, env }){
   var admin = await requireAdmin(request, env);
   if(!admin) return json({ ok:false, error:"unauthorized" }, 401);
-  var list = await getTokens(env), seen = {};
-  list.forEach(function(x){ if(x && x.cid) seen[x.cid] = 1; });
-  return json({ ok:true, configured: pushConfigured(env), devices: list.length, customers: Object.keys(seen).length });
+  var list = await getTokens(env), by = {};
+  list.forEach(function(x){
+    if(!x || !x.cid) return;
+    var e = by[x.cid] || (by[x.cid] = { id: x.cid, devices: 0, at: 0 });
+    e.devices++; if((+x.at || 0) > e.at) e.at = +x.at || 0;
+  });
+  /* names of the customers whose phones are registered */
+  var names = {};
+  try{ (await getList(env, "customers")).forEach(function(c){ if(c && c.identifier) names[String(c.identifier).toLowerCase()] = c.name || ""; }); }catch(e){}
+  var people = Object.keys(by).map(function(k){ var e = by[k]; e.name = names[k] || ""; return e; })
+    .sort(function(a, b){ return b.at - a.at; }).slice(0, 50);
+  var info = await pushInfo(env);
+  return json({ ok:true, configured: pushConfigured(env), devices: list.length, customers: people.length, people: people, project: info.project, keyOk: info.keyOk, last: info.last });
 }
 
 export async function onRequestPut({ request, env }){
@@ -60,7 +72,7 @@ export async function onRequestPut({ request, env }){
   if(!toks.length) return json({ ok:false, error:"no_devices" }, 404);
   try{
     var r = await sendPush(env, toks, { id: "test_" + Date.now().toString(36), kind: "order", title: "🔔 تجربة إشعارات متجر آل عبده", body: "لو الرسالة دي ظهرت فوق الشاشة يبقى الإشعارات الفورية شغالة ✅", link: "orders", at: String(Date.now()) });
-    return json({ ok: r.sent > 0, sent: r.sent, failed: r.failed, devices: toks.length });
+    return json({ ok: r.sent > 0, sent: r.sent, failed: r.failed, removed: r.removed, devices: toks.length, detail: r.error || "" });
   }catch(e){
     return json({ ok:false, error:"send_failed", detail: String(e && e.message || e).slice(0, 200) }, 502);
   }

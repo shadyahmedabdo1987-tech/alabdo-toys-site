@@ -8739,13 +8739,22 @@ function v2SyncNativeCustomer(){
     if(c && c.identifier && c.password){
       /* مرة واحدة: نخلي الموبايل يسجّل نفسه تاني للإشعارات الفورية (لو كان
          تسجيله اتمسح من السيرفر قبل تصليح تبديل الحسابات) */
-      var RK = "aa_push_resync_v1";
-      var need = false; try{ need = localStorage.getItem(RK) !== String(c.identifier); }catch(x){}
+      var RK = "aa_push_resync_v2", nowMs = Date.now();
+      var need = true;
+      try{ var last = String(localStorage.getItem(RK) || "").split("|"); need = last[0] !== String(c.identifier) || nowMs - (+last[1] || 0) > 6 * 3600000; }catch(x){}
       if(need){
-        try{ localStorage.setItem(RK, String(c.identifier)); }catch(x){}
+        try{ localStorage.setItem(RK, String(c.identifier) + "|" + nowMs); }catch(x){}
         n.setCustomer("", "");
       }
       n.setCustomer(String(c.identifier), String(c.password));
+      /* نبلغ السيرفر إن التطبيق اتفتح (بيظهر في كارت الإشعارات الفورية) */
+      try{
+        var PK = "aa_push_ping", lp = +localStorage.getItem(PK) || 0;
+        if(need || nowMs - lp > 10 * 60000){
+          localStorage.setItem(PK, String(nowMs));
+          fetch("/api/push-token", { method:"POST", headers: Object.assign({ "content-type":"application/json" }, customerAuthHeaders()), body: JSON.stringify({ action:"ping", nat: need ? "resync" : "open" }) }).catch(function(){});
+        }
+      }catch(x){}
     } else n.setCustomer("", "");
   }catch(e){}
 }
@@ -13102,7 +13111,8 @@ function pushStatusLoad(){
       }
       var lg = document.getElementById("pushLog");
       if(lg) lg.innerHTML = (res.log && res.log.length) ? '<b>'+t("آخر حركات تسجيل الموبايلات:")+'</b><br>' + res.log.map(function(e){
-        return (e.a === "register" ? "📲 "+t("اتسجّل") : "📴 "+t("خروج")) + ' <span dir="ltr">'+escHtml(e.cid || "")+'</span> · '+escHtml(bcWhen(e.at));
+        var lb = e.a === "register" ? "📲 "+t("اتسجّل") : e.a === "open" ? "👀 "+t("فتح التطبيق") + (e.nat === "resync" ? " ("+t("بيعيد التسجيل")+")" : "") : "📴 "+t("خروج");
+        return lb + ' <span dir="ltr">'+escHtml(e.cid || "")+'</span> · '+escHtml(bcWhen(e.at));
       }).join("<br>") : '';
     })
     .catch(function(e){ box.innerHTML = '<span class="bc-pill is-off">'+(e === "missing" ? t("⚠️ ارفع ملف push-token.js الأول") : t("تعذر التحميل."))+'</span>'; });

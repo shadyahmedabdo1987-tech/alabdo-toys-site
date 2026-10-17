@@ -73,10 +73,29 @@ async function accessToken(env, sa){
 
 export async function getTokens(env){ return getList(env, TOKENS_KEY); }
 
-export async function addToken(env, customerId, token){
-  var cid = String(customerId || "").toLowerCase();
-  var list = (await getTokens(env)).filter(function(x){ return x && x.t !== token; });
-  list.push({ cid: cid, tail: tailOf(customerId), t: token, at: Date.now() });
+function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+/* KV accepts about one write per second on the same key, so when a phone
+   switches accounts (remove + register arrive together) the second write
+   can fail or overwrite the first. Retry, and remember the latest owner of
+   every device in its own small key ("ptr:<hash>") so a late "remove" for
+   the old account can never wipe the new registration. */
+async function saveTokens(env, list){
+  for(var i = 0; i < 4; i++){
+    try{ await saveList(env, TOKENS_KEY, list); return true; }
+    catch(e){ await sleep(1100); }
+  }
+  return false;
+}
+async function tokenKey(token){
+  var d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(String(token)));
+  return "ptr:" + Array.from(new Uint8Array(d)).slice(0, 16).map(function(b){ return b.toString(16).padStart(2, "0"); }).join("");
+}
+async function getOwner(env, token){
+  try{ return JSON.parse(await env.STORE_KV.get(await tokenKey(token)) || "null"); }catch(e){ return null; }
+}
+function applyAdd(list, cid, tail, token, at){
+  list = list.filter(function(x){ return x && x.t !== token; });
+  list.push({ cid: cid, tail: tail, t: token, at: at });
   /* keep the newest few devices per customer */
   var mine = list.filter(function(x){ return x.cid === cid; });
   if(mine.length > MAX_PER_CUSTOMER){
@@ -84,15 +103,41 @@ export async function addToken(env, customerId, token){
     list = list.filter(function(x){ return drop.indexOf(x.t) === -1; });
   }
   if(list.length > 20000) list = list.slice(list.length - 20000);
-  await saveList(env, TOKENS_KEY, list);
-  return mine.length;
+  return list;
+}
+
+export async function addToken(env, customerId, token){
+  var cid = String(customerId || "").toLowerCase(), tail = tailOf(customerId), at = Date.now();
+  try{ await env.STORE_KV.put(await tokenKey(token), JSON.stringify({ cid: cid, tail: tail, at: at }), { expirationTtl: 60 * 60 * 24 * 400 }); }catch(e){}
+  var list = applyAdd(await getTokens(env), cid, tail, token, at);
+  await saveTokens(env, list);
+  /* a moment later make sure nothing written at the same time removed it */
+  await sleep(1500);
+  var again = await getTokens(env);
+  if(!again.some(function(x){ return x && x.t === token && x.cid === cid; })){
+    var own = await getOwner(env, token);
+    if(!own || own.cid === cid) await saveTokens(env, applyAdd(again, cid, tail, token, at));
+  }
+  return list.filter(function(x){ return x.cid === cid; }).length;
 }
 
 export async function removeToken(env, customerId, token){
   var cid = String(customerId || "").toLowerCase();
+  /* the device already belongs to another account (account switch): the
+     new registration moved it, nothing to remove */
+  var own = await getOwner(env, token);
+  if(cid && own && own.cid && own.cid !== cid) return 0;
   var list = await getTokens(env);
   var next = list.filter(function(x){ return !(x && x.t === token && (!cid || x.cid === cid)); });
-  if(next.length !== list.length) await saveList(env, TOKENS_KEY, next);
+  if(next.length === list.length) return 0;
+  await saveTokens(env, next);
+  /* if the phone registered again for another account meanwhile, put it back */
+  await sleep(1500);
+  var now = await getOwner(env, token);
+  if(now && now.cid && now.cid !== cid){
+    var cur = await getTokens(env);
+    if(!cur.some(function(x){ return x && x.t === token; })) await saveTokens(env, applyAdd(cur, now.cid, now.tail || "", token, now.at || Date.now()));
+  }
   return list.length - next.length;
 }
 
@@ -111,10 +156,15 @@ export async function tokensFor(env, customerId, phoneTail){
 export async function sendPush(env, tokens, data){
   var sa = serviceAccount(env);
   if(!sa || !tokens || !tokens.length) return { sent: 0, failed: 0, configured: !!sa };
-  var at = await accessToken(env, sa);
+  var at;
+  try{ at = await accessToken(env, sa); }
+  catch(e){
+    try{ await env.STORE_KV.put("fcm_last", JSON.stringify({ at: Date.now(), sent: 0, failed: tokens.length, removed: 0, kind: String(data && data.kind || ""), err: "key " + String(e && e.message || e).slice(0, 200) })); }catch(x){}
+    throw e;
+  }
   var payload = {};
   Object.keys(data || {}).forEach(function(k){ if(data[k] != null) payload[k] = String(data[k]).slice(0, 900); });
-  var sent = 0, failed = 0, dead = [];
+  var sent = 0, failed = 0, dead = [], lastErr = "";
   var uniq = [];
   tokens.forEach(function(x){ var t = typeof x === "string" ? x : x.t; if(t && uniq.indexOf(t) === -1) uniq.push(t); });
   await Promise.all(uniq.map(async function(t){
@@ -127,8 +177,11 @@ export async function sendPush(env, tokens, data){
       if(res.ok){ sent++; return; }
       failed++;
       var txt = await res.text().catch(function(){ return ""; });
-      if(res.status === 404 || /UNREGISTERED|registration-token-not-registered|INVALID_ARGUMENT/.test(txt)) dead.push(t);
-    }catch(e){ failed++; }
+      if(!lastErr) lastErr = res.status + " " + txt.replace(/\s+/g, " ").slice(0, 300);
+      /* only forget a device when Google says the app is gone from it
+         (uninstalled / token expired) - never for other errors */
+      if(/UNREGISTERED|registration-token-not-registered|not a valid FCM registration token/i.test(txt)) dead.push(t);
+    }catch(e){ failed++; if(!lastErr) lastErr = "net " + String(e && e.message || e).slice(0, 200); }
   }));
   if(dead.length){
     try{
@@ -137,7 +190,16 @@ export async function sendPush(env, tokens, data){
       if(next.length !== list.length) await saveList(env, TOKENS_KEY, next);
     }catch(e){}
   }
-  return { sent: sent, failed: failed, removed: dead.length, configured: true };
+  /* last send result, shown in the admin card (no secrets in it) */
+  try{ await env.STORE_KV.put("fcm_last", JSON.stringify({ at: Date.now(), sent: sent, failed: failed, removed: dead.length, kind: String(payload.kind || ""), err: lastErr })); }catch(e){}
+  return { sent: sent, failed: failed, removed: dead.length, configured: true, error: lastErr };
+}
+
+/* project id of the server key + last send result (for the admin card) */
+export async function pushInfo(env){
+  var sa = serviceAccount(env), last = null;
+  try{ last = JSON.parse(await env.STORE_KV.get("fcm_last") || "null"); }catch(e){}
+  return { project: sa ? sa.project_id : "", keyOk: !!sa, last: last };
 }
 
 /* Push for a bell note (order status / reply / back in stock) */

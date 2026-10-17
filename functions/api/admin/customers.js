@@ -1,4 +1,4 @@
-import { json, getCustomers, saveCustomers, sha256Hex, requireAdmin } from "../../_lib.js";
+import { json, getCustomers, saveCustomers, sha256Hex, requireAdmin, getList, saveList } from "../../_lib.js";
 
 /* Strips the password hash before sending a customer account back to the
    admin dashboard - the admin can see and edit everything else, but there
@@ -73,8 +73,19 @@ export async function onRequestDelete({ request, env }){
   if(!id) return json({ ok:false, error:"missing_id" }, 400);
 
   var list = await getCustomers(env);
+  var gone = list.find(function(c){ return c.id === id; });
   var next = list.filter(function(c){ return c.id !== id; });
   if(next.length === list.length) return json({ ok:false, error:"not_found" }, 404);
   await saveCustomers(env, next);
+  /* the deleted customer's phones stop getting instant notifications
+     (the app itself logs out on its next check, within a minute) */
+  try{
+    var cid = String(gone && gone.identifier || "").toLowerCase();
+    if(cid){
+      var toks = await getList(env, "pushTokens");
+      var keep = toks.filter(function(x){ return !(x && x.cid === cid); });
+      if(keep.length !== toks.length) await saveList(env, "pushTokens", keep);
+    }
+  }catch(e){}
   return json({ ok:true });
 }

@@ -8699,6 +8699,39 @@ function startRateBannerWatch(){
 startRateBannerWatch();
 
 /* ---------- ربط بإشعارات التطبيق (حالة الطلب والردود) ---------- */
+/* ---------- لو الإدارة مسحت حساب العميل (أو غيّرت رقمه/باسورده) ----------
+   التطبيق والموقع بيسألوا السيرفر "حسابي لسه موجود؟" أول ما يفتحوا، ولما
+   العميل يرجع للتطبيق، وكل 30 ثانية وهو مفتوح. لو الحساب اتمسح بيخرج منه
+   فورًا ويرجع كزائر من غير حساب. (لو النت قاطع مش بيعمل حاجة.) */
+var aaSessChecking = false;
+function aaCheckCustomerSession(){
+  try{
+    if(aaSessChecking || document.visibilityState === "hidden") return;
+    var c = getCustomerProfile(); if(!c || !c.identifier || !c.password) return;
+    aaSessChecking = true;
+    fetch("/api/customers/session", { headers: customerAuthHeaders(), cache:"no-store" })
+      .then(function(r){ return r.json().then(function(j){ return { status:r.status, body:j }; }, function(){ return { status:r.status, body:null }; }); })
+      .then(function(res){
+        aaSessChecking = false;
+        var err = res.body && res.body.error;
+        if(res.status !== 401 || (err !== "gone" && err !== "changed")) return;
+        var now = getCustomerProfile();
+        if(!now || String(now.identifier) !== String(c.identifier)) return; /* اتغير الحساب في النص */
+        clearCustomerProfile(); FAVORITES = {};
+        try{ refreshFavoriteViews(); }catch(e){}
+        try{ updateAccountLabel(); }catch(e){}
+        try{ closeAllPanels(); }catch(e){}
+        try{ goToView("home"); }catch(e){}
+        showToast(err === "gone" ? t("⚠️ حسابك اتمسح من المتجر، وخرجت منه.") : t("⚠️ بيانات دخولك اتغيّرت، سجّل دخولك تاني."));
+      })
+      .catch(function(){ aaSessChecking = false; });
+  }catch(e){ aaSessChecking = false; }
+}
+setTimeout(aaCheckCustomerSession, 2500);
+setInterval(aaCheckCustomerSession, 30000);
+document.addEventListener("visibilitychange", function(){ if(document.visibilityState === "visible") setTimeout(aaCheckCustomerSession, 300); });
+window.addEventListener("focus", function(){ setTimeout(aaCheckCustomerSession, 300); });
+
 function v2SyncNativeCustomer(){
   try{
     var n = window.AlAbdoNative; if(!n || typeof n.setCustomer !== "function") return;

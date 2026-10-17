@@ -2621,6 +2621,15 @@ html[data-theme="dark"] .os-pill{filter:brightness(.9) saturate(1.2);}
 .bc-h{font-size:16px; margin:6px 0 10px;}
 .push-st{display:flex; flex-wrap:wrap; gap:6px; align-items:center;}
 .push-test{display:flex; gap:8px; align-items:center;}
+.push-people{display:flex; flex-direction:column; gap:6px; margin-top:10px;}
+.push-people:empty, .push-last:empty{display:none;}
+.push-person{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 12px; border-radius:12px; background:var(--surface-2); font-size:13px;}
+.push-person b{font-weight:800; color:var(--ink);}
+.push-person .pp-ph{direction:ltr; color:var(--ink-soft); font-size:12px;}
+.push-person .pp-meta{color:var(--ink-faint); font-size:11.5px; white-space:nowrap; text-align:end;}
+.push-last{margin-top:10px; padding:8px 12px; border-radius:12px; font-size:12.5px; line-height:1.6; background:var(--surface-2); color:var(--ink-soft);}
+.push-last.is-bad{background:#fff3e0; color:#a65b00;}
+.push-last code{direction:ltr; display:block; font-size:11px; word-break:break-all; opacity:.85; margin-top:4px;}
 .push-test input{flex:1; min-width:0; padding:9px 12px; border-radius:12px; border:1.5px solid var(--border); background:var(--surface-3); color:var(--ink); font:inherit; font-size:14px; direction:ltr; text-align:start;}
 .bc-rep{display:flex; gap:6px; padding:4px; border-radius:14px; background:var(--surface-3); border:1.5px solid var(--border);}
 .bc-rep button{flex:1; border:0; background:none; color:var(--ink-soft); font:inherit; font-size:13.5px; font-weight:800; padding:9px 8px; border-radius:10px; cursor:pointer;}
@@ -3762,6 +3771,8 @@ try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("messa
         <h3 class="bc-h" data-i18n>⚡ الإشعارات الفورية (حالة الطلب)</h3>
         <div class="admin-card bc-card" id="pushCard">
           <div class="push-st" id="pushStatus"><span class="bc-pill" data-i18n>جاري التحميل...</span></div>
+          <div class="push-people" id="pushPeople"></div>
+          <div class="push-last" id="pushLast"></div>
           <p class="apr-note" data-i18n>لما تغيّر حالة طلب أو ترد على عميل، الإشعار بيوصل لموبايله في ثواني حتى لو التطبيق مقفول. جرّب: اكتب رقم موبايل عميل (أو رقمك لو عامل حساب عميل على موبايلك) وابعتله إشعار تجربة.</p>
           <div class="push-test"><input type="tel" id="pushTestPhone" inputmode="numeric" placeholder="01xxxxxxxxx" autocomplete="off"><button type="button" class="btn btn-outline btn-sm" id="pushTestBtn" data-i18n>🔔 ابعت إشعار تجربة</button></div>
         </div>
@@ -10976,23 +10987,25 @@ function renderAccountModal(){
       });
       return;
     } else {
-      html += '<div class="modal-info" style="padding:30px 24px;">'
-        + '<span style="font-size:34px;">🎉</span>'
-        + '<h3>'+t("تم التسجيل")+'</h3>'
-        + '<p style="color:var(--ink-soft); font-size:13.5px;">'+t("اتعمل حسابك بنجاح. دلوقتي سجّل دخولك برقم الموبايل أو الإيميل والباسورد اللي اخترته:")+'</p>'
-        + '<div class="hero-ctas" style="margin-top:16px; justify-content:flex-start;">'
-          + '<button class="btn btn-primary" id="acctContinue" type="button">'+t("تسجيل الدخول الآن")+'</button>'
-        + '</div></div>';
-    }
-    document.getElementById("modalCard").innerHTML = html;
-    document.getElementById("modalCloseBtn").addEventListener("click", closeAllPanels);
-    document.getElementById("acctContinue").addEventListener("click", function(){
-      /* شاشة الدخول اللي بعد كده لازم تفتح فاضية تمامًا - من غير أي بيانات
-         محفوظة من الخطوات اللي فاتت (رقم موبايل، إيميل، كود، رقم سري)،
-         سواء بعد تسجيل حساب جديد أو بعد تغيير الرقم السري. */
+      /* تسجيل عميل جديد: نفس تصميم شاشة "تم استلام طلبك" */
+      haptic("success");
       acctState = { tab:"login", registerResult:null, resetFlow:null };
-      renderAccountModal();
-    });
+      closeAllPanels();
+      var inNow = false;
+      try{ var cp = getCustomerProfile(); inNow = !!(cp && cp.identifier); }catch(x){}
+      aaSuccessPop(inNow ? {
+        title: t("تم إنشاء حسابك بنجاح"),
+        sub: escHtml(t("أهلاً بيك في متجر آل عبده 🎉")) + '<br>' + escHtml(t("حسابك جاهز وإنت مسجّل دخول دلوقتي، تقدر تطلب وتتابع طلباتك.")),
+        btn: t("ابدأ التسوق"),
+        onDone: function(){ goToView("home"); }
+      } : {
+        title: t("تم إنشاء حسابك بنجاح"),
+        sub: escHtml(t("أهلاً بيك في متجر آل عبده 🎉")) + '<br>' + escHtml(t("دلوقتي سجّل دخولك برقم الموبايل أو الإيميل والباسورد اللي اخترته.")),
+        btn: t("تسجيل الدخول الآن"),
+        onDone: function(go){ if(!go) return; acctState = { tab:"login", registerResult:null, resetFlow:null }; openAccountModal(); }
+      });
+      return;
+    }
     return;
   }
 
@@ -13020,7 +13033,26 @@ function pushStatusLoad(){
           ? '<span class="bc-pill is-on">● '+t("شغالة")+'</span>'
           : '<span class="bc-pill is-off">⏸ '+t("مستنية إعداد Firebase")+'</span>')
         + '<span class="bc-pill">📱 '+fmt(res.devices || 0)+' '+t("موبايل متسجّل")+'</span>'
-        + '<span class="bc-pill">👤 '+fmt(res.customers || 0)+' '+t("عميل")+'</span>';
+        + '<span class="bc-pill">👤 '+fmt(res.customers || 0)+' '+t("عميل")+'</span>'
+        + (res.project ? '<span class="bc-pill">🔑 '+escHtml(res.project)+'</span>' : '');
+      var pp = document.getElementById("pushPeople");
+      if(pp) pp.innerHTML = (res.people || []).map(function(p){
+        return '<div class="push-person"><div><b>'+escHtml(p.name || t("عميل"))+'</b> <span class="pp-ph">'+escHtml(p.id)+'</span></div>'
+          + '<div class="pp-meta">📱 '+fmt(p.devices || 0)+(p.at ? ' · '+escHtml(bcWhen(p.at)) : '')+'</div></div>';
+      }).join("");
+      var pl = document.getElementById("pushLast"), L = res.last;
+      if(pl){
+        if(!L){ pl.className = "push-last"; pl.innerHTML = ""; }
+        else {
+          var bad = !(L.sent > 0) && (L.failed > 0);
+          pl.className = "push-last" + (bad ? " is-bad" : "");
+          pl.innerHTML = t("آخر إشعار فوري")+' ('+escHtml(bcWhen(L.at))+'): '
+            + (L.sent > 0 ? '✅ '+t("وصل لـ")+' '+fmt(L.sent)+' '+t("موبايل") : '⚠️ '+t("موصلش"))
+            + (L.failed > 0 ? ' · '+t("فشل")+' '+fmt(L.failed) : '')
+            + (L.removed > 0 ? ' · '+t("اتشال")+' '+fmt(L.removed)+' '+t("موبايل التطبيق اتمسح منه") : '')
+            + (L.err ? '<code>'+escHtml(L.err)+'</code>' : '');
+        }
+      }
     })
     .catch(function(e){ box.innerHTML = '<span class="bc-pill is-off">'+(e === "missing" ? t("⚠️ ارفع ملف push-token.js الأول") : t("تعذر التحميل."))+'</span>'; });
 }
@@ -13033,7 +13065,9 @@ document.getElementById("pushTestBtn").addEventListener("click", function(){
     .then(function(res){
       btn.disabled = false;
       var b = res.body || {};
+      setTimeout(pushStatusLoad, 400);
       if(b.ok) showToast("✅ "+t("اتبعت — بص على الموبايل"));
+      else if(b.failed) showToast("⚠️ "+t("جوجل رفضت الإرسال — السبب مكتوب في الكارت"));
       else if(b.error === "not_configured") showToast(t("⚠️ الإشعارات الفورية لسه مستنية إعداد Firebase"));
       else if(b.error === "no_devices") showToast(t("⚠️ الرقم ده مفيش عليه موبايل متسجّل — العميل يفتح التطبيق بحسابه الأول"));
       else showToast(t("⚠️ تعذر الإرسال، جرّب تاني."));

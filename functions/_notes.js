@@ -1,4 +1,5 @@
 import { getList, saveList } from "./_lib.js";
+import { pushForNote } from "./_push.js";
 
 /* Customer notifications ("the bell"): admin replies to contact-us inquiries
    and "back in stock" messages. Product-request replies live on the request
@@ -33,6 +34,8 @@ export async function addNote(env, note){
   list.push(item);
   if(list.length > MAX_KEEP) list = list.slice(list.length - MAX_KEEP);
   await saveNotes(env, list);
+  /* instant push to the customer's phone (if Firebase is set up) */
+  try{ await pushForNote(env, item); }catch(e){}
   return item;
 }
 

@@ -127,6 +127,9 @@ export async function removeToken(env, customerId, token){
      new registration moved it, nothing to remove */
   var own = await getOwner(env, token);
   if(cid && own && own.cid && own.cid !== cid) return 0;
+  /* the same phone registered this account a few seconds ago: this "remove"
+     is a leftover from a re-login, ignore it */
+  if(own && own.cid === cid && Date.now() - (+own.at || 0) < 20000) return 0;
   var list = await getTokens(env);
   var next = list.filter(function(x){ return !(x && x.t === token && (!cid || x.cid === cid)); });
   if(next.length === list.length) return 0;
@@ -139,6 +142,20 @@ export async function removeToken(env, customerId, token){
     if(!cur.some(function(x){ return x && x.t === token; })) await saveTokens(env, applyAdd(cur, now.cid, now.tail || "", token, now.at || Date.now()));
   }
   return list.length - next.length;
+}
+
+/* small history of device registrations, for the admin card */
+export async function logPush(env, ev){
+  try{
+    var log = JSON.parse(await env.STORE_KV.get("push_log") || "[]");
+    if(!Array.isArray(log)) log = [];
+    log.push(Object.assign({ at: Date.now() }, ev));
+    if(log.length > 30) log = log.slice(log.length - 30);
+    await env.STORE_KV.put("push_log", JSON.stringify(log));
+  }catch(e){}
+}
+export async function getPushLog(env){
+  try{ var l = JSON.parse(await env.STORE_KV.get("push_log") || "[]"); return Array.isArray(l) ? l : []; }catch(e){ return []; }
 }
 
 /* Devices of whoever a note/notification is for (account id or phone) */

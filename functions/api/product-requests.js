@@ -1,4 +1,5 @@
 import { json, getList, saveList, requireAdmin, requireCustomer } from "../_lib.js";
+import { pushConfigured, tokensFor, sendPush } from "../_push.js";
 
 /* "Request a product" (customer asks the store to bring in a toy that is not
    in the catalog). Stored as one array under KV key "productRequests".
@@ -101,6 +102,16 @@ export async function onRequestPost({ request, env }){
       };
       r.seen = false;
       await saveList(env, KEY, all);
+      /* instant push to the customer's phone (if Firebase is set up) */
+      try{
+        if(pushConfigured(env)){
+          var toks = await tokensFor(env, r.customerId, r.phone || r.customerId);
+          if(toks.length){
+            var pid = r.reply.productId && /^\d{1,12}$/.test(String(r.reply.productId)) ? String(r.reply.productId) : "";
+            await sendPush(env, toks, { id: r.id, kind: "preq", title: "💬 رد على طلبك: " + String(r.productName || "").slice(0, 60), body: r.reply.message || (status === "available" ? "المنتج متوفر" : "رد جديد من المتجر"), link: pid ? "p:" + pid : "home", at: String(r.reply.at) });
+          }
+        }
+      }catch(e){}
       return json({ ok:true, request: r });
     }
     return json({ ok:false, error:"bad_request" }, 400);

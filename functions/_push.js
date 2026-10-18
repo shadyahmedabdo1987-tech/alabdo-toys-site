@@ -212,11 +212,35 @@ export async function sendPush(env, tokens, data){
   return { sent: sent, failed: failed, removed: dead.length, configured: true, error: lastErr };
 }
 
+/* One message to every phone subscribed to a topic (app 2.0.25+ subscribes
+   to "offers") - a single request no matter how many customers there are. */
+export async function sendTopic(env, topic, data){
+  var sa = serviceAccount(env);
+  if(!sa) return { ok: false, error: "not_configured" };
+  var payload = {};
+  Object.keys(data || {}).forEach(function(k){ if(data[k] != null) payload[k] = String(data[k]).slice(0, 900); });
+  var res, txt = "";
+  try{
+    var at = await accessToken(env, sa);
+    res = await fetch("https://fcm.googleapis.com/v1/projects/" + encodeURIComponent(sa.project_id) + "/messages:send", {
+      method: "POST",
+      headers: { "authorization": "Bearer " + at, "content-type": "application/json" },
+      body: JSON.stringify({ message: { topic: topic, data: payload, android: { priority: "HIGH", ttl: "86400s" } } })
+    });
+    if(!res.ok) txt = res.status + " " + (await res.text().catch(function(){ return ""; })).replace(/\s+/g, " ").slice(0, 300);
+  }catch(e){ txt = "err " + String(e && e.message || e).slice(0, 200); }
+  var ok = !!(res && res.ok);
+  try{ await env.STORE_KV.put("fcm_last_offer", JSON.stringify({ at: Date.now(), ok: ok, id: String(payload.id || ""), err: txt })); }catch(e){}
+  return { ok: ok, error: txt };
+}
+
 /* project id of the server key + last send result (for the admin card) */
 export async function pushInfo(env){
   var sa = serviceAccount(env), last = null;
+  var lastOffer = null;
   try{ last = JSON.parse(await env.STORE_KV.get("fcm_last") || "null"); }catch(e){}
-  return { project: sa ? sa.project_id : "", keyOk: !!sa, last: last };
+  try{ lastOffer = JSON.parse(await env.STORE_KV.get("fcm_last_offer") || "null"); }catch(e){}
+  return { project: sa ? sa.project_id : "", keyOk: !!sa, last: last, lastOffer: lastOffer };
 }
 
 /* Push for a bell note (order status / reply / back in stock) */

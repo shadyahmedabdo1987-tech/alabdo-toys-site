@@ -34,8 +34,7 @@ export async function onRequestGet({ request, env }){
    سوا. لو معاه هيدرز عميل صحيحة (X-Customer-Id/Pass) الطلب بيترابط
    بحسابه (customerId) عشان يقدر يشوفه بعدين في "طلباتي" بفاتورته
    كاملة؛ لو من غير حساب (ضيف) الطلب برضه بيتسجّل عادي (customerId=null)
-   لكن مش هيظهر لحد إلا الأدمن، وبيتبعت فورًا إشعار بالإيميل لصاحب
-   المتجر عشان محدش يتأخر عليه (شوف sendGuestOrderEmail تحت). Body:
+   لكن مش هيظهر لحد إلا الأدمن (بيظهر فورًا في برنامج الإدارة). Body:
    {items:[{id,name,price,qty}], subtotal, shipping, total, name, phone,
    governorate, address, notes, paymentMethod, paymentProof}. الاسم ورقم
    الموبايل والمحافظة والعنوان إلزاميين للضيف (العميل المسجّل بياناته
@@ -244,13 +243,7 @@ export async function onRequestPost({ request, env }){
     if(!stored && rawProof.length <= 3 * 1024 * 1024) order.paymentProof = rawProof;
   }
 
-  /* بنسجّل نتيجة إرسال إيميل الإشعار (نجح/فشل + كود الاستجابة) على الطلب
-     نفسه (emailDebug) - مش بس بنحاول ونسكت لو فشل زي الأول. ده عشان لو
-     الإيميل معاش يوصل نقدر نشوف السبب بالظبط من صفحة تفاصيل الطلب في
-     لوحة التحكم من غير ما نحتاج نوصل لداشبورد Resend مباشرة. */
-  /* إيميل الإشعار بيتبعت لكل الطلبات: ضيف أو عميل مسجّل (كان الأول للضيف بس). */
-  try{ order.emailDebug = await sendGuestOrderEmail(order, env); }
-  catch(e){ order.emailDebug = { ok:false, error: String((e && e.message) || e) }; }
+  /* إشعار الطلب الجديد بيوصل لصاحب المتجر في برنامج الإدارة (مفيش إيميل). */
 
   var list = await getList(env, "orders");
   list.push(order);
@@ -491,64 +484,6 @@ export async function onRequestDelete({ request, env }){
     if(notesRemoved) await saveNotes(env, keptNotes);
   }catch(e){}
   return json({ ok:true, notesRemoved: notesRemoved });
-}
-
-/* بيبعت إشعار إيميل فوري لصاحب المتجر (shady.ahmed.abdo.1987@gmail.com)
-   لما عميل يعمل طلب من غير ما يسجّل حساب - ده الطلب الوحيد اللي مفيش
-   وسيلة تانية صاحب المتجر يتابعه بيها غير الإيميل، لأن مفيش حساب
-   مرتبط بيه يقدر يتابعه منه زي طلبات العملاء المسجّلين.
-   بيستخدم Resend (استبدلنا بيه Web3Forms بعد ما تأكدنا إنه بيرد "نجاح"
-   ومع ذلك الإيميل مش بيوصل فعليًا - مشكلة مش قادرين نشخصها أو نصلحها من
-   عندنا). مفتاح الـ API بييجي من متغيّر بيئة على Cloudflare Pages
-   (env.RESEND_API_KEY) مش مكتوب هنا في الكود، عشان الريبو ده عام على
-   GitHub ومفتاح Resend أحساس من مفتاح Web3Forms القديم. لازم يتضاف يدويًا
-   من Cloudflare Dashboard → Settings → Environment variables.
-   من غير توثيق دومين خاص، Resend بيسمح بالإرسال بس لنفس الإيميل اللي
-   اتسجل بيه الحساب - وده بالظبط إيميل صاحب المتجر فمفيش مشكلة.
-   الدالة بترجع تفاصيل نتيجة الإرسال (نجح ولا فشل، وكود وجسم استجابة
-   Resend) عشان تتسجل على الطلب نفسه (emailDebug) - مفيش استثناء بيتفلت
-   منها، أي خطأ بيترجم لكائن {ok:false, error} بدل ما يوقف تسجيل الطلب
-   (شوف onRequestPost). */
-async function sendGuestOrderEmail(order, env){
-  var lines = order.items.map(function(it, i){
-    return (i + 1) + ") " + it.name + " ×" + it.qty + " - " + (it.price * it.qty) + " ج.م";
-  });
-  lines.push("الإجمالي الفرعي: " + order.subtotal + " ج.م");
-  if(order.coupon) lines.push("كود الخصم: " + order.coupon + " (" + order.couponPercent + "%) - خصم " + order.discount + " ج.م");
-  if(order.tier) lines.push("خصم قيمة الطلب: " + (order.tier.type === "fixed" ? order.tier.value + " ج.م" : order.tier.value + "%") + " (الطلب عدّى " + order.tier.min + " ج.م) - خصم " + order.discount + " ج.م");
-  lines.push("الشحن: " + order.shipping + " ج.م");
-  lines.push("الإجمالي الكلي: " + order.total + " ج.م");
-  lines.push("نوع العميل: " + (order.customerId ? ("عميل مسجّل (حساب: " + order.customerId + ")") : "ضيف بدون حساب"));
-  lines.push("الاسم: " + (order.name || order.customerName || "-"));
-  lines.push("رقم الموبايل: " + order.phone);
-  if(order.governorate) lines.push("المحافظة: " + order.governorate);
-  lines.push("العنوان: " + (order.address || "-"));
-  lines.push("وسيلة الدفع: " + (order.paymentMethod || "-"));
-  if(order.proofCheck) lines.push("مراجعة الإيصال: " + (order.proofCheck.status === "ok" ? "✅ اتراجع آليًا" : "⚠️ محتاج مراجعة يدوية") + (order.proofCheck.amount != null ? " - المبلغ " + order.proofCheck.amount + " ج.م" : "") + (order.proofCheck.reference ? " - رقم العملية " + order.proofCheck.reference : ""));
-  if(order.proofStored || order.paymentProof) lines.push("سكرين شوت التحويل: مرفق - افتحه ونزّله من لوحة التحكم ← الطلبات ← فاتورة #" + String(order.id).slice(-6));
-  if(order.notes) lines.push("ملاحظات: " + order.notes);
-
-  var apiKey = env && env.RESEND_API_KEY;
-  if(!apiKey){
-    return { ok:false, error:"RESEND_API_KEY مش مضبوط في متغيرات البيئة على Cloudflare Pages" };
-  }
-
-  var res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "authorization": "Bearer " + apiKey
-    },
-    body: JSON.stringify({
-      from: "متجر آل عبده <onboarding@resend.dev>",
-      to: ["shady.ahmed.abdo.1987@gmail.com"],
-      subject: (order.customerId ? "طلب جديد من عميل مسجّل" : "طلب جديد بدون تسجيل") + " #" + String(order.id).slice(-6) + " - " + (+order.total || 0) + " ج.م - متجر آل عبده",
-      text: lines.join("\n")
-    })
-  });
-  var bodyText = "";
-  try{ bodyText = await res.text(); }catch(e){ /* مفيش جسم استجابة نقدر نقراه */ }
-  return { ok: res.ok, status: res.status, body: bodyText.slice(0, 400) };
 }
 
 /* PATCH /api/orders - admin only. Body: {id} or {all:true}. Marks an order

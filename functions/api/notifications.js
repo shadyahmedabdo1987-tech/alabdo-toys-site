@@ -1,4 +1,5 @@
 import { json, getList, saveList, requireCustomer } from "../_lib.js";
+import { pushDueOffers } from "./broadcast.js";
 import { getNotes, saveNotes, noteMatches } from "../_notes.js";
 
 /* The customer's bell: every reply from the store in one list.
@@ -14,7 +15,9 @@ import { getNotes, saveNotes, noteMatches } from "../_notes.js";
 
 function sameCustomer(r, acc){ return String(r.customerId || "").toLowerCase() === String(acc.identifier || "").toLowerCase(); }
 
-export async function onRequestGet({ request, env }){
+export async function onRequestGet({ request, env, waitUntil }){
+  /* عروض متكررة جه ميعادها؟ تتبعت فوري (شوف api/broadcast.js) */
+  try{ if(waitUntil) waitUntil(pushDueOffers(env).catch(function(){})); }catch(e){}
   var acc = await requireCustomer(request, env);
   if(!acc) return json({ ok:false, error:"unauthorized" }, 401);
   var items = [];

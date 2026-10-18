@@ -8,6 +8,7 @@
    - PATCH (أدمن) {id, active?, time?, until?}: إيقاف/تشغيل التكرار أو تغيير معاده.
    - DELETE (أدمن) {id}: مسح إشعار (ولو متكرر بيبطل يتبعت خالص). */
 import { json, getList, saveList, requireAdmin } from "../_lib.js";
+import { pushConfigured, sendTopic } from "../_push.js";
 
 const KEY = "broadcasts";
 const LINKS = /^(home|offers|products|new|cat:[\w-]{1,40}|p:\d{1,12})$/;
@@ -78,7 +79,35 @@ function nextOccurrence(b, now){
   return null;
 }
 
-export async function onRequestGet({ request, env }){
+/* ---- إشعار فوري بالعرض (تطبيق 2.0.25 وبعد كده مشترك في "offers") ----
+   العرض اللي بيتبعت مرة واحدة بيتبعت فوري أول ما تدوس إرسال. المتكرر كل يوم
+   بيتبعت أول ما ميعاده ييجي: السيرفر بيبص عليه مع أي طلب من التطبيقات
+   (فحص العروض/الإشعارات)، وبيعلّم كل ميعاد اتبعت عشان ميتبعتش مرتين.
+   التطبيقات الأقدم بتفضل تاخد العروض بالفحص الدوري زي ما هي. */
+async function pushOffer(env, o){
+  const key = "bcp:" + o.id;
+  try{ if(await env.STORE_KV.get(key)) return false; }catch(e){ return false; }
+  try{ await env.STORE_KV.put(key, "1", { expirationTtl: 60 * 60 * 24 * 8 }); }catch(e){ return false; }
+  const r = await sendTopic(env, "offers", { id: o.id, kind: "offer", title: o.title, body: o.body, link: o.link || "home", at: String(o.at) });
+  return r.ok;
+}
+export async function pushDueOffers(env){
+  if(!pushConfigured(env)) return;
+  const list = await getList(env, KEY);
+  const now = Date.now();
+  let sent = 0;
+  for(const b of list){
+    if(!isDaily(b) || b.active === false) continue;
+    for(const o of dailyOccurrences(b, now, 0)){
+      if(o.at < now - 3 * 3600000) continue; /* ميعاد فات من بدري: ميتبعتش متأخر */
+      if(sent >= 3) return;
+      if(await pushOffer(env, o)) sent++;
+    }
+  }
+}
+
+export async function onRequestGet({ request, env, waitUntil }){
+  try{ if(waitUntil) waitUntil(pushDueOffers(env).catch(function(){})); }catch(e){}
   const url = new URL(request.url);
   const list = await getList(env, KEY);
   const now = Date.now();
@@ -127,7 +156,10 @@ export async function onRequestPost({ request, env }){
   /* بنحتفظ بآخر 40 إشعار، والإشعارات المتكررة الشغالة مش بتتمسح لوحدها */
   const keep = list.filter(function(b, i){ return i >= list.length - 40 || (isDaily(b) && b.active !== false); });
   await saveList(env, KEY, keep);
-  return json({ ok:true, item });
+  /* إشعار فوري لكل الموبايلات (لو Firebase متظبط) */
+  let pushed = false;
+  try{ if(pushConfigured(env)) pushed = await pushOffer(env, item); }catch(e){}
+  return json({ ok:true, item, pushed });
 }
 
 export async function onRequestPatch({ request, env }){

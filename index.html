@@ -3769,7 +3769,7 @@ try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("messa
             <b id="bcPrevTitle"></b><p id="bcPrevBody"></p>
           </div>
           <button type="button" class="btn btn-primary" id="bcSend" data-i18n>📣 ابعت الإشعار لكل العملاء</button>
-          <p class="apr-note" data-i18n>الإشعار بيوصل للعميل أول ما يفتح التطبيق (نسخة 2.0.20 وبعد كده)، ولو التطبيق مقفول بيوصله خلال ساعتين تقريبًا. العميل لازم يكون موافق على الإشعارات في موبايله.</p>
+          <p class="apr-note" data-i18n>⚡ من نسخة 2.0.25: العرض بيوصل لموبايل العميل فورًا حتى لو التطبيق مقفول (والمتكرر بيوصل في ميعاده). النسخ الأقدم بيوصلها أول ما تفتح التطبيق أو خلال نص ساعة. العميل لازم يكون موافق على الإشعارات في موبايله.</p>
         </div>
         <h3 class="bc-h" data-i18n>⚡ الإشعارات الفورية (حالة الطلب)</h3>
         <div class="admin-card bc-card" id="pushCard">
@@ -8741,7 +8741,7 @@ function v2SyncNativeCustomer(){
          تسجيله اتمسح من السيرفر قبل تصليح تبديل الحسابات) */
       var RK = "aa_push_resync_v2", nowMs = Date.now();
       var need = true;
-      try{ var last = String(localStorage.getItem(RK) || "").split("|"); need = last[0] !== String(c.identifier) || nowMs - (+last[1] || 0) > 6 * 3600000; }catch(x){}
+      try{ var last = String(localStorage.getItem(RK) || "").split("|"); need = last[0] !== String(c.identifier) || nowMs - (+last[1] || 0) > 24 * 3600000; }catch(x){}
       if(need){
         try{ localStorage.setItem(RK, String(c.identifier) + "|" + nowMs); }catch(x){}
         n.setCustomer("", "");
@@ -8750,7 +8750,7 @@ function v2SyncNativeCustomer(){
       /* نبلغ السيرفر إن التطبيق اتفتح (بيظهر في كارت الإشعارات الفورية) */
       try{
         var PK = "aa_push_ping", lp = +localStorage.getItem(PK) || 0;
-        if(need || nowMs - lp > 10 * 60000){
+        if(need || nowMs - lp > 6 * 3600000){
           localStorage.setItem(PK, String(nowMs));
           fetch("/api/push-token", { method:"POST", headers: Object.assign({ "content-type":"application/json" }, customerAuthHeaders()), body: JSON.stringify({ action:"ping", nat: need ? "resync" : "open" }) }).catch(function(){});
         }
@@ -13108,6 +13108,12 @@ function pushStatusLoad(){
             + (L.removed > 0 ? ' · '+t("اتشال")+' '+fmt(L.removed)+' '+t("موبايل التطبيق اتمسح منه") : '')
             + (L.err ? '<code>'+escHtml(L.err)+'</code>' : '');
         }
+      }
+      var LO = res.lastOffer;
+      if(pl && LO){
+        pl.innerHTML += (pl.innerHTML ? '<br>' : '') + t("آخر عرض اتبعت فوري")+' ('+escHtml(bcWhen(LO.at))+'): '
+          + (LO.ok ? '✅ '+t("اتبعت لكل الموبايلات اللي عليها نسخة 2.0.25") : '⚠️ '+t("موصلش") + (LO.err ? '<code>'+escHtml(LO.err)+'</code>' : ''));
+        if(!L) pl.className = "push-last" + (LO.ok ? "" : " is-bad");
       }
       var lg = document.getElementById("pushLog");
       if(lg) lg.innerHTML = (res.log && res.log.length) ? '<b>'+t("آخر حركات تسجيل الموبايلات:")+'</b><br>' + res.log.map(function(e){

@@ -17,6 +17,7 @@
 # notifications: red accent color + round store-badge status-bar icon
 # orders: order-status / replies pop up at the top (high-importance channel), checked every minute while the app is open and every 30 min when closed
 # push: instant notifications through Firebase Cloud Messaging (reads .github/firebase/google-services.json; polling stays as a fallback)
+# build 25: offers & discounts arrive instantly too (every phone joins the "offers" topic, shown once even if the 30-min check finds them later)
 name: Build Android APK
 
 on:
@@ -1374,8 +1375,11 @@ jobs:
                           JSONObject it = items.getJSONObject(i);
                           long at = it.optLong("at", 0L);
                           if (at <= since) continue;
-                          show(c, it.optString("id", "" + at), it.optString("title", "متجر آل عبده"), it.optString("body", ""), it.optString("link", "home"));
                           if (at > newest) newest = at;
+                          String oid = it.optString("id", "" + at);
+                          /* وصل قبل كده كإشعار فوري؟ منعرضوش تاني */
+                          if (!markShown(c, oid)) continue;
+                          show(c, oid, it.optString("title", "متجر آل عبده"), it.optString("body", ""), it.optString("link", "home"));
                       }
                   }
                   if (newest > since) sp.edit().putLong("since", newest).apply();
@@ -1552,6 +1556,14 @@ jobs:
               static void sync(final Context c) {
                   if (!ready(c)) return;
                   final Context app = c.getApplicationContext();
+                  /* العروض والخصومات: كل موبايل (حتى من غير حساب) مشترك في "offers" */
+                  try {
+                      if (!app.getSharedPreferences(OffersJob.PREFS, Context.MODE_PRIVATE).getBoolean("topic_offers", false)) {
+                          FirebaseMessaging.getInstance().subscribeToTopic("offers").addOnCompleteListener(t -> {
+                              if (t.isSuccessful()) app.getSharedPreferences(OffersJob.PREFS, Context.MODE_PRIVATE).edit().putBoolean("topic_offers", true).apply();
+                          });
+                      }
+                  } catch (Throwable t) { /* ignore */ }
                   try {
                       FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
                           if (task.isSuccessful() && task.getResult() != null) register(app, task.getResult(), false);
@@ -1641,7 +1653,7 @@ jobs:
                   if ("preq".equals(kind) && d.get("at") != null) id = id + "@" + d.get("at");
                   if (!OffersJob.notifOn(this)) return;
                   if (!OffersJob.markShown(this, id)) return;
-                  OffersJob.show(this, id, title, body.length() > 0 ? body : "متجر آل عبده", link, !"stock".equals(kind));
+                  OffersJob.show(this, id, title, body.length() > 0 ? body : "متجر آل عبده", link, !"stock".equals(kind) && !"offer".equals(kind));
               }
 
               @Override

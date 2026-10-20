@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "رصيد",
+    "slug": "raseed",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "raseed",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0F3D38"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.raseed.finance",
+      "infoPlist": {
+        "CFBundleAllowMixedLocalizations": true
+      }
+    },
+    "android": {
+      "package": "app.raseed.finance",
+      "adaptiveIcon": {
+        "backgroundColor": "#0F3D38",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-splash-screen"
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      }
+    },
+    "locales": {
+      "ar": "./locales/ar.json"
+    }
+  }
+}

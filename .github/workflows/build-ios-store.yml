@@ -173,8 +173,16 @@ jobs:
                     cartChanged: function(n, names){}
                   };
                   """
+                  /* منع تكبير الشاشة لوحده لما العميل يدوس على خانة كتابة */
+                  let noZoom = """
+                  (function(){ var c="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover";
+                    var m=document.querySelector('meta[name="viewport"]');
+                    if(!m){ m=document.createElement("meta"); m.name="viewport"; (document.head||document.documentElement).appendChild(m); }
+                    m.setAttribute("content", c); })();
+                  """
                   let uc = WKUserContentController()
                   uc.addUserScript(WKUserScript(source: bridge, injectionTime: .atDocumentStart, forMainFrameOnly: true))
+                  uc.addUserScript(WKUserScript(source: noZoom, injectionTime: .atDocumentEnd, forMainFrameOnly: true))
                   uc.add(self, name: "alabdo")
 
                   let cfg = WKWebViewConfiguration()
@@ -207,6 +215,15 @@ jobs:
                       web.trailingAnchor.constraint(equalTo: view.trailingAnchor),
                       web.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
                   ])
+
+                  web.scrollView.minimumZoomScale = 1
+                  web.scrollView.maximumZoomScale = 1
+                  web.scrollView.pinchGestureRecognizer?.isEnabled = false
+                  /* لو الشاشة كبرت لأي سبب، ترجع لحجمها أول ما الكيبورد يقفل */
+                  NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { [weak self] _ in
+                      guard let sv = self?.web?.scrollView else { return }
+                      if sv.zoomScale != 1 { sv.setZoomScale(1, animated: true) }
+                  }
 
                   let refresh = UIRefreshControl()
                   refresh.addTarget(self, action: #selector(reloadPage(_:)), for: .valueChanged)

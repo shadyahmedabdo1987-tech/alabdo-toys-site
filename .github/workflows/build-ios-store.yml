@@ -1,0 +1,372 @@
+# متجر آل عبده - نسخة آيفون الرسمية (App Store)
+# بتبني تطبيق آيفون على سيرفر ماك من GitHub، وبتوقّعه أوتوماتيك بحساب
+# المطوّرين بتاع أبل (Apple Developer)، وبترفعه على App Store Connect
+# (يظهر في TestFlight، ومنه بيتبعت للمراجعة وينزل على App Store).
+# التطبيق بيفتح الموقع الحقيقي https://alabdo-toys.com بشكل تطبيق العميل
+# (نفس واجهة تطبيق الأندرويد)، وفيه اهتزاز الآيفون وتقييم التطبيق من جوه
+# التطبيق وحفظ الفواتير.
+#
+# محتاج 4 أسرار في GitHub (Settings ← Secrets and variables ← Actions)
+# صاحب الحساب بيحطهم بنفسه - مبيتكتبوش هنا أبدًا:
+#   ASC_KEY_ID      رقم مفتاح App Store Connect API
+#   ASC_ISSUER_ID   الـ Issuer ID بتاع المفاتيح
+#   ASC_KEY_P8      محتوى ملف AuthKey_XXXX.p8 كله
+#   APPLE_TEAM_ID   رقم الفريق (Team ID) من صفحة Membership
+# رقم النسخة اللي بيظهر للناس: APP_VERSION تحت. رقم البناء بيزيد لوحده.
+
+name: Build iOS app (App Store)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/build-ios-store.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-ios-store
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: macos-latest
+    env:
+      RUN: ${{ github.run_number }}
+      APP_VERSION: "1.0"
+      BUNDLE_ID: com.alabdotoys.app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check the Apple secrets
+        env:
+          K1: ${{ secrets.ASC_KEY_ID }}
+          K2: ${{ secrets.ASC_ISSUER_ID }}
+          K3: ${{ secrets.ASC_KEY_P8 }}
+          K4: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          miss=""
+          [ -n "$K1" ] || miss="$miss ASC_KEY_ID"
+          [ -n "$K2" ] || miss="$miss ASC_ISSUER_ID"
+          [ -n "$K3" ] || miss="$miss ASC_KEY_P8"
+          [ -n "$K4" ] || miss="$miss APPLE_TEAM_ID"
+          if [ -n "$miss" ]; then echo "missing secrets:$miss" | tee "$RUNNER_TEMP/build.log"; exit 1; fi
+          echo "secrets ok"
+
+      - name: Newest Xcode + XcodeGen
+        run: |
+          X=$(ls -d /Applications/Xcode_*.app 2>/dev/null | grep -v -i beta | sort -V | tail -1)
+          if [ -n "$X" ]; then sudo xcode-select -s "$X"; fi
+          xcodebuild -version
+          brew install xcodegen
+
+      - name: App Store Connect key (temporary file)
+        env:
+          K3: ${{ secrets.ASC_KEY_P8 }}
+          K1: ${{ secrets.ASC_KEY_ID }}
+        run: |
+          KEY="$RUNNER_TEMP/AuthKey_${K1}.p8"
+          printf '%s\n' "$K3" > "$KEY"
+          chmod 600 "$KEY"
+          echo "ASC_KEY_PATH=$KEY" >> "$GITHUB_ENV"
+
+      - name: Create the Xcode project
+        env:
+          TEAM: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -e
+          P="$RUNNER_TEMP/ios"
+          echo "P=$P" >> "$GITHUB_ENV"
+          mkdir -p "$P/Sources/Assets.xcassets/AppIcon.appiconset"
+
+          cat > "$P/project.yml" <<EOF
+          name: AlabdoToys
+          options:
+            bundleIdPrefix: com.alabdotoys
+            deploymentTarget:
+              iOS: "15.0"
+          targets:
+            AlabdoToys:
+              type: application
+              platform: iOS
+              sources: [Sources]
+              scheme: {}
+              info:
+                path: Sources/Info.plist
+                properties:
+                  CFBundleDisplayName: "آل عبده"
+                  CFBundleDevelopmentRegion: ar
+                  CFBundleShortVersionString: "${APP_VERSION}"
+                  CFBundleVersion: "${RUN}"
+                  UILaunchScreen: {}
+                  UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+                  UIStatusBarStyle: UIStatusBarStyleLightContent
+                  UIViewControllerBasedStatusBarAppearance: false
+                  NSCameraUsageDescription: "عشان تصوّر إيصال التحويل أو صورة المنتج اللي بتدوّر عليه"
+                  NSPhotoLibraryUsageDescription: "عشان تختار صورة إيصال التحويل أو صورة منتج"
+                  NSPhotoLibraryAddUsageDescription: "عشان تحفظ الصور والفواتير على الموبايل"
+                  ITSAppUsesNonExemptEncryption: false
+                  LSApplicationQueriesSchemes: [whatsapp, tel, mailto]
+              settings:
+                base:
+                  PRODUCT_BUNDLE_IDENTIFIER: ${BUNDLE_ID}
+                  TARGETED_DEVICE_FAMILY: "1"
+                  ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+                  SWIFT_VERSION: "5.0"
+                  CODE_SIGN_STYLE: Automatic
+                  DEVELOPMENT_TEAM: ${TEAM}
+          EOF
+
+          cat > "$P/Sources/Assets.xcassets/Contents.json" <<'EOF'
+          { "info" : { "author" : "xcode", "version" : 1 } }
+          EOF
+          cat > "$P/Sources/Assets.xcassets/AppIcon.appiconset/Contents.json" <<'EOF'
+          { "images" : [ { "filename" : "icon-1024.png", "idiom" : "universal", "platform" : "ios", "size" : "1024x1024" } ],
+            "info" : { "author" : "xcode", "version" : 1 } }
+          EOF
+
+          cat > "$P/Sources/App.swift" <<'EOF'
+          import UIKit
+          import WebKit
+          import StoreKit
+
+          @main
+          class AppDelegate: UIResponder, UIApplicationDelegate {
+              var window: UIWindow?
+              func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+                  window = UIWindow(frame: UIScreen.main.bounds)
+                  window?.rootViewController = WebViewController()
+                  window?.makeKeyAndVisible()
+                  return true
+              }
+          }
+
+          final class WebViewController: UIViewController, WKScriptMessageHandler, WKNavigationDelegate, WKUIDelegate {
+              private var web: WKWebView!
+              private let home = URL(string: "https://alabdo-toys.com/?source=app")!
+              private let pink = UIColor(red: 0.933, green: 0.122, blue: 0.424, alpha: 1)
+
+              override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
+
+              override func viewDidLoad() {
+                  super.viewDidLoad()
+                  view.backgroundColor = .white
+
+                  let bridge = """
+                  window.AlAbdoNative = {
+                    haptic: function(k){ try{ window.webkit.messageHandlers.alabdo.postMessage({ t:"haptic", k:String(k||"tap") }); }catch(e){} },
+                    saveBase64: function(name, mime, b64){ try{ window.webkit.messageHandlers.alabdo.postMessage({ t:"save", name:String(name||"file"), mime:String(mime||""), b64:String(b64||"") }); }catch(e){} },
+                    requestReview: function(){ try{ window.webkit.messageHandlers.alabdo.postMessage({ t:"review" }); }catch(e){} },
+                    setCustomer: function(id, pass){},
+                    cartChanged: function(n, names){}
+                  };
+                  """
+                  let uc = WKUserContentController()
+                  uc.addUserScript(WKUserScript(source: bridge, injectionTime: .atDocumentStart, forMainFrameOnly: true))
+                  uc.add(self, name: "alabdo")
+
+                  let cfg = WKWebViewConfiguration()
+                  cfg.userContentController = uc
+                  cfg.allowsInlineMediaPlayback = true
+                  cfg.applicationNameForUserAgent = "AlAbdoApp/5 iOS"
+
+                  web = WKWebView(frame: .zero, configuration: cfg)
+                  web.navigationDelegate = self
+                  web.uiDelegate = self
+                  web.allowsBackForwardNavigationGestures = true
+                  web.isOpaque = false
+                  web.backgroundColor = .white
+                  web.translatesAutoresizingMaskIntoConstraints = false
+                  view.addSubview(web)
+
+                  /* شريط وردي ورا شريط الساعة والبطارية زي تطبيق الأندرويد */
+                  let top = UIView()
+                  top.backgroundColor = pink
+                  top.translatesAutoresizingMaskIntoConstraints = false
+                  view.addSubview(top)
+
+                  NSLayoutConstraint.activate([
+                      top.topAnchor.constraint(equalTo: view.topAnchor),
+                      top.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                      top.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                      top.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+                      web.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+                      web.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                      web.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                      web.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
+                  ])
+
+                  let refresh = UIRefreshControl()
+                  refresh.addTarget(self, action: #selector(reloadPage(_:)), for: .valueChanged)
+                  web.scrollView.refreshControl = refresh
+
+                  web.load(URLRequest(url: home))
+              }
+
+              @objc private func reloadPage(_ sender: UIRefreshControl) {
+                  if let u = web.url, isOwnSite(u) { web.reload() } else { web.load(URLRequest(url: home)) }
+                  DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { sender.endRefreshing() }
+              }
+
+              /* رسايل من الموقع: الاهتزاز + حفظ الملفات */
+              func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+                  guard let d = message.body as? [String: Any], let t = d["t"] as? String else { return }
+                  if t == "haptic" {
+                      let k = (d["k"] as? String) ?? "tap"
+                      switch k {
+                      case "success": UINotificationFeedbackGenerator().notificationOccurred(.success)
+                      case "warn": UINotificationFeedbackGenerator().notificationOccurred(.warning)
+                      case "add": UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+                      default: UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                      }
+                  } else if t == "review" {
+                      /* تقييم التطبيق على App Store من جوه التطبيق */
+                      if let scene = view.window?.windowScene { SKStoreReviewController.requestReview(in: scene) }
+                  } else if t == "save" {
+                      let name = ((d["name"] as? String) ?? "file").replacingOccurrences(of: "/", with: "_")
+                      guard let b64 = d["b64"] as? String, let data = Data(base64Encoded: b64, options: .ignoreUnknownCharacters) else { return }
+                      let url = FileManager.default.temporaryDirectory.appendingPathComponent(name)
+                      do { try data.write(to: url) } catch { return }
+                      let share = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+                      share.popoverPresentationController?.sourceView = view
+                      present(share, animated: true)
+                  }
+              }
+
+              private func isOwnSite(_ url: URL) -> Bool {
+                  guard let h = url.host?.lowercased() else { return false }
+                  return h == "alabdo-toys.com" || h.hasSuffix(".alabdo-toys.com")
+              }
+
+              /* لينكات برّه الموقع (واتساب، اتصال، فيسبوك...) بتفتح برّه التطبيق */
+              func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+                  guard let url = navigationAction.request.url else { decisionHandler(.allow); return }
+                  let scheme = (url.scheme ?? "").lowercased()
+                  if scheme == "about" || scheme == "blob" || scheme == "data" { decisionHandler(.allow); return }
+                  if scheme != "http" && scheme != "https" {
+                      UIApplication.shared.open(url)
+                      decisionHandler(.cancel); return
+                  }
+                  if !isOwnSite(url) && navigationAction.targetFrame?.isMainFrame != false {
+                      UIApplication.shared.open(url)
+                      decisionHandler(.cancel); return
+                  }
+                  decisionHandler(.allow)
+              }
+
+              /* لينك target=_blank */
+              func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
+                  if let url = navigationAction.request.url {
+                      if isOwnSite(url) { webView.load(URLRequest(url: url)) } else { UIApplication.shared.open(url) }
+                  }
+                  return nil
+              }
+
+              func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
+                  let a = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+                  a.addAction(UIAlertAction(title: "تمام", style: .default) { _ in completionHandler() })
+                  present(a, animated: true)
+              }
+
+              func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (Bool) -> Void) {
+                  let a = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+                  a.addAction(UIAlertAction(title: "إلغاء", style: .cancel) { _ in completionHandler(false) })
+                  a.addAction(UIAlertAction(title: "تمام", style: .default) { _ in completionHandler(true) })
+                  present(a, animated: true)
+              }
+
+              /* لو النت قاطع وقت الفتح */
+              func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+                  let e = error as NSError
+                  let offline = [NSURLErrorNotConnectedToInternet, NSURLErrorTimedOut, NSURLErrorCannotFindHost, NSURLErrorCannotConnectToHost, NSURLErrorNetworkConnectionLost, NSURLErrorDNSLookupFailed]
+                  guard e.domain == NSURLErrorDomain && offline.contains(e.code) else { return }
+                  let html = "<html dir='rtl'><meta name='viewport' content='width=device-width,initial-scale=1'><body style='font-family:-apple-system;text-align:center;padding:80px 24px;color:#2a1f3d'><div style='font-size:52px'>📶</div><h2>مفيش اتصال بالإنترنت</h2><p>اتأكد من النت واسحب الشاشة لتحت عشان تحاول تاني.</p></body></html>"
+                  webView.loadHTMLString(html, baseURL: nil)
+              }
+          }
+          EOF
+
+      - name: App icon (store logo on cream, 1024)
+        run: |
+          set -e
+          python3 -m venv "$RUNNER_TEMP/py"
+          "$RUNNER_TEMP/py/bin/pip" install --quiet pillow
+          "$RUNNER_TEMP/py/bin/python" - <<'EOF'
+          import os
+          from PIL import Image
+          P = os.environ["P"]
+          N = 1024
+          src = "alabdo-logo.png" if os.path.exists("alabdo-logo.png") else "icon-512.png"
+          logo = Image.open(src).convert("RGBA")
+          bg = Image.new("RGBA", (N, N), (255, 248, 239, 255))
+          s = round(N * 0.86)
+          L = logo.resize((s, s), Image.LANCZOS)
+          bg.alpha_composite(L, ((N - s) // 2, (N - s) // 2))
+          bg.convert("RGB").save(os.path.join(P, "Sources/Assets.xcassets/AppIcon.appiconset/icon-1024.png"))
+          print("icon ok from", src)
+          EOF
+
+      - name: Archive (signed automatically)
+        env:
+          TEAM: ${{ secrets.APPLE_TEAM_ID }}
+          K1: ${{ secrets.ASC_KEY_ID }}
+          K2: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          set -e
+          set -o pipefail
+          cd "$P"
+          xcodegen generate
+          xcodebuild -project AlabdoToys.xcodeproj -scheme AlabdoToys -configuration Release \
+            -destination "generic/platform=iOS" -archivePath "$P/build/AlabdoToys.xcarchive" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" -authenticationKeyID "$K1" -authenticationKeyIssuerID "$K2" \
+            DEVELOPMENT_TEAM="$TEAM" CODE_SIGN_STYLE=Automatic \
+            archive 2>&1 | tee "$RUNNER_TEMP/build.log" | tail -n 40
+
+      - name: Upload to App Store Connect (TestFlight)
+        env:
+          TEAM: ${{ secrets.APPLE_TEAM_ID }}
+          K1: ${{ secrets.ASC_KEY_ID }}
+          K2: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          set -e
+          set -o pipefail
+          cat > "$P/ExportOptions.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>${TEAM}</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict>
+          </plist>
+          EOF
+          xcodebuild -exportArchive -archivePath "$P/build/AlabdoToys.xcarchive" \
+            -exportOptionsPlist "$P/ExportOptions.plist" -exportPath "$P/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" -authenticationKeyID "$K1" -authenticationKeyIssuerID "$K2" \
+            2>&1 | tee -a "$RUNNER_TEMP/build.log" | tail -n 40
+
+      - name: Report (branch ios-store-build)
+        if: always()
+        run: |
+          rm -f "$ASC_KEY_PATH"
+          mkdir -p "$RUNNER_TEMP/rep" && cd "$RUNNER_TEMP/rep"
+          git init -q
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "ok run ${RUN} version ${APP_VERSION} (${RUN}) uploaded to App Store Connect $(xcodebuild -version | head -1) $(date -u)" > info.txt
+          else
+            echo "FAILED run ${RUN} at $(date -u)" > info.txt
+          fi
+          if [ -f "$RUNNER_TEMP/build.log" ]; then grep -E "error:|error |ERROR|BUILD|EXPORT|Upload|upload" "$RUNNER_TEMP/build.log" | grep -v -i "authenticationKey" | head -n 120 > errors.txt || true; tail -n 300 "$RUNNER_TEMP/build.log" | grep -v -i "BEGIN PRIVATE KEY" > build.log; fi
+          git add . && git commit -q -m "iOS App Store build ${RUN}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:refs/heads/ios-store-build

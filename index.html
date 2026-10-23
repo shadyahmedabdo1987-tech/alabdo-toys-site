@@ -8424,7 +8424,7 @@ function v2MaybeAskReview(orders){
     if(st.done || (st.later && Date.now() - st.later < 20 * 86400000)) return;
     if(!(orders || []).some(function(o){ return o.status === "delivered"; })) return;
     setTimeout(function(){
-      appConfirm({ icon:"⭐", title:t("عجبتك تجربة الشراء؟"), message:t("قيّمنا على جوجل بلاي في ثانية — تقييمك بيساعدنا نوصل لأمهات وآباء أكتر 💛"), ok:t("قيّم التطبيق"), cancel:t("بعدين") })
+      appConfirm({ icon:"⭐", title:t("عجبتك تجربة الشراء؟"), message:(/iPhone|iPad|iOS/.test(navigator.userAgent) ? t("قيّمنا على App Store في ثانية — تقييمك بيساعدنا نوصل لأمهات وآباء أكتر 💛") : t("قيّمنا على جوجل بلاي في ثانية — تقييمك بيساعدنا نوصل لأمهات وآباء أكتر 💛")), ok:t("قيّم التطبيق"), cancel:t("بعدين") })
         .then(function(ok){
           if(ok){ localStorage.setItem("aa_review_ask", JSON.stringify({ done:1 })); try{ window.AlAbdoNative.requestReview(); }catch(e){} }
           else localStorage.setItem("aa_review_ask", JSON.stringify({ later: Date.now() }));

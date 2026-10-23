@@ -54,6 +54,19 @@ jobs:
           [ -n "$K3" ] || miss="$miss ASC_KEY_P8"
           [ -n "$K4" ] || miss="$miss APPLE_TEAM_ID"
           if [ -n "$miss" ]; then echo "missing secrets:$miss" | tee "$RUNNER_TEMP/build.log"; exit 1; fi
+          # نشيل أي مسافات أو سطور زيادة اتنسخت مع الأرقام
+          T=$(printf '%s' "$K4" | tr -cd 'A-Za-z0-9')
+          I=$(printf '%s' "$K1" | tr -cd 'A-Za-z0-9')
+          S=$(printf '%s' "$K2" | tr -cd 'A-Za-z0-9-')
+          echo "lengths: team ${#T} (should be 10), key id ${#I} (should be 10), issuer ${#S} (should be 36)" | tee "$RUNNER_TEMP/build.log"
+          bad=""
+          [ ${#T} -eq 10 ] || bad="$bad APPLE_TEAM_ID"
+          [ ${#I} -eq 10 ] || bad="$bad ASC_KEY_ID"
+          [ ${#S} -eq 36 ] || bad="$bad ASC_ISSUER_ID"
+          if [ -n "$bad" ]; then echo "wrong value in secrets:$bad" | tee -a "$RUNNER_TEMP/build.log"; exit 1; fi
+          echo "TEAM_ID=$T" >> "$GITHUB_ENV"
+          echo "ASC_KID=$I" >> "$GITHUB_ENV"
+          echo "ASC_ISS=$S" >> "$GITHUB_ENV"
           echo "secrets ok"
 
       - name: Newest Xcode + XcodeGen
@@ -66,16 +79,14 @@ jobs:
       - name: App Store Connect key (temporary file)
         env:
           K3: ${{ secrets.ASC_KEY_P8 }}
-          K1: ${{ secrets.ASC_KEY_ID }}
         run: |
-          KEY="$RUNNER_TEMP/AuthKey_${K1}.p8"
+          KEY="$RUNNER_TEMP/AuthKey_${ASC_KID}.p8"
           printf '%s\n' "$K3" > "$KEY"
           chmod 600 "$KEY"
+          grep -q "BEGIN PRIVATE KEY" "$KEY" && grep -q "END PRIVATE KEY" "$KEY" || { echo "ASC_KEY_P8 doesn't look like the .p8 file (BEGIN/END lines missing)" | tee -a "$RUNNER_TEMP/build.log"; exit 1; }
           echo "ASC_KEY_PATH=$KEY" >> "$GITHUB_ENV"
 
       - name: Create the Xcode project
-        env:
-          TEAM: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           set -e
           P="$RUNNER_TEMP/ios"
@@ -117,7 +128,7 @@ jobs:
                   ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
                   SWIFT_VERSION: "5.0"
                   CODE_SIGN_STYLE: Automatic
-                  DEVELOPMENT_TEAM: ${TEAM}
+                  DEVELOPMENT_TEAM: ${TEAM_ID}
           EOF
 
           cat > "$P/Sources/Assets.xcassets/Contents.json" <<'EOF'
@@ -310,10 +321,6 @@ jobs:
           EOF
 
       - name: Archive (signed automatically)
-        env:
-          TEAM: ${{ secrets.APPLE_TEAM_ID }}
-          K1: ${{ secrets.ASC_KEY_ID }}
-          K2: ${{ secrets.ASC_ISSUER_ID }}
         run: |
           set -e
           set -o pipefail
@@ -322,15 +329,11 @@ jobs:
           xcodebuild -project AlabdoToys.xcodeproj -scheme AlabdoToys -configuration Release \
             -destination "generic/platform=iOS" -archivePath "$P/build/AlabdoToys.xcarchive" \
             -allowProvisioningUpdates \
-            -authenticationKeyPath "$ASC_KEY_PATH" -authenticationKeyID "$K1" -authenticationKeyIssuerID "$K2" \
-            DEVELOPMENT_TEAM="$TEAM" CODE_SIGN_STYLE=Automatic \
-            archive 2>&1 | tee "$RUNNER_TEMP/build.log" | tail -n 40
+            -authenticationKeyPath "$ASC_KEY_PATH" -authenticationKeyID "$ASC_KID" -authenticationKeyIssuerID "$ASC_ISS" \
+            DEVELOPMENT_TEAM="$TEAM_ID" CODE_SIGN_STYLE=Automatic \
+            archive 2>&1 | tee -a "$RUNNER_TEMP/build.log" | tail -n 40
 
       - name: Upload to App Store Connect (TestFlight)
-        env:
-          TEAM: ${{ secrets.APPLE_TEAM_ID }}
-          K1: ${{ secrets.ASC_KEY_ID }}
-          K2: ${{ secrets.ASC_ISSUER_ID }}
         run: |
           set -e
           set -o pipefail
@@ -341,7 +344,7 @@ jobs:
           <dict>
             <key>method</key><string>app-store-connect</string>
             <key>destination</key><string>upload</string>
-            <key>teamID</key><string>${TEAM}</string>
+            <key>teamID</key><string>${TEAM_ID}</string>
             <key>signingStyle</key><string>automatic</string>
             <key>uploadSymbols</key><true/>
             <key>manageAppVersionAndBuildNumber</key><false/>
@@ -351,7 +354,7 @@ jobs:
           xcodebuild -exportArchive -archivePath "$P/build/AlabdoToys.xcarchive" \
             -exportOptionsPlist "$P/ExportOptions.plist" -exportPath "$P/export" \
             -allowProvisioningUpdates \
-            -authenticationKeyPath "$ASC_KEY_PATH" -authenticationKeyID "$K1" -authenticationKeyIssuerID "$K2" \
+            -authenticationKeyPath "$ASC_KEY_PATH" -authenticationKeyID "$ASC_KID" -authenticationKeyIssuerID "$ASC_ISS" \
             2>&1 | tee -a "$RUNNER_TEMP/build.log" | tail -n 40
 
       - name: Report (branch ios-store-build)

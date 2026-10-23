@@ -6175,8 +6175,8 @@ var I18N_EN = {
   "أكتر من صورة مرة واحدة": "Multiple photos at once",
   "من المعرض تقدر تختار أكتر من صورة مرة واحدة. دوس على أي صورة عشان تخليها الرئيسية.": "From the gallery you can pick several photos at once. Tap any photo to make it the main one.",
   "دوس على أي صورة عشان تخليها الصورة الرئيسية.": "Tap any photo to make it the main one.",
-  "✅ تم إضافة": "✅ Added",
-  "صور": "photos",
+  "تم إضافة": "Added",
+  "صور للمنتج": "product photos",
   "حفظ وإضافة تاني": "Save & add another",
   "سجّل دخول تاني عشان التعديلات تتحفظ": "Log in again so your changes can be saved",
   "مستني النت": "Waiting for internet",
@@ -11522,7 +11522,7 @@ function addPfImageFiles(files){
         var galIn = document.getElementById("admGalleryInput"); if(galIn) galIn.value = "";
         var camIn = document.getElementById("admCamInput"); if(camIn) camIn.value = "";
         if(document.documentElement.classList.contains("admin-app") && added > 1){
-          showToast(t("✅ تم إضافة") + " " + added + " " + t("صور"));
+          showToast("✅ " + t("تم إضافة") + " " + added + " " + t("صور للمنتج"));
         }
       }
     });

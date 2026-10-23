@@ -46,23 +46,21 @@ jobs:
           K1: ${{ secrets.ASC_KEY_ID }}
           K2: ${{ secrets.ASC_ISSUER_ID }}
           K3: ${{ secrets.ASC_KEY_P8 }}
-          K4: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           miss=""
           [ -n "$K1" ] || miss="$miss ASC_KEY_ID"
           [ -n "$K2" ] || miss="$miss ASC_ISSUER_ID"
           [ -n "$K3" ] || miss="$miss ASC_KEY_P8"
-          [ -n "$K4" ] || miss="$miss APPLE_TEAM_ID"
           if [ -n "$miss" ]; then echo "missing secrets:$miss" | tee "$RUNNER_TEMP/build.log"; exit 1; fi
           # نشيل أي مسافات أو سطور زيادة اتنسخت مع الأرقام
-          T=$(printf '%s' "$K4" | tr -cd 'A-Za-z0-9')
+          # رقم الفريق مش سر - ثابت هنا (Team ID بتاع حساب أبل)
+          T="8G52ACR278"
           I=$(printf '%s' "$K1" | tr -cd 'A-Za-z0-9')
           S=$(printf '%s' "$K2" | tr -cd 'A-Za-z0-9-')
-          echo "lengths: team ${#T} (should be 10), key id ${#I} (should be 10), issuer ${#S} (should be 36)" | tee "$RUNNER_TEMP/build.log"
           bad=""
-          [ ${#T} -eq 10 ] || bad="$bad APPLE_TEAM_ID"
-          [ ${#I} -eq 10 ] || bad="$bad ASC_KEY_ID"
-          [ ${#S} -eq 36 ] || bad="$bad ASC_ISSUER_ID"
+          printf '%s' "$I" | grep -Eq '^[A-Z0-9]{10}$' || bad="$bad ASC_KEY_ID(should be 10 capital letters/digits, got ${#I} chars)"
+          printf '%s' "$S" | grep -Eqi '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' || bad="$bad ASC_ISSUER_ID(should look like xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx, got ${#S} chars)"
+          echo "checked: key id ${#I} chars, issuer ${#S} chars" | tee "$RUNNER_TEMP/build.log"
           if [ -n "$bad" ]; then echo "wrong value in secrets:$bad" | tee -a "$RUNNER_TEMP/build.log"; exit 1; fi
           echo "TEAM_ID=$T" >> "$GITHUB_ENV"
           echo "ASC_KID=$I" >> "$GITHUB_ENV"

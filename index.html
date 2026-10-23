@@ -1627,6 +1627,16 @@ button.inv-tile{cursor:pointer;}
 .aa-dlg-btns .btn{flex:1 1 0; padding:12px 14px; font-size:15px; min-height:48px;}
 .aa-dlg-card.is-danger .aa-dlg-ok{background:linear-gradient(180deg, var(--aa-danger), color-mix(in srgb, var(--aa-danger) 80%, black)); box-shadow:0 1px 0 rgba(255,255,255,.3) inset, 0 4px 0 color-mix(in srgb, var(--aa-danger) 60%, black), 0 10px 18px rgba(224,54,79,.28);}
 .aa-dlg-btns .btn:focus-visible{outline:3px solid color-mix(in srgb, var(--pink) 45%, transparent); outline-offset:2px;}
+/* اختيار الوضع الليلي: تشغيل / إيقاف */
+.aa-dlg-opts{display:grid; gap:10px; margin-top:18px;}
+.aa-dlg-opt{display:flex; align-items:center; gap:12px; width:100%; min-height:56px; padding:12px 16px; border-radius:16px; border:2px solid var(--line, rgba(127,127,127,.25)); background:var(--surface-2); color:var(--ink); font:inherit; font-size:16px; font-weight:700; text-align:start; cursor:pointer; transition:border-color .15s ease, background-color .15s ease;}
+.aa-dlg-opt .em{font-size:22px; line-height:1;}
+.aa-dlg-opt .lb{flex:1 1 auto;}
+.aa-dlg-opt .ck{width:24px; height:24px; border-radius:50%; border:2px solid var(--line, rgba(127,127,127,.35)); display:flex; align-items:center; justify-content:center; font-size:14px; color:#fff; flex:0 0 auto;}
+.aa-dlg-opt.is-on{border-color:var(--pink); background:color-mix(in srgb, var(--pink) 10%, var(--surface));}
+.aa-dlg-opt.is-on .ck{background:var(--pink); border-color:var(--pink);}
+.aa-dlg-opt:focus-visible{outline:3px solid color-mix(in srgb, var(--pink) 45%, transparent); outline-offset:2px;}
+.aa-dlg-opts + .aa-dlg-btns{margin-top:14px;}
 @media (prefers-reduced-motion: reduce){ .aa-dlg, .aa-dlg-card{transition:none;} }
 /* شاشة الافتتاح جوه الصفحة: نفس لون ومقاس شاشة التطبيق الأصلية، واللوجو بيلف
    زي لوجو الموقع (rotateY) لحد ما المنتجات تحمل. */
@@ -5132,14 +5142,67 @@ try{
   var savedTheme = localStorage.getItem("aa_theme");
   if(savedTheme){ root.setAttribute("data-theme", savedTheme); }
 }catch(e){}
-document.getElementById("themeToggle").addEventListener("click", function(){
+function aaIsDark(){
   var cur = root.getAttribute("data-theme");
-  var next;
-  if(!cur){ next = matchMedia("(prefers-color-scheme:dark)").matches ? "light" : "dark"; }
-  else { next = cur === "dark" ? "light" : "dark"; }
+  return cur ? cur === "dark" : !!(window.matchMedia && matchMedia("(prefers-color-scheme:dark)").matches);
+}
+function aaSetTheme(next){
   root.setAttribute("data-theme", next);
   try{ localStorage.setItem("aa_theme", next); }catch(e){}
-});
+}
+/* الوضع الليلي: بدل ما الزرار يقلب على طول، بيفتح نافذة صغيرة فيها
+   «تشغيل» و«إيقاف» والاختيار الحالي عليه علامة ✓. بترجع الاختيار
+   ("dark" / "light") أو null لو اتقفلت من غير اختيار. */
+function openThemeChooser(){
+  return new Promise(function(resolve){
+    var prevFocus = document.activeElement;
+    var dark = aaIsDark();
+    var wrap = document.createElement("div");
+    wrap.className = "aa-dlg";
+    wrap.setAttribute("role", "dialog");
+    wrap.setAttribute("aria-modal", "true");
+    wrap.setAttribute("aria-labelledby", "aaThemeTitle");
+    var card = document.createElement("div");
+    card.className = "aa-dlg-card";
+    function opt(val, em, label, on){
+      return '<button type="button" class="aa-dlg-opt'+(on ? ' is-on' : '')+'" data-theme-opt="'+val+'" role="radio" aria-checked="'+(on ? 'true' : 'false')+'">'
+        + '<span class="em" aria-hidden="true">'+em+'</span><span class="lb">'+label+'</span><span class="ck" aria-hidden="true">'+(on ? '✓' : '')+'</span></button>';
+    }
+    card.innerHTML = '<div class="aa-dlg-ic" aria-hidden="true">🌓</div>'
+      + '<h3 class="aa-dlg-title" id="aaThemeTitle">'+t("الوضع الليلي")+'</h3>'
+      + '<p class="aa-dlg-msg">'+t("اختار شكل التطبيق اللي يريّح عينك")+'</p>'
+      + '<div class="aa-dlg-opts" role="radiogroup" aria-labelledby="aaThemeTitle">'
+        + opt("dark", "🌙", t("تشغيل الوضع الليلي"), dark)
+        + opt("light", "☀️", t("إيقاف الوضع الليلي"), !dark)
+      + '</div>'
+      + '<div class="aa-dlg-btns"><button type="button" class="btn btn-outline aa-dlg-cancel">'+t("إلغاء")+'</button></div>';
+    wrap.appendChild(card);
+    document.body.appendChild(wrap);
+    var done = false;
+    function close(val){
+      if(done) return; done = true;
+      document.removeEventListener("keydown", onKey, true);
+      wrap.classList.remove("show");
+      setTimeout(function(){ if(wrap.parentNode) wrap.parentNode.removeChild(wrap); try{ if(prevFocus && prevFocus.focus) prevFocus.focus(); }catch(e){} }, 200);
+      resolve(val);
+    }
+    function onKey(e){ if(e.key==="Escape"){ e.preventDefault(); close(null); } }
+    document.addEventListener("keydown", onKey, true);
+    wrap.addEventListener("click", function(e){ if(e.target===wrap) close(null); });
+    card.querySelector(".aa-dlg-cancel").addEventListener("click", function(){ close(null); });
+    card.querySelectorAll("[data-theme-opt]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var v = b.getAttribute("data-theme-opt");
+        aaSetTheme(v);
+        try{ haptic("tap"); }catch(e){}
+        close(v);
+      });
+    });
+    requestAnimationFrame(function(){ wrap.classList.add("show"); });
+    setTimeout(function(){ var f = card.querySelector(".aa-dlg-opt.is-on"); if(f) f.focus({preventScroll:true}); }, 30);
+  });
+}
+document.getElementById("themeToggle").addEventListener("click", function(){ openThemeChooser(); });
 
 /* قاموس ترجمة النصوص للإنجليزي - مفتاح كل سطر هو النص العربي الأصلي بالظبط
    زي ما اتكتب في الصفحة، والقيمة هي الترجمة الإنجليزية. المرحلة الحالية
@@ -6069,6 +6132,9 @@ var I18N_EN = {
   "⚠️ الكمية المتاحة اتغيرت، راجع سلتك وجرّب تاني": "⚠️ Available stock changed — review your cart and try again",
   "اللغة": "Language",
   "الوضع الليلي": "Dark mode",
+  "اختار شكل التطبيق اللي يريّح عينك": "Choose the look that's easiest on your eyes",
+  "تشغيل الوضع الليلي": "Turn dark mode on",
+  "إيقاف الوضع الليلي": "Turn dark mode off",
   "مفعّل": "On",
   "مقفول": "Off",
   "حمّل تطبيقنا على": "Get our app on",
@@ -10351,7 +10417,7 @@ if(appSheet){
     else if(a==="preq"){ closeAllPanels(); openProductRequestForm(""); }
     else if(a==="wish"){ state.badge="wish"; state.cat="all"; state.q=""; goToView("products"); renderProductsView(); }
     else if(a==="lang"){ closeAllPanels(); document.getElementById("langToggle").click(); }
-    else if(a==="theme"){ document.getElementById("themeToggle").click(); renderAppSheet(); }
+    else if(a==="theme"){ openThemeChooser().then(function(){ renderAppSheet(); }); }
     else { goToView(a); }
     updateAppTabbar();
   });
@@ -13123,6 +13189,11 @@ function pushStatusLoad(){
         pl.innerHTML += (pl.innerHTML ? '<br>' : '') + t("آخر عرض اتبعت فوري")+' ('+escHtml(bcWhen(LO.at))+'): '
           + (LO.ok ? '✅ '+t("اتبعت لكل الموبايلات اللي عليها نسخة 2.0.25") : '⚠️ '+t("موصلش") + (LO.err ? '<code>'+escHtml(LO.err)+'</code>' : ''));
         if(!L) pl.className = "push-last" + (LO.ok ? "" : " is-bad");
+      }
+      var LA = res.lastAdmin;
+      if(pl && LA){
+        pl.innerHTML += (pl.innerHTML ? '<br>' : '') + t("آخر تنبيه فوري لبرنامج الإدارة")+' ('+escHtml(bcWhen(LA.at))+'): '
+          + (LA.ok ? '✅ '+t("اتبعت") : '⚠️ '+t("موصلش") + (LA.err ? '<code>'+escHtml(LA.err)+'</code>' : ''));
       }
       var lg = document.getElementById("pushLog");
       if(lg) lg.innerHTML = (res.log && res.log.length) ? '<b>'+t("آخر حركات تسجيل الموبايلات:")+'</b><br>' + res.log.map(function(e){

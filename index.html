@@ -5150,32 +5150,30 @@ function aaSetTheme(next){
   root.setAttribute("data-theme", next);
   try{ localStorage.setItem("aa_theme", next); }catch(e){}
 }
-/* الوضع الليلي: بدل ما الزرار يقلب على طول، بيفتح نافذة صغيرة فيها
-   «تشغيل» و«إيقاف» والاختيار الحالي عليه علامة ✓. بترجع الاختيار
-   ("dark" / "light") أو null لو اتقفلت من غير اختيار. */
-function openThemeChooser(){
+/* نافذة اختيار صغيرة (للوضع الليلي واللغة): بدل ما الزرار يقلب على طول،
+   بتطلع اختيارات والاختيار الحالي عليه علامة ✓. بترجع قيمة الاختيار أو
+   null لو اتقفلت من غير اختيار. */
+function openChoiceDialog(o){
   return new Promise(function(resolve){
     var prevFocus = document.activeElement;
-    var dark = aaIsDark();
     var wrap = document.createElement("div");
     wrap.className = "aa-dlg";
     wrap.setAttribute("role", "dialog");
     wrap.setAttribute("aria-modal", "true");
-    wrap.setAttribute("aria-labelledby", "aaThemeTitle");
+    wrap.setAttribute("aria-labelledby", "aaChoiceTitle");
     var card = document.createElement("div");
     card.className = "aa-dlg-card";
-    function opt(val, em, label, on){
-      return '<button type="button" class="aa-dlg-opt'+(on ? ' is-on' : '')+'" data-theme-opt="'+val+'" role="radio" aria-checked="'+(on ? 'true' : 'false')+'">'
-        + '<span class="em" aria-hidden="true">'+em+'</span><span class="lb">'+label+'</span><span class="ck" aria-hidden="true">'+(on ? '✓' : '')+'</span></button>';
-    }
-    card.innerHTML = '<div class="aa-dlg-ic" aria-hidden="true">🌓</div>'
-      + '<h3 class="aa-dlg-title" id="aaThemeTitle">'+t("الوضع الليلي")+'</h3>'
-      + '<p class="aa-dlg-msg">'+t("اختار شكل التطبيق اللي يريّح عينك")+'</p>'
-      + '<div class="aa-dlg-opts" role="radiogroup" aria-labelledby="aaThemeTitle">'
-        + opt("dark", "🌙", t("تشغيل الوضع الليلي"), dark)
-        + opt("light", "☀️", t("إيقاف الوضع الليلي"), !dark)
+    var esc = function(x){ return String(x==null?"":x).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); };
+    card.innerHTML = '<div class="aa-dlg-ic" aria-hidden="true">'+esc(o.icon)+'</div>'
+      + '<h3 class="aa-dlg-title" id="aaChoiceTitle">'+esc(o.title)+'</h3>'
+      + (o.message ? '<p class="aa-dlg-msg">'+esc(o.message)+'</p>' : '')
+      + '<div class="aa-dlg-opts" role="radiogroup" aria-labelledby="aaChoiceTitle">'
+        + o.options.map(function(x){
+            return '<button type="button" class="aa-dlg-opt'+(x.on ? ' is-on' : '')+'" data-choice="'+esc(x.val)+'" role="radio" aria-checked="'+(x.on ? 'true' : 'false')+'">'
+              + '<span class="em" aria-hidden="true">'+esc(x.em)+'</span><span class="lb"'+(x.dir ? ' dir="'+x.dir+'"' : '')+'>'+esc(x.label)+'</span><span class="ck" aria-hidden="true">'+(x.on ? '✓' : '')+'</span></button>';
+          }).join("")
       + '</div>'
-      + '<div class="aa-dlg-btns"><button type="button" class="btn btn-outline aa-dlg-cancel">'+t("إلغاء")+'</button></div>';
+      + '<div class="aa-dlg-btns"><button type="button" class="btn btn-outline aa-dlg-cancel">'+esc(o.cancel || t("إلغاء"))+'</button></div>';
     wrap.appendChild(card);
     document.body.appendChild(wrap);
     var done = false;
@@ -5190,17 +5188,26 @@ function openThemeChooser(){
     document.addEventListener("keydown", onKey, true);
     wrap.addEventListener("click", function(e){ if(e.target===wrap) close(null); });
     card.querySelector(".aa-dlg-cancel").addEventListener("click", function(){ close(null); });
-    card.querySelectorAll("[data-theme-opt]").forEach(function(b){
+    card.querySelectorAll("[data-choice]").forEach(function(b){
       b.addEventListener("click", function(){
-        var v = b.getAttribute("data-theme-opt");
-        aaSetTheme(v);
         try{ haptic("tap"); }catch(e){}
-        close(v);
+        close(b.getAttribute("data-choice"));
       });
     });
     requestAnimationFrame(function(){ wrap.classList.add("show"); });
     setTimeout(function(){ var f = card.querySelector(".aa-dlg-opt.is-on"); if(f) f.focus({preventScroll:true}); }, 30);
   });
+}
+/* الوضع الليلي: تشغيل / إيقاف */
+function openThemeChooser(){
+  var dark = aaIsDark();
+  return openChoiceDialog({
+    icon: "🌓", title: t("الوضع الليلي"), message: t("اختار شكل التطبيق اللي يريّح عينك"),
+    options: [
+      { val:"dark", em:"🌙", label:t("تشغيل الوضع الليلي"), on: dark },
+      { val:"light", em:"☀️", label:t("إيقاف الوضع الليلي"), on: !dark }
+    ]
+  }).then(function(v){ if(v) aaSetTheme(v); return v; });
 }
 document.getElementById("themeToggle").addEventListener("click", function(){ openThemeChooser(); });
 
@@ -6314,9 +6321,17 @@ function setLang(next){
   try{ localStorage.setItem("aa_lang", next); }catch(e){}
   location.reload();
 }
-document.getElementById("langToggle").addEventListener("click", function(){
-  setLang(LANG==="en" ? "ar" : "en");
-});
+/* اللغة: العربية / English - كل اختيار مكتوب بلغته عشان أي حد يلاقيه */
+function openLangChooser(){
+  return openChoiceDialog({
+    icon: "🌐", title: LANG==="en" ? "Language" : "اللغة", message: LANG==="en" ? "Choose the app language" : "اختار لغة التطبيق",
+    options: [
+      { val:"ar", em:"🇪🇬", label:"العربية", on: LANG!=="en" },
+      { val:"en", em:"🇬🇧", label:"English", on: LANG==="en" }
+    ]
+  }).then(function(v){ if(v && v !== (LANG==="en" ? "en" : "ar")) setLang(v); return v; });
+}
+document.getElementById("langToggle").addEventListener("click", function(){ openLangChooser(); });
 document.getElementById("langToggleLabel").textContent = LANG==="en" ? "العربية" : "English";
 applyI18n();
 
@@ -10416,7 +10431,7 @@ if(appSheet){
     else if(a==="account"){ closeAllPanels(); openAcctDrawer(); }
     else if(a==="preq"){ closeAllPanels(); openProductRequestForm(""); }
     else if(a==="wish"){ state.badge="wish"; state.cat="all"; state.q=""; goToView("products"); renderProductsView(); }
-    else if(a==="lang"){ closeAllPanels(); document.getElementById("langToggle").click(); }
+    else if(a==="lang"){ openLangChooser(); }
     else if(a==="theme"){ openThemeChooser().then(function(){ renderAppSheet(); }); }
     else { goToView(a); }
     updateAppTabbar();

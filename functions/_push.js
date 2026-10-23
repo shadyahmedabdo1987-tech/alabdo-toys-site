@@ -168,6 +168,13 @@ export async function tokensFor(env, customerId, phoneTail){
   });
 }
 
+/* iPhone: data-only messages are silent there, so every message also carries
+   a visible alert for Apple devices (Android ignores this block and keeps
+   showing its own notification from the data). */
+function apnsFor(payload){
+  return { headers: { "apns-priority": "10" }, payload: { aps: { alert: { title: String(payload.title || "متجر آل عبده"), body: String(payload.body || "") }, sound: "default" } } };
+}
+
 /* Send one data message to a list of tokens. data values must be strings.
    Dead tokens (app uninstalled) are removed. Returns {sent, failed}. */
 export async function sendPush(env, tokens, data){
@@ -189,7 +196,7 @@ export async function sendPush(env, tokens, data){
       var res = await fetch("https://fcm.googleapis.com/v1/projects/" + encodeURIComponent(sa.project_id) + "/messages:send", {
         method: "POST",
         headers: { "authorization": "Bearer " + at, "content-type": "application/json" },
-        body: JSON.stringify({ message: { token: t, data: payload, android: { priority: "HIGH", ttl: "172800s" } } })
+        body: JSON.stringify({ message: { token: t, data: payload, android: { priority: "HIGH", ttl: "172800s" }, apns: apnsFor(payload) } })
       });
       if(res.ok){ sent++; return; }
       failed++;
@@ -225,7 +232,7 @@ export async function sendTopic(env, topic, data){
     res = await fetch("https://fcm.googleapis.com/v1/projects/" + encodeURIComponent(sa.project_id) + "/messages:send", {
       method: "POST",
       headers: { "authorization": "Bearer " + at, "content-type": "application/json" },
-      body: JSON.stringify({ message: { topic: topic, data: payload, android: { priority: "HIGH", ttl: "86400s" } } })
+      body: JSON.stringify({ message: { topic: topic, data: payload, android: { priority: "HIGH", ttl: "86400s" }, apns: apnsFor(payload) } })
     });
     if(!res.ok) txt = res.status + " " + (await res.text().catch(function(){ return ""; })).replace(/\s+/g, " ").slice(0, 300);
   }catch(e){ txt = "err " + String(e && e.message || e).slice(0, 200); }

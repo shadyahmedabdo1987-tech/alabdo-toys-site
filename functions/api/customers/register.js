@@ -1,4 +1,5 @@
 import { json, getCustomers, saveCustomers, sha256Hex, linkGuestOrdersToCustomer } from "../../_lib.js";
+import { adminWake } from "../../_push.js";
 
 /* POST /api/customers/register - public. Body: {phone, name, email, governorate, address, password}.
    Creates a customer account on the server (same trust model as the admin
@@ -9,7 +10,7 @@ import { json, getCustomers, saveCustomers, sha256Hex, linkGuestOrdersToCustomer
    generates or stores it in plain text. governorate/address are saved on
    the account so they can be auto-filled into future orders instead of
    being retyped every time. */
-export async function onRequestPost({ request, env }){
+export async function onRequestPost({ request, env, waitUntil }){
   var body;
   try{ body = await request.json(); }catch(e){ return json({ ok:false, error:"bad_json" }, 400); }
   var phone = (body && body.phone || "").trim();
@@ -44,5 +45,6 @@ export async function onRequestPost({ request, env }){
      القديمة بحسابه الجديد على طول عشان تبان له في "طلباتي". */
   try{ await linkGuestOrdersToCustomer(env, acct); }catch(e){ /* الربط مش سبب لفشل التسجيل نفسه */ }
 
+  try{ waitUntil(adminWake(env, "customer")); }catch(e){}
   return json({ ok:true, name: acct.name, phone: acct.identifier, email: acct.email, governorate: acct.governorate, address: acct.address });
 }

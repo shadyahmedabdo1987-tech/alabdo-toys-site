@@ -73,6 +73,38 @@ jobs:
           grep -q "BEGIN PRIVATE KEY" "$KEY" && grep -q "END PRIVATE KEY" "$KEY" || { echo "ASC_KEY_P8 BEGIN/END lines missing" | tee -a "$RUNNER_TEMP/build.log"; exit 1; }
           echo "ASC_KEY_PATH=$KEY" >> "$GITHUB_ENV"
 
+      - name: Register bundle ID + check App Store Connect app record
+        run: |
+          pip3 install --quiet --break-system-packages pyjwt cryptography 2>/dev/null || pip3 install --quiet pyjwt cryptography
+          python3 - <<'PY'
+          import jwt, time, json, os, urllib.request, urllib.error
+          key = open(os.environ['ASC_KEY_PATH']).read()
+          now = int(time.time())
+          tok = jwt.encode({'iss': os.environ['ASC_ISS'], 'iat': now, 'exp': now + 900, 'aud': 'appstoreconnect-v1'},
+                           key, algorithm='ES256', headers={'kid': os.environ['ASC_KID'], 'typ': 'JWT'})
+          def api(method, path, body=None):
+              req = urllib.request.Request('https://api.appstoreconnect.apple.com' + path, method=method,
+                    data=json.dumps(body).encode() if body else None,
+                    headers={'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json'})
+              try:
+                  with urllib.request.urlopen(req) as r: return r.status, json.loads(r.read() or b'{}')
+              except urllib.error.HTTPError as e: return e.code, json.loads(e.read() or b'{}')
+          log = open(os.environ['RUNNER_TEMP'] + '/build.log', 'a')
+          bid = os.environ['BUNDLE_ID']
+          s, d = api('GET', '/v1/bundleIds?filter[identifier]=' + bid)
+          if not [x for x in d.get('data', []) if x['attributes']['identifier'] == bid]:
+              s, d = api('POST', '/v1/bundleIds', {'data': {'type': 'bundleIds', 'attributes': {'identifier': bid, 'name': 'Raseed', 'platform': 'IOS'}}})
+              print('BUNDLE_ID_REGISTERED', s, json.dumps(d.get('errors', ''))[:300]); log.write('BUNDLE_ID_REGISTERED %s\n' % s)
+          else:
+              print('BUNDLE_ID_EXISTS'); log.write('BUNDLE_ID_EXISTS\n')
+          s, d = api('GET', '/v1/apps?filter[bundleId]=' + bid)
+          apps = d.get('data', [])
+          if not apps:
+              m = 'NO_APP_RECORD error: create the app in App Store Connect (Apps > + > New App) with bundle ID ' + bid
+              print(m); log.write(m + '\n'); raise SystemExit(1)
+          print('APP_RECORD', apps[0]['id'], apps[0]['attributes']['name']); log.write('APP_RECORD %s %s\n' % (apps[0]['id'], apps[0]['attributes']['name']))
+          PY
+
       - name: Create the Xcode project
         run: |
           set -e

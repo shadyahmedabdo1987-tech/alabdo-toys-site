@@ -241,13 +241,40 @@ export async function sendTopic(env, topic, data){
   return { ok: ok, error: txt };
 }
 
+/* Wake the admin app the moment something new arrives (order, inquiry,
+   product request, "notify me" request, new customer). The message carries
+   NO customer data - only a wake signal on the "admin_wake" topic. The
+   admin app then reads its private feed (/api/admin/feed with its own
+   notify token) and shows the notification exactly like its background
+   check does. Polling in the admin app stays as a fallback. */
+export var ADMIN_TOPIC = "admin_wake";
+export async function adminWake(env, kind){
+  var sa = serviceAccount(env);
+  if(!sa) return { ok: false, error: "not_configured" };
+  var res, txt = "";
+  try{
+    var at = await accessToken(env, sa);
+    res = await fetch("https://fcm.googleapis.com/v1/projects/" + encodeURIComponent(sa.project_id) + "/messages:send", {
+      method: "POST",
+      headers: { "authorization": "Bearer " + at, "content-type": "application/json" },
+      body: JSON.stringify({ message: { topic: ADMIN_TOPIC, data: { kind: "admin_wake", what: String(kind || ""), at: String(Date.now()) }, android: { priority: "HIGH", ttl: "900s" } } })
+    });
+    if(!res.ok) txt = res.status + " " + (await res.text().catch(function(){ return ""; })).replace(/\s+/g, " ").slice(0, 300);
+  }catch(e){ txt = "err " + String(e && e.message || e).slice(0, 200); }
+  var ok = !!(res && res.ok);
+  try{ await env.STORE_KV.put("fcm_last_admin", JSON.stringify({ at: Date.now(), ok: ok, what: String(kind || ""), err: txt })); }catch(e){}
+  return { ok: ok, error: txt };
+}
+
 /* project id of the server key + last send result (for the admin card) */
 export async function pushInfo(env){
   var sa = serviceAccount(env), last = null;
   var lastOffer = null;
   try{ last = JSON.parse(await env.STORE_KV.get("fcm_last") || "null"); }catch(e){}
+  var lastAdmin = null;
   try{ lastOffer = JSON.parse(await env.STORE_KV.get("fcm_last_offer") || "null"); }catch(e){}
-  return { project: sa ? sa.project_id : "", keyOk: !!sa, last: last, lastOffer: lastOffer };
+  try{ lastAdmin = JSON.parse(await env.STORE_KV.get("fcm_last_admin") || "null"); }catch(e){}
+  return { project: sa ? sa.project_id : "", keyOk: !!sa, last: last, lastOffer: lastOffer, lastAdmin: lastAdmin };
 }
 
 /* Push for a bell note (order status / reply / back in stock) */

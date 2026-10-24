@@ -2,6 +2,7 @@
 # icons: admin = round store logo, transparent background + small gold gear (admin-logo-icon-*.png)
 # print: AlAbdoNative.printPdf (sales report)
 # notifications: red accent + round store-badge status-bar icon (same as the customer app)
+# instant: Firebase wake signal (topic admin_wake, no customer data) -> app reads its feed right away (reads .github/firebase/google-services-admin.json; polling stays as a fallback)
 # التطبيق بيفتح لوحة تحكم المتجر جوه متصفح داخلي خاص بيه (WebView) - من غير
 # جوجل كروم خالص، فمفيش أي رسالة من كروم أول مرة. تطبيق منفصل عن تطبيق
 # العملاء (com.alabdotoys.admin)، أيقونته عليها ترس، ولموبايلك إنت بس
@@ -18,6 +19,7 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/build-admin-apk.yml"
+      - ".github/firebase/google-services-admin.json"
 
 permissions:
   contents: write
@@ -122,6 +124,8 @@ jobs:
 
           dependencies {
               implementation 'androidx.core:core:1.13.1'
+              implementation platform('com.google.firebase:firebase-bom:33.7.0')
+              implementation 'com.google.firebase:firebase-messaging'
           }
           EOF
 
@@ -192,6 +196,15 @@ jobs:
                       android:name=".StockWatchJob"
                       android:permission="android.permission.BIND_JOB_SERVICE"
                       android:exported="false" />
+
+                  <!-- تنبيه فوري من Firebase: أول ما يوصل جديد التطبيق بيصحى ويعرض الإشعار -->
+                  <service
+                      android:name=".AdminPushService"
+                      android:exported="false">
+                      <intent-filter>
+                          <action android:name="com.google.firebase.MESSAGING_EVENT" />
+                      </intent-filter>
+                  </service>
 
                   <provider
                       android:name="androidx.core.content.FileProvider"
@@ -727,6 +740,7 @@ jobs:
                   super.onStart();
                   if (!askNotificationPermissionOnce()) askBatteryExemptionOnce();
                   try { StockWatchJob.ensureScheduled(this); } catch (Exception e) { /* ignore */ }
+                  AdminPush.subscribe(this);
                   /* المتابعة في الخلفية: الإشعارات بتوصل حتى لو التطبيق مقفول */
                   WatchService.start(this);
                   WatchTick.scheduleNext(this, 60000L);
@@ -1347,6 +1361,51 @@ jobs:
           }
           EOF
 
+          cat > $P/app/src/main/java/com/alabdotoys/admin/AdminPushService.java <<'EOF'
+          package com.alabdotoys.admin;
+
+          import android.content.Context;
+          import com.google.firebase.FirebaseApp;
+          import com.google.firebase.messaging.FirebaseMessaging;
+          import com.google.firebase.messaging.FirebaseMessagingService;
+          import com.google.firebase.messaging.RemoteMessage;
+
+          /* تنبيه فوري من السيرفر: أول ما يوصل طلب أو استفسار أو طلب توفّر أو عميل جديد،
+             Firebase بيصحّي التطبيق (الرسالة نفسها مفيهاش أي بيانات عملاء)، والتطبيق
+             بيقرا الجديد بمفتاح الإشعارات بتاعه ويعرض الإشعار على طول - نفس الإشعار
+             اللي كان بيطلع من الفحص الدوري (اللي لسه شغال كاحتياطي). */
+          public class AdminPushService extends FirebaseMessagingService {
+              @Override
+              public void onMessageReceived(RemoteMessage msg) {
+                  final Context c = getApplicationContext();
+                  if (StockWatchJob.getNotifyToken(c).isEmpty()) return;
+                  String what = msg.getData() != null ? msg.getData().get("what") : null;
+                  if ("order".equals(what)) StockWatchJob.lastStockAt = 0; /* الطلب ممكن يخلّص منتج من المخزن */
+                  try { StockWatchJob.runAll(c); } catch (Throwable t) { /* ignore */ }
+                  /* لو السيرفر لسه ما حدّثش القايمة في نفس اللحظة نبص تاني بعد ثواني
+                     (الإشعار مش بيتكرر - التطبيق فاكر اللي عرضه) */
+                  new Thread(new Runnable() { @Override public void run() {
+                      try { Thread.sleep(8000); StockWatchJob.runAll(c); } catch (Throwable t) { /* ignore */ }
+                      try { Thread.sleep(20000); StockWatchJob.runAll(c); } catch (Throwable t) { /* ignore */ }
+                  } }).start();
+              }
+
+              @Override
+              public void onNewToken(String token) { AdminPush.subscribe(getApplicationContext()); }
+          }
+
+          final class AdminPush {
+              static final String TOPIC = "admin_wake";
+              /* لو ملف إعدادات Firebase مش موجود في البناء، ده بيتجاهل والفحص الدوري شغال زي ما هو */
+              static void subscribe(Context c) {
+                  try {
+                      if (FirebaseApp.getApps(c).isEmpty()) return;
+                      FirebaseMessaging.getInstance().subscribeToTopic(TOPIC);
+                  } catch (Throwable t) { /* ignore */ }
+              }
+          }
+          EOF
+
           cat > $P/app/src/main/java/com/alabdotoys/admin/StockWatchJob.java <<'EOF'
           package com.alabdotoys.admin;
 
@@ -1783,6 +1842,37 @@ jobs:
               legacy.resize((256, 256), Image.LANCZOS).save(os.path.join(nd, "notif_logo.png"))
               print("notification icons ok")
               print("icons ok")
+          EOF
+
+      - name: Firebase config (instant notifications)
+        run: |
+          python3 - <<'EOF'
+          import json, os
+          res = os.path.join(os.environ["P"], "app/src/main/res/values")
+          pkg = "com.alabdotoys.admin"
+          c = None
+          for src in (".github/firebase/google-services-admin.json", ".github/firebase/google-services.json"):
+              if not os.path.exists(src): continue
+              g = json.load(open(src, encoding="utf-8"))
+              cl = [x for x in g.get("client", []) if x.get("client_info", {}).get("android_client_info", {}).get("package_name") == pkg]
+              if cl:
+                  c = cl[0]; pi = g.get("project_info", {}); print("using", src); break
+          if c is None:
+              print("no Firebase config for", pkg, "- building without instant notifications (polling only)")
+              raise SystemExit(0)
+          key = (c.get("api_key") or [{}])[0].get("current_key", "")
+          vals = {
+              "google_app_id": c["client_info"]["mobilesdk_app_id"],
+              "gcm_defaultSenderId": pi.get("project_number", ""),
+              "google_api_key": key,
+              "google_crash_reporting_api_key": key,
+              "project_id": pi.get("project_id", ""),
+              "google_storage_bucket": pi.get("storage_bucket", ""),
+          }
+          from xml.sax.saxutils import escape
+          out = '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n' + "".join('    <string name="%s" translatable="false">%s</string>\n' % (k, escape(str(v))) for k, v in vals.items() if v) + "</resources>\n"
+          open(os.path.join(res, "firebase_config.xml"), "w", encoding="utf-8").write(out)
+          print("firebase config ok for project", vals["project_id"])
           EOF
 
       - name: Build APK (unsigned)

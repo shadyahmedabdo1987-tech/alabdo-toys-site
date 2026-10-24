@@ -1,5 +1,6 @@
 import { json, getList, saveList, requireAdmin, requireCustomer } from "../_lib.js";
 import { addNote, phoneTail, hasAccountFor } from "../_notes.js";
+import { adminWake } from "../_push.js";
 
 /* GET /api/inquiries - admin only. Returns every "تواصل معنا" message
    customers have submitted through the contact-us form, so the admin
@@ -15,7 +16,7 @@ export async function onRequestGet({ request, env }){
    stock-notify requests - a browsing customer shouldn't need an account
    just to send a question). Body: {name, phone, message}. phone and
    message are required. */
-export async function onRequestPost({ request, env }){
+export async function onRequestPost({ request, env, waitUntil }){
   var body;
   try{ body = await request.json(); }catch(e){ return json({ ok:false, error:"bad_json" }, 400); }
   var name = (body && body.name || "").trim().slice(0, 80);
@@ -38,6 +39,7 @@ export async function onRequestPost({ request, env }){
   var list = await getList(env, "inquiries");
   list.push(item);
   await saveList(env, "inquiries", list);
+  try{ waitUntil(adminWake(env, "inquiry")); }catch(e){}
   return json({ ok:true });
 }
 

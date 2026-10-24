@@ -67,7 +67,7 @@ export async function onRequestGet({ request, env }){
     .sort(function(a, b){ return b.at - a.at; }).slice(0, 50);
   var info = await pushInfo(env);
   var log = (await getPushLog(env)).slice(-8).reverse();
-  return json({ ok:true, configured: pushConfigured(env), devices: list.length, customers: people.length, people: people, project: info.project, keyOk: info.keyOk, last: info.last, lastOffer: info.lastOffer, log: log });
+  return json({ ok:true, configured: pushConfigured(env), devices: list.length, customers: people.length, people: people, project: info.project, keyOk: info.keyOk, last: info.last, lastOffer: info.lastOffer, lastAdmin: info.lastAdmin, log: log });
 }
 
 export async function onRequestPut({ request, env }){

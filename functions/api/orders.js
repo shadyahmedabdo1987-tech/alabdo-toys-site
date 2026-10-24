@@ -3,6 +3,7 @@ import { getCoupons, saveCoupons, findCoupon, couponState, usedBy, perCustomerLi
 import { dataUrlToBytes, sha256Bytes, checkReceipt, normRef } from "../_payproof.js";
 import { getTierConfig, activeTiers, pickTier, tierAmount } from "../_tiers.js";
 import { getNotes, saveNotes } from "../_notes.js";
+import { adminWake } from "../_push.js";
 
 /* GET /api/orders - admin headers return every order (for the admin
    dashboard's order list); customer headers return only that customer's
@@ -41,7 +42,7 @@ export async function onRequestGet({ request, env }){
    ترجع من حسابه أصلاً). paymentMethod هو "cash"/"vodafone"/"instapay"؛
    paymentProof صورة سكرين شوت التحويل base64 مضغوطة، إلزامية من الفرونت
    اند لفودافون كاش/إنستاباي (مش بتتفحص تاني هنا). notes اختياري. */
-export async function onRequestPost({ request, env }){
+export async function onRequestPost({ request, env, waitUntil }){
   var customer = await requireCustomer(request, env);
 
   var body;
@@ -299,6 +300,7 @@ export async function onRequestPost({ request, env }){
     }
   }catch(e){ /* الخصم مش أساسي لنجاح الطلب */ }
 
+  try{ waitUntil(adminWake(env, "order")); }catch(e){}
   return json({ ok:true, orderId: order.id, total: order.total, discount: order.discount || 0 });
 }
 

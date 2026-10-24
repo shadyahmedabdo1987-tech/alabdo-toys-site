@@ -1,5 +1,5 @@
 import { json, getList, saveList, requireAdmin, requireCustomer } from "../_lib.js";
-import { pushConfigured, tokensFor, sendPush } from "../_push.js";
+import { pushConfigured, tokensFor, sendPush, adminWake } from "../_push.js";
 
 /* "Request a product" (customer asks the store to bring in a toy that is not
    in the catalog). Stored as one array under KV key "productRequests".
@@ -65,7 +65,7 @@ export async function onRequestGet({ request, env }){
   return json({ ok:true, requests: mine, unread: unread });
 }
 
-export async function onRequestPost({ request, env }){
+export async function onRequestPost({ request, env, waitUntil }){
   var body;
   try{ body = await request.json(); }catch(e){ return json({ ok:false, error:"bad_json" }, 400); }
   var action = body && body.action;
@@ -177,5 +177,6 @@ export async function onRequestPost({ request, env }){
     list = list.filter(function(x){ if(extra > 0 && x.status !== "pending"){ extra--; return false; } return true; });
   }
   await saveList(env, KEY, list);
+  try{ waitUntil(adminWake(env, "product_request")); }catch(e){}
   return json({ ok:true, request: forCustomer(item) });
 }

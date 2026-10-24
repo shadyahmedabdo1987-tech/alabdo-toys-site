@@ -1,5 +1,6 @@
 import { json, getList, saveList, requireAdmin, requireCustomer } from "../_lib.js";
 import { addNote, phoneTail, hasAccountFor } from "../_notes.js";
+import { adminWake } from "../_push.js";
 
 /* GET /api/stock-requests - admin only. Returns every "أعلمني عند التوفر"
    request customers have submitted for out-of-stock products/colors, so the
@@ -15,7 +16,7 @@ export async function onRequestGet({ request, env }){
    guest WhatsApp checkout path - a browsing customer shouldn't need an
    account just to ask to be notified). Body: {productId, productName,
    colorName, name, phone}. phone is the only required field. */
-export async function onRequestPost({ request, env }){
+export async function onRequestPost({ request, env, waitUntil }){
   var body;
   try{ body = await request.json(); }catch(e){ return json({ ok:false, error:"bad_json" }, 400); }
   if(!body || !body.productId || !String(body.phone||"").trim()){
@@ -37,6 +38,7 @@ export async function onRequestPost({ request, env }){
   var list = await getList(env, "stockRequests");
   list.push(item);
   await saveList(env, "stockRequests", list);
+  try{ waitUntil(adminWake(env, "stock")); }catch(e){}
   return json({ ok:true });
 }
 

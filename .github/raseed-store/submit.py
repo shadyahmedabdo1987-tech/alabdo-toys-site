@@ -46,7 +46,7 @@ if build['attributes'].get('usesNonExemptEncryption') is None:
     ok('ENCRYPTION', *api('PATCH', '/v1/builds/' + build['id'], {'data': {'type': 'builds', 'id': build['id'], 'attributes': {'usesNonExemptEncryption': False}}}))
 
 # ---------- 0. optionally pull back a pending submission (to swap in a newer build) ----------
-if os.environ.get('CANCEL_FIRST') == '1':
+if os.environ.get('CANCEL_FIRST') == 'yes':
     s, d = api('GET', f'/v1/reviewSubmissions?filter[app]={aid}&filter[platform]=IOS&limit=10')
     for r in d.get('data', []):
         st = r['attributes'].get('state')

@@ -1,0 +1,8 @@
+APP 6826768034 دوري – جمعيتك في جيبك
+BUILDS 0
+CREATE_INTERNAL_GROUP 201 
+USERS 1 200 
+  user roles=ACCOUNT_HOLDER,ADMIN allApps=True
+  ADD_TESTER 201 
+GROUP_TESTERS 1
+  tester state=NOT_INVITED invite=EMAIL

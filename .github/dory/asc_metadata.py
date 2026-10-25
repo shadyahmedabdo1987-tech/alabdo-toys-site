@@ -169,5 +169,6 @@ if os.environ.get('SUBMIT') == 'yes':
                 s, d = api('POST', '/v1/reviewSubmissionItems', {'data': {'type': 'reviewSubmissionItems',
                        'relationships': {'reviewSubmission': {'data': {'type': 'reviewSubmissions', 'id': sub['id']}},
                                          'appStoreVersion': {'data': {'type': 'appStoreVersions', 'id': vid}}}}}); ok('SUBMISSION_ITEM', s, d)
+                if s >= 300: print('ITEM_ERRORS', json.dumps(d, ensure_ascii=False)[:4000])
                 s, d = api('PATCH', f"/v1/reviewSubmissions/{sub['id']}", {'data': {'type': 'reviewSubmissions', 'id': sub['id'], 'attributes': {'submitted': True}}})
                 ok('SUBMITTED', s, d)

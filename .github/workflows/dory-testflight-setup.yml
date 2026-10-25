@@ -1,0 +1,86 @@
+# دوري — حالة TestFlight (v2) + إضافة صاحب الحساب كمختبر داخلي (بيستخدم أسرار أبل اللي في الريبو)
+name: Dory TestFlight status + testers
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [".github/workflows/dory-testflight-setup.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  status:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Query App Store Connect
+        env:
+          K1: ${{ secrets.ASC_KEY_ID }}
+          K2: ${{ secrets.ASC_ISSUER_ID }}
+          K3: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          pip3 install --quiet pyjwt cryptography
+          printf '%s\n' "$K3" > "$RUNNER_TEMP/k.p8"
+          python3 - <<'PY' | tee "$RUNNER_TEMP/report.txt"
+          import jwt, time, json, os, re, urllib.request, urllib.error
+          kid = re.sub(r'[^A-Za-z0-9]', '', os.environ['K1']); iss = re.sub(r'[^A-Za-z0-9-]', '', os.environ['K2'])
+          key = open(os.environ['RUNNER_TEMP'] + '/k.p8').read()
+          now = int(time.time())
+          tok = jwt.encode({'iss': iss, 'iat': now, 'exp': now + 1100, 'aud': 'appstoreconnect-v1'}, key, algorithm='ES256', headers={'kid': kid, 'typ': 'JWT'})
+          def api(method, path, body=None):
+              req = urllib.request.Request('https://api.appstoreconnect.apple.com' + path, method=method,
+                    data=json.dumps(body).encode() if body else None,
+                    headers={'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json'})
+              try:
+                  with urllib.request.urlopen(req) as r: return r.status, json.loads(r.read() or b'{}')
+              except urllib.error.HTTPError as e: return e.code, json.loads(e.read() or b'{}')
+          def errs(d): return '; '.join((e.get('detail') or e.get('title') or '') for e in d.get('errors', []))
+          s, d = api('GET', '/v1/apps?filter[bundleId]=com.alabdo.dory')
+          app = d['data'][0]; aid = app['id']; print('APP', aid, app['attributes']['name'])
+          s, d = api('GET', f'/v1/builds?filter[app]={aid}&sort=-uploadedDate&limit=10')
+          builds = d.get('data', [])
+          print('BUILDS', len(builds))
+          for b in builds:
+              a = b['attributes']
+              print('  build', a.get('version'), 'state=' + str(a.get('processingState')), 'expired=' + str(a.get('expired')), 'encryption=' + str(a.get('usesNonExemptEncryption')), a.get('uploadedDate'))
+              if a.get('processingState') == 'VALID' and a.get('usesNonExemptEncryption') is None:
+                  s2, d2 = api('PATCH', '/v1/builds/' + b['id'], {'data': {'type': 'builds', 'id': b['id'], 'attributes': {'usesNonExemptEncryption': False}}})
+                  print('  set encryption=false', s2, errs(d2))
+          # internal group
+          s, d = api('GET', f'/v1/betaGroups?filter[app]={aid}&limit=50')
+          groups = d.get('data', [])
+          g = next((x for x in groups if x['attributes'].get('isInternalGroup')), None)
+          if not g:
+              s, d = api('POST', '/v1/betaGroups', {'data': {'type': 'betaGroups', 'attributes': {'name': 'فريق دوري', 'isInternalGroup': True, 'hasAccessToAllBuilds': True},
+                                                     'relationships': {'app': {'data': {'type': 'apps', 'id': aid}}}}})
+              print('CREATE_INTERNAL_GROUP', s, errs(d)); g = d.get('data')
+          else:
+              print('INTERNAL_GROUP', g['attributes']['name'])
+          # account users -> add as internal testers
+          s, d = api('GET', '/v1/users?limit=50')
+          users = d.get('data', [])
+          print('USERS', len(users), s, errs(d))
+          for u in users:
+              ua = u['attributes']; email = ua.get('username') or ua.get('email')
+              print('  user roles=' + ','.join(ua.get('roles', [])), 'allApps=' + str(ua.get('allAppsVisible')))
+              if g and email:
+                  s, d = api('POST', '/v1/betaTesters', {'data': {'type': 'betaTesters', 'attributes': {'email': email, 'firstName': ua.get('firstName') or 'Shady', 'lastName': ua.get('lastName') or 'Ahmed'},
+                                                       'relationships': {'betaGroups': {'data': [{'type': 'betaGroups', 'id': g['id']}]}}}})
+                  print('  ADD_TESTER', s, errs(d)[:200])
+          if g:
+              s, d = api('GET', f"/v1/betaGroups/{g['id']}/betaTesters?limit=50")
+              print('GROUP_TESTERS', len(d.get('data', [])))
+              for t in d.get('data', []):
+                  print('  tester state=' + str(t['attributes'].get('state')), 'invite=' + str(t['attributes'].get('inviteType')))
+          PY
+          rm -f "$RUNNER_TEMP/k.p8"
+
+      - name: Save report (branch dory-testflight-report)
+        if: always()
+        run: |
+          mkdir -p r && cd r && git init -q
+          git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cp "$RUNNER_TEMP/report.txt" report.txt 2>/dev/null || echo "no report" > report.txt
+          git add . && git commit -q -m "report $(date -u)"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:refs/heads/dory-testflight-report

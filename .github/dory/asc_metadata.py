@@ -67,12 +67,13 @@ if d.get('data'):
 s, d = api('GET', f'/v1/apps/{aid}/appStoreVersions?filter[platform]=IOS&limit=5')
 ver = [v for v in d['data'] if v['attributes']['appStoreState'] in ('PREPARE_FOR_SUBMISSION', 'DEVELOPER_REJECTED', 'REJECTED', 'METADATA_REJECTED')][0]
 vid = ver['id']
+VER = os.environ.get('VERSION') or '2.59.0'
 s, d = api('GET', f'/v1/builds?filter[app]={aid}&sort=-uploadedDate&limit=5&include=preReleaseVersion')
 pre = {x['id']: x['attributes'].get('version') for x in d.get('included', [])}
 for b in d.get('data', []): b['attributes']['short'] = pre.get(((b.get('relationships') or {}).get('preReleaseVersion') or {}).get('data', {}).get('id'))
-builds = [b for b in d.get('data', []) if b['attributes'].get('processingState') == 'VALID' and b['attributes'].get('short') == '2.58.0']
+builds = [b for b in d.get('data', []) if b['attributes'].get('processingState') == 'VALID' and b['attributes'].get('short') == VER]
 for b in d.get('data', []): print('  build', b['attributes'].get('short'), b['attributes']['version'], b['attributes'].get('processingState'))
-vstr = '2.58.0'
+vstr = VER
 s, d = api('PATCH', f'/v1/appStoreVersions/{vid}', {'data': {'type': 'appStoreVersions', 'id': vid, 'attributes': {
     'versionString': vstr, 'copyright': '2026 Shady Ahmed', 'releaseType': 'AFTER_APPROVAL'}}}); ok('VERSION', s, d)
 if builds:
@@ -144,3 +145,29 @@ else:
     s, d = api('POST', '/v1/appStoreReviewDetails', {'data': {'type': 'appStoreReviewDetails', 'attributes': rd,
            'relationships': {'appStoreVersion': {'data': {'type': 'appStoreVersions', 'id': vid}}}}})
 ok('REVIEW_DETAILS', s, d)
+
+# --- Submit for review (only when asked, and only with the right build attached)
+if os.environ.get('SUBMIT') == 'yes':
+    s, d = api('GET', f'/v1/appStoreVersions/{vid}/build')
+    att = (d.get('data') or {}).get('attributes', {}).get('version')
+    print('ATTACHED_BUILD', att)
+    if not builds or att != builds[0]['attributes']['version']:
+        print('SUBMIT_SKIPPED build not ready')
+    else:
+        s, d = api('GET', f'/v1/apps/{aid}/reviewSubmissions?filter[platform]=IOS&filter[state]=READY_FOR_REVIEW,WAITING_FOR_REVIEW,IN_REVIEW,UNRESOLVED_ISSUES')
+        open_subs = d.get('data', [])
+        for x in open_subs: print('OPEN_SUBMISSION', x['id'], x['attributes'].get('state'))
+        if any(x['attributes'].get('state') in ('WAITING_FOR_REVIEW', 'IN_REVIEW') for x in open_subs):
+            print('SUBMIT_SKIPPED already submitted')
+        else:
+            sub = next((x for x in open_subs if x['attributes'].get('state') == 'READY_FOR_REVIEW'), None)
+            if not sub:
+                s, d = api('POST', '/v1/reviewSubmissions', {'data': {'type': 'reviewSubmissions', 'attributes': {'platform': 'IOS'},
+                       'relationships': {'app': {'data': {'type': 'apps', 'id': aid}}}}}); ok('SUBMISSION_CREATE', s, d)
+                sub = d.get('data')
+            if sub:
+                s, d = api('POST', '/v1/reviewSubmissionItems', {'data': {'type': 'reviewSubmissionItems',
+                       'relationships': {'reviewSubmission': {'data': {'type': 'reviewSubmissions', 'id': sub['id']}},
+                                         'appStoreVersion': {'data': {'type': 'appStoreVersions', 'id': vid}}}}}); ok('SUBMISSION_ITEM', s, d)
+                s, d = api('PATCH', f"/v1/reviewSubmissions/{sub['id']}", {'data': {'type': 'reviewSubmissions', 'id': sub['id'], 'attributes': {'submitted': True}}})
+                ok('SUBMITTED', s, d)

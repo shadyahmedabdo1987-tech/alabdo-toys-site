@@ -17,6 +17,13 @@ s, d = api('GET', '/v1/apps?filter[bundleId]=com.alabdo.dory'); aid = d['data'][
 print('APP', aid)
 
 # --- Replace the version waiting for review: pull it back first (edits are locked while it waits)
+if os.environ.get('SUBMIT') == 'withdraw':
+    s, d = api('GET', f'/v1/apps/{aid}/reviewSubmissions?filter[platform]=IOS&filter[state]=WAITING_FOR_REVIEW,IN_REVIEW,UNRESOLVED_ISSUES')
+    for x in d.get('data', []):
+        s2, d2 = api('PATCH', f"/v1/reviewSubmissions/{x['id']}", {'data': {'type': 'reviewSubmissions', 'id': x['id'], 'attributes': {'canceled': True}}})
+        ok('WITHDRAW ' + x['attributes'].get('state', ''), s2, d2)
+    if not d.get('data'): print('WITHDRAW nothing waiting')
+    raise SystemExit(0)
 if os.environ.get('SUBMIT') == 'replace':
     # Only pull the old one back once the new build is ready to take its place.
     want = os.environ.get('VERSION') or ''

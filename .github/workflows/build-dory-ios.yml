@@ -1,0 +1,184 @@
+# دوري - نسخة آيفون (App Store / TestFlight)
+# الكود في الريبو shadyahmedabdo1987-tech/dory (Expo / React Native)
+# والوركفلو هنا علشان يستخدم نفس أسرار أبل المتسجلة في الريبو ده
+# (ASC_KEY_ID / ASC_ISSUER_ID / ASC_KEY_P8) — مبيتكتبوش هنا أبدًا.
+# رقم النسخة من app.json بتاع دوري، ورقم البناء = تاريخ ووقت التشغيل (بيزيد لوحده).
+
+name: Build Dory iOS (TestFlight)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/build-dory-ios.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-dory-ios
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 90
+    env:
+      BUNDLE_ID: com.alabdo.dory
+    steps:
+      - name: Checkout (secrets repo)
+        uses: actions/checkout@v4
+
+      - name: Checkout Dory source
+        uses: actions/checkout@v4
+        with:
+          repository: shadyahmedabdo1987-tech/dory
+          path: dory
+
+      - name: Check the Apple secrets
+        env:
+          K1: ${{ secrets.ASC_KEY_ID }}
+          K2: ${{ secrets.ASC_ISSUER_ID }}
+          K3: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          miss=""
+          [ -n "$K1" ] || miss="$miss ASC_KEY_ID"
+          [ -n "$K2" ] || miss="$miss ASC_ISSUER_ID"
+          [ -n "$K3" ] || miss="$miss ASC_KEY_P8"
+          if [ -n "$miss" ]; then echo "missing secrets:$miss" | tee "$RUNNER_TEMP/build.log"; exit 1; fi
+          echo "TEAM_ID=8G52ACR278" >> "$GITHUB_ENV"
+          echo "ASC_KID=$(printf '%s' "$K1" | tr -cd 'A-Za-z0-9')" >> "$GITHUB_ENV"
+          echo "ASC_ISS=$(printf '%s' "$K2" | tr -cd 'A-Za-z0-9-')" >> "$GITHUB_ENV"
+          echo "BUILD_NO=$(TZ=Africa/Cairo date +%y%m%d%H%M)" >> "$GITHUB_ENV"
+          echo "APP_VERSION=$(node -p "require('./dory/app.json').expo.version")" >> "$GITHUB_ENV"
+          echo "secrets ok" | tee "$RUNNER_TEMP/build.log"
+
+      - name: App Store Connect key (temporary file)
+        env:
+          K3: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          KEY="$RUNNER_TEMP/AuthKey_${ASC_KID}.p8"
+          printf '%s\n' "$K3" > "$KEY"
+          chmod 600 "$KEY"
+          grep -q "BEGIN PRIVATE KEY" "$KEY" || { echo "ASC_KEY_P8 BEGIN line missing" | tee -a "$RUNNER_TEMP/build.log"; exit 1; }
+          echo "ASC_KEY_PATH=$KEY" >> "$GITHUB_ENV"
+
+      - name: Register bundle ID + check App Store Connect app record
+        run: |
+          pip3 install --quiet --break-system-packages pyjwt cryptography 2>/dev/null || pip3 install --quiet pyjwt cryptography
+          python3 - <<'PY'
+          import jwt, time, json, os, urllib.request, urllib.error
+          key = open(os.environ['ASC_KEY_PATH']).read()
+          now = int(time.time())
+          tok = jwt.encode({'iss': os.environ['ASC_ISS'], 'iat': now, 'exp': now + 900, 'aud': 'appstoreconnect-v1'},
+                           key, algorithm='ES256', headers={'kid': os.environ['ASC_KID'], 'typ': 'JWT'})
+          def api(method, path, body=None):
+              req = urllib.request.Request('https://api.appstoreconnect.apple.com' + path, method=method,
+                    data=json.dumps(body).encode() if body else None,
+                    headers={'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json'})
+              try:
+                  with urllib.request.urlopen(req) as r: return r.status, json.loads(r.read() or b'{}')
+              except urllib.error.HTTPError as e: return e.code, json.loads(e.read() or b'{}')
+          log = open(os.environ['RUNNER_TEMP'] + '/build.log', 'a')
+          def say(m): print(m); log.write(m + '\n')
+          bid = os.environ['BUNDLE_ID']
+          s, d = api('GET', '/v1/bundleIds?filter[identifier]=' + bid)
+          found = [x for x in d.get('data', []) if x['attributes']['identifier'] == bid]
+          if not found:
+              s, d = api('POST', '/v1/bundleIds', {'data': {'type': 'bundleIds', 'attributes': {'identifier': bid, 'name': 'Dory', 'platform': 'IOS'}}})
+              say('BUNDLE_ID_REGISTERED %s %s' % (s, json.dumps(d.get('errors', ''))[:300]))
+              found = [d['data']] if d.get('data') else []
+          else:
+              say('BUNDLE_ID_EXISTS')
+          if found:
+              s, d = api('POST', '/v1/bundleIdCapabilities', {'data': {'type': 'bundleIdCapabilities', 'attributes': {'capabilityType': 'PUSH_NOTIFICATIONS'},
+                      'relationships': {'bundleId': {'data': {'type': 'bundleIds', 'id': found[0]['id']}}}}})
+              say('PUSH_CAPABILITY %s' % s)
+          s, d = api('GET', '/v1/apps?filter[bundleId]=' + bid)
+          apps = d.get('data', [])
+          if not apps:
+              say('NO_APP_RECORD error: create the app in App Store Connect (Apps > + > New App) with bundle ID ' + bid)
+              raise SystemExit(1)
+          aid = apps[0]['id']
+          say('APP_RECORD %s %s' % (aid, apps[0]['attributes']['name']))
+          s, d = api('GET', f'/v1/builds?filter[app]={aid}&sort=-uploadedDate&limit=5')
+          for b in d.get('data', []):
+              say('  previous build %s %s' % (b['attributes'].get('version'), b['attributes'].get('processingState')))
+          PY
+
+      - name: Newest Xcode + Node
+        run: |
+          X=$(ls -d /Applications/Xcode_*.app 2>/dev/null | grep -v -i beta | sort -V | tail -1)
+          if [ -n "$X" ]; then sudo xcode-select -s "$X"; fi
+          xcodebuild -version | tee -a "$RUNNER_TEMP/build.log"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install + generate the iOS project
+        working-directory: dory
+        run: |
+          set -e
+          set -o pipefail
+          npm install --no-audit --no-fund 2>&1 | tail -5
+          cp config/production.env .env
+          IOS_BUILD_NUMBER="$BUILD_NO" CI=1 npx expo prebuild --platform ios --clean 2>&1 | tee -a "$RUNNER_TEMP/build.log" | tail -n 30
+          ls ios
+          WS=$(ls -d ios/*.xcworkspace | head -1)
+          SCHEME=$(basename "$WS" .xcworkspace)
+          echo "WS=$GITHUB_WORKSPACE/dory/$WS" >> "$GITHUB_ENV"
+          echo "SCHEME=$SCHEME" >> "$GITHUB_ENV"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" -c "Print :CFBundleVersion" "ios/$SCHEME/Info.plist" | tee -a "$RUNNER_TEMP/build.log"
+
+      - name: Archive (unsigned - signing happens on upload)
+        run: |
+          set -e
+          set -o pipefail
+          xcodebuild -workspace "$WS" -scheme "$SCHEME" -configuration Release \
+            -destination "generic/platform=iOS" -archivePath "$RUNNER_TEMP/build/Dory.xcarchive" \
+            DEVELOPMENT_TEAM="$TEAM_ID" CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="-" PROVISIONING_PROFILE_SPECIFIER="" \
+            CODE_SIGNING_REQUIRED=NO AD_HOC_CODE_SIGNING_ALLOWED=YES \
+            archive 2>&1 | tee -a "$RUNNER_TEMP/build.log" | grep -E "error:|warning: .*deprecated|ARCHIVE|\*\*" | tail -n 60
+
+      - name: Upload to App Store Connect (TestFlight)
+        run: |
+          set -e
+          set -o pipefail
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>${TEAM_ID}</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict>
+          </plist>
+          EOF
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/build/Dory.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" -authenticationKeyID "$ASC_KID" -authenticationKeyIssuerID "$ASC_ISS" \
+            2>&1 | tee -a "$RUNNER_TEMP/build.log" | tail -n 40
+
+      - name: Report (branch dory-ios-build)
+        if: always()
+        run: |
+          rm -f "$ASC_KEY_PATH"
+          mkdir -p "$RUNNER_TEMP/rep" && cd "$RUNNER_TEMP/rep"
+          git init -q
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "ok Dory ${APP_VERSION} (${BUILD_NO}) uploaded to App Store Connect $(date -u)" > info.txt
+          else
+            echo "FAILED Dory ${APP_VERSION} (${BUILD_NO}) at $(date -u)" > info.txt
+          fi
+          if [ -f "$RUNNER_TEMP/build.log" ]; then grep -E "error:|ERROR|BUILD|EXPORT|Upload|upload|APP_RECORD|BUNDLE|PUSH|previous build|NO_APP" "$RUNNER_TEMP/build.log" | grep -v -i "authenticationKey" | head -n 150 > errors.txt || true; tail -n 300 "$RUNNER_TEMP/build.log" | grep -v -i "PRIVATE KEY" > build.log; fi
+          git add . && git commit -q -m "Dory iOS build ${BUILD_NO}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:refs/heads/dory-ios-build

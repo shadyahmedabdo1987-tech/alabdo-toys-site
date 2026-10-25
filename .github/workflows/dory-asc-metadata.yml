@@ -15,9 +15,6 @@ on:
       submit:
         description: "yes = submit for App Review; replace = pull back the waiting version and submit this one"
         default: "no"
-  push:
-    branches: [main]
-    paths: [".github/workflows/dory-asc-metadata.yml", ".github/dory/asc_metadata.py"]
 
 permissions:
   contents: write

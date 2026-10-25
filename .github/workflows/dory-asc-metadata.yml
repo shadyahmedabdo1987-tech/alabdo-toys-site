@@ -1,0 +1,173 @@
+# دوري — تجهيز صفحة App Store (الوصف، الكلمات، الصور، التصنيف، بيانات المراجعة، النسخة)
+# بيستخدم نفس أسرار أبل (ASC_KEY_ID / ASC_ISSUER_ID / ASC_KEY_P8). الرقم السري لحساب المراجع
+# بيكتبه صاحب الحساب بنفسه في App Store Connect — مبيتكتبش هنا.
+name: Dory App Store metadata
+
+on:
+  workflow_dispatch:
+    inputs:
+      demo_user:
+        description: "Reviewer sign-in phone number (no password here)"
+        default: ""
+  push:
+    branches: [main]
+    paths: [".github/workflows/dory-asc-metadata.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  meta:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fill App Store Connect
+        env:
+          K1: ${{ secrets.ASC_KEY_ID }}
+          K2: ${{ secrets.ASC_ISSUER_ID }}
+          K3: ${{ secrets.ASC_KEY_P8 }}
+          DEMO_USER: ${{ inputs.demo_user }}
+        run: |
+          pip3 install --quiet pyjwt cryptography
+          printf '%s\n' "$K3" > "$RUNNER_TEMP/k.p8"
+          python3 - <<'PY' 2>&1 | tee "$RUNNER_TEMP/report.txt"
+          import jwt, time, json, os, re, hashlib, urllib.request, urllib.error
+          kid = re.sub(r'[^A-Za-z0-9]', '', os.environ['K1']); iss = re.sub(r'[^A-Za-z0-9-]', '', os.environ['K2'])
+          key = open(os.environ['RUNNER_TEMP'] + '/k.p8').read()
+          now = int(time.time())
+          TOK = jwt.encode({'iss': iss, 'iat': now, 'exp': now + 1150, 'aud': 'appstoreconnect-v1'}, key, algorithm='ES256', headers={'kid': kid, 'typ': 'JWT'})
+          def api(method, path, body=None):
+              url = path if path.startswith('http') else 'https://api.appstoreconnect.apple.com' + path
+              req = urllib.request.Request(url, method=method, data=json.dumps(body).encode() if body is not None else None,
+                    headers={'Authorization': 'Bearer ' + TOK, 'Content-Type': 'application/json'})
+              try:
+                  with urllib.request.urlopen(req) as r: return r.status, json.loads(r.read() or b'{}')
+              except urllib.error.HTTPError as e: return e.code, json.loads(e.read() or b'{}')
+          def errs(d): return '; '.join((e.get('detail') or e.get('title') or '') for e in d.get('errors', []))[:400]
+          def ok(tag, s, d): print(tag, s, errs(d))
+
+          s, d = api('GET', '/v1/apps?filter[bundleId]=com.alabdo.dory'); aid = d['data'][0]['id']
+          print('APP', aid)
+          s, d = api('PATCH', f'/v1/apps/{aid}', {'data': {'type': 'apps', 'id': aid, 'attributes': {'contentRightsDeclaration': 'DOES_NOT_USE_THIRD_PARTY_CONTENT'}}}); ok('CONTENT_RIGHTS', s, d)
+
+          # --- App info: categories, subtitle, privacy URL, age rating
+          s, d = api('GET', f'/v1/apps/{aid}/appInfos')
+          info = [x for x in d['data'] if x['attributes'].get('appStoreState') not in ('READY_FOR_SALE',)][0]; iid = info['id']
+          s, d = api('PATCH', f'/v1/appInfos/{iid}', {'data': {'type': 'appInfos', 'id': iid, 'relationships': {
+              'primaryCategory': {'data': {'type': 'appCategories', 'id': 'FINANCE'}},
+              'secondaryCategory': {'data': {'type': 'appCategories', 'id': 'PRODUCTIVITY'}}}}}); ok('CATEGORIES', s, d)
+          s, d = api('GET', f'/v1/appInfos/{iid}/appInfoLocalizations')
+          for loc in d['data']:
+              if loc['attributes']['locale'] == 'ar-SA':
+                  s2, d2 = api('PATCH', f"/v1/appInfoLocalizations/{loc['id']}", {'data': {'type': 'appInfoLocalizations', 'id': loc['id'], 'attributes': {
+                      'subtitle': 'نظّم الأقساط والأدوار والقبض', 'privacyPolicyUrl': 'https://alabdo-toys.com/dory/privacy.html'}}}); ok('APPINFO_AR', s2, d2)
+          s, d = api('GET', f'/v1/appInfos/{iid}/ageRatingDeclaration')
+          if d.get('data'):
+              arid = d['data']['id']
+              attrs = {k: ('NONE' if isinstance(v, str) else False) for k, v in d['data']['attributes'].items() if v is None or isinstance(v, (str, bool))}
+              for k in ['kidsAgeBand', 'ageRatingOverride', 'ageRatingOverrideV2', 'koreaAgeRatingOverride', 'developerAgeRatingInfoUrl']: attrs.pop(k, None)
+              s, d = api('PATCH', f'/v1/ageRatingDeclarations/{arid}', {'data': {'type': 'ageRatingDeclarations', 'id': arid, 'attributes': attrs}})
+              ok('AGE_RATING', s, d)
+              if s >= 300: print('AGE_ATTRS', list(attrs))
+
+          # --- Price: free
+          s, d = api('GET', f'/v1/apps/{aid}/appPricePoints?filter[territory]=EGY&limit=1')
+          if d.get('data'):
+              pp = d['data'][0]['id']
+              s, d = api('POST', '/v1/appPriceSchedules', {'data': {'type': 'appPriceSchedules', 'relationships': {
+                  'app': {'data': {'type': 'apps', 'id': aid}}, 'baseTerritory': {'data': {'type': 'territories', 'id': 'EGY'}},
+                  'manualPrices': {'data': [{'type': 'appPrices', 'id': '${p0}'}]}}},
+                  'included': [{'type': 'appPrices', 'id': '${p0}', 'attributes': {'startDate': None},
+                                'relationships': {'appPricePoint': {'data': {'type': 'appPricePoints', 'id': pp}}}}]})
+              ok('PRICE_FREE', s, d)
+
+          # --- Version: number, copyright, build, localization, screenshots, review details
+          s, d = api('GET', f'/v1/apps/{aid}/appStoreVersions?filter[platform]=IOS&limit=5')
+          ver = [v for v in d['data'] if v['attributes']['appStoreState'] in ('PREPARE_FOR_SUBMISSION', 'DEVELOPER_REJECTED', 'REJECTED', 'METADATA_REJECTED')][0]
+          vid = ver['id']
+          s, d = api('GET', f'/v1/builds?filter[app]={aid}&filter[preReleaseVersion.version]=2.58.0&sort=-uploadedDate&limit=5')
+          builds = [b for b in d.get('data', []) if b['attributes'].get('processingState') == 'VALID']
+          for b in d.get('data', []): print('  build', b['attributes']['version'], b['attributes'].get('processingState'))
+          vstr = '2.58.0'
+          s, d = api('PATCH', f'/v1/appStoreVersions/{vid}', {'data': {'type': 'appStoreVersions', 'id': vid, 'attributes': {
+              'versionString': vstr, 'copyright': '2026 Shady Ahmed', 'releaseType': 'AFTER_APPROVAL'}}}); ok('VERSION', s, d)
+          if builds:
+              bid = builds[0]['id']
+              api('PATCH', f'/v1/builds/{bid}', {'data': {'type': 'builds', 'id': bid, 'attributes': {'usesNonExemptEncryption': False}}})
+              s, d = api('PATCH', f'/v1/appStoreVersions/{vid}/relationships/build', {'data': {'type': 'builds', 'id': bid}}); ok('BUILD ' + builds[0]['attributes']['version'], s, d)
+          DESC = '''دوري بينظّم الجمعية (الادخار الدوري) من أولها لآخرها، لصاحب الجمعية والأعضاء.
+
+لصاحب الجمعية:
+• اعمل جمعية في دقيقة: القسط، والمواعيد (كل شهر أو كل كام شهر)، وعدد الأعضاء.
+• ضيف الأعضاء بنفسك أو ابعتلهم كود دعوة يدخلوا بيه.
+• رتّب الأدوار بإيدك أو بعجلة القرعة.
+• كل الأدوار قدامك أيقونات: الأصفر لسه، والأخضر خلص.
+• أكّد الأقساط كاش أو بصورة التحويل، وسجّل تسليم القبض.
+• تأجيل قسط لعضو، ودور إضافي، ومبلغ إضافي، وتسريع الجمعية.
+• رسايل وتذكيرات للأعضاء، وتقرير كامل للجمعية.
+
+للعضو:
+• شوف دورك، والأقساط اللي دفعتها واللي فاضلة.
+• دوس "دفعت" وارفق صورة التحويل.
+• أكّد إنك استلمت فلوسك لما دورك يجي.
+
+• قفل التطبيق بالبصمة أو بصمة الوش.
+• عربي وإنجليزي، فاتح وليلي.
+
+دوري ما بيحوّلش فلوس ولا بيحتفظ بفلوس — هو دفتر الجمعية المنظّم في جيبك.
+Powered by Shady Ahmed'''
+          s, d = api('GET', f'/v1/appStoreVersions/{vid}/appStoreVersionLocalizations')
+          locs = {x['attributes']['locale']: x['id'] for x in d['data']}
+          fields = {'description': DESC, 'keywords': 'جمعية,جمعيات,ادخار,أقساط,قسط,دور,قبض,توفير,فلوس,حسابات,دفتر',
+                    'promotionalText': 'نظّم جمعيتك: الأقساط والأدوار والقبض في مكان واحد، لصاحب الجمعية والأعضاء.',
+                    'supportUrl': 'https://alabdo-toys.com/dory/privacy.html', 'marketingUrl': 'https://alabdo-toys.com/dory/privacy.html'}
+          if 'ar-SA' in locs:
+              lid = locs['ar-SA']
+              s, d = api('PATCH', f'/v1/appStoreVersionLocalizations/{lid}', {'data': {'type': 'appStoreVersionLocalizations', 'id': lid, 'attributes': fields}}); ok('VERSION_AR', s, d)
+              # screenshots (6.5" iPhone)
+              s, d = api('GET', f'/v1/appStoreVersionLocalizations/{lid}/appScreenshotSets')
+              sets = {x['attributes']['screenshotDisplayType']: x['id'] for x in d.get('data', [])}
+              if 'APP_IPHONE_65' not in sets:
+                  s, d = api('POST', '/v1/appScreenshotSets', {'data': {'type': 'appScreenshotSets', 'attributes': {'screenshotDisplayType': 'APP_IPHONE_65'},
+                         'relationships': {'appStoreVersionLocalization': {'data': {'type': 'appStoreVersionLocalizations', 'id': lid}}}}}); ok('SHOT_SET', s, d)
+                  sets['APP_IPHONE_65'] = d['data']['id']
+              sid = sets['APP_IPHONE_65']
+              s, d = api('GET', f'/v1/appScreenshotSets/{sid}/appScreenshots')
+              if d.get('data'):
+                  print('SHOTS already', len(d['data']))
+              else:
+                  for n in (1, 2, 3):
+                      img = open(f'.github/dory/shots/shot-{n}.png', 'rb').read()
+                      s, d = api('POST', '/v1/appScreenshots', {'data': {'type': 'appScreenshots', 'attributes': {'fileName': f'shot-{n}.png', 'fileSize': len(img)},
+                             'relationships': {'appScreenshotSet': {'data': {'type': 'appScreenshotSets', 'id': sid}}}}})
+                      if s >= 300: ok('SHOT_RESERVE', s, d); continue
+                      shid = d['data']['id']
+                      for op in d['data']['attributes']['uploadOperations']:
+                          urllib.request.urlopen(urllib.request.Request(op['url'], method=op['method'], data=img[op['offset']:op['offset'] + op['length']],
+                                                 headers={h['name']: h['value'] for h in op['requestHeaders']})).read()
+                      s, d = api('PATCH', f'/v1/appScreenshots/{shid}', {'data': {'type': 'appScreenshots', 'id': shid,
+                             'attributes': {'uploaded': True, 'sourceFileChecksum': hashlib.md5(img).hexdigest()}}}); ok(f'SHOT_{n}', s, d)
+          # review details (no password — the owner types it in App Store Connect)
+          rd = {'contactFirstName': 'Shady', 'contactLastName': 'Ahmed', 'contactPhone': '+201099952333', 'contactEmail': 'shady.ahmed.abdo.1987@gmail.com',
+                'demoAccountRequired': True,
+                'notes': 'Dory is a free app to organize a rotating savings circle (gameya). Sign in on the start screen with "أنا صاحب جمعية" > "عندي حساب" using the demo phone number and password. The demo account already has a sample circle. The app does not move money; members record payments and the organizer confirms them. Account deletion: حسابي > حذف الحساب.'}
+          if os.environ.get('DEMO_USER'): rd['demoAccountName'] = os.environ['DEMO_USER']
+          s, d = api('GET', f'/v1/appStoreVersions/{vid}/appStoreReviewDetail')
+          if d.get('data'):
+              rid = d['data']['id']
+              s, d = api('PATCH', f'/v1/appStoreReviewDetails/{rid}', {'data': {'type': 'appStoreReviewDetails', 'id': rid, 'attributes': rd}})
+          else:
+              s, d = api('POST', '/v1/appStoreReviewDetails', {'data': {'type': 'appStoreReviewDetails', 'attributes': rd,
+                     'relationships': {'appStoreVersion': {'data': {'type': 'appStoreVersions', 'id': vid}}}}})
+          ok('REVIEW_DETAILS', s, d)
+          PY
+          rm -f "$RUNNER_TEMP/k.p8"
+
+      - name: Save report (branch dory-asc-report)
+        if: always()
+        run: |
+          mkdir -p r && cd r && git init -q
+          git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cp "$RUNNER_TEMP/report.txt" report.txt 2>/dev/null || echo "no report" > report.txt
+          git add . && git commit -q -m "report $(date -u)"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:refs/heads/dory-asc-report

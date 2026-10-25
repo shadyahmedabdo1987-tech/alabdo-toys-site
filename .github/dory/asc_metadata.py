@@ -87,7 +87,14 @@ if d.get('data'):
 
 # --- Version: number, copyright, build, localization, screenshots, review details
 s, d = api('GET', f'/v1/apps/{aid}/appStoreVersions?filter[platform]=IOS&limit=5')
-ver = [v for v in d['data'] if v['attributes']['appStoreState'] in ('PREPARE_FOR_SUBMISSION', 'DEVELOPER_REJECTED', 'REJECTED', 'METADATA_REJECTED')][0]
+for v in d['data']: print('VERSION_STATE', v['attributes'].get('versionString'), v['attributes'].get('appStoreState'), v['attributes'].get('appVersionState'))
+editable = [v for v in d['data'] if v['attributes']['appStoreState'] in ('PREPARE_FOR_SUBMISSION', 'DEVELOPER_REJECTED', 'REJECTED', 'METADATA_REJECTED')]
+if not editable:
+    s, d = api('GET', f'/v1/apps/{aid}/reviewSubmissions?filter[platform]=IOS&limit=5')
+    for x in d.get('data', []): print('SUBMISSION', x['id'], x['attributes'].get('state'), x['attributes'].get('submittedDate'))
+    print('NOTHING_EDITABLE (the version is with Apple)')
+    raise SystemExit(0)
+ver = editable[0]
 vid = ver['id']
 VER = os.environ.get('VERSION') or '2.59.0'
 s, d = api('GET', f'/v1/builds?filter[app]={aid}&sort=-uploadedDate&limit=5&include=preReleaseVersion')

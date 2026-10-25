@@ -1,0 +1,146 @@
+# دوري — إنشاء منتجات الشراء داخل التطبيق على App Store Connect (مرة واحدة، وتتعاد من غير ضرر)
+#   com.alabdo.dory.trial30  تجربة مجانية ٣٠ يوم (سعر ٠)
+#   com.alabdo.dory.full     النسخة الكاملة (٢٠٠ ج.م)
+# بيستخدم نفس أسرار أبل اللي في الريبو (ASC_KEY_ID / ASC_ISSUER_ID / ASC_KEY_P8).
+name: Dory in-app purchases setup
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [".github/workflows/dory-iap-setup.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create products
+        env:
+          K1: ${{ secrets.ASC_KEY_ID }}
+          K2: ${{ secrets.ASC_ISSUER_ID }}
+          K3: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          pip3 install --quiet pyjwt cryptography
+          printf '%s\n' "$K3" > "$RUNNER_TEMP/k.p8"
+          python3 - <<'PY' 2>&1 | tee "$RUNNER_TEMP/report.txt"
+          import jwt, time, json, os, re, hashlib, urllib.request, urllib.error
+          kid = re.sub(r'[^A-Za-z0-9]', '', os.environ['K1']); iss = re.sub(r'[^A-Za-z0-9-]', '', os.environ['K2'])
+          key = open(os.environ['RUNNER_TEMP'] + '/k.p8').read()
+          def token():
+              now = int(time.time())
+              return jwt.encode({'iss': iss, 'iat': now, 'exp': now + 1100, 'aud': 'appstoreconnect-v1'}, key, algorithm='ES256', headers={'kid': kid, 'typ': 'JWT'})
+          TOK = token()
+          def api(method, path, body=None):
+              url = path if path.startswith('http') else 'https://api.appstoreconnect.apple.com' + path
+              req = urllib.request.Request(url, method=method, data=json.dumps(body).encode() if body is not None else None,
+                    headers={'Authorization': 'Bearer ' + TOK, 'Content-Type': 'application/json'})
+              try:
+                  with urllib.request.urlopen(req) as r: return r.status, json.loads(r.read() or b'{}')
+              except urllib.error.HTTPError as e: return e.code, json.loads(e.read() or b'{}')
+          def errs(d): return '; '.join((e.get('detail') or e.get('title') or '') for e in d.get('errors', []))[:400]
+
+          s, d = api('GET', '/v1/apps?filter[bundleId]=com.alabdo.dory')
+          aid = d['data'][0]['id']; print('APP', aid)
+
+          PRODUCTS = [
+              {'pid': 'com.alabdo.dory.trial30', 'ref': 'Dory 30-day free trial', 'price': '0.0',
+               'name': 'تجربة مجانية ٣٠ يوم', 'desc': 'جرّب كل مميزات دوري ٣٠ يوم ببلاش.'},
+              {'pid': 'com.alabdo.dory.full', 'ref': 'Dory full version', 'price': '200.0',
+               'name': 'النسخة الكاملة', 'desc': 'افتح دوري للأبد بدفعة واحدة، من غير اشتراك.'},
+          ]
+          s, d = api('GET', f'/v1/apps/{aid}/inAppPurchasesV2?limit=50')
+          existing = {x['attributes']['productId']: x for x in d.get('data', [])}
+          print('EXISTING', list(existing))
+          shot = open('.github/dory/iap-review.png', 'rb').read()
+
+          for p in PRODUCTS:
+              print('---', p['pid'])
+              if p['pid'] in existing:
+                  iap = existing[p['pid']]
+              else:
+                  s, d = api('POST', '/v2/inAppPurchases', {'data': {'type': 'inAppPurchases',
+                      'attributes': {'name': p['ref'], 'productId': p['pid'], 'inAppPurchaseType': 'NON_CONSUMABLE', 'familySharable': False,
+                                     'reviewNote': 'Dory: 30-day free trial item, then a one-time purchase that unlocks the app. Test with any sandbox account.'},
+                      'relationships': {'app': {'data': {'type': 'apps', 'id': aid}}}}})
+                  print('CREATE', s, errs(d))
+                  if s >= 300: continue
+                  iap = d['data']
+              iid = iap['id']
+              # Localization (Arabic + English)
+              s, d = api('GET', f'/v2/inAppPurchases/{iid}/inAppPurchaseLocalizations')
+              have = {x['attributes']['locale'] for x in d.get('data', [])}
+              for loc, nm, ds in [('ar-SA', p['name'], p['desc']), ('en-US', p['ref'].replace('Dory ', 'Dory – '), p['ref'])]:
+                  if loc in have: continue
+                  s, d = api('POST', '/v1/inAppPurchaseLocalizations', {'data': {'type': 'inAppPurchaseLocalizations',
+                      'attributes': {'locale': loc, 'name': nm[:30], 'description': ds[:45]},
+                      'relationships': {'inAppPurchaseV2': {'data': {'type': 'inAppPurchases', 'id': iid}}}}})
+                  print('LOCALIZATION', loc, s, errs(d))
+              # Price (Egypt base territory)
+              s, d = api('GET', f'/v1/inAppPurchasePriceSchedules/{iid}/manualPrices?limit=5')
+              if s == 200 and d.get('data'):
+                  print('PRICE already set')
+              else:
+                  url = f'/v2/inAppPurchases/{iid}/pricePoints?filter[territory]=EGY&limit=200'
+                  pp = None
+                  while url and not pp:
+                      s, d = api('GET', url)
+                      for x in d.get('data', []):
+                          if abs(float(x['attributes']['customerPrice']) - float(p['price'])) < 0.001: pp = x['id']; break
+                      url = d.get('links', {}).get('next')
+                  print('PRICE_POINT', pp)
+                  if pp:
+                      s, d = api('POST', '/v1/inAppPurchasePriceSchedules', {'data': {'type': 'inAppPurchasePriceSchedules',
+                          'relationships': {'inAppPurchase': {'data': {'type': 'inAppPurchases', 'id': iid}},
+                                            'baseTerritory': {'data': {'type': 'territories', 'id': 'EGY'}},
+                                            'manualPrices': {'data': [{'type': 'inAppPurchasePrices', 'id': '${p0}'}]}}},
+                          'included': [{'type': 'inAppPurchasePrices', 'id': '${p0}', 'attributes': {'startDate': None},
+                                        'relationships': {'inAppPurchasePricePoint': {'data': {'type': 'inAppPurchasePricePoints', 'id': pp}}}}]})
+                      print('PRICE', s, errs(d))
+              # Availability: every territory
+              s, d = api('GET', f'/v2/inAppPurchases/{iid}/inAppPurchaseAvailability')
+              if s != 200 or not d.get('data'):
+                  terr, url = [], '/v1/territories?limit=200'
+                  while url:
+                      s2, d2 = api('GET', url); terr += [t['id'] for t in d2.get('data', [])]; url = d2.get('links', {}).get('next')
+                  s, d = api('POST', '/v1/inAppPurchaseAvailabilities', {'data': {'type': 'inAppPurchaseAvailabilities',
+                      'attributes': {'availableInNewTerritories': True},
+                      'relationships': {'inAppPurchase': {'data': {'type': 'inAppPurchases', 'id': iid}},
+                                        'availableTerritories': {'data': [{'type': 'territories', 'id': t} for t in terr]}}}})
+                  print('AVAILABILITY', len(terr), s, errs(d))
+              else:
+                  print('AVAILABILITY already set')
+              # Review screenshot
+              s, d = api('GET', f'/v2/inAppPurchases/{iid}/appStoreReviewScreenshot')
+              if s == 200 and d.get('data'):
+                  print('SCREENSHOT already set')
+              else:
+                  s, d = api('POST', '/v1/inAppPurchaseAppStoreReviewScreenshots', {'data': {'type': 'inAppPurchaseAppStoreReviewScreenshots',
+                      'attributes': {'fileName': 'review.png', 'fileSize': len(shot)},
+                      'relationships': {'inAppPurchaseV2': {'data': {'type': 'inAppPurchases', 'id': iid}}}}})
+                  print('SCREENSHOT_RESERVE', s, errs(d))
+                  if s < 300:
+                      sid = d['data']['id']
+                      for op in d['data']['attributes']['uploadOperations']:
+                          part = shot[op['offset']:op['offset'] + op['length']]
+                          req = urllib.request.Request(op['url'], method=op['method'], data=part, headers={h['name']: h['value'] for h in op['requestHeaders']})
+                          urllib.request.urlopen(req).read()
+                      s, d = api('PATCH', f'/v1/inAppPurchaseAppStoreReviewScreenshots/{sid}', {'data': {'type': 'inAppPurchaseAppStoreReviewScreenshots', 'id': sid,
+                          'attributes': {'uploaded': True, 'sourceFileChecksum': hashlib.md5(shot).hexdigest()}}})
+                      print('SCREENSHOT_COMMIT', s, errs(d))
+              s, d = api('GET', f'/v2/inAppPurchases/{iid}')
+              print('STATE', d.get('data', {}).get('attributes', {}).get('state'))
+          PY
+          rm -f "$RUNNER_TEMP/k.p8"
+
+      - name: Save report (branch dory-iap-report)
+        if: always()
+        run: |
+          mkdir -p r && cd r && git init -q
+          git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cp "$RUNNER_TEMP/report.txt" report.txt 2>/dev/null || echo "no report" > report.txt
+          git add . && git commit -q -m "report $(date -u)"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:refs/heads/dory-iap-report

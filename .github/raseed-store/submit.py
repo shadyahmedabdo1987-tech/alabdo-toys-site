@@ -88,8 +88,8 @@ s, d = api('GET', f'/v1/appInfos/{iid}/ageRatingDeclaration')
 if s < 300 and d.get('data'):
     ar = d['data']; cur = ar['attributes']; log('AGE_KEYS', sorted(cur))
     BOOL = {'gambling', 'unrestrictedWebAccess', 'lootBox', 'messagingAndChat', 'parentalControls', 'ageAssurance', 'userGeneratedContent',
-            'advertising', 'healthOrWellnessTopics', 'seventeenPlus', 'gamblingAndContests', 'kidsAgeBand'}
-    SKIP = {'kidsAgeBand', 'developerAgeRatingInfoUrl', 'ageRatingOverride', 'ageRatingOverrideV2', 'koreaAgeRatingOverride', 'seventeenPlus', 'gamblingAndContests'}
+            'advertising', 'healthOrWellnessTopics', 'seventeenPlus', 'gamblingAndContests', 'kidsAgeBand', 'socialMedia', 'socialMediaAgeRestricted'}
+    SKIP = {'gracRatingClassificationNumber', 'kidsAgeBand', 'developerAgeRatingInfoUrl', 'ageRatingOverride', 'ageRatingOverrideV2', 'koreaAgeRatingOverride', 'seventeenPlus', 'gamblingAndContests'}
     attrs = {}
     for k, v in cur.items():
         if k in SKIP: continue

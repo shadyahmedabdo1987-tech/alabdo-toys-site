@@ -1,0 +1,26 @@
+{
+  "version": "1.10.0",
+  "copyright": "2026 Shady Ahmed",
+  "supportUrl": "https://alabdo-toys.com/raseed/",
+  "privacyUrl": "https://alabdo-toys.com/raseed/privacy.html",
+  "order": ["home", "add", "card", "debts", "reports", "insights"],
+  "loc": {
+    "ar-SA": {
+      "name": "رصيد – مصروفاتك ومديونياتك",
+      "subtitle": "مصروفات وأقساط وتقارير PDF",
+      "promo": "سجّل مصروفك في ثانية، قسّط مديونياتك، وتابع كروتك البنكية — بالعربي أو بالإنجليزي.",
+      "keywords": "مصروفات,ميزانية,ديون,أقساط,مديونية,حسابات,محفظة,فلوس,مرتب,ادخار,تقارير,فيزا,expenses,budget",
+      "whatsNew": "• دعم اللغة الإنجليزية مع إمكانية الاختيار بين العربي والإنجليزي من الإعدادات\n• تحسينات في الأداء والتصميم",
+      "description": "رصيد هو مساعدك الشخصي لإدارة فلوسك بسهولة: سجّل مصروفاتك وإيداعاتك ومرتبك، تابع مديونياتك وأقساطك، واعرف فلوسك بتروح فين بتقارير واضحة.\n\nأهم المميزات:\n• تسجيل المصروفات والإيداعات بضغطة واحدة مع بنود جاهزة وأيقونات واضحة\n• المديونيات: أقساط بمواعيد ثابتة أو مبلغ مفتوح تدفع منه وقت ما تحب، والتطبيق يحسب المتبقي\n• تذكير بالإشعارات قبل ميعاد كل قسط وعند التأخير\n• البطاقات البنكية: ديبت وكريدت، الحد الائتماني والمتاح والمديونية، وسداد الفيزا من الكاش بأي مبلغ\n• ميزانية لكل بند، والتطبيق يقولك البند هيخلص إمتى\n• تقارير وتحليل لنقاط القوة والضعف، واختيار أي فترة من تاريخ لتاريخ\n• تصدير تقرير PDF احترافي أو طباعته\n• قفل برقم سري وبصمة الوجه أو الإصبع\n• نسخ احتياطي واسترجاع لبياناتك\n• الوضع الليلي\n• عربي أو إنجليزي — اختار اللغة اللي تريحك\n\nخصوصيتك أولاً: كل بياناتك محفوظة على جهازك بس، من غير حساب ومن غير سيرفرات ومن غير إعلانات."
+    },
+    "en-US": {
+      "name": "Raseed: Expenses & Debts",
+      "subtitle": "Expenses, installments & PDF",
+      "promo": "Log expenses in seconds, split your debts into installments and track your bank cards — in English or Arabic.",
+      "keywords": "expense,tracker,budget,debt,installment,loan,money,wallet,salary,savings,report,finance,spending",
+      "whatsNew": "• English language support — switch between Arabic and English from Settings\n• Performance and design improvements",
+      "description": "Raseed is your personal money assistant: log your expenses, deposits and salary, keep track of debts and installments, and see exactly where your money goes with clear reports.\n\nKey features:\n• Log expenses and deposits with one tap, with ready-made categories and clear icons\n• Debts: fixed-date installments or an open amount you pay whenever you like — the app calculates what's left\n• Notifications before every installment is due and when it's overdue\n• Bank cards: debit and credit, credit limit, available balance and card debt, and pay your card from cash with any amount\n• A budget for each category, and the app tells you when it will run out\n• Reports and insights on your strengths and weaknesses, for any date range\n• Export a professional PDF report or print it\n• PIN lock with Face ID / Touch ID\n• Backup and restore your data\n• Dark mode\n• English or Arabic — choose the language you prefer\n\nPrivacy first: all your data stays on your device only — no account, no servers, no ads."
+    }
+  },
+  "reviewNotes": "Raseed is an offline personal finance tracker. No account or login is required; all data is stored locally on the device. To try it: complete the short onboarding, then tap + to add an expense, open Debts to add an installment plan, and Reports to export a PDF. The language (Arabic/English) can be changed from Settings > Language."
+}

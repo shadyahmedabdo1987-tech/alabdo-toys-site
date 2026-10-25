@@ -31,11 +31,26 @@ for loc in d['data']:
 s, d = api('GET', f'/v1/appInfos/{iid}/ageRatingDeclaration')
 if d.get('data'):
     arid = d['data']['id']
-    attrs = {k: ('NONE' if isinstance(v, str) else False) for k, v in d['data']['attributes'].items() if v is None or isinstance(v, (str, bool))}
-    for k in ['kidsAgeBand', 'ageRatingOverride', 'ageRatingOverrideV2', 'koreaAgeRatingOverride', 'developerAgeRatingInfoUrl']: attrs.pop(k, None)
-    s, d = api('PATCH', f'/v1/ageRatingDeclarations/{arid}', {'data': {'type': 'ageRatingDeclarations', 'id': arid, 'attributes': attrs}})
+    BOOL = ['advertising', 'gambling', 'lootBox', 'messagingAndChat', 'parentalControls', 'ageAssurance', 'socialMedia',
+            'unrestrictedWebAccess', 'userGeneratedContent', 'healthOrWellnessTopics']
+    STR = ['alcoholTobaccoOrDrugUseOrReferences', 'contests', 'gamblingSimulated', 'gunsOrOtherWeapons', 'medicalOrTreatmentInformation',
+           'profanityOrCrudeHumor', 'sexualContentGraphicAndNudity', 'sexualContentOrNudity', 'horrorOrFearThemes',
+           'matureOrSuggestiveThemes', 'violenceCartoonOrFantasy', 'violenceRealisticProlongedGraphicOrSadistic', 'violenceRealistic']
+    have = d['data']['attributes']
+    attrs = {k: False for k in BOOL if k in have}
+    attrs.update({k: 'NONE' for k in STR if k in have})
+    for _ in range(4):
+        s, d = api('PATCH', f'/v1/ageRatingDeclarations/{arid}', {'data': {'type': 'ageRatingDeclarations', 'id': arid, 'attributes': attrs}})
+        if s < 300: break
+        fixed = False
+        for e in d.get('errors', []):
+            ptr = (e.get('source') or {}).get('pointer', '').split('/')[-1]; det = e.get('detail', '')
+            if ptr in attrs and 'Expected a STRING' in det: attrs[ptr] = 'NONE'; fixed = True
+            elif ptr in attrs and 'Expected a BOOLEAN' in det: attrs[ptr] = False; fixed = True
+            elif ptr in attrs: attrs.pop(ptr); fixed = True
+        if not fixed: break
     ok('AGE_RATING', s, d)
-    if s >= 300: print('AGE_ATTRS', list(attrs))
+    if s >= 300: print('AGE_ATTRS', attrs)
 
 # --- Price: free
 s, d = api('GET', f'/v1/apps/{aid}/appPricePoints?filter[territory]=EGY&limit=1')
@@ -52,9 +67,11 @@ if d.get('data'):
 s, d = api('GET', f'/v1/apps/{aid}/appStoreVersions?filter[platform]=IOS&limit=5')
 ver = [v for v in d['data'] if v['attributes']['appStoreState'] in ('PREPARE_FOR_SUBMISSION', 'DEVELOPER_REJECTED', 'REJECTED', 'METADATA_REJECTED')][0]
 vid = ver['id']
-s, d = api('GET', f'/v1/builds?filter[app]={aid}&filter[preReleaseVersion.version]=2.58.0&sort=-uploadedDate&limit=5')
-builds = [b for b in d.get('data', []) if b['attributes'].get('processingState') == 'VALID']
-for b in d.get('data', []): print('  build', b['attributes']['version'], b['attributes'].get('processingState'))
+s, d = api('GET', f'/v1/builds?filter[app]={aid}&sort=-uploadedDate&limit=5&include=preReleaseVersion')
+pre = {x['id']: x['attributes'].get('version') for x in d.get('included', [])}
+for b in d.get('data', []): b['attributes']['short'] = pre.get(((b.get('relationships') or {}).get('preReleaseVersion') or {}).get('data', {}).get('id'))
+builds = [b for b in d.get('data', []) if b['attributes'].get('processingState') == 'VALID' and b['attributes'].get('short') == '2.58.0']
+for b in d.get('data', []): print('  build', b['attributes'].get('short'), b['attributes']['version'], b['attributes'].get('processingState'))
 vstr = '2.58.0'
 s, d = api('PATCH', f'/v1/appStoreVersions/{vid}', {'data': {'type': 'appStoreVersions', 'id': vid, 'attributes': {
     'versionString': vstr, 'copyright': '2026 Shady Ahmed', 'releaseType': 'AFTER_APPROVAL'}}}); ok('VERSION', s, d)

@@ -93,6 +93,14 @@ if not editable:
     s, d = api('GET', f'/v1/apps/{aid}/reviewSubmissions?filter[platform]=IOS&limit=5')
     for x in d.get('data', []): print('SUBMISSION', x['id'], x['attributes'].get('state'), x['attributes'].get('submittedDate'))
     print('NOTHING_EDITABLE (the version is with Apple)')
+    if os.environ.get('SUBMIT') == 'yes':
+        for x in d.get('data', []):
+            if x['attributes'].get('state') != 'READY_FOR_REVIEW': continue
+            s3, d3 = api('GET', f"/v1/reviewSubmissions/{x['id']}/items")
+            for it in d3.get('data', []): print('  ITEM', it['id'], it['attributes'].get('state'))
+            s2, d2 = api('PATCH', f"/v1/reviewSubmissions/{x['id']}", {'data': {'type': 'reviewSubmissions', 'id': x['id'], 'attributes': {'submitted': True}}})
+            ok('SUBMITTED', s2, d2)
+            if s2 >= 300: print('SUBMIT_ERRORS', json.dumps(d2, ensure_ascii=False)[:4000])
     raise SystemExit(0)
 ver = editable[0]
 vid = ver['id']

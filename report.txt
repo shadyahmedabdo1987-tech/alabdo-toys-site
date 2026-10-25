@@ -1,0 +1,55 @@
+APP 6826738981
+BUILD 7
+  submission 899cc642-33ec-43d3-85fd-22b7009c38e5 READY_FOR_REVIEW
+CANCEL_SUBMISSION 409 STATE_ERROR.ENTITY_STATE_INVALID: Resource is not in cancellable state ""
+  submission f8bac301-9383-4e42-92e0-1219ef93194c COMPLETE
+  version states ['PREPARE_FOR_SUBMISSION']
+  version 1.10.0 PREPARE_FOR_SUBMISSION PREPARE_FOR_SUBMISSION
+VERSION_ATTRS 200 OK
+ATTACH_BUILD 204 OK
+CONTENT_RIGHTS 200 OK
+APPINFO 7c186c24-c398-4bf6-aa38-1b9e6ed54bce PREPARE_FOR_SUBMISSION
+CATEGORY 200 OK
+INFO_LOCALES ['en-US', 'ar-SA']
+INFO_LOC ar-SA 200 OK
+INFO_LOC en-US 200 OK
+AGE_KEYS ['advertising', 'ageAssurance', 'ageRatingOverride', 'ageRatingOverrideV2', 'alcoholTobaccoOrDrugUseOrReferences', 'contests', 'developerAgeRatingInfoUrl', 'gambling', 'gamblingSimulated', 'gracRatingClassificationNumber', 'gunsOrOtherWeapons', 'healthOrWellnessTopics', 'horrorOrFearThemes', 'kidsAgeBand', 'koreaAgeRatingOverride', 'lootBox', 'matureOrSuggestiveThemes', 'medicalOrTreatmentInformation', 'messagingAndChat', 'parentalControls', 'profanityOrCrudeHumor', 'sexualContentGraphicAndNudity', 'sexualContentOrNudity', 'socialMedia', 'socialMediaAgeRestricted', 'unrestrictedWebAccess', 'userGeneratedContent', 'violenceCartoonOrFantasy', 'violenceRealistic', 'violenceRealisticProlongedGraphicOrSadistic']
+AGE_RATING OK
+VER_LOCALES ['en-US', 'ar-SA']
+VER_LOC ar-SA 200 OK
+VER_LOC en-US 200 OK
+SCREENSHOTS ar-SA
+  SHOT_RESERVE home 201 OK
+  SHOT_COMMIT home 200 OK
+  SHOT_RESERVE add 201 OK
+  SHOT_COMMIT add 200 OK
+  SHOT_RESERVE card 201 OK
+  SHOT_COMMIT card 200 OK
+  SHOT_RESERVE debts 201 OK
+  SHOT_COMMIT debts 200 OK
+  SHOT_RESERVE reports 201 OK
+  SHOT_COMMIT reports 200 OK
+  SHOT_RESERVE insights 201 OK
+  SHOT_COMMIT insights 200 OK
+SCREENSHOTS en-US
+  SHOT_RESERVE home 201 OK
+  SHOT_COMMIT home 200 OK
+  SHOT_RESERVE add 201 OK
+  SHOT_COMMIT add 200 OK
+  SHOT_RESERVE card 201 OK
+  SHOT_COMMIT card 200 OK
+  SHOT_RESERVE debts 201 OK
+  SHOT_COMMIT debts 200 OK
+  SHOT_RESERVE reports 201 OK
+  SHOT_COMMIT reports 200 OK
+  SHOT_RESERVE insights 201 OK
+  SHOT_COMMIT insights 200 OK
+CONTACT_FOUND True
+REVIEW_DETAIL 200 OK
+PRICE_SCHEDULE 200 exists
+AVAILABILITY 200 exists
+  existing submission 899cc642-33ec-43d3-85fd-22b7009c38e5 READY_FOR_REVIEW
+  existing submission f8bac301-9383-4e42-92e0-1219ef93194c COMPLETE
+SUBMISSION_ITEM 409 STATE_ERROR.ENTITY_STATE_INVALID: This resource cannot be reviewed, please check associated errors to see why. ""
+SUBMIT_FOR_REVIEW 409 ENTITY_ERROR.RELATIONSHIP.REQUIRED: App 6826738981 must have an approved appStoreVersions for at least one of platforms [IOS], or an appStoreVersions must be included in this review submission. {"pointer": "/data/relationships/appStoreVersionForReview"}
+FINAL_VERSION_STATE PREPARE_FOR_SUBMISSION PREPARE_FOR_SUBMISSION

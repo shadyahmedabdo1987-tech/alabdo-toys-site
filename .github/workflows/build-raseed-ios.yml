@@ -2,7 +2,7 @@
 # الكود بتاع التطبيق في الريبو shadyahmedabdo1987-tech/raseed-ios
 # والوركفلو هنا عشان يستخدم نفس أسرار أبل المتسجلة في الريبو ده
 # (ASC_KEY_ID / ASC_ISSUER_ID / ASC_KEY_P8) — مبيتكتبوش هنا أبدًا.
-# رقم البناء بيزيد لوحده مع كل تشغيل. (run 202610250334)
+# رقم البناء بيزيد لوحده مع كل تشغيل. (run 202610250815)
 
 name: Build Raseed iOS (TestFlight)
 
@@ -25,7 +25,7 @@ jobs:
     runs-on: macos-latest
     env:
       RUN: ${{ github.run_number }}
-      APP_VERSION: "1.9.3"
+      APP_VERSION: "1.10.0"
       BUNDLE_ID: com.shadyahmed.raseed
     steps:
       - name: Checkout (secrets repo)

@@ -178,7 +178,10 @@ if os.environ.get('SUBMIT') == 'yes':
     else:
         s, d = api('GET', f'/v1/apps/{aid}/reviewSubmissions?filter[platform]=IOS&filter[state]=READY_FOR_REVIEW,WAITING_FOR_REVIEW,IN_REVIEW,UNRESOLVED_ISSUES')
         open_subs = d.get('data', [])
-        for x in open_subs: print('OPEN_SUBMISSION', x['id'], x['attributes'].get('state'))
+        for x in open_subs:
+            print('OPEN_SUBMISSION', x['id'], x['attributes'].get('state'))
+            s3, d3 = api('GET', f"/v1/reviewSubmissions/{x['id']}/items")
+            for it in d3.get('data', []): print('  ITEM', it['id'], it['attributes'].get('state'), json.dumps(it.get('relationships', {}))[:300])
         if any(x['attributes'].get('state') in ('WAITING_FOR_REVIEW', 'IN_REVIEW') for x in open_subs):
             print('SUBMIT_SKIPPED already submitted')
         else:
@@ -194,3 +197,4 @@ if os.environ.get('SUBMIT') == 'yes':
                 if s >= 300: print('ITEM_ERRORS', json.dumps(d, ensure_ascii=False)[:4000])
                 s, d = api('PATCH', f"/v1/reviewSubmissions/{sub['id']}", {'data': {'type': 'reviewSubmissions', 'id': sub['id'], 'attributes': {'submitted': True}}})
                 ok('SUBMITTED', s, d)
+                if s >= 300: print('SUBMIT_ERRORS', json.dumps(d, ensure_ascii=False)[:4000])

@@ -1,4 +1,4 @@
-# رصيد — شيل دول الاتحاد الأوروبي من الإتاحة. (run 1)
+# رصيد — شيل دول الاتحاد الأوروبي من الإتاحة. (run 2) — رجّعهم تاني (التطبيق مجاني)
 name: Raseed remove EU
 
 on:
@@ -20,6 +20,7 @@ jobs:
           K1: ${{ secrets.ASC_KEY_ID }}
           K2: ${{ secrets.ASC_ISSUER_ID }}
           K3: ${{ secrets.ASC_KEY_P8 }}
+          EU_MODE: restore
         run: |
           pip3 install --quiet pyjwt cryptography
           printf '%s\n' "$K3" > "$RUNNER_TEMP/k.p8"

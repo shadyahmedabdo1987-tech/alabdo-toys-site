@@ -10,11 +10,12 @@ if av:
     log('TERR_AVAIL', len(tas)); n = 0
     for t in tas:
         tid = (t.get('relationships', {}).get('territory', {}).get('data') or {}).get('id')
-        if tid in EU and t['attributes'].get('available'):
-            s2, d2 = api('PATCH', f"/v1/territoryAvailabilities/{t['id']}", {'data': {'type': 'territoryAvailabilities', 'id': t['id'], 'attributes': {'available': False}}})
+        if tid in EU and t['attributes'].get('available') == (os.environ.get('EU_MODE') != 'restore'):
+            s2, d2 = api('PATCH', f"/v1/territoryAvailabilities/{t['id']}", {'data': {'type': 'territoryAvailabilities', 'id': t['id'], 'attributes': {'available': os.environ.get('EU_MODE') == 'restore'}}})
             if s2 < 300: n += 1
             else: log('  ERR', tid, errs(d2)[:200])
-    log('APP_EU_REMOVED', n)
+    log('APP_EU_CHANGED', n)
+if os.environ.get('EU_MODE') == 'restore': sys.exit(0)
 terr = [t['id'] for t in all_pages('/v1/territories?limit=200') if t['id'] not in EU]
 for x in all_pages(f'/v1/apps/{aid}/inAppPurchasesV2?limit=200'):
     ok('IAP_AVAIL ' + x['attributes']['productId'], *api('POST', '/v1/inAppPurchaseAvailabilities', {'data': {'type': 'inAppPurchaseAvailabilities',

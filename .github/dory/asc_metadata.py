@@ -18,6 +18,15 @@ print('APP', aid)
 
 # --- Replace the version waiting for review: pull it back first (edits are locked while it waits)
 if os.environ.get('SUBMIT') == 'replace':
+    # Only pull the old one back once the new build is ready to take its place.
+    want = os.environ.get('VERSION') or ''
+    s, d = api('GET', f'/v1/builds?filter[app]={aid}&sort=-uploadedDate&limit=5&include=preReleaseVersion')
+    pre = {x['id']: x['attributes'].get('version') for x in d.get('included', [])}
+    ready = [b for b in d.get('data', []) if b['attributes'].get('processingState') == 'VALID'
+             and pre.get(((b.get('relationships') or {}).get('preReleaseVersion') or {}).get('data', {}).get('id')) == want]
+    if not ready:
+        print('REPLACE_WAIT build', want, 'not processed yet — nothing changed')
+        raise SystemExit(0)
     s, d = api('GET', f'/v1/apps/{aid}/reviewSubmissions?filter[platform]=IOS&filter[state]=WAITING_FOR_REVIEW,IN_REVIEW,UNRESOLVED_ISSUES')
     for x in d.get('data', []):
         s2, d2 = api('PATCH', f"/v1/reviewSubmissions/{x['id']}", {'data': {'type': 'reviewSubmissions', 'id': x['id'], 'attributes': {'canceled': True}}})

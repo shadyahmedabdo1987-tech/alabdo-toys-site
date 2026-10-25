@@ -1,4 +1,4 @@
-# رصيد — حالة TestFlight + إضافة صاحب الحساب كمختبر داخلي (بيستخدم أسرار أبل اللي في الريبو)
+# رصيد — حالة TestFlight (v2) + إضافة صاحب الحساب كمختبر داخلي (بيستخدم أسرار أبل اللي في الريبو)
 name: Raseed TestFlight status + testers
 
 on:
@@ -6,6 +6,9 @@ on:
   push:
     branches: [main]
     paths: [".github/workflows/raseed-testflight-setup.yml"]
+
+permissions:
+  contents: write
 
 jobs:
   status:

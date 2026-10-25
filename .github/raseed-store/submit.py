@@ -32,9 +32,11 @@ VER = M['version']
 
 # ---------- 1. build ----------
 build = None
-for i in range(40):
+for i in range(80):
     s, d = api('GET', f'/v1/builds?filter[app]={aid}&filter[preReleaseVersion.version]={VER}&sort=-uploadedDate&limit=5')
     bs = [b for b in d.get('data', []) if not b['attributes'].get('expired')]
+    MINB = int(os.environ.get('MIN_BUILD', '0'))
+    bs = [b for b in bs if int(b['attributes'].get('version') or 0) >= MINB]
     if bs and bs[0]['attributes'].get('processingState') == 'VALID':
         build = bs[0]; break
     log('waiting build', VER, [b['attributes'].get('processingState') for b in bs]); time.sleep(30)
@@ -42,6 +44,22 @@ if not build: log('NO VALID BUILD'); sys.exit(1)
 log('BUILD', build['attributes']['version'])
 if build['attributes'].get('usesNonExemptEncryption') is None:
     ok('ENCRYPTION', *api('PATCH', '/v1/builds/' + build['id'], {'data': {'type': 'builds', 'id': build['id'], 'attributes': {'usesNonExemptEncryption': False}}}))
+
+# ---------- 0. optionally pull back a pending submission (to swap in a newer build) ----------
+if os.environ.get('CANCEL_FIRST') == '1':
+    s, d = api('GET', f'/v1/reviewSubmissions?filter[app]={aid}&filter[platform]=IOS&limit=10')
+    for r in d.get('data', []):
+        st = r['attributes'].get('state')
+        log('  submission', r['id'], st)
+        if st in ('WAITING_FOR_REVIEW', 'READY_FOR_REVIEW', 'UNRESOLVED_ISSUES'):
+            ok('CANCEL_SUBMISSION', *api('PATCH', f"/v1/reviewSubmissions/{r['id']}", {'data': {'type': 'reviewSubmissions', 'id': r['id'], 'attributes': {'canceled': True}}}))
+    for i in range(30):
+        s, d = api('GET', f'/v1/apps/{aid}/appStoreVersions?filter[platform]=IOS&limit=5')
+        sts = [v['attributes'].get('appStoreState') for v in d.get('data', [])]
+        log('  version states', sts)
+        if any(x in ('PREPARE_FOR_SUBMISSION', 'DEVELOPER_REJECTED') for x in sts): break
+        time.sleep(20)
+    time.sleep(20)
 
 # ---------- 2. version ----------
 s, d = api('GET', f'/v1/apps/{aid}/appStoreVersions?filter[platform]=IOS&limit=20')

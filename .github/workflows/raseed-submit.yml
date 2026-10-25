@@ -1,4 +1,4 @@
-# رصيد — تجهيز صفحة الآب ستور (وصف/صور/سعر/تقييم عمري) والإرسال للمراجعة. (run 3)
+# رصيد — تجهيز صفحة الآب ستور (وصف/صور/سعر/تقييم عمري) والإرسال للمراجعة. (run 4)
 name: Raseed App Store submit
 
 on:
@@ -21,6 +21,8 @@ jobs:
           K2: ${{ secrets.ASC_ISSUER_ID }}
           K3: ${{ secrets.ASC_KEY_P8 }}
           DO_SUBMIT: "1"
+          CANCEL_FIRST: "1"
+          MIN_BUILD: "7"
         run: |
           pip3 install --quiet pyjwt cryptography
           printf '%s\n' "$K3" > "$RUNNER_TEMP/k.p8"

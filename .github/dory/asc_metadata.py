@@ -15,6 +15,19 @@ def ok(tag, s, d): print(tag, s, errs(d))
 
 s, d = api('GET', '/v1/apps?filter[bundleId]=com.alabdo.dory'); aid = d['data'][0]['id']
 print('APP', aid)
+
+# --- Replace the version waiting for review: pull it back first (edits are locked while it waits)
+if os.environ.get('SUBMIT') == 'replace':
+    s, d = api('GET', f'/v1/apps/{aid}/reviewSubmissions?filter[platform]=IOS&filter[state]=WAITING_FOR_REVIEW,IN_REVIEW,UNRESOLVED_ISSUES')
+    for x in d.get('data', []):
+        s2, d2 = api('PATCH', f"/v1/reviewSubmissions/{x['id']}", {'data': {'type': 'reviewSubmissions', 'id': x['id'], 'attributes': {'canceled': True}}})
+        ok('CANCEL ' + x['attributes'].get('state', ''), s2, d2)
+    for i in range(30):
+        s, d = api('GET', f'/v1/apps/{aid}/reviewSubmissions?filter[platform]=IOS&filter[state]=WAITING_FOR_REVIEW,IN_REVIEW,CANCELING,UNRESOLVED_ISSUES')
+        if not d.get('data'): break
+        time.sleep(10)
+    print('CANCEL_DONE', i)
+    os.environ['SUBMIT'] = 'yes'
 s, d = api('PATCH', f'/v1/apps/{aid}', {'data': {'type': 'apps', 'id': aid, 'attributes': {'contentRightsDeclaration': 'DOES_NOT_USE_THIRD_PARTY_CONTENT'}}}); ok('CONTENT_RIGHTS', s, d)
 
 # --- App info: categories, subtitle, privacy URL, age rating

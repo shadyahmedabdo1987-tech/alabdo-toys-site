@@ -1,0 +1,31 @@
+Hello App Review team,
+
+Thank you for reviewing Raseed. Here is the information you requested.
+
+1. Screen recording
+The attached screen recording was captured on a physical iPhone running the latest iOS. It starts with launching the app and shows the typical flow: the short onboarding, adding an expense and a deposit, creating a debt with scheduled installments and paying one installment, adding a bank card, viewing reports and exporting a PDF, and Settings (language Arabic/English, PIN lock with Face ID, backup).
+The app has no account registration or login, no user-generated content shared with other users, and no paid content or in-app purchases — the app is completely free.
+
+2. Purpose and target audience
+Raseed is a personal finance tracker for individuals, mainly in Egypt and the Arab region (Arabic and English). It helps people record their daily expenses, deposits and salary, keep track of debts and installments with reminders, follow their bank cards (debit/credit limit and balance), set budgets per category, and understand where their money goes through clear reports and PDF export. The problem it solves: many people pay debts in installments and lose track of their spending; Raseed keeps everything in one simple place.
+
+3. How to use the main features
+No login, account or sample files are needed.
+- Open the app and complete the 4-step onboarding (name and salary are optional).
+- Tap the "+" button to add an expense or a deposit.
+- Open the "Debts" tab > "New debt" to create a debt with scheduled installments or an open amount, then pay an installment.
+- Settings > Bank cards to add a debit or credit card.
+- Open the "Reports" tab to see insights and tap the PDF icon to export a report.
+- Settings > Language to switch between Arabic and English.
+
+4. External services
+None. The app works fully offline. All data is stored locally on the device only. It does not use any servers, analytics, advertising, authentication, payment processors or AI services. Notifications are local notifications scheduled on the device.
+
+5. Regional differences
+There are none. The app functions the same in all regions. The user can choose Arabic or English and the currency label.
+
+6. Regulated industry
+Raseed is not a banking or payment app. It does not move money, connect to bank accounts, or provide financial, lending or investment services — users only record their own numbers manually for personal budgeting. No third-party protected material is included.
+
+Thank you,
+Shady Ahmed

@@ -1,0 +1,17 @@
+APP 6826738981 رصيد – مصروفاتك ومديونياتك
+BUILDS 9
+  build 12 state=VALID expired=False encryption=False 2026-10-28T07:39:05-07:00
+  build 11 state=VALID expired=False encryption=False 2026-10-26T03:42:20-07:00
+  build 10 state=VALID expired=False encryption=False 2026-10-25T02:25:52-07:00
+  build 9 state=VALID expired=False encryption=False 2026-10-25T01:56:51-07:00
+  build 8 state=VALID expired=False encryption=False 2026-10-25T00:29:05-07:00
+  build 7 state=VALID expired=False encryption=False 2026-10-24T22:29:26-07:00
+  build 6 state=VALID expired=False encryption=False 2026-10-24T22:26:44-07:00
+  build 5 state=VALID expired=False encryption=False 2026-10-24T22:14:25-07:00
+  build 4 state=VALID expired=False encryption=False 2026-10-24T20:38:00-07:00
+INTERNAL_GROUP فريق رصيد
+USERS 1 200 
+  user roles=ACCOUNT_HOLDER,ADMIN allApps=True
+  ADD_TESTER 409 Tester(s) cannot be assigned
+GROUP_TESTERS 1
+  tester state=INSTALLED invite=EMAIL

@@ -1,0 +1,6 @@
+BUILD 25388eeb-4817-4100-ba96-7c3738528030 1.10.0 12 VALID {"autoNotifyEnabled": true, "internalBuildState": "IN_BETA_TESTING", "externalBuildState": "READY_FOR_BETA_SUBMISSION"}
+BUILD 72fef99c-6a9c-43bd-9cf1-123c91443eb1 1.10.0 11 VALID {"autoNotifyEnabled": true, "internalBuildState": "IN_BETA_TESTING", "externalBuildState": "READY_FOR_BETA_SUBMISSION"}
+BUILD 05d408c7-c679-4579-8a41-3e51d11257cc 1.11.0 10 VALID {"autoNotifyEnabled": true, "internalBuildState": "IN_BETA_TESTING", "externalBuildState": "READY_FOR_BETA_SUBMISSION"}
+GROUP 5d3f8028-1013-4a17-bc3e-93135e89a806 {"publicLinkLimit": null, "iosBuildsAvailableForAppleSiliconMac": true, "createdDate": "2026-10-25T04:21:43.082Z", "publicLinkEnabled": null, "publicLink": null, "hasAccessToAllBuilds": true, "publicLinkId": null, "isInternalGroup": true, "name": "\u0641\u0631\u064a\u0642 \u0631\u0635\u064a\u062f", 
+  group builds ['12', '11', '10', '9', '8']
+ADD_BUILD_TO_GROUP فريق رصيد 422 ENTITY_UNPROCESSABLE: Cannot add internal group to a build. ""

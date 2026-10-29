@@ -230,6 +230,16 @@ if os.environ.get('SUBMIT') == 'yes':
             for it in d3.get('data', []): print('  ITEM', it['id'], it['attributes'].get('state'), json.dumps(it.get('relationships', {}))[:300])
         if any(x['attributes'].get('state') in ('WAITING_FOR_REVIEW', 'IN_REVIEW') for x in open_subs):
             print('SUBMIT_SKIPPED already submitted')
+        elif any(x['attributes'].get('state') == 'UNRESOLVED_ISSUES' for x in open_subs):
+            # Apple asked for more information: send the same submission back (now with notes + video).
+            for x in open_subs:
+                if x['attributes'].get('state') == 'READY_FOR_REVIEW':
+                    s2, d2 = api('PATCH', f"/v1/reviewSubmissions/{x['id']}", {'data': {'type': 'reviewSubmissions', 'id': x['id'], 'attributes': {'canceled': True}}})
+                    ok('CANCEL_EMPTY', s2, d2)
+            sub = next(x for x in open_subs if x['attributes'].get('state') == 'UNRESOLVED_ISSUES')
+            s2, d2 = api('PATCH', f"/v1/reviewSubmissions/{sub['id']}", {'data': {'type': 'reviewSubmissions', 'id': sub['id'], 'attributes': {'submitted': True}}})
+            ok('RESUBMITTED', s2, d2)
+            if s2 >= 300: print('SUBMIT_ERRORS', json.dumps(d2, ensure_ascii=False)[:3000])
         else:
             sub = next((x for x in open_subs if x['attributes'].get('state') == 'READY_FOR_REVIEW'), None)
             if not sub:

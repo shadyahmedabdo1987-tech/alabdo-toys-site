@@ -15,6 +15,9 @@ on:
       submit:
         description: "yes = submit for App Review; replace = pull back the waiting version and submit this one"
         default: "no"
+      video_branch:
+        description: "Branch holding review.mp4 to attach for App Review (optional)"
+        default: ""
 
 permissions:
   contents: write
@@ -24,6 +27,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Review video
+        if: ${{ inputs.video_branch != '' }}
+        run: |
+          git fetch -q origin "+refs/heads/${{ inputs.video_branch }}:refs/remotes/origin/vid"
+          git show origin/vid:review.mp4 > "$RUNNER_TEMP/review.mp4"
+          ls -la "$RUNNER_TEMP/review.mp4"
+          echo "REVIEW_VIDEO=$RUNNER_TEMP/review.mp4" >> "$GITHUB_ENV"
       - name: Fill App Store Connect
         env:
           K1: ${{ secrets.ASC_KEY_ID }}

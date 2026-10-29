@@ -189,6 +189,30 @@ else:
     s, d = api('POST', '/v1/appStoreReviewDetails', {'data': {'type': 'appStoreReviewDetails', 'attributes': rd,
            'relationships': {'appStoreVersion': {'data': {'type': 'appStoreVersions', 'id': vid}}}}})
 ok('REVIEW_DETAILS', s, d)
+# --- Screen recording for App Review (attachment on the review details)
+vid_path = os.environ.get('REVIEW_VIDEO')
+if vid_path and os.path.exists(vid_path):
+    s, d = api('GET', f'/v1/appStoreVersions/{vid}/appStoreReviewDetail')
+    rid = d['data']['id']
+    s, d = api('GET', f'/v1/appStoreReviewDetails/{rid}/appStoreReviewAttachments')
+    have = [x['attributes'].get('fileName') for x in d.get('data', [])]
+    print('ATTACHMENTS', have)
+    if 'dory-screen-recording.mp4' not in have:
+        data = open(vid_path, 'rb').read()
+        s, d = api('POST', '/v1/appStoreReviewAttachments', {'data': {'type': 'appStoreReviewAttachments',
+               'attributes': {'fileName': 'dory-screen-recording.mp4', 'fileSize': len(data)},
+               'relationships': {'appStoreReviewDetail': {'data': {'type': 'appStoreReviewDetails', 'id': rid}}}}})
+        ok('ATTACH_RESERVE', s, d)
+        if s < 300:
+            aid2 = d['data']['id']
+            for op in d['data']['attributes']['uploadOperations']:
+                part = data[op['offset']:op['offset'] + op['length']]
+                req = urllib.request.Request(op['url'], method=op['method'], data=part, headers={h['name']: h['value'] for h in op['requestHeaders']})
+                urllib.request.urlopen(req).read()
+            s, d = api('PATCH', f'/v1/appStoreReviewAttachments/{aid2}', {'data': {'type': 'appStoreReviewAttachments', 'id': aid2,
+                   'attributes': {'uploaded': True, 'sourceFileChecksum': hashlib.md5(data).hexdigest()}}})
+            ok('ATTACH_COMMIT', s, d)
+
 
 # --- Submit for review (only when asked, and only with the right build attached)
 if os.environ.get('SUBMIT') == 'yes':

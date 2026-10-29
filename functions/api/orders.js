@@ -98,11 +98,13 @@ export async function onRequestPost({ request, env, waitUntil }){
      only when EVERY product in it has freeShipping; otherwise the normal
      shipping fee applies. Decided here, not taken from the phone.
      (keep SHIPPING_FEE equal to SHIPPING_COST in index.html) */
-  var SHIPPING_FEE = 100;
-  /* shipping by governorate: Alexandria 50, everywhere else SHIPPING_FEE
-     (keep equal to SHIPPING_ALEX / SHIPPING_COST in index.html) */
-  var SHIPPING_ALEX = 50;
-  function shipFeeFor(g){ return String(g || "").trim() === "\u0627\u0644\u0625\u0633\u0643\u0646\u062F\u0631\u064A\u0629" ? SHIPPING_ALEX : SHIPPING_FEE; }
+  var SHIPPING_FEE = 160;
+  /* shipping by governorate (shipping company prices from Alexandria, small/medium
+     size): Cairo, Giza & Qalyubia 110, Alexandria 102, Delta & Canal 110, North Upper Egypt 124,
+     South Upper Egypt 140, North Coast 144, Sinai & Valley 160.
+     (keep equal to SHIP_BY_GOV in index.html) */
+  var SHIP_BY_GOV = { "\u0627\u0644\u0642\u0627\u0647\u0631\u0629": 110, "\u0627\u0644\u062C\u064A\u0632\u0629": 110, "\u0627\u0644\u0642\u0644\u064A\u0648\u0628\u064A\u0629": 110, "\u0627\u0644\u0625\u0633\u0643\u0646\u062F\u0631\u064A\u0629": 102, "\u0627\u0644\u0628\u062D\u064A\u0631\u0629": 102, "\u0627\u0644\u062F\u0642\u0647\u0644\u064A\u0629": 110, "\u0627\u0644\u063A\u0631\u0628\u064A\u0629": 110, "\u0627\u0644\u0645\u0646\u0648\u0641\u064A\u0629": 110, "\u0627\u0644\u0634\u0631\u0642\u064A\u0629": 110, "\u0643\u0641\u0631\u0020\u0627\u0644\u0634\u064A\u062E": 110, "\u062F\u0645\u064A\u0627\u0637": 110, "\u0628\u0648\u0631\u0633\u0639\u064A\u062F": 110, "\u0627\u0644\u0625\u0633\u0645\u0627\u0639\u064A\u0644\u064A\u0629": 110, "\u0627\u0644\u0633\u0648\u064A\u0633": 110, "\u0627\u0644\u0641\u064A\u0648\u0645": 124, "\u0628\u0646\u064A\u0020\u0633\u0648\u064A\u0641": 124, "\u0627\u0644\u0645\u0646\u064A\u0627": 124, "\u0623\u0633\u064A\u0648\u0637": 124, "\u0633\u0648\u0647\u0627\u062C": 140, "\u0642\u0646\u0627": 140, "\u0627\u0644\u0623\u0642\u0635\u0631": 140, "\u0623\u0633\u0648\u0627\u0646": 140, "\u0645\u0637\u0631\u0648\u062D": 144, "\u0634\u0645\u0627\u0644\u0020\u0633\u064A\u0646\u0627\u0621": 160, "\u062C\u0646\u0648\u0628\u0020\u0633\u064A\u0646\u0627\u0621": 160, "\u0627\u0644\u0648\u0627\u062F\u064A\u0020\u0627\u0644\u062C\u062F\u064A\u062F": 160, "\u0627\u0644\u0628\u062D\u0631\u0020\u0627\u0644\u0623\u062D\u0645\u0631": 160 };
+  function shipFeeFor(g){ var k = String(g || "").trim(); return Object.prototype.hasOwnProperty.call(SHIP_BY_GOV, k) ? SHIP_BY_GOV[k] : SHIPPING_FEE; }
   var shipping = +body.shipping || 0;
   try{
     var shipCatalog = (typeof stockCatalog !== "undefined" && stockCatalog) ? stockCatalog : await getCatalog(env);

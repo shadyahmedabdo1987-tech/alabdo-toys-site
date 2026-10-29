@@ -1,0 +1,24 @@
+APP 6826768034
+CONTENT_RIGHTS 200 
+CATEGORIES 200 
+APPINFO_AR 200 
+AGE_RATING 200 
+PRICE_FREE 201 
+VERSION_STATE 2.64.0 PREPARE_FOR_SUBMISSION PREPARE_FOR_SUBMISSION
+  build 2.64.0 2610290820 VALID
+  build 2.63.0 2610261313 VALID
+  build 2.62.0 2610261140 VALID
+  build 2.61.0 2610251756 VALID
+  build 2.60.0 2610251703 VALID
+VERSION 200 
+BUILD 2610290820 204 
+VERSION_AR 200 
+SHOTS already 3
+REVIEW_DETAILS 200 
+ATTACHED_BUILD 2610290820
+OPEN_SUBMISSION ac3c0d65-2bf0-4e4c-8066-86ccfd08923d READY_FOR_REVIEW
+OPEN_SUBMISSION 21c80b9d-7de0-4966-9049-167f1daae973 UNRESOLVED_ISSUES
+  ITEM MjFjODBiOWQtN2RlMC00OTY2LTkwNDktMTY3ZjFkYWFlOTczfDZ8ODkzODQ0MzE3 REJECTED {}
+CANCEL_EMPTY 409 Resource is not in cancellable state
+RESUBMITTED 409 This resource cannot be reviewed, please check associated errors to see why.
+SUBMIT_ERRORS {"errors": [{"id": "2f41d42f-2281-4695-88b7-f91492eddd72", "status": "409", "code": "STATE_ERROR.ENTITY_STATE_INVALID", "title": "appStoreVersions with id '183f6afb-f0af-45ce-90cf-ca33eb51b6b3' is not in valid state.", "detail": "This resource cannot be reviewed, please check associated errors to see why.", "meta": {"associatedErrors": {"/v1/appStoreVersions/183f6afb-f0af-45ce-90cf-ca33eb51b6b3": [{"id": "d771cb21-ef5a-4a64-8481-911669780a9f", "status": "409", "code": "STATE_ERROR", "title": "The request cannot be fulfilled because of the state of another resource.", "detail": "Version is not ready to be submitted yet, please try again later."}]}}}]}

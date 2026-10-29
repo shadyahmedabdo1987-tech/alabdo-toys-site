@@ -7054,7 +7054,8 @@ Object.assign(I18N_EN, {
  "طلبك بيتجهز": "Your order is being prepared",
  "طلبك خرج للشحن": "Your order is out for delivery",
  "طلبك وصل": "Your order was delivered",
- "طلبك اتلغى": "Your order was cancelled"
+ "طلبك اتلغى": "Your order was cancelled",
+ "حسب المحافظة": "by governorate"
 });
 
 
@@ -7419,7 +7420,7 @@ function cartItems(){
 function cartTotal(){ return cartItems().reduce(function(s,it){ return s + priceForSize(it.p, it.sizeLabel)*it.qty; },0); }
 /* مصاريف شحن ثابتة على كل طلب (١٠٠ جنيه) - بتتضاف على إجمالي المنتجات
    وبتظهر كبند منفصل في السلة والفاتورة، وبتتحسب بس لو السلة فيها أصناف. */
-var SHIPPING_COST = 100;
+var SHIPPING_COST = 160; /* لو المحافظة مش معروفة */
 /* كود الخصم المتطبّق على السلة دلوقتي ({code, percent}) - بيتأكد منه السيرفر
    تاني وقت تسجيل الطلب، والخصم على المنتجات بس (مش على الشحن). */
 var CART_COUPON = null;
@@ -7485,10 +7486,14 @@ function cartFreeShipping(){ var it = cartItems(); return it.length > 0 && it.ev
 /* وأي طلب إجمالي منتجاته (بعد خصم الكود) يوصل FREE_SHIP_MIN شحنه مجاني */
 var FREE_SHIP_MIN = 1000;
 function cartReachedFreeMin(){ return cartItems().length > 0 && (cartTotal() - couponDiscount()) >= FREE_SHIP_MIN; }
-/* الشحن على حسب المحافظة: الإسكندرية 50 ج.م وباقي المحافظات SHIPPING_COST (100)
-   (نفس القاعدة على السيرفر في orders.js) */
-var SHIPPING_ALEX = 50;
-function shippingFeeFor(gov){ return String(gov||"").trim() === "الإسكندرية" ? SHIPPING_ALEX : SHIPPING_COST; }
+/* الشحن على حسب المحافظة (أسعار شركة الشحن من الإسكندرية، حجم صغير ومتوسط):
+   القاهرة والجيزة والقليوبية 110 · الإسكندرية 102 · الدلتا والقناة 110 · شمال الصعيد 124
+   جنوب الصعيد 140 · الساحل الشمالي 144 · سيناء والوادي 160
+   (نفس الجدول على السيرفر في orders.js - لازم يفضلوا زي بعض) */
+var SHIP_BY_GOV = {"القاهرة":110, "الجيزة":110, "القليوبية":110, "الإسكندرية":102, "البحيرة":102, "الدقهلية":110, "الغربية":110, "المنوفية":110, "الشرقية":110, "كفر الشيخ":110, "دمياط":110, "بورسعيد":110, "الإسماعيلية":110, "السويس":110, "الفيوم":124, "بني سويف":124, "المنيا":124, "أسيوط":124, "سوهاج":140, "قنا":140, "الأقصر":140, "أسوان":140, "مطروح":144, "شمال سيناء":160, "جنوب سيناء":160, "الوادي الجديد":160, "البحر الأحمر":160};
+var SHIPPING_ALEX = SHIP_BY_GOV["الإسكندرية"];
+var SHIP_MIN = 102, SHIP_MAX = 160;
+function shippingFeeFor(gov){ var g = String(gov||"").trim(); return Object.prototype.hasOwnProperty.call(SHIP_BY_GOV, g) ? SHIP_BY_GOV[g] : SHIPPING_COST; }
 function checkoutGov(){
   var el = document.getElementById("checkoutGovernorate"), v = el ? el.value : "";
   if(!v){ var c = getCustomerProfile(); v = (c && c.governorate) || ""; }
@@ -7879,7 +7884,7 @@ function renderCartFoot(){
   var shipEl = document.getElementById("cartShipping");
   if(items.length && (cartFreeShipping() || cartReachedFreeMin())) shipEl.innerHTML = '<b class="ship-free">🚚 '+t("مجاني")+'</b>';
   else if(!items.length) shipEl.textContent = "0 "+t("ج.م");
-  else if(!checkoutGov()) shipEl.innerHTML = '<span class="ship-by-gov">'+fmt(SHIPPING_ALEX)+' '+t("إسكندرية")+' · '+fmt(SHIPPING_COST)+' '+t("باقي المحافظات")+'</span>';
+  else if(!checkoutGov()) shipEl.innerHTML = '<span class="ship-by-gov">'+fmt(SHIP_MIN)+' – '+fmt(SHIP_MAX)+' '+t("ج.م")+' · '+t("حسب المحافظة")+'</span>';
   else shipEl.innerHTML = fmt(shippingFeeFor(checkoutGov()))+' '+t("ج.م")+' <small class="ship-gov">('+escHtml(t(checkoutGov()))+')</small>';
   var shipNote = document.getElementById("cartShipNote");
   if(shipNote){

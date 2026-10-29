@@ -1,0 +1,300 @@
+/Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/BuildProductsPath/Release-iphoneos/MLKitTextRecognition/LatinOCRResources.bundle
+/Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/BuildProductsPath/Release-iphoneos/MLKitTextRecognitionChinese/ChineseOCRResources.bundle
+/Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/BuildProductsPath/Release-iphoneos/MLKitTextRecognitionDevanagari/DevanagariOCRResources.bundle
+/Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/BuildProductsPath/Release-iphoneos/MLKitTextRecognitionJapanese/JapaneseOCRResources.bundle
+/Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/BuildProductsPath/Release-iphoneos/MLKitTextRecognitionKorean/KoreanOCRResources.bundle
+/Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/BuildProductsPath/Release-iphoneos/PromisesObjC/FBLPromises_Privacy.bundle
+/Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/BuildProductsPath/Release-iphoneos/RNCAsyncStorage/RNCAsyncStorage_resources.bundle
+/Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/BuildProductsPath/Release-iphoneos/RNSVG/RNSVGFilters.bundle
+/Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/BuildProductsPath/Release-iphoneos/ReachabilitySwift/ReachabilitySwift.bundle
+/Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/BuildProductsPath/Release-iphoneos/React-Core/React-Core_privacy.bundle
+/Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/BuildProductsPath/Release-iphoneos/React-cxxreact/React-cxxreact_privacy.bundle
+/Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/BuildProductsPath/Release-iphoneos/SDWebImage/SDWebImage.bundle
+/Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/BuildProductsPath/Release-iphoneos/nanopb/nanopb_Privacy.bundle
+Transfer starting: 143 files
+ChineseOCRResources.bundle/
+ChineseOCRResources.bundle/Info.plist
+ChineseOCRResources.bundle/region_proposal_text_detector_tflite_vertical.bincfg
+ChineseOCRResources.bundle/rpn_lstm_engine_tflite_zh_la.bincfg
+ChineseOCRResources.bundle/rpn_text_detector_mobile_space_to_depth_quantized_v2.tflite
+ChineseOCRResources.bundle/seastar_lstm_recognizer_zh_0.2.class_lst
+ChineseOCRResources.bundle/tflite_langid.tflite
+ChineseOCRResources.bundle/tflite_lstm_recognizer_latin_0.3.bincfg
+ChineseOCRResources.bundle/tflite_lstm_recognizer_latin_0.3.class_lst
+ChineseOCRResources.bundle/tflite_lstm_recognizer_latin_0.3.conv_model
+ChineseOCRResources.bundle/tflite_lstm_recognizer_latin_0.3.lstm_model
+ChineseOCRResources.bundle/tflite_lstm_recognizer_zh_0.1.bincfg
+ChineseOCRResources.bundle/tflite_lstm_recognizer_zh_0.1.class_lst
+ChineseOCRResources.bundle/tflite_lstm_recognizer_zh_0.1.conv_model
+ChineseOCRResources.bundle/tflite_lstm_recognizer_zh_0.1.lstm_model
+ChineseOCRResources.bundle/tflite_script_detector_0.3.bincfg
+ChineseOCRResources.bundle/tflite_script_detector_0.3.conv_model
+ChineseOCRResources.bundle/tflite_script_detector_0.3.lstm_model
+DevanagariOCRResources.bundle/
+DevanagariOCRResources.bundle/Info.plist
+DevanagariOCRResources.bundle/region_proposal_text_detector_tflite_vertical.bincfg
+DevanagariOCRResources.bundle/rpn_lstm_engine_tflite_devanagari_la.bincfg
+DevanagariOCRResources.bundle/rpn_text_detector_mobile_space_to_depth_quantized_v2.tflite
+DevanagariOCRResources.bundle/tflite_langid.tflite
+DevanagariOCRResources.bundle/tflite_lstm_recognizer_devanagari_0.1.bincfg
+DevanagariOCRResources.bundle/tflite_lstm_recognizer_devanagari_0.1.class_lst
+DevanagariOCRResources.bundle/tflite_lstm_recognizer_devanagari_0.1.conv_model
+DevanagariOCRResources.bundle/tflite_lstm_recognizer_devanagari_0.1.lstm_model
+DevanagariOCRResources.bundle/tflite_lstm_recognizer_latin_0.3.bincfg
+DevanagariOCRResources.bundle/tflite_lstm_recognizer_latin_0.3.class_lst
+DevanagariOCRResources.bundle/tflite_lstm_recognizer_latin_0.3.conv_model
+DevanagariOCRResources.bundle/tflite_lstm_recognizer_latin_0.3.lstm_model
+DevanagariOCRResources.bundle/tflite_script_detector_0.3.bincfg
+DevanagariOCRResources.bundle/tflite_script_detector_0.3.conv_model
+DevanagariOCRResources.bundle/tflite_script_detector_0.3.lstm_model
+EXConstants.bundle/
+EXConstants.bundle/Info.plist
+EXConstants.bundle/app.config
+EXUpdates.bundle/
+EXUpdates.bundle/Info.plist
+EXUpdates.bundle/app.manifest
+ExpoApplication_privacy.bundle/
+ExpoApplication_privacy.bundle/Info.plist
+ExpoApplication_privacy.bundle/PrivacyInfo.xcprivacy
+ExpoConstants_privacy.bundle/
+ExpoConstants_privacy.bundle/Info.plist
+ExpoConstants_privacy.bundle/PrivacyInfo.xcprivacy
+ExpoDevice_privacy.bundle/
+ExpoDevice_privacy.bundle/Info.plist
+ExpoDevice_privacy.bundle/PrivacyInfo.xcprivacy
+ExpoFileSystem_privacy.bundle/
+ExpoFileSystem_privacy.bundle/Info.plist
+ExpoFileSystem_privacy.bundle/PrivacyInfo.xcprivacy
+ExpoLocalization_privacy.bundle/
+ExpoLocalization_privacy.bundle/Info.plist
+ExpoLocalization_privacy.bundle/PrivacyInfo.xcprivacy
+ExpoNotifications_privacy.bundle/
+ExpoNotifications_privacy.bundle/Info.plist
+ExpoNotifications_privacy.bundle/PrivacyInfo.xcprivacy
+FBLPromises_Privacy.bundle/
+FBLPromises_Privacy.bundle/Info.plist
+FBLPromises_Privacy.bundle/PrivacyInfo.xcprivacy
+GTMSessionFetcher_Core_Privacy.bundle/
+GTMSessionFetcher_Core_Privacy.bundle/Info.plist
+GTMSessionFetcher_Core_Privacy.bundle/PrivacyInfo.xcprivacy
+GoogleDataTransport_Privacy.bundle/
+GoogleDataTransport_Privacy.bundle/Info.plist
+GoogleDataTransport_Privacy.bundle/PrivacyInfo.xcprivacy
+GoogleToolboxForMac_Logger_Privacy.bundle/
+GoogleToolboxForMac_Logger_Privacy.bundle/Info.plist
+GoogleToolboxForMac_Logger_Privacy.bundle/PrivacyInfo.xcprivacy
+GoogleToolboxForMac_Privacy.bundle/
+GoogleToolboxForMac_Privacy.bundle/Info.plist
+GoogleToolboxForMac_Privacy.bundle/PrivacyInfo.xcprivacy
+GoogleUtilities_Privacy.bundle/
+GoogleUtilities_Privacy.bundle/Info.plist
+GoogleUtilities_Privacy.bundle/PrivacyInfo.xcprivacy
+JapaneseOCRResources.bundle/
+JapaneseOCRResources.bundle/Info.plist
+JapaneseOCRResources.bundle/region_proposal_text_detector_tflite_vertical.bincfg
+JapaneseOCRResources.bundle/rpn_lstm_engine_tflite_ja_la.bincfg
+JapaneseOCRResources.bundle/rpn_text_detector_mobile_space_to_depth_quantized_v2.tflite
+JapaneseOCRResources.bundle/tflite_langid.tflite
+JapaneseOCRResources.bundle/tflite_lstm_recognizer_ja_0.1.bincfg
+JapaneseOCRResources.bundle/tflite_lstm_recognizer_ja_0.1.class_lst
+JapaneseOCRResources.bundle/tflite_lstm_recognizer_ja_0.1.conv_model
+JapaneseOCRResources.bundle/tflite_lstm_recognizer_ja_0.1.lstm_model
+JapaneseOCRResources.bundle/tflite_lstm_recognizer_latin_0.3.bincfg
+JapaneseOCRResources.bundle/tflite_lstm_recognizer_latin_0.3.class_lst
+JapaneseOCRResources.bundle/tflite_lstm_recognizer_latin_0.3.conv_model
+JapaneseOCRResources.bundle/tflite_lstm_recognizer_latin_0.3.lstm_model
+JapaneseOCRResources.bundle/tflite_script_detector_0.3.bincfg
+JapaneseOCRResources.bundle/tflite_script_detector_0.3.conv_model
+JapaneseOCRResources.bundle/tflite_script_detector_0.3.lstm_model
+KoreanOCRResources.bundle/
+KoreanOCRResources.bundle/Info.plist
+KoreanOCRResources.bundle/region_proposal_text_detector_tflite_vertical.bincfg
+KoreanOCRResources.bundle/rpn_lstm_engine_tflite_ko_la.bincfg
+KoreanOCRResources.bundle/rpn_text_detector_mobile_space_to_depth_quantized_v2.tflite
+KoreanOCRResources.bundle/tflite_langid.tflite
+KoreanOCRResources.bundle/tflite_lstm_recognizer_ko_0.1.bincfg
+KoreanOCRResources.bundle/tflite_lstm_recognizer_ko_0.1.class_lst
+KoreanOCRResources.bundle/tflite_lstm_recognizer_ko_0.1.conv_model
+KoreanOCRResources.bundle/tflite_lstm_recognizer_ko_0.1.lstm_model
+KoreanOCRResources.bundle/tflite_lstm_recognizer_latin_0.3.bincfg
+KoreanOCRResources.bundle/tflite_lstm_recognizer_latin_0.3.class_lst
+KoreanOCRResources.bundle/tflite_lstm_recognizer_latin_0.3.conv_model
+KoreanOCRResources.bundle/tflite_lstm_recognizer_latin_0.3.lstm_model
+KoreanOCRResources.bundle/tflite_script_detector_0.3.bincfg
+KoreanOCRResources.bundle/tflite_script_detector_0.3.conv_model
+KoreanOCRResources.bundle/tflite_script_detector_0.3.lstm_model
+LatinOCRResources.bundle/
+LatinOCRResources.bundle/Info.plist
+LatinOCRResources.bundle/region_proposal_text_detector_tflite_gray_quantized.bincfg
+LatinOCRResources.bundle/rpn_lstm_engine_tflite_latin.bincfg
+LatinOCRResources.bundle/rpn_text_detector_mobile_space_to_depth_quantized_v2.tflite
+LatinOCRResources.bundle/tflite_langid.tflite
+LatinOCRResources.bundle/tflite_lstm_recognizer_latin_0.3.bincfg
+LatinOCRResources.bundle/tflite_lstm_recognizer_latin_0.3.class_lst
+LatinOCRResources.bundle/tflite_lstm_recognizer_latin_0.3.conv_model
+LatinOCRResources.bundle/tflite_lstm_recognizer_latin_0.3.lstm_model
+RNCAsyncStorage_resources.bundle/
+RNCAsyncStorage_resources.bundle/Info.plist
+RNCAsyncStorage_resources.bundle/PrivacyInfo.xcprivacy
+RNSVGFilters.bundle/
+RNSVGFilters.bundle/Info.plist
+RNSVGFilters.bundle/RNSVGArithmeticFilter.iphoneos.metallib
+RNSVGFilters.bundle/RNSVGCompositeXor.iphoneos.metallib
+ReachabilitySwift.bundle/
+ReachabilitySwift.bundle/Info.plist
+ReachabilitySwift.bundle/PrivacyInfo.xcprivacy
+React-Core_privacy.bundle/
+React-Core_privacy.bundle/Info.plist
+React-Core_privacy.bundle/PrivacyInfo.xcprivacy
+React-cxxreact_privacy.bundle/
+React-cxxreact_privacy.bundle/Info.plist
+React-cxxreact_privacy.bundle/PrivacyInfo.xcprivacy
+SDWebImage.bundle/
+SDWebImage.bundle/Info.plist
+SDWebImage.bundle/PrivacyInfo.xcprivacy
+nanopb_Privacy.bundle/
+nanopb_Privacy.bundle/Info.plist
+nanopb_Privacy.bundle/PrivacyInfo.xcprivacy
+
+sent 8030628 bytes  received 2750 bytes  28990898 bytes/sec
+total size is 8013089  speedup is 1.00
+Transfer starting: 143 files
+
+sent 11113 bytes  received 20 bytes  651052 bytes/sec
+total size is 8013089  speedup is 719.76
+
+PhaseScriptExecution [CP]\ Embed\ Pods\ Frameworks /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/IntermediateBuildFilesPath/dwry.build/Release-iphoneos/dwry.build/Script-6E26EF1D4FF100A9866B0AF4.sh (in target 'dwry' from project 'dwry')
+    cd /Users/runner/work/alabdo-toys-site/alabdo-toys-site/dory/ios
+    /bin/sh -c /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/IntermediateBuildFilesPath/dwry.build/Release-iphoneos/dwry.build/Script-6E26EF1D4FF100A9866B0AF4.sh
+mkdir -p /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/BuildProductsPath/Release-iphoneos/dwry.app/Frameworks
+rsync --delete -av --filter P .*.?????? --links --filter "- CVS/" --filter "- .svn/" --filter "- .git/" --filter "- .hg/" --filter "- Headers" --filter "- PrivateHeaders" --filter "- Modules" "/Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/BuildProductsPath/Release-iphoneos/XCFrameworkIntermediates/React-Core-prebuilt/React.framework" "/Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/InstallationBuildProductsLocation/Applications/dwry.app/Frameworks"
+Transfer starting: 3 files
+React.framework/
+React.framework/Info.plist
+React.framework/React
+
+sent 11268001 bytes  received 70 bytes  72184951 bytes/sec
+total size is 11266237  speedup is 1.00
+rsync --delete -av --filter P .*.?????? --links --filter "- CVS/" --filter "- .svn/" --filter "- .git/" --filter "- .hg/" --filter "- Headers" --filter "- PrivateHeaders" --filter "- Modules" "/Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/BuildProductsPath/Release-iphoneos/XCFrameworkIntermediates/ReactNativeDependencies/ReactNativeDependencies.framework" "/Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/InstallationBuildProductsLocation/Applications/dwry.app/Frameworks"
+Transfer starting: 12 files
+ReactNativeDependencies.framework/
+ReactNativeDependencies.framework/Info.plist
+ReactNativeDependencies.framework/ReactNativeDependencies
+ReactNativeDependencies.framework/ReactNativeDependencies_boost.bundle/
+ReactNativeDependencies.framework/ReactNativeDependencies_boost.bundle/Info.plist
+ReactNativeDependencies.framework/ReactNativeDependencies_boost.bundle/PrivacyInfo.xcprivacy
+ReactNativeDependencies.framework/ReactNativeDependencies_folly.bundle/
+ReactNativeDependencies.framework/ReactNativeDependencies_folly.bundle/Info.plist
+ReactNativeDependencies.framework/ReactNativeDependencies_folly.bundle/PrivacyInfo.xcprivacy
+ReactNativeDependencies.framework/ReactNativeDependencies_glog.bundle/
+ReactNativeDependencies.framework/ReactNativeDependencies_glog.bundle/Info.plist
+ReactNativeDependencies.framework/ReactNativeDependencies_glog.bundle/PrivacyInfo.xcprivacy
+
+sent 1265535 bytes  received 220 bytes  48496360 bytes/sec
+total size is 1263674  speedup is 1.00
+rsync --delete -av --filter P .*.?????? --links --filter "- CVS/" --filter "- .svn/" --filter "- .git/" --filter "- .hg/" --filter "- Headers" --filter "- PrivateHeaders" --filter "- Modules" "/Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/BuildProductsPath/Release-iphoneos/XCFrameworkIntermediates/hermes-engine/Pre-built/hermes.framework" "/Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/InstallationBuildProductsLocation/Applications/dwry.app/Frameworks"
+Transfer starting: 3 files
+hermes.framework/
+hermes.framework/Info.plist
+hermes.framework/hermes
+
+sent 4702235 bytes  received 70 bytes  63458906 bytes/sec
+total size is 4701267  speedup is 1.00
+
+CopySwiftLibs /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/InstallationBuildProductsLocation/Applications/dwry.app (in target 'dwry' from project 'dwry')
+    cd /Users/runner/work/alabdo-toys-site/alabdo-toys-site/dory/ios
+    builtin-swiftStdLibTool --copy --verbose --sign - --scan-executable /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/InstallationBuildProductsLocation/Applications/dwry.app/dwry --scan-folder /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/InstallationBuildProductsLocation/Applications/dwry.app/Frameworks --scan-folder /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/InstallationBuildProductsLocation/Applications/dwry.app/PlugIns --scan-folder /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/InstallationBuildProductsLocation/Applications/dwry.app/SystemExtensions --scan-folder /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/InstallationBuildProductsLocation/Applications/dwry.app/Extensions --platform iphoneos --toolchain /var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.6.109.0.Al0B0L/Metal.xctoolchain --toolchain /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/InstallationBuildProductsLocation/Applications/dwry.app/Frameworks --unsigned-destination /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/BuildProductsPath/SwiftSupport --strip-bitcode --strip-bitcode-tool /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/IntermediateBuildFilesPath/dwry.build/Release-iphoneos/dwry.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os --back-deploy-swift-span
+
+ExtractAppIntentsMetadata (in target 'dwry' from project 'dwry')
+    cd /Users/runner/work/alabdo-toys-site/alabdo-toys-site/dory/ios
+    /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.6.109.0.Al0B0L/Metal.xctoolchain --module-name dwry --sdk-root /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk --xcode-version 17F113 --platform-family iOS --deployment-target 15.5 --bundle-identifier com.alabdo.dory --output /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/InstallationBuildProductsLocation/Applications/dwry.app --target-triple arm64-apple-ios15.5 --binary-file /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/InstallationBuildProductsLocation/Applications/dwry.app/dwry --dependency-file /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/IntermediateBuildFilesPath/dwry.build/Release-iphoneos/dwry.build/Objects-normal/arm64/dwry_dependency_info.dat --stringsdata-file /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/IntermediateBuildFilesPath/dwry.build/Release-iphoneos/dwry.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/IntermediateBuildFilesPath/dwry.build/Release-iphoneos/dwry.build/Objects-normal/arm64/dwry.SwiftFileList --metadata-file-list /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/IntermediateBuildFilesPath/dwry.build/Release-iphoneos/dwry.build/dwry.DependencyMetadataFileList --static-metadata-file-list /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/IntermediateBuildFilesPath/dwry.build/Release-iphoneos/dwry.build/dwry.DependencyStaticMetadataFileList --swift-const-vals-list /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/IntermediateBuildFilesPath/dwry.build/Release-iphoneos/dwry.build/Objects-normal/arm64/dwry.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --validate-assistant-intents --no-app-shortcuts-localization
+2026-10-29 05:34:29.054 appintentsmetadataprocessor[25085:71480] Starting appintentsmetadataprocessor export
+2026-10-29 05:34:29.083 appintentsmetadataprocessor[25085:71480] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
+
+AppIntentsSSUTraining (in target 'dwry' from project 'dwry')
+    cd /Users/runner/work/alabdo-toys-site/alabdo-toys-site/dory/ios
+    /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsnltrainingprocessor --infoplist-path /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/InstallationBuildProductsLocation/Applications/dwry.app/Info.plist --temp-dir-path /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/IntermediateBuildFilesPath/dwry.build/Release-iphoneos/dwry.build/ssu --bundle-id com.alabdo.dory --product-path /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/InstallationBuildProductsLocation/Applications/dwry.app --extracted-metadata-path /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/InstallationBuildProductsLocation/Applications/dwry.app/Metadata.appintents --deployment-postprocessing --metadata-file-list /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/IntermediateBuildFilesPath/dwry.build/Release-iphoneos/dwry.build/dwry.DependencyMetadataFileList --source-file /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/InstallationBuildProductsLocation/Applications/dwry.app/Info.plist --archive-ssu-assets
+2026-10-29 05:34:29.143 appintentsnltrainingprocessor[25086:71482] Parsing options for appintentsnltrainingprocessor
+2026-10-29 05:34:29.144 appintentsnltrainingprocessor[25086:71482] Starting AppIntents SSU YAML Generation
+2026-10-29 05:34:29.158 appintentsnltrainingprocessor[25086:71482] No AppShortcuts found - Skipping.
+
+Strip /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/InstallationBuildProductsLocation/Applications/dwry.app/dwry (in target 'dwry' from project 'dwry')
+    cd /Users/runner/work/alabdo-toys-site/alabdo-toys-site/dory/ios
+    /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/strip -D /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/InstallationBuildProductsLocation/Applications/dwry.app/dwry
+
+SetOwnerAndGroup runner:staff /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/InstallationBuildProductsLocation/Applications/dwry.app (in target 'dwry' from project 'dwry')
+    cd /Users/runner/work/alabdo-toys-site/alabdo-toys-site/dory/ios
+    /usr/sbin/chown -RH runner:staff /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/InstallationBuildProductsLocation/Applications/dwry.app
+
+SetMode u+w,go-w,a+rX /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/InstallationBuildProductsLocation/Applications/dwry.app (in target 'dwry' from project 'dwry')
+    cd /Users/runner/work/alabdo-toys-site/alabdo-toys-site/dory/ios
+    /bin/chmod -RH u+w,go-w,a+rX /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/InstallationBuildProductsLocation/Applications/dwry.app
+
+CodeSign /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/InstallationBuildProductsLocation/Applications/dwry.app (in target 'dwry' from project 'dwry')
+    cd /Users/runner/work/alabdo-toys-site/alabdo-toys-site/dory/ios
+    
+    Signing Identity:     "Sign to Run Locally"
+    
+    /usr/bin/codesign --force --sign - --entitlements /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/IntermediateBuildFilesPath/dwry.build/Release-iphoneos/dwry.build/dwry.app.xcent --generate-entitlement-der /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/InstallationBuildProductsLocation/Applications/dwry.app
+
+RegisterExecutionPolicyException /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/InstallationBuildProductsLocation/Applications/dwry.app (in target 'dwry' from project 'dwry')
+    cd /Users/runner/work/alabdo-toys-site/alabdo-toys-site/dory/ios
+    builtin-RegisterExecutionPolicyException /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/InstallationBuildProductsLocation/Applications/dwry.app
+
+Validate /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/InstallationBuildProductsLocation/Applications/dwry.app (in target 'dwry' from project 'dwry')
+    cd /Users/runner/work/alabdo-toys-site/alabdo-toys-site/dory/ios
+    builtin-validationUtility /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/InstallationBuildProductsLocation/Applications/dwry.app -validate-for-store -shallow-bundle -infoplist-subpath Info.plist
+
+Touch /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/InstallationBuildProductsLocation/Applications/dwry.app (in target 'dwry' from project 'dwry')
+    cd /Users/runner/work/alabdo-toys-site/alabdo-toys-site/dory/ios
+    /usr/bin/touch -c /Users/runner/Library/Developer/Xcode/DerivedData/dwry-gudqykcacxwepoefvdvsbcfjpilf/Build/Intermediates.noindex/ArchiveIntermediates/dwry/InstallationBuildProductsLocation/Applications/dwry.app
+
+warning: Run script build phase '[CP-User] [Hermes] Replace Hermes for the right configuration, if needed' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'hermes-engine' from project 'Pods')
+note: Run script build phase '[CP-User] [RNDeps] Replace React Native Core for the right configuration, if needed' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'React-Core-prebuilt' from project 'Pods')
+note: Run script build phase '[CP-User] [RN]Check FBReactNativeSpec' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'React-RCTFBReactNativeSpec' from project 'Pods')
+note: Run script build phase '[CP-User] [RNDeps] Replace React Native Dependencies for the right configuration, if needed' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'ReactNativeDependencies' from project 'Pods')
+note: Run script build phase '[Expo] Configure project' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'dwry' from project 'dwry')
+note: Run script build phase 'Bundle React Native code and images' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'dwry' from project 'dwry')
+/Users/runner/work/alabdo-toys-site/alabdo-toys-site/dory/ios/Pods/Pods.xcodeproj: warning: The iOS deployment target 'IPHONEOS_DEPLOYMENT_TARGET' is set to 9.0, but the range of supported deployment target versions is 12.0 to 26.5.99. (in target 'nanopb-nanopb_Privacy' from project 'Pods')
+/Users/runner/work/alabdo-toys-site/alabdo-toys-site/dory/ios/Pods/Pods.xcodeproj: warning: The iOS deployment target 'IPHONEOS_DEPLOYMENT_TARGET' is set to 9.0, but the range of supported deployment target versions is 12.0 to 26.5.99. (in target 'SDWebImage-SDWebImage' from project 'Pods')
+/Users/runner/work/alabdo-toys-site/alabdo-toys-site/dory/ios/Pods/Pods.xcodeproj: warning: The iOS deployment target 'IPHONEOS_DEPLOYMENT_TARGET' is set to 9.0, but the range of supported deployment target versions is 12.0 to 26.5.99. (in target 'PromisesObjC-FBLPromises_Privacy' from project 'Pods')
+/Users/runner/work/alabdo-toys-site/alabdo-toys-site/dory/ios/Pods/Pods.xcodeproj: warning: The iOS deployment target 'IPHONEOS_DEPLOYMENT_TARGET' is set to 9.0, but the range of supported deployment target versions is 12.0 to 26.5.99. (in target 'GoogleUtilities-GoogleUtilities_Privacy' from project 'Pods')
+/Users/runner/work/alabdo-toys-site/alabdo-toys-site/dory/ios/Pods/Pods.xcodeproj: warning: The iOS deployment target 'IPHONEOS_DEPLOYMENT_TARGET' is set to 10.0, but the range of supported deployment target versions is 12.0 to 26.5.99. (in target 'GoogleToolboxForMac-GoogleToolboxForMac_Privacy' from project 'Pods')
+/Users/runner/work/alabdo-toys-site/alabdo-toys-site/dory/ios/Pods/Pods.xcodeproj: warning: The iOS deployment target 'IPHONEOS_DEPLOYMENT_TARGET' is set to 10.0, but the range of supported deployment target versions is 12.0 to 26.5.99. (in target 'GoogleToolboxForMac-GoogleToolboxForMac_Logger_Privacy' from project 'Pods')
+/Users/runner/work/alabdo-toys-site/alabdo-toys-site/dory/ios/Pods/Pods.xcodeproj: warning: The iOS deployment target 'IPHONEOS_DEPLOYMENT_TARGET' is set to 9.0, but the range of supported deployment target versions is 12.0 to 26.5.99. (in target 'GoogleDataTransport-GoogleDataTransport_Privacy' from project 'Pods')
+/Users/runner/work/alabdo-toys-site/alabdo-toys-site/dory/ios/Pods/Pods.xcodeproj: warning: The iOS deployment target 'IPHONEOS_DEPLOYMENT_TARGET' is set to 10.0, but the range of supported deployment target versions is 12.0 to 26.5.99. (in target 'GTMSessionFetcher-GTMSessionFetcher_Core_Privacy' from project 'Pods')
+note: Run script build phase '[CP-User] Generate updates resources for expo-updates' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'EXUpdates' from project 'Pods')
+note: Run script build phase '[CP-User] Generate app.config for prebuilt Constants.manifest' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'EXConstants' from project 'Pods')
+** ARCHIVE SUCCEEDED **
+
+2026-10-29 05:34:34.181 xcodebuild[25114:71629] [MT] IDEDistribution: -[IDEDistributionLogging _createLoggingBundleAtPath:]: Created bundle at path "/var/folders/n6/hn37q6pj7sj_9dmqqc2113800000gn/T/dwry_2026-10-29_05-34-34.165.xcdistributionlogs".
+2026-10-29 05:34:55.220 xcodebuild[25114:71629] Starting upload
+2026-10-29 05:34:56.274 xcodebuild[25114:71752] Progress 0%: Making copy of ‘dwry.ipa’…
+2026-10-29 05:34:56.275 xcodebuild[25114:71752] Progress 0%: Making copy of ‘dwry.ipa’…
+2026-10-29 05:34:56.278 xcodebuild[25114:71752] Progress 0%: Preparing to upload ‘dwry.ipa’…
+2026-10-29 05:35:44.979 xcodebuild[25114:71752] Progress 0%: Analyzing package…
+2026-10-29 05:35:46.420 xcodebuild[25114:71635] Progress 0%: Sending analysis to App Store Connect…
+2026-10-29 05:35:47.298 xcodebuild[25114:71635] Progress 0%: Waiting for App Store Connect analysis response…
+2026-10-29 05:35:49.487 xcodebuild[25114:71635] Progress 0%: Waiting for App Store Connect analysis response…
+2026-10-29 05:36:32.812 xcodebuild[25114:71635] Progress 0%: Sending SPI analysis to App Store Connect…
+2026-10-29 05:36:33.995 xcodebuild[25114:71635] Progress 0%: Waiting for App Store Connect SPI analysis response…
+2026-10-29 05:36:36.250 xcodebuild[25114:71635] Progress 0%: Waiting for App Store Connect SPI analysis response…
+2026-10-29 05:36:57.523 xcodebuild[25114:71635] Progress 0%: Requesting upload instructions from App Store Connect…
+2026-10-29 05:36:58.927 xcodebuild[25114:71635] Progress 0%: Preparing file for upload to App Store Connect…
+2026-10-29 05:36:58.951 xcodebuild[25114:71635] Progress 0%: Preparing file for upload to App Store Connect…
+2026-10-29 05:36:58.952 xcodebuild[25114:71635] Progress 0%: Uploading to App Store Connect…
+2026-10-29 05:36:59.106 xcodebuild[25114:71635] Progress 15%: Uploading to App Store Connect…
+2026-10-29 05:36:59.108 xcodebuild[25114:71635] Progress 15%: Uploading to App Store Connect…
+2026-10-29 05:36:59.806 xcodebuild[25114:71635] Progress 15%: Completing upload…
+2026-10-29 05:37:01.831 xcodebuild[25114:71635] Progress 15%: Waiting for package to begin processing…
+2026-10-29 05:37:02.089 xcodebuild[25114:71635] Progress 15%: Uploaded package is processing.
+2026-10-29 05:37:02.094 xcodebuild[25114:71635] Progress 15%: Upload succeeded.
+warning: exportArchive Upload Symbols Failed. The archive did not include a dSYM for the React.framework with the UUIDs [D6367361-9590-3FE5-BBAB-2A3AD49A83E8]. Ensure that the archive's dSYM folder includes a DWARF file for React.framework with the expected UUIDs.
+
+warning: exportArchive Upload Symbols Failed. The archive did not include a dSYM for the ReactNativeDependencies.framework with the UUIDs [B35F1182-B82E-3372-8A74-A4FE502C0906]. Ensure that the archive's dSYM folder includes a DWARF file for ReactNativeDependencies.framework with the expected UUIDs.
+
+warning: exportArchive Upload Symbols Failed. The archive did not include a dSYM for the hermes.framework with the UUIDs [BA3C949A-7707-3472-B346-D3E0690C88D0]. Ensure that the archive's dSYM folder includes a DWARF file for hermes.framework with the expected UUIDs.
+
+Uploaded dwry
+** EXPORT SUCCEEDED **
+

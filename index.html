@@ -12892,6 +12892,15 @@ function aoeOptionHtml(o, i, active){
     + '<span class="aoe-ac-side"><b class="tabular">'+fmt(o.price)+' '+t("ج.م")+'</b>'+(stTxt ? '<small class="'+(st > 0 ? '' : 'is-out')+'">'+stTxt+'</small>' : '')+'</span>'
   + '</button>';
 }
+/* خصم الطلب وقت تعديله من الأدمن: نفس حساب السيرفر بالظبط (orders.js PUT) —
+   كود خصم = نسبته من الأصناف بعد التعديل، أو خصم المستوى لو الطلب عليه مستوى، وإلا مفيش خصم. */
+function orderEditDiscount(order, sub){
+  sub = Math.max(0, +sub || 0);
+  if(!order || !sub) return 0;
+  if(order.coupon) return Math.round(sub * (+order.couponPercent || 0) / 100);
+  if(order.tier) return tierCalc(order.tier, sub);
+  return 0;
+}
 /* نموذج تعديل الطلب (اسم/موبايل/عنوان + الأصناف بكمياتها وأسعارها، والإجمالي
    بيتحسب لوحده أول بأول) - بيبدّل مكان الفاتورة في نفس المودال، وبيرجع
    لعرض الفاتورة تاني لو ضغط "إلغاء". */
@@ -12952,7 +12961,7 @@ function showAdminOrderEditForm(order){
   }
   function updateTotal(){
     var sub = items.reduce(function(sum, it){ return sum + (+it.qty||0)*(+it.price||0); }, 0);
-    var total = sub - orderEditDiscount(order, sub) + editShipping();
+    var total = Math.max(0, sub - orderEditDiscount(order, sub)) + editShipping();
     document.getElementById("aoeTotal").textContent = fmt(total)+" "+t("ج.م");
   }
   function renderItemRows(focusIdx){
@@ -13038,7 +13047,7 @@ function showAdminOrderEditForm(order){
   var pay = { method: order.paymentMethod || "cash", img: null, remove: false, check: null, seq: 0 };
   function currentEditTotal(){
     var sub = items.reduce(function(sum, it){ return sum + (+it.qty||0)*(+it.price||0); }, 0);
-    return sub - orderEditDiscount(order, sub) + editShipping();
+    return Math.max(0, sub - orderEditDiscount(order, sub)) + editShipping();
   }
   /* مراجعة الإيصال بالذكاء الاصطناعي (نفس مراجعة إيصال العميل) */
   function aiCheckProof(){
@@ -13129,7 +13138,7 @@ function showAdminOrderEditForm(order){
       }
     }
     var sub2 = cleanItems.reduce(function(sum, it){ return sum + it.qty*it.price; }, 0);
-    var total = sub2 - orderEditDiscount(order, sub2) + editShipping();
+    var total = Math.max(0, sub2 - orderEditDiscount(order, sub2)) + editShipping();
     var btn = this;
     btn.disabled = true;
     fetch("/api/orders", {

@@ -36,7 +36,7 @@ jobs:
     runs-on: macos-latest
     env:
       RUN: ${{ github.run_number }}
-      APP_VERSION: "1.0"
+      APP_VERSION: "1.0.1"
       BUNDLE_ID: com.alabdotoys.app
     steps:
       - name: Checkout
@@ -124,8 +124,8 @@ jobs:
                   CFBundleVersion: "${RUN}"
                   UILaunchScreen: {}
                   UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
-                  UIStatusBarStyle: UIStatusBarStyleLightContent
-                  UIViewControllerBasedStatusBarAppearance: false
+                  UIStatusBarStyle: UIStatusBarStyleDarkContent
+                  UIViewControllerBasedStatusBarAppearance: true
                   NSCameraUsageDescription: "عشان تصوّر إيصال التحويل أو صورة المنتج اللي بتدوّر عليه"
                   NSPhotoLibraryUsageDescription: "عشان تختار صورة إيصال التحويل أو صورة منتج"
                   NSPhotoLibraryAddUsageDescription: "عشان تحفظ الصور والفواتير على الموبايل"
@@ -291,9 +291,20 @@ jobs:
 
               private var web: WKWebView!
               private let home = URL(string: "https://alabdo-toys.com/?source=app")!
-              private let pink = UIColor(red: 0.933, green: 0.122, blue: 0.424, alpha: 1)
+              /* لون الشريط اللي ورا الساعة والبطارية: أصفر نون، والموقع يقدر يغيّره
+                 (AlAbdoNative.setBar) علشان أي تغيير ألوان بعد كده ميحتاجش تحديث */
+              private let barYellow = UIColor(red: 0.980, green: 0.898, blue: 0.408, alpha: 1)
+              private var topBar: UIView!
+              private var barLightIcons = false
 
-              override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
+              override var preferredStatusBarStyle: UIStatusBarStyle { barLightIcons ? .lightContent : .darkContent }
+
+              private func colorFromHex(_ hex: String) -> UIColor? {
+                  var h = hex.trimmingCharacters(in: .whitespacesAndNewlines)
+                  if h.hasPrefix("#") { h.removeFirst() }
+                  guard h.count == 6, let v = UInt32(h, radix: 16) else { return nil }
+                  return UIColor(red: CGFloat((v >> 16) & 0xFF) / 255, green: CGFloat((v >> 8) & 0xFF) / 255, blue: CGFloat(v & 0xFF) / 255, alpha: 1)
+              }
 
               override func viewDidLoad() {
                   super.viewDidLoad()
@@ -306,6 +317,7 @@ jobs:
                     saveBase64: function(name, mime, b64){ try{ window.webkit.messageHandlers.alabdo.postMessage({ t:"save", name:String(name||"file"), mime:String(mime||""), b64:String(b64||"") }); }catch(e){} },
                     requestReview: function(){ try{ window.webkit.messageHandlers.alabdo.postMessage({ t:"review" }); }catch(e){} },
                     setCustomer: function(id, pass){ try{ window.webkit.messageHandlers.alabdo.postMessage({ t:"cust", id:String(id||""), pass:String(pass||"") }); }catch(e){} },
+                    setBar: function(c, light){ try{ window.webkit.messageHandlers.alabdo.postMessage({ t:"bar", c:String(c||""), l:!!light }); }catch(e){} },
                     cartChanged: function(n, names){}
                   };
                   """
@@ -335,9 +347,10 @@ jobs:
                   web.translatesAutoresizingMaskIntoConstraints = false
                   view.addSubview(web)
 
-                  /* شريط وردي ورا شريط الساعة والبطارية زي تطبيق الأندرويد */
+                  /* شريط أصفر (زي نون) ورا شريط الساعة والبطارية */
                   let top = UIView()
-                  top.backgroundColor = pink
+                  top.backgroundColor = barYellow
+                  topBar = top
                   top.translatesAutoresizingMaskIntoConstraints = false
                   view.addSubview(top)
 
@@ -393,7 +406,11 @@ jobs:
               /* رسايل من الموقع: الاهتزاز + حفظ الملفات */
               func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
                   guard let d = message.body as? [String: Any], let t = d["t"] as? String else { return }
-                  if t == "cust" {
+                  if t == "bar" {
+                      if let c = d["c"] as? String, let col = colorFromHex(c) { topBar?.backgroundColor = col }
+                      barLightIcons = (d["l"] as? Bool) ?? false
+                      setNeedsStatusBarAppearanceUpdate()
+                  } else if t == "cust" {
                       Push.setCustomer(id: (d["id"] as? String) ?? "", pass: (d["pass"] as? String) ?? "")
                   } else if t == "haptic" {
                       let k = (d["k"] as? String) ?? "tap"

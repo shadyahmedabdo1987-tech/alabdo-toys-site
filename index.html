@@ -5655,7 +5655,19 @@ function aaIsDark(){
 function aaSetTheme(next){
   root.setAttribute("data-theme", next);
   try{ localStorage.setItem("aa_theme", next); }catch(e){}
+  aaSyncBar();
 }
+/* لون الشريط اللي ورا الساعة والبطارية في تطبيق الآيفون (من النسخة 1.0.1):
+   أصفر نون في الوضع العادي، وغامق في الوضع الليلي. النسخ القديمة مبتتأثرش. */
+function aaSyncBar(){
+  try{
+    var n = window.AlAbdoNative; if(!n || typeof n.setBar !== "function") return;
+    var d = aaIsDark();
+    n.setBar(d ? "#2a2817" : "#fae568", d);
+  }catch(e){}
+}
+aaSyncBar();
+try{ if(window.matchMedia){ var aaMq = matchMedia("(prefers-color-scheme:dark)"); if(aaMq.addEventListener) aaMq.addEventListener("change", aaSyncBar); } }catch(e){}
 /* نافذة اختيار صغيرة (للوضع الليلي واللغة): بدل ما الزرار يقلب على طول،
    بتطلع اختيارات والاختيار الحالي عليه علامة ✓. بترجع قيمة الاختيار أو
    null لو اتقفلت من غير اختيار. */

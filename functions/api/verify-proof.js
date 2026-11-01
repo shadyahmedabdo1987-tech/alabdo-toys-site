@@ -50,7 +50,11 @@ async function verify(request, env){
   if(img.bytes.length > 8 * 1024 * 1024) return json({ ok:false, status:"fail", reason:"too_big" }, 413);
   var total = Math.max(0, +body.total || 0);
 
-  var res = await checkReceipt(env, img, total);
+  /* what the page read from the ORIGINAL picked file (before it was resized):
+     size + photo-editor names in its metadata (see fileForensics) */
+  var m0 = body && body.meta, meta = null;
+  if(m0 && typeof m0 === "object") meta = { w: +m0.w || 0, h: +m0.h || 0, soft: Array.isArray(m0.soft) ? m0.soft.slice(0, 8).map(function(x){ return String(x).slice(0, 40); }) : [] };
+  var res = await checkReceipt(env, img, total, meta);
   res.total = total;
   res.at = Date.now();
   await env.STORE_KV.put("pv:" + res.hash, JSON.stringify(res), { expirationTtl: 86400 });
@@ -58,6 +62,7 @@ async function verify(request, env){
     ok: res.status !== "fail",
     status: res.status,
     reason: res.reason || null,
+    detail: res.detail || null,
     amount: res.amount != null ? res.amount : null,
     recipient: res.recipient || "",
     reference: res.reference || "",

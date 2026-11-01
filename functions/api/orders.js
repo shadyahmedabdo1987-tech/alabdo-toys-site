@@ -207,6 +207,9 @@ export async function onRequestPost({ request, env, waitUntil }){
     if(pv.status === "ok" && (+pv.amount || 0) + 1 < order.total) return json({ ok:false, error:"proof_low_amount", amount: pv.amount, total: order.total }, 409);
     proofRef = normRef(pv.reference || "");
     if(proofRef.length >= 6 && await env.STORE_KV.get("pref:" + proofRef)) return json({ ok:false, error:"proof_reused" }, 409);
+    /* the money must be seen in the wallet before the order moves on:
+       admin confirms with api/order-status {pay:"confirm"} */
+    order.payPending = true;
     order.proofCheck = {
       status: pv.status,
       amount: pv.amount != null ? pv.amount : null,

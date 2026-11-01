@@ -17,6 +17,7 @@
 # notifications: red accent color + round store-badge status-bar icon
 # orders: order-status / replies pop up at the top (high-importance channel), checked every minute while the app is open and every 30 min when closed
 # push: instant notifications through Firebase Cloud Messaging (reads .github/firebase/google-services.json; polling stays as a fallback)
+# build 26: Noon-yellow look: yellow status bar (dark icons) + yellow splash; the site can set the bar color (AlAbdoNative.setBar)
 # build 25: offers & discounts arrive instantly too (every phone joins the "offers" topic, shown once even if the 30-min check finds them later)
 name: Build Android APK
 
@@ -252,8 +253,9 @@ jobs:
           cat > $P/app/src/main/res/values/colors.xml <<'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <resources>
-              <color name="brandPink">#EE1F6C</color>
-              <color name="splashBg">#FFF8EF</color>
+              <color name="brandPink">#1B2A4E</color>
+              <color name="brandYellow">#FAE568</color>
+              <color name="splashBg">#FAE568</color>
               <color name="iconBackground">#00000000</color>
           </resources>
           EOF
@@ -263,7 +265,7 @@ jobs:
           <resources>
               <style name="AppTheme" parent="@android:style/Theme.Material.Light.NoActionBar">
                   <item name="android:windowBackground">@drawable/splash_bg</item>
-                  <item name="android:statusBarColor">@color/brandPink</item>
+                  <item name="android:statusBarColor">@color/brandYellow</item>
                   <item name="android:colorPrimary">@color/brandPink</item>
                   <item name="android:colorAccent">@color/brandPink</item>
               </style>
@@ -275,7 +277,7 @@ jobs:
           <resources>
               <style name="AppTheme" parent="@android:style/Theme.Material.Light.NoActionBar">
                   <item name="android:windowBackground">@color/splashBg</item>
-                  <item name="android:statusBarColor">@color/brandPink</item>
+                  <item name="android:statusBarColor">@color/brandYellow</item>
                   <item name="android:colorPrimary">@color/brandPink</item>
                   <item name="android:colorAccent">@color/brandPink</item>
                   <item name="android:windowSplashScreenBackground">@color/splashBg</item>
@@ -381,14 +383,15 @@ jobs:
 
                   LinearLayout root = new LinearLayout(this);
                   root.setOrientation(LinearLayout.VERTICAL);
-                  root.setBackgroundColor(0xFFFFF8EF);
+                  root.setBackgroundColor(0xFFFFFFFF);
                   topBar = new View(this);
-                  topBar.setBackgroundColor(0xFFEE1F6C);
+                  /* شريط أصفر نون ورا الساعة والبطارية (الموقع يقدر يغيّره: AlAbdoNative.setBar) */
+                  topBar.setBackgroundColor(0xFFFAE568);
                   bottomBar = new View(this);
                   bottomBar.setBackgroundColor(bottomColor);
                   FrameLayout content = new FrameLayout(this);
                   web = new WebView(this);
-                  web.setBackgroundColor(0xFFFFF8EF);
+                  web.setBackgroundColor(0xFFFFFFFF);
                   content.addView(web, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
                   splash = buildSplash();
                   content.addView(splash, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
@@ -413,14 +416,16 @@ jobs:
                       WindowInsetsController c = w.getInsetsController();
                       if (c != null) {
                           int mask = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS | WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
-                          c.setSystemBarsAppearance(night ? 0 : WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS, mask);
+                          /* أيقونات الساعة والبطارية غامقة علشان تبان على الأصفر */
+                          c.setSystemBarsAppearance(WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS | (night ? 0 : WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS), mask);
                       }
                   } else {
-                      w.setStatusBarColor(0xFFEE1F6C);
+                      w.setStatusBarColor(0xFFFAE568);
                       if (Build.VERSION.SDK_INT >= 26) {
                           w.setNavigationBarColor(bottomColor);
-                          if (!night) w.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+                          w.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | (night ? 0 : View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR));
                       } else {
+                          if (Build.VERSION.SDK_INT >= 23) w.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
                           w.setNavigationBarColor(Color.BLACK);
                       }
                   }
@@ -482,7 +487,8 @@ jobs:
                   splashStart = android.os.SystemClock.uptimeMillis();
 
                   FrameLayout f = new FrameLayout(this);
-                  f.setBackgroundColor(0xFFFFF8EF);
+                  /* خلفية أصفر نون (من فوق لتحت بتفتح شوية) */
+                  f.setBackground(new android.graphics.drawable.GradientDrawable(android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM, new int[]{0xFFFAE568, 0xFFFBEC87, 0xFFFEF9D3}));
                   f.setClickable(true);
 
                   LinearLayout col = new LinearLayout(this);
@@ -502,7 +508,7 @@ jobs:
                   android.graphics.drawable.GradientDrawable gd = new android.graphics.drawable.GradientDrawable();
                   gd.setShape(android.graphics.drawable.GradientDrawable.OVAL);
                   gd.setGradientType(android.graphics.drawable.GradientDrawable.RADIAL_GRADIENT);
-                  gd.setColors(new int[]{0x55EE1F6C, 0x33FFB703, 0x00FFF8EF});
+                  gd.setColors(new int[]{0x88FFFFFF, 0x33FFB703, 0x00FAE568});
                   gd.setGradientRadius(stageSize / 2f);
                   glow.setBackground(gd);
                   glow.setAlpha(0f);
@@ -512,7 +518,7 @@ jobs:
                   int logoSize = (int) (138 * d);
                   for (int i = 0; i < 2; i++) {
                       View ring = new View(this);
-                      ring.setBackground(oval(0x00000000, i == 0 ? 0xFFEE1F6C : 0xFFFFB703, (int) (2.5f * d)));
+                      ring.setBackground(oval(0x00000000, i == 0 ? 0xFF1B2A4E : 0xFFFF9F00, (int) (2.5f * d)));
                       ring.setAlpha(0f);
                       stage.addView(ring, new FrameLayout.LayoutParams(logoSize, logoSize, Gravity.CENTER));
                       android.animation.PropertyValuesHolder sx = android.animation.PropertyValuesHolder.ofFloat("scaleX", 1f, 2.05f);
@@ -530,7 +536,7 @@ jobs:
                   FrameLayout orbit = new FrameLayout(this);
                   orbit.setClipChildren(false);
                   stage.addView(orbit, new FrameLayout.LayoutParams(stageSize, stageSize, Gravity.CENTER));
-                  int[] colors = {0xFFEE1F6C, 0xFFFFB703, 0xFF1FA9DD, 0xFF1FB87F, 0xFF8E24AA, 0xFFFF7A45, 0xFFEE1F6C, 0xFF1FA9DD};
+                  int[] colors = {0xFFE0262F, 0xFF1B2A4E, 0xFF1FA9DD, 0xFF1FB87F, 0xFF8E24AA, 0xFFFF7A45, 0xFFE0262F, 0xFF1B2A4E};
                   float[] sizes = {12, 9, 11, 8, 10, 7, 8, 9};
                   float[] radii = {118, 104, 124, 110, 120, 100, 126, 112};
                   for (int i = 0; i < colors.length; i++) {
@@ -616,7 +622,7 @@ jobs:
                   /* اسم المتجر والشعار */
                   android.widget.TextView name = new android.widget.TextView(this);
                   name.setText("متجر آل عبده");
-                  name.setTextColor(0xFFB6135A);
+                  name.setTextColor(0xFF1B2A4E);
                   name.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 27);
                   name.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
                   name.setGravity(Gravity.CENTER);
@@ -626,7 +632,7 @@ jobs:
 
                   android.widget.TextView tag = new android.widget.TextView(this);
                   tag.setText("متعة أكبر .. طفولة أجمل");
-                  tag.setTextColor(0xFF6B6080);
+                  tag.setTextColor(0xFF404553);
                   tag.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 15);
                   tag.setGravity(Gravity.CENTER);
                   LinearLayout.LayoutParams tlp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -654,7 +660,7 @@ jobs:
                   llp.topMargin = (int) (22 * d);
                   col.addView(loader, llp);
                   loader.setAlpha(0f);
-                  int[] lc = {0xFFEE1F6C, 0xFFFFB703, 0xFF1FA9DD};
+                  int[] lc = {0xFF1B2A4E, 0xFFE0262F, 0xFF1FA9DD};
                   for (int i = 0; i < 3; i++) {
                       View dt = new View(this);
                       dt.setBackground(oval(lc[i], 0, 0));
@@ -726,6 +732,14 @@ jobs:
                           @Override public void run() { askNotificationPermissionOnce(); }
                       });
                   }
+                  /* لون الشريط اللي ورا الساعة والبطارية بييجي من الموقع
+                     (علشان أي تغيير ألوان بعد كده ميحتاجش تحديث للتطبيق) */
+                  @JavascriptInterface
+                  public void setBar(final String hex, final boolean lightIcons) {
+                      runOnUiThread(new Runnable() {
+                          @Override public void run() { applyBar(hex, lightIcons); }
+                      });
+                  }
                   /* تقييم التطبيق على جوجل بلاي من جوه التطبيق */
                   @JavascriptInterface
                   public void requestReview() {
@@ -740,6 +754,24 @@ jobs:
                       if (count > 0) runOnUiThread(new Runnable() {
                           @Override public void run() { askNotificationPermissionOnce(); }
                       });
+                  }
+              }
+
+              private void applyBar(String hex, boolean lightIcons) {
+                  int col;
+                  try { col = Color.parseColor(hex); } catch (Exception e) { return; }
+                  if (topBar != null) topBar.setBackgroundColor(col);
+                  Window w = getWindow();
+                  if (Build.VERSION.SDK_INT >= 30) {
+                      WindowInsetsController c = w.getInsetsController();
+                      if (c != null) c.setSystemBarsAppearance(lightIcons ? 0 : WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS, WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS);
+                  } else {
+                      w.setStatusBarColor(col);
+                      if (Build.VERSION.SDK_INT >= 23) {
+                          View dv = w.getDecorView();
+                          int f = dv.getSystemUiVisibility();
+                          dv.setSystemUiVisibility(lightIcons ? (f & ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR) : (f | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR));
+                      }
                   }
               }
 
@@ -972,15 +1004,15 @@ jobs:
               private void showOffline() {
                   String html = "<!doctype html><html dir='rtl'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
                       + "<style>body{margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;"
-                      + "font-family:sans-serif;background:#fff8ef;color:#2a1f3d;text-align:center;padding:28px;box-sizing:border-box}"
-                      + ".art{width:150px;height:150px;border-radius:50%;background:#fff;display:grid;place-items:center;box-shadow:0 14px 34px rgba(238,31,108,.16);margin-bottom:6px;animation:f 3.4s ease-in-out infinite}"
+                      + "font-family:sans-serif;background:#fef9d3;color:#1c1c1c;text-align:center;padding:28px;box-sizing:border-box}"
+                      + ".art{width:150px;height:150px;border-radius:50%;background:#fff;display:grid;place-items:center;box-shadow:0 14px 34px rgba(27,42,78,.14);margin-bottom:6px;animation:f 3.4s ease-in-out infinite}"
                       + "@keyframes f{50%{transform:translateY(-8px)}}"
                       + "b{font-size:21px}p{margin:0;color:#6b6080;line-height:1.7;max-width:300px}"
                       + "button{margin-top:10px;border:0;border-radius:999px;background:linear-gradient(180deg,#f2457f,#d0175c);color:#fff;font-size:16px;font-weight:700;padding:13px 32px;box-shadow:0 6px 16px rgba(208,23,92,.3)}"
-                      + "small{color:#9b8fb3;font-size:12.5px}.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#ee1f6c;margin:0 2px;animation:d 1.2s infinite}"
+                      + "small{color:#9b8fb3;font-size:12.5px}.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#1b2a4e;margin:0 2px;animation:d 1.2s infinite}"
                       + ".dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}@keyframes d{50%{opacity:.25}}</style></head>"
-                      + "<body><div class='art'><svg width='92' height='92' viewBox='0 0 24 24' fill='none' stroke='#ee1f6c' stroke-width='1.8' stroke-linecap='round'>"
-                      + "<path d='M2 8.8a15 15 0 0 1 20 0'/><path d='M5.5 12.3a10 10 0 0 1 13 0'/><path d='M9 15.8a5 5 0 0 1 6 0'/><circle cx='12' cy='19.2' r='1' fill='#ee1f6c'/>"
+                      + "<body><div class='art'><svg width='92' height='92' viewBox='0 0 24 24' fill='none' stroke='#1b2a4e' stroke-width='1.8' stroke-linecap='round'>"
+                      + "<path d='M2 8.8a15 15 0 0 1 20 0'/><path d='M5.5 12.3a10 10 0 0 1 13 0'/><path d='M9 15.8a5 5 0 0 1 6 0'/><circle cx='12' cy='19.2' r='1' fill='#1b2a4e'/>"
                       + "<path d='M3 3l18 18' stroke='#2a1f3d'/></svg></div>"
                       + "<b>النت فاصل شوية</b><p>اتأكد إن الواي فاي أو الداتا شغالين، وأول ما النت يرجع المتجر هيفتح لوحده.</p>"
                       + "<button onclick=\"location.href='" + HOME + "'\">حاول تاني</button>"

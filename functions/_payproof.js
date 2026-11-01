@@ -9,8 +9,20 @@
      - the same receipt (transaction reference or the exact same image)
        was not used for another order before.
    This catches mistakes and re-used / wrong receipts. It can NOT prove the
-   money really arrived (an edited screenshot can still look right) - the
-   admin should still glance at the wallet before shipping.
+   money really arrived (an edited screenshot can still look right) - so
+   every transfer order is created with payPending=true and can't move to
+   preparing/shipped until the admin confirms the money reached the wallet
+   (api/order-status {pay:"confirm"}).
+   Extra anti-tamper checks (Nov 2026, after an edited InstaPay receipt):
+     - photo-editor signatures in the file (Canva, Snapseed, PicsArt,
+       Photoshop, Lightroom, ...) -> "edited"
+     - the image must be a full phone screenshot (portrait phone ratio) ->
+       otherwise "cropped"
+     - the AI is asked for visual edit signs (different fonts/sizes in the
+       numbers, blurred or pasted patches, misaligned text) -> "edited"
+     - the transfer time must be recent (MAX_AGE_MIN) and not in the future,
+       and the phone status-bar clock must be at/after the transfer time ->
+       otherwise "stale" / "edited"
    KV keys: "pv:<imgHash>" verification result (1 day),
             "pref:<reference>" / "pimg:<imgHash>" -> orderId once used.
    (ASCII-only comments on purpose, same as _lib.js.) */
@@ -19,6 +31,8 @@ export var STORE_NUMBERS = ["01099952333"];
 /* the store's InstaPay address (IPA) - customers can pay to it instead of the number */
 export var STORE_IPAS = ["shady1088@instapay"];
 var MAX_AGE_DAYS = 3;
+/* a transfer older than this (minutes) is refused: pay, then upload right away */
+var MAX_AGE_MIN = 6 * 60;
 /* Several ways of sending the image, because the Workers AI vision models
    don't all take the same input shape. The first one that answers is
    remembered in KV ("ai:variant") and tried first next time. */
@@ -98,7 +112,11 @@ var PROMPT = [
   ' "sender": string (the SENDER (From / من) phone or InstaPay address, "" if not shown),',
   ' "recipient_name": string ("" if not shown),',
   ' "reference": string (transaction ID / reference number; "" if not shown),',
-  ' "date": "YYYY-MM-DD" or "" }'
+  ' "date": "YYYY-MM-DD" or "",',
+  ' "time": "HH:MM" (24-hour time of the transfer written on the receipt, "" if not shown),',
+  ' "status_bar_time": "HH:MM" (the phone clock in the top status bar of the screenshot, exactly as shown, "" if there is no status bar),',
+  ' "edited": true/false (true ONLY if you see clear visual signs that this screenshot was edited: the amount, phone number, name, date or reference uses a different font, size, weight, color or alignment than the text around it, blurred/smudged or pasted patches, background color not matching behind some text, overlapping or cut characters, or a cropped image that is not a full phone screen),',
+  ' "edit_reason": string (short reason when edited is true, else "") }'
 ].join("\n");
 
 function extractJson(out){
@@ -193,16 +211,101 @@ export function pickRecipient(env, r)
     return { ok:true, reason:null, recipient: shown2 };
   }
 }
+/* ---------- anti-tamper helpers ---------- */
+var EDITOR_RE = /(canva|snapseed|picsart|adobe photoshop|photoshop express|photoshop cc|lightroom|gimp|pixlr|fotor|photopea|meitu|photoroom|polarr|vsco|picmonkey|befunky|inshot|photo editor|photodirector|picsay|airbrush|remini|photo lab|retouch|xodo)/i;
+function latin1(bytes, from, to){
+  var out = "", a = Math.max(0, from), b = Math.min(bytes.length, to);
+  for(var i = a; i < b; i += 8192) out += String.fromCharCode.apply(null, bytes.subarray(i, Math.min(b, i + 8192)));
+  return out;
+}
+/* editor names found in the file metadata (EXIF Software, XMP CreatorTool, PNG text) */
+export function editorSignatures(bytes){
+  var found = [];
+  var txt = latin1(bytes, 0, 262144) + latin1(bytes, bytes.length - 65536, bytes.length);
+  var re = new RegExp(EDITOR_RE.source, "gi"), m;
+  while((m = re.exec(txt))){ var k = m[1].toLowerCase(); if(found.indexOf(k) < 0) found.push(k); if(found.length > 5) break; }
+  return found;
+}
+/* width/height of a JPEG / PNG / WebP */
+export function imageSize(bytes){
+  var b = bytes;
+  if(b[0] === 0x89 && b[1] === 0x50) return { w: (b[16] << 24 | b[17] << 16 | b[18] << 8 | b[19]) >>> 0, h: (b[20] << 24 | b[21] << 16 | b[22] << 8 | b[23]) >>> 0 };
+  if(b[0] === 0xFF && b[1] === 0xD8){
+    var i = 2;
+    while(i + 9 < b.length){
+      if(b[i] !== 0xFF){ i++; continue; }
+      var mk = b[i + 1];
+      if(mk === 0xD8 || mk === 0x01 || (mk >= 0xD0 && mk <= 0xD7)){ i += 2; continue; }
+      var len = b[i + 2] << 8 | b[i + 3];
+      if(mk >= 0xC0 && mk <= 0xCF && mk !== 0xC4 && mk !== 0xC8 && mk !== 0xCC) return { w: b[i + 7] << 8 | b[i + 8], h: b[i + 5] << 8 | b[i + 6] };
+      i += 2 + len;
+    }
+    return null;
+  }
+  if(b[0] === 0x52 && b[1] === 0x49 && b[8] === 0x57 && b[9] === 0x45){
+    var tag = String.fromCharCode(b[12], b[13], b[14], b[15]);
+    if(tag === "VP8X") return { w: 1 + (b[24] | b[25] << 8 | b[26] << 16), h: 1 + (b[27] | b[28] << 8 | b[29] << 16) };
+    if(tag === "VP8 ") return { w: (b[26] | b[27] << 8) & 0x3fff, h: (b[28] | b[29] << 8) & 0x3fff };
+    if(tag === "VP8L") return { w: 1 + ((b[22] << 8 | b[21]) & 0x3fff), h: 1 + (((b[24] & 0xf) << 10 | b[23] << 2 | (b[22] & 0xc0) >> 6)) };
+  }
+  return null;
+}
+/* checks on the file itself (before asking the AI).
+   meta = what the page read from the ORIGINAL picked file: {w,h,soft:[...]} */
+export function fileForensics(img, meta){
+  var soft = editorSignatures(img.bytes);
+  if(meta && Array.isArray(meta.soft)) meta.soft.forEach(function(x){ x = String(x).toLowerCase().slice(0, 40); if(EDITOR_RE.test(x) && soft.indexOf(x) < 0) soft.push(x); });
+  if(soft.length) return { reason: "edited", detail: soft.join(",") };
+  var dims = [imageSize(img.bytes)];
+  if(meta && +meta.w > 0 && +meta.h > 0) dims.push({ w: +meta.w, h: +meta.h });
+  for(var i = 0; i < dims.length; i++){
+    var d = dims[i]; if(!d || !d.w || !d.h) continue;
+    /* a full phone screenshot is portrait, about 16:9 .. 21:9 */
+    var r = d.h / d.w;
+    if(r < 1.55 || r > 2.5) return { reason: "cropped", detail: d.w + "x" + d.h };
+  }
+  return null;
+}
+function hm(s){
+  var m = /(\d{1,2})\s*[:.]\s*(\d{2})/.exec(toLatinDigits(s || ""));
+  if(!m) return null;
+  var h = +m[1], mi = +m[2];
+  if(h > 23 || mi > 59) return null;
+  return h * 60 + mi;
+}
+/* minutes since the transfer (Cairo time) or null if the date/time can't be read.
+   The receipt may use a 12-hour clock ("4:15 PM" / "04:15 \u0645"): try both
+   halves of the day when AM/PM isn't clear and keep the most plausible one. */
+function transferAgeMin(date, time){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date || "")) return null;
+  var t = hm(time); if(t == null) return null;
+  var s = toLatinDigits(time).toLowerCase();
+  var pm = /pm|\u0645|\u0645\u0633\u0627\u0621/.test(s), am = /am|\u0635|\u0635\u0628\u0627\u062d/.test(s);
+  var cands = [t];
+  if(t < 720){ if(pm) cands = [t + 720]; else if(!am) cands.push(t + 720); }
+  var best = null;
+  cands.forEach(function(c){
+    var hh = String(Math.floor(c / 60) % 24).padStart(2, "0"), mm = String(c % 60).padStart(2, "0");
+    var at = Date.parse(date + "T" + hh + ":" + mm + ":00+02:00");
+    if(!at) return;
+    var age = (Date.now() - at) / 60000;
+    if(best == null || (age >= -75 && (best < -75 || age < best))) best = age;
+  });
+  return best;
+}
+
 /* admin diagnostics: same decision from an already-read receipt */
 export async function checkReceiptFromJson(env, r){
   return pickRecipient(env, r || {});
 }
 
 /* full check -> { status:"ok"|"fail"|"manual", reason, amount, recipient, reference, provider, date } */
-export async function checkReceipt(env, img, expectedTotal){
+export async function checkReceipt(env, img, expectedTotal, meta){
   var hash = await sha256Bytes(img.bytes);
   var usedImg = await env.STORE_KV.get("pimg:" + hash);
   if(usedImg) return { status:"fail", reason:"reused", hash: hash };
+  var fz = fileForensics(img, meta);
+  if(fz) return { status:"fail", reason: fz.reason, detail: fz.detail, hash: hash };
 
   var rr = await readReceipt(env, img);
   if(!rr.json) return { status:"manual", reason:"ai_unavailable", hash: hash, aiErrors: rr.errors };
@@ -216,6 +319,8 @@ export async function checkReceipt(env, img, expectedTotal){
     recipientName: String(r.recipient_name || "").slice(0, 60),
     reference: String(toLatinDigits(r.reference || "")).slice(0, 60),
     date: String(r.date || "").slice(0, 10),
+    time: String(r.time || "").slice(0, 8),
+    statusBarTime: String(r.status_bar_time || "").slice(0, 8),
     model: r._model,
     variant: rr.variant
   };
@@ -223,6 +328,7 @@ export async function checkReceipt(env, img, expectedTotal){
 
   if(r.is_receipt === false) return fail("not_receipt");
   if(r.success === false) return fail("not_success");
+  if(r.edited === true){ res.detail = String(r.edit_reason || "").slice(0, 160); return fail("edited"); }
   var pick = pickRecipient(env, r);
   res.recipient = pick.recipient || res.recipient;
   if(!pick.ok) return fail(pick.reason);
@@ -231,6 +337,18 @@ export async function checkReceipt(env, img, expectedTotal){
   if(/^\d{4}-\d{2}-\d{2}$/.test(res.date)){
     var t = Date.parse(res.date + "T23:59:59+02:00");
     if(t && Date.now() - t > MAX_AGE_DAYS * 24 * 60 * 60 * 1000) return fail("old");
+  }
+  /* the transfer must be recent: pay, then upload the screenshot right away */
+  var age = transferAgeMin(res.date, res.time);
+  if(age != null){
+    if(age < -75) return fail("edited");
+    if(age > MAX_AGE_MIN + 60) return fail("stale");
+  }
+  /* the phone clock in the status bar is taken AFTER the transfer (12h or 24h clock) */
+  var sb = hm(res.statusBarTime), tt = hm(res.time);
+  if(sb != null && tt != null){
+    var diff = ((sb - tt) % 720 + 720) % 720;
+    if(diff > 240) return fail("edited");
   }
   var ref = normRef(res.reference);
   if(ref.length >= 6){

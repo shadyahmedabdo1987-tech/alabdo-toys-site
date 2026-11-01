@@ -604,6 +604,10 @@ html[dir="ltr"] .drawer.show{transform:translateX(0);}
 .color-swatch{width:58px; display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; background:none; border:0; padding:0;}
 .color-swatch img{width:48px; height:48px; border-radius:50%; object-fit:cover; border:2.5px solid var(--border); display:block;}
 .color-swatch.active img{border-color:var(--pink-deep);}
+.color-swatch .cs-dot{display:block; width:48px; height:48px; border-radius:50%; border:2.5px solid var(--border); box-shadow:inset 0 0 0 3px var(--surface);}
+.color-swatch.active .cs-dot{border-color:var(--pink-deep);}
+.color-swatch.out .cs-dot{filter:grayscale(1);}
+.color-swatches .color-swatch .cs-dot{width:100%; height:100%; flex:none; border:0; box-shadow:inset 0 0 0 2px var(--surface);}
 .color-swatch span{font-size:11px; color:var(--ink-soft); text-align:center; max-width:58px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 .color-swatch.active span{color:var(--pink-deep); font-weight:700;}
 .color-swatch.out{opacity:.45;}
@@ -2588,6 +2592,17 @@ html[data-theme="dark"] .os-pill{filter:brightness(.9) saturate(1.2);}
 .v2-tl.is-cancel{display:block; padding:10px 12px; border-radius:12px; background:#fde7e7; color:#b3141c; font-weight:800; font-size:13.5px;}
 .v2-tl-eta{margin:2px 0 8px; font-size:12.5px; color:var(--ink-soft); text-align:center;}
 .v2-reorder{margin:6px 0 12px;}
+.os-pill.is-paywait{background:#fff1d6; color:#9a5a00;}
+.ao-pay{border-radius:12px; padding:10px 12px; background:#fff6e0; border:1.5px solid #f3c96b; color:#5a3d00; display:flex; flex-direction:column; gap:6px; font-size:13.5px;}
+.ao-pay p{margin:0; font-size:12.5px; line-height:1.6;}
+.ao-pay.is-done{background:#e5f7ec; border-color:#9fd9b4; color:#14603a; font-weight:800;}
+.ao-pay-btns{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+.ao-pay-btns button{border:0; border-radius:12px; padding:11px 6px; font:inherit; font-size:13.5px; font-weight:900; cursor:pointer; color:#fff;}
+.ao-pay-btns .is-ok{background:#1d9a55;}
+.ao-pay-btns .is-no{background:#d23a4b;}
+.ao-pay-btns button:disabled, .ao-status-btns button:disabled{opacity:.55; cursor:not-allowed;}
+[data-theme="dark"] .ao-pay{background:#3a2f12; border-color:#6b5520; color:#ffe2a3;}
+[data-theme="dark"] .ao-pay.is-done{background:#123222; border-color:#2a6b45; color:#9be0b7;}
 .ao-status{border:1.5px solid var(--border); border-radius:14px; padding:12px; margin-top:12px; display:flex; flex-direction:column; gap:10px; background:var(--surface-3);}
 .ao-status-head{display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:14px;}
 .ao-status-btns{display:grid; grid-template-columns:repeat(auto-fill, minmax(118px, 1fr)); gap:7px;}
@@ -3048,6 +3063,52 @@ html.app-mode .cat-chip .ic{padding:4px;}
 html.app-mode .cat-chip .ic > img.cat3d{width:100% !important; height:100% !important;}
 html:not(.admin-app)[data-theme="dark"] .cat-chip .ic{background:linear-gradient(180deg,#2a2c34 0%,#24262d 100%) !important; border-color:#4a4620; box-shadow:0 4px 12px rgba(0,0,0,.35);}
 @media (prefers-color-scheme:dark){ html:not(.admin-app):not([data-theme="light"]) .cat-chip .ic{background:linear-gradient(180deg,#2a2c34 0%,#24262d 100%) !important; border-color:#4a4620; box-shadow:0 4px 12px rgba(0,0,0,.35);} }
+
+/* =====================================================================
+   برنامج الإدارة بألوان نون (نفس أصفر تطبيق العملاء): الشريط اللي فوق أصفر
+   والكلام كحلي، والأزرار والتبويب المختار كحلي.
+   ===================================================================== */
+html.admin-app{
+  --bg:#f7f7fa; --border:#ebebef;
+  --pink:#1b2a4e; --pink-deep:#1b2a4e; --pink-pale:#fff8b0; --pink-line:#f1e14d;
+  --adm-bar:#fae568; --adm-bar-2:#f1e14d; --adm-bar-ink:#1c1c1c;
+  --adm-nav:#1b2a4e; --adm-nav-ink:#ffffff;
+  --adm-sky:#1b2a4e; --adm-sky-pale:#fff8b0;
+}
+html.admin-app[data-theme="dark"]{
+  --bg:#121317; --surface:#1c1e24; --surface-2:#24272f; --surface-3:#202228; --border:#2c2f38;
+  --pink:#fae568; --pink-deep:#fae568; --pink-pale:#2a2914; --pink-line:#4a4620;
+  --adm-bar:#2a2817; --adm-bar-2:#1e1d19; --adm-bar-ink:#fae568;
+  --adm-nav:#fae568; --adm-nav-ink:#1c1c1c;
+  --adm-sky:#fae568; --adm-sky-pale:#2a2914;
+}
+@media (prefers-color-scheme:dark){
+  html.admin-app:not([data-theme="light"]){
+    --bg:#121317; --surface:#1c1e24; --surface-2:#24272f; --surface-3:#202228; --border:#2c2f38;
+    --pink:#fae568; --pink-deep:#fae568; --pink-pale:#2a2914; --pink-line:#4a4620;
+    --adm-bar:#2a2817; --adm-bar-2:#1e1d19; --adm-bar-ink:#fae568;
+    --adm-nav:#fae568; --adm-nav-ink:#1c1c1c;
+    --adm-sky:#fae568; --adm-sky-pale:#2a2914;
+  }
+}
+html.admin-app #admTopbar{background:linear-gradient(180deg,var(--adm-bar),var(--adm-bar-2)); box-shadow:0 2px 10px rgba(60,50,0,.14);}
+html.admin-app .adm-tb-btn:active{background:rgba(0,0,0,.08);}
+html.admin-app .adm-tb-btn:focus-visible{outline-color:var(--adm-bar-ink);}
+html.admin-app .adm-tb-title img{border-radius:50%; padding:0; background:none;}
+html.admin-app .adm-tab.on{color:var(--adm-nav);}
+html.admin-app .adm-fab{background:var(--adm-nav); color:var(--adm-nav-ink); box-shadow:0 8px 20px rgba(27,42,78,.32);}
+html.admin-app .adm-fab svg{color:var(--adm-bar);}
+html.admin-app[data-theme="dark"] .adm-fab svg{color:var(--adm-nav-ink);}
+html.admin-app .toast{background:#1b2a4e; color:#fff;}
+html.admin-app .adm-hero{color:var(--adm-bar-ink); box-shadow:0 8px 20px rgba(120,100,0,.14);}
+html.admin-app .adm-hero::after{background:radial-gradient(circle,rgba(255,255,255,.45),transparent 70%);}
+html.admin-app .adm-hero small, html.admin-app .adm-hero-row span{opacity:.85;}
+html.admin-app .adm-action.primary i{background:var(--adm-nav); color:var(--adm-nav-ink);}
+html.admin-app .adm-chip.on{background:var(--adm-nav); border-color:var(--adm-nav); color:var(--adm-nav-ink);}
+html.admin-app .adm-photo-btn.primary{background:var(--adm-nav); color:var(--adm-nav-ink);}
+html.admin-app #pfImagesPreview > div:first-child::after{background:var(--adm-nav); color:var(--adm-nav-ink);}
+html.admin-app #admLoginBrand img{border-radius:50%; padding:0; background:none;}
+html.admin-app .btn-primary{background:var(--adm-nav); color:var(--adm-nav-ink);}
 </style>
 </head>
 <body>
@@ -4093,7 +4154,7 @@ try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("messa
                 <div id="pfColorsList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:10px;"></div>
                 <label style="font-size:12.5px; font-weight:700; color:var(--ink-soft);" data-i18n>1) اختار اللون من اللوحة</label>
                 <div class="admin-color-picker" id="pfColorNamePicker"></div>
-                <label style="font-size:12.5px; font-weight:700; color:var(--ink-soft); margin-top:10px; display:block;" data-i18n>2) اختار صورة اللون ده</label>
+                <label style="font-size:12.5px; font-weight:700; color:var(--ink-soft); margin-top:10px; display:block;" data-i18n>2) صورة اللون (اختياري — ممكن تضيف اللون من غير صورة)</label>
                 <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
                   <input type="file" id="pfColorImageInput" accept="image/*" hidden>
                   <button type="button" class="btn btn-outline btn-sm" id="pfColorImagePickBtn" data-i18n>اختيار صورة اللون</button>
@@ -4946,6 +5007,9 @@ function adminProofReason(c){
   if(r === "wrong_recipient") return t("التحويل مش على رقم المتجر")+" ("+PAYMENT_TRANSFER_NUMBER+" "+t("أو")+" "+PAYMENT_INSTAPAY_IPA+")";
   if(r === "low_amount") return t("المبلغ المحوَّل أقل من إجمالي الطلب")+(c.total ? " ("+fmt(+c.total)+" "+t("ج.م")+")" : "");
   if(r === "reused") return t("الإيصال ده اتستخدم قبل كده في طلب تاني");
+  if(r === "edited") return t("الصورة متعدلة (برنامج تعديل صور أو أرقام مش متطابقة)")+(c.detail ? " — "+c.detail : "");
+  if(r === "cropped") return t("الصورة متقصوصة، مش سكرين شوت كامل");
+  if(r === "stale") return t("وقت التحويل في الإيصال قديم");
   if(r === "network") return t("تعذر الاتصال بالسيرفر");
   return proofReasonText(r, c.amount, c.total);
 }
@@ -5226,6 +5290,32 @@ function openProofViewer(o, admin){
 /* قراءة سكرين التحويل في السلة: لو الصورة أصلاً صغيرة وبصيغة عادية بتتبعت
    زي ما هي (أوضح حاجة ممكنة)، ولو كبيرة بتتصغر لحد 2000 بكسل بجودة عالية
    عشان الأرقام والكلام اللي فيها يفضلوا مقروءين. */
+/* قبل ما الصورة تتصغر: بنقرا من الملف الأصلي مقاسه وأسماء برامج تعديل الصور
+   المكتوبة جوه بياناته (كانفا، سناب سيد، بيكس آرت، فوتوشوب...). السيرفر بيرفض
+   الإيصال لو الصورة متعدلة أو متقصوصة (مش سكرين شوت كامل للشاشة). */
+function proofFileMeta(file){
+  return new Promise(function(resolve){
+    var meta = { w:0, h:0, soft:[], size: file ? file.size : 0, type: file ? file.type : "" };
+    if(!file){ resolve(meta); return; }
+    var done = 0, finish = function(){ if(++done === 2) resolve(meta); };
+    try{
+      var head = file.slice(0, 262144), tail = file.size > 262144 ? file.slice(Math.max(262144, file.size - 65536)) : new Blob([]);
+      Promise.all([head.arrayBuffer(), tail.arrayBuffer()]).then(function(bufs){
+        var txt = "";
+        bufs.forEach(function(b){ var u = new Uint8Array(b); for(var i = 0; i < u.length; i += 8192) txt += String.fromCharCode.apply(null, u.subarray(i, i + 8192)); });
+        var re = /(canva|snapseed|picsart|adobe photoshop|photoshop express|photoshop cc|lightroom|gimp|pixlr|fotor|photopea|meitu|photoroom|polarr|vsco|picmonkey|befunky|inshot|photo editor|photodirector|picsay|airbrush|remini|photo lab|retouch|xodo)/gi, m;
+        while((m = re.exec(txt)) && meta.soft.length < 6){ var k = m[1].toLowerCase(); if(meta.soft.indexOf(k) < 0) meta.soft.push(k); }
+        finish();
+      }).catch(finish);
+    }catch(e){ finish(); }
+    try{
+      var url = URL.createObjectURL(file), im = new Image();
+      im.onload = function(){ meta.w = im.naturalWidth; meta.h = im.naturalHeight; URL.revokeObjectURL(url); finish(); };
+      im.onerror = function(){ URL.revokeObjectURL(url); finish(); };
+      im.src = url;
+    }catch(e){ finish(); }
+  });
+}
 function readProofImage(file, callback){
   /* الصورة بتتصغر دايمًا لحد 1600 بكسل JPEG: الكلام والأرقام بيفضلوا واضحين،
      والمراجعة الآلية بتبقى أسرع وأضمن من صورة PNG تقيلة */
@@ -7964,6 +8054,9 @@ function proofReasonText(reason, amount, total){
     no_amount: t("مش قادرين نقرا المبلغ المحوَّل. ارفع صورة أوضح."),
     low_amount: t("المبلغ المحوَّل")+(amount!=null ? " ("+fmt(+amount)+" "+t("ج.م")+")" : "")+" "+t("أقل من إجمالي الطلب")+(total!=null ? " ("+fmt(+total)+" "+t("ج.م")+")" : "")+".",
     old: t("الإيصال ده قديم. ارفع إيصال التحويل الخاص بالطلب ده."),
+    stale: t("الإيصال ده مش جديد. حوّل المبلغ وارفع سكرين شوت التحويل على طول."),
+    edited: t("الصورة دي باين إنها متعدلة. ارفع سكرين شوت التحويل الأصلي زي ما هو من غير أي تعديل."),
+    cropped: t("ارفع سكرين شوت كامل لشاشة التحويل من غير قص (الشاشة كلها زي ما هي)."),
     reused: t("الإيصال ده اتستخدم قبل كده في طلب تاني."),
     too_many: t("محاولات كتير، استنى شوية وجرّب تاني."),
     too_big: t("الصورة كبيرة جدًا، جرّب سكرين شوت عادي."),
@@ -7977,10 +8070,12 @@ function verifyProofNow(){
   if(!cartCheckout.proofData) return;
   var total = cartGrandTotal(), seq = ++proofCheckSeq;
   cartCheckout.proofCheck = { state:"checking", total: total };
-  fetch("/api/verify-proof", {
-    method: "POST",
-    headers: { "content-type":"application/json" },
-    body: JSON.stringify({ image: cartCheckout.proofData, total: total })
+  Promise.resolve(cartCheckout.proofMetaP).catch(function(){ return null; }).then(function(meta){
+    return fetch("/api/verify-proof", {
+      method: "POST",
+      headers: { "content-type":"application/json" },
+      body: JSON.stringify({ image: cartCheckout.proofData, total: total, meta: meta || undefined })
+    });
   }).then(function(r){ return r.json(); }).then(function(res){
     if(seq !== proofCheckSeq) return;
     var st = res && res.status;
@@ -8321,8 +8416,10 @@ function renderCartPaymentStep(){
     proofInput.addEventListener("change", function(){
       var file = this.files && this.files[0];
       if(!file) return;
+      var metaP = proofFileMeta(file);
       readProofImage(file, function(dataUrl){
         cartCheckout.proofData = dataUrl;
+        cartCheckout.proofMetaP = metaP;
         cartCheckout.proofName = file.name;
         cartCheckout.proofCheck = null;
         verifyProofNow();
@@ -9683,7 +9780,8 @@ var V2_STATUS_TXT = { new:"اتسجل", preparing:"بيتجهز", shipped:"خر�
 function orderStatusOf(o){ return (o && o.status) || "new"; }
 function orderStatusPill(o){
   var s = orderStatusOf(o);
-  return '<span class="os-pill is-'+s+'">'+({ new:"🧾", preparing:"📦", shipped:"🚚", delivered:"🎉", cancelled:"❌" })[s]+' '+t(V2_STATUS_TXT[s])+'</span>';
+  return '<span class="os-pill is-'+s+'">'+({ new:"🧾", preparing:"📦", shipped:"🚚", delivered:"🎉", cancelled:"❌" })[s]+' '+t(V2_STATUS_TXT[s])+'</span>'
+    + (o && o.payPending && s !== "cancelled" ? ' <span class="os-pill is-paywait">⏳ '+t("بانتظار تأكيد وصول التحويل")+'</span>' : '');
 }
 function v2TimelineHtml(o){
   var s = orderStatusOf(o);
@@ -10156,6 +10254,31 @@ function v2SyncNativeCustomer(){
     row.insertAdjacentHTML("beforebegin", v2AdminStatusHtml(order));
     var box = document.getElementById("aoStatusBox");
     if(box) box.addEventListener("click", function(e){
+      var pb = e.target.closest("[data-pay]");
+      if(pb && !pb.disabled){
+        var act = pb.dataset.pay;
+        var send = function(){
+          Array.prototype.forEach.call(box.querySelectorAll("button"), function(x){ x.disabled = true; });
+          fetch("/api/order-status", { method:"POST", headers: Object.assign({ "content-type":"application/json" }, adminAuthHeaders()), body: JSON.stringify({ id: order.id, pay: act }) })
+            .then(function(r){ return r.json().then(function(j){ return { status:r.status, body:j }; }); })
+            .then(function(res){
+              if(res.body && res.body.ok && res.body.order){
+                Object.assign(order, res.body.order);
+                (ADMIN_ORDERS_CACHE || []).forEach(function(o){ if(o.id === order.id) Object.assign(o, res.body.order); });
+                showToast(act === "confirm" ? "💰 "+t("اتأكد وصول الفلوس — تقدر تجهز الطلب دلوقتي") : "❌ "+t("الطلب اتلغى لأن الفلوس ما وصلتش، والعميل وصله إشعار"));
+                showAdminOrderInvoiceModal(order);
+                var card = document.querySelector('[data-order-id="'+order.id+'"] .os-pill'); if(card){ var nx = card.nextElementSibling; if(nx && nx.classList.contains("is-paywait")) nx.remove(); card.outerHTML = orderStatusPill(order); }
+              } else {
+                showToast(t("⚠️ تعذر الحفظ، جرّب تاني."));
+                Array.prototype.forEach.call(box.querySelectorAll("button"), function(x){ x.disabled = false; });
+              }
+            })
+            .catch(function(){ showToast(t("⚠️ تعذر الحفظ، جرّب تاني.")); Array.prototype.forEach.call(box.querySelectorAll("button"), function(x){ x.disabled = false; }); });
+        };
+        if(act === "confirm") appConfirm({ icon:"💰", title:t("الفلوس وصلت فعلًا؟"), message:t("اتأكد من المحفظة نفسها إن مبلغ")+" "+fmt(+order.total||0)+" "+t("ج.م")+" "+t("وصل، مش من صورة الإيصال."), ok:t("أيوه، وصلت") }).then(function(ok){ if(ok) send(); });
+        else appConfirm({ icon:"❌", title:t("الفلوس ما وصلتش؟"), message:t("الطلب هيتلغي والعميل هيوصله إشعار إن التحويل ما وصلش."), ok:t("إلغاء الطلب"), danger:true }).then(function(ok){ if(ok) send(); });
+        return;
+      }
       var b = e.target.closest("[data-set-status]"); if(!b || b.disabled) return;
       var st = b.dataset.setStatus;
       var go = function(){
@@ -10221,8 +10344,14 @@ function v2SyncNativeCustomer(){
 function v2AdminStatusHtml(o){
   var s = orderStatusOf(o);
   var steps = ["new", "preparing", "shipped", "delivered"];
-  return '<div class="ao-status" id="aoStatusBox"><div class="ao-status-head"><b>'+t("حالة الطلب")+'</b>'+orderStatusPill(o)+'</div>'
-    + '<div class="ao-status-btns">'+steps.map(function(k){ return '<button type="button" data-set-status="'+k+'" class="'+(k === s ? 'on' : '')+'"'+(k === s ? ' disabled' : '')+'>'+({ new:"🧾", preparing:"📦", shipped:"🚚", delivered:"🎉" })[k]+' '+t(V2_STATUS_TXT[k])+'</button>'; }).join("")
+  var wait = !!(o.payPending && s !== "cancelled");
+  var payBox = wait
+    ? '<div class="ao-pay"><b>⏳ '+t("بانتظار تأكيد وصول الفلوس")+'</b>'
+      + '<p>'+t("افتح محفظة")+' '+t(paymentMethodLabel(o.paymentMethod))+' '+t("واتأكد إن مبلغ")+' <b class="tabular">'+fmt(+o.total||0)+' '+t("ج.م")+'</b> '+t("وصل فعلًا قبل ما تجهز الطلب. الإيصال لوحده مش ضمان (ممكن يكون متعدل).")+'</p>'
+      + '<div class="ao-pay-btns"><button type="button" data-pay="confirm" class="is-ok">✅ '+t("الفلوس وصلت")+'</button><button type="button" data-pay="reject" class="is-no">❌ '+t("الفلوس ما وصلتش")+'</button></div></div>'
+    : (o.payConfirmedAt ? '<div class="ao-pay is-done">💰 '+t("الفلوس وصلت واتأكدت")+' · '+escHtml(new Date(o.payConfirmedAt).toLocaleString(LANG==="en"?"en-US":"ar-EG", { day:"numeric", month:"short", hour:"numeric", minute:"2-digit" }))+'</div>' : '');
+  return '<div class="ao-status" id="aoStatusBox">'+payBox+'<div class="ao-status-head"><b>'+t("حالة الطلب")+'</b>'+orderStatusPill(o)+'</div>'
+    + '<div class="ao-status-btns">'+steps.map(function(k){ var lock = wait && k !== "new"; return '<button type="button" data-set-status="'+k+'" class="'+(k === s ? 'on' : '')+'"'+(k === s || lock ? ' disabled' : '')+(lock ? ' title="'+t("أكد وصول الفلوس الأول")+'"' : '')+'>'+({ new:"🧾", preparing:"📦", shipped:"🚚", delivered:"🎉" })[k]+' '+t(V2_STATUS_TXT[k])+'</button>'; }).join("")
     + '<button type="button" data-set-status="cancelled" class="is-cancel'+(s === "cancelled" ? ' on' : '')+'"'+(s === "cancelled" ? ' disabled' : '')+'>❌ '+t("إلغاء")+'</button></div>'
     + '<small>'+t("كل ما تغيّر الحالة العميل بيوصله إشعار.")+'</small></div>';
 }
@@ -10961,7 +11090,7 @@ function openProductModal(id){
     colorPickerHtml = '<p class="color-picker-label">'+t("اختر اللون")+'</p>'
       + '<div class="color-swatches" id="modalColorSwatches">'
         + colors.map(function(c, i){
-          return '<button type="button" class="color-swatch'+(isTrackedOut(p,c.name)?' out':'')+'" data-color-idx="'+i+'"><img src="'+c.image+'" alt="'+c.name+'"><span>'+c.name+(isTrackedOut(p,c.name)?' ('+t("خلص")+')':'')+'</span></button>';
+          return '<button type="button" class="color-swatch'+(isTrackedOut(p,c.name)?' out':'')+'" data-color-idx="'+i+'">'+(c.image ? '<img src="'+c.image+'" alt="'+c.name+'">' : '<i class="cs-dot" style="background:'+colorHexOf(c.name)+'"></i>')+'<span>'+c.name+(isTrackedOut(p,c.name)?' ('+t("خلص")+')':'')+'</span></button>';
         }).join("")
       + '</div>'
       + '<p class="color-required-note" id="modalColorError">'+t("من فضلك اختار اللون الأول.")+'</p>';
@@ -11232,7 +11361,8 @@ function openProductModal(id){
       document.querySelectorAll("#modalColorSwatches .color-swatch").forEach(function(b){ b.classList.remove("active"); });
       btn.classList.add("active");
       var mainImg = document.getElementById("modalMainImg");
-      if(mainImg && mainImg.tagName==="IMG"){ mainImg.src = modalSelectedColor.image; pgGo(0, true); }
+      if(!modalSelectedColor.image){ /* لون من غير صورة: الصورة تفضل زي ما هي */ }
+      else if(mainImg && mainImg.tagName==="IMG"){ mainImg.src = modalSelectedColor.image; pgGo(0, true); }
       else {
         var mediaBox = document.querySelector(".modal-media");
         if(mediaBox) mediaBox.innerHTML = '<img id="modalMainImg" src="'+modalSelectedColor.image+'" alt="">';
@@ -11890,6 +12020,11 @@ var EMOJI_SUGGESTIONS = [
 var selectedCatColor = COLOR_PRESETS[0].value;
 /* لوحة ألوان المنتج الكاملة - الأدمن بيختار اسم اللون من هنا (بدل ما
    يكتبه بنفسه) بالظبط زي لوحة إيموجي القسم، وبعدين بيربطه بصورة. */
+/* لون الدايرة لاسم لون من اللوحة (للألوان اللي اتضافت من غير صورة) */
+function colorHexOf(name){
+  var c = (typeof COLOR_NAME_PALETTE !== "undefined" ? COLOR_NAME_PALETTE : []).find(function(x){ return x.name === name; });
+  return c ? c.hex : "#cccccc";
+}
 var COLOR_NAME_PALETTE = [
   {name:"أحمر", hex:"#e53935"},
   {name:"وردي", hex:"#ec407a"},
@@ -12912,7 +13047,7 @@ function renderPfColorsList(){
   if(!pfColorsData.length){ box.innerHTML = '<span style="color:var(--ink-soft); font-size:13px;">'+t("بدون ألوان (المنتج بلون واحد)")+'</span>'; updatePfStockVisibility(); return; }
   box.innerHTML = pfColorsData.map(function(c, i){
     return '<div style="display:flex; align-items:center; gap:10px; border:1.5px solid var(--border); border-radius:12px; padding:6px 10px;">'
-      + '<img src="'+c.image+'" alt="" style="width:40px; height:40px; border-radius:8px; object-fit:cover; flex:none;">'
+      + (c.image ? '<img src="'+c.image+'" alt="" style="width:40px; height:40px; border-radius:8px; object-fit:cover; flex:none;">' : '<span style="width:40px; height:40px; border-radius:50%; flex:none; background:'+colorHexOf(c.name)+'; border:2px solid var(--border);"></span>')
       + '<span style="flex:1; font-weight:700; font-size:13.5px;">'+t(String(c.name||"")).replace(/</g,"&lt;")+'</span>'
       + '<input type="number" min="0" step="1" data-pf-color-stock="'+i+'" value="'+(c.stock==null?"":c.stock)+'" placeholder="'+t("الكمية")+'" title="'+t("الكمية المتاحة من اللون ده (اتركها فاضية لو مش عايز تتبعها)")+'" style="width:82px; padding:6px 8px; border-radius:8px; border:1.5px solid var(--border); background:var(--surface-3); color:var(--ink); font-size:12.5px; flex:none;">'
       + '<button type="button" data-remove-pf-color="'+i+'" aria-label="'+t("إزالة اللون")+'" style="border:0; background:var(--surface-2); width:26px; height:26px; border-radius:50%; color:var(--pink-deep); font-size:14px; line-height:1; cursor:pointer; flex:none;">×</button>'
@@ -12933,8 +13068,9 @@ document.getElementById("pfColorImageInput").addEventListener("change", function
 });
 document.getElementById("pfColorAddBtn").addEventListener("click", function(){
   if(!pfColorPendingName){ showToast(t("⚠️ اختار اللون من اللوحة الأول")); return; }
-  if(!pfColorPendingImage){ showToast(t("⚠️ اختار صورة للون الأول")); return; }
-  pfColorsData.push({ name:pfColorPendingName, image:pfColorPendingImage, stock:null });
+  if(pfColorsData.some(function(c){ return c.name === pfColorPendingName; })){ showToast(t("⚠️ اللون ده مضاف قبل كده")); return; }
+  /* الصورة اختيارية: من غير صورة العميل بيختار اللون بس (دايرة باللون) */
+  pfColorsData.push(pfColorPendingImage ? { name:pfColorPendingName, image:pfColorPendingImage, stock:null } : { name:pfColorPendingName, stock:null });
   pfColorPendingName = null;
   pfColorPendingImage = null;
   document.getElementById("pfColorImageInput").value = "";

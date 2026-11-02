@@ -111,7 +111,7 @@ var PROMPT = [
   ' "recipient_numbers": array of strings (EVERY phone number / account number / InstaPay address (like name@instapay) shown in the receiver (To) section ONLY, full or masked, exactly as written - never include anything from the sender (From) section),',
   ' "sender": string (the SENDER (From / من) phone or InstaPay address, "" if not shown),',
   ' "recipient_name": string ("" if not shown),',
-  ' "reference": string (transaction ID / reference number; "" if not shown),',
+  ' "reference": string (the transaction reference number exactly as written on the receipt - labels like "Reference number", "Reference No", "Ref", "Transaction ID", "Txn ID", "رقم المرجع", "الرقم المرجعي", "رقم مرجعي", "رقم العملية", "رقم المعاملة". Copy it character by character. "" if no reference number is shown - never invent one, never use a phone number, amount, date or balance as the reference),',
   ' "date": "YYYY-MM-DD" or "",',
   ' "time": "HH:MM" (24-hour time of the transfer written on the receipt, "" if not shown),',
   ' "status_bar_time": "HH:MM" (the phone clock in the top status bar of the screenshot, exactly as shown, "" if there is no status bar),',
@@ -350,11 +350,11 @@ export async function checkReceipt(env, img, expectedTotal, meta){
     var diff = ((sb - tt) % 720 + 720) % 720;
     if(diff > 240) return fail("edited");
   }
+  /* لازم الإيصال يبان فيه الرقم المرجعي للعملية - من غيره الإيصال مرفوض */
   var ref = normRef(res.reference);
-  if(ref.length >= 6){
-    var usedRef = await env.STORE_KV.get("pref:" + ref);
-    if(usedRef) return fail("reused");
-  }
+  if(ref.length < 6 || !/\d/.test(ref)) return fail("no_reference");
+  var usedRef = await env.STORE_KV.get("pref:" + ref);
+  if(usedRef) return fail("reused");
   res.status = "ok";
   return res;
 }

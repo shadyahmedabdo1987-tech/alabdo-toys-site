@@ -168,6 +168,7 @@ export async function onRequestPost({ request, env, waitUntil }){
     address: address,
     notes: (body.notes || "").trim(),
     paymentMethod: (body.paymentMethod || "").trim(),
+    source: /^[a-z0-9_]{1,24}$/.test(String(body.source || "")) ? String(body.source) : null,
     paymentProof: null,
     status: "new",
     statusHistory: [{ s: "new", at: Date.now() }],

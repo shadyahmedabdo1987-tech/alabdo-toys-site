@@ -1,7 +1,9 @@
 import { json, getAnalytics, saveAnalytics, requireAdmin } from "../_lib.js";
 
 var ALLOWED_VIEWS = ["home", "products", "about", "contact", "terms", "privacy"];
-var ALLOWED_EVENTS = ["addToCart", "orderPlaced"];
+var ALLOWED_EVENTS = ["addToCart", "orderPlaced", "qrScanIos", "qrScanAndroid"];
+/* مصدر الزيارة (إعلان ممول، كود QR...) - حروف إنجليزي صغيرة وأرقام و _ بس */
+function cleanSrc(v){ v = String(v || "").toLowerCase().trim(); return /^[a-z0-9_]{1,24}$/.test(v) ? v : null; }
 var RETENTION_DAYS = 90;
 
 function todayKey(){ return new Date().toISOString().slice(0, 10); }
@@ -36,6 +38,7 @@ export async function onRequestPost({ request, env }){
   var view = (body && body.view && ALLOWED_VIEWS.indexOf(body.view) !== -1) ? body.view : null;
   var device = (body && (body.device === "mobile" || body.device === "desktop")) ? body.device : null;
   var eventName = (body && ALLOWED_EVENTS.indexOf(body.event) !== -1) ? body.event : null;
+  var src = cleanSrc(body && body.src);
   if(!view && !eventName) return json({ ok:false, error:"bad_request" }, 400);
 
   var data = await getAnalytics(env);
@@ -55,6 +58,15 @@ export async function onRequestPost({ request, env }){
   }
   if(eventName){
     day.events[eventName] = (day.events[eventName] || 0) + 1;
+  }
+  if(src){
+    if(!day.sources) day.sources = {};
+    var sd = day.sources[src] || (day.sources[src] = { views:0, visitors:[], addToCart:0, orderPlaced:0 });
+    if(view){
+      sd.views = (sd.views || 0) + 1;
+      if(sd.visitors.indexOf(visitorId) === -1) sd.visitors.push(visitorId);
+    }
+    if(eventName === "addToCart" || eventName === "orderPlaced") sd[eventName] = (sd[eventName] || 0) + 1;
   }
 
   pruneOldDays(data);
@@ -90,7 +102,8 @@ export async function onRequestGet({ request, env }){
   var last7 = sumRange(lastNDates(7));
   var last30 = sumRange(last30Dates);
 
-  var events = { addToCart: 0, orderPlaced: 0 };
+  var events = { addToCart: 0, orderPlaced: 0, qrScanIos: 0, qrScanAndroid: 0 };
+  var srcAgg = {};
   var pages = {};
   var devices = { mobile: 0, desktop: 0 };
   last30Dates.forEach(function(d){
@@ -98,6 +111,16 @@ export async function onRequestGet({ request, env }){
     if(!day) return;
     events.addToCart += (day.events && day.events.addToCart) || 0;
     events.orderPlaced += (day.events && day.events.orderPlaced) || 0;
+    events.qrScanIos += (day.events && day.events.qrScanIos) || 0;
+    events.qrScanAndroid += (day.events && day.events.qrScanAndroid) || 0;
+    Object.keys(day.sources || {}).forEach(function(k){
+      var sd = day.sources[k];
+      var a = srcAgg[k] || (srcAgg[k] = { src:k, views:0, visitors:{}, addToCart:0, orderPlaced:0 });
+      a.views += sd.views || 0;
+      (sd.visitors || []).forEach(function(v){ a.visitors[v] = 1; });
+      a.addToCart += sd.addToCart || 0;
+      a.orderPlaced += sd.orderPlaced || 0;
+    });
     Object.keys(day.pages || {}).forEach(function(p){ pages[p] = (pages[p] || 0) + day.pages[p]; });
     devices.mobile += (day.devices && day.devices.mobile) || 0;
     devices.desktop += (day.devices && day.devices.desktop) || 0;
@@ -123,6 +146,8 @@ export async function onRequestGet({ request, env }){
     events: events,
     topPages: topPages,
     devices: devices,
+    sources: Object.keys(srcAgg).map(function(k){ var a = srcAgg[k]; return { src:k, views:a.views, visitors:Object.keys(a.visitors).length, addToCart:a.addToCart, orderPlaced:a.orderPlaced }; })
+      .sort(function(x, y){ return y.visitors - x.visitors; }),
     chart: chart
   });
 }

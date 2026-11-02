@@ -7689,6 +7689,26 @@ function getAnalyticsVisitorId(){
     return id;
   }catch(e){ return null; }
 }
+/* مصدر الزيارة: لو العميل جه من إعلان ممول (utm_source=facebook/instagram مع
+   utm_medium=paid) أو من كود QR (src=...)، بنحفظ المصدر 7 أيام عشان نعرف
+   مين من الإعلان زار/ضاف للسلة/طلب - بيظهر في "تحليل الزوار" وبيتسجّل مع الطلب. */
+var TRAFFIC_SRC_KEY = "aa_src";
+function getTrafficSource(){
+  try{
+    var q = new URLSearchParams(location.search);
+    var us = (q.get("utm_source")||"").toLowerCase(), um = (q.get("utm_medium")||"").toLowerCase();
+    var s = (q.get("src")||"").toLowerCase();
+    if(!s && us){
+      if(/^(facebook|fb|instagram|ig|meta)$/.test(us)) s = (um==="paid"||um==="cpc"||um==="ad") ? "fb_ad" : "fb_organic";
+      else s = us;
+    }
+    s = s.replace(/[^a-z0-9_]/g,"").slice(0,24);
+    if(s){ localStorage.setItem(TRAFFIC_SRC_KEY, JSON.stringify({ s:s, t:Date.now() })); return s; }
+    var o = JSON.parse(localStorage.getItem(TRAFFIC_SRC_KEY) || "null");
+    if(o && o.s && (Date.now()-o.t) < 7*86400000) return o.s;
+  }catch(e){}
+  return null;
+}
 function analyticsDevice(){
   return (window.matchMedia && window.matchMedia("(max-width:640px)").matches) ? "mobile" : "desktop";
 }
@@ -7701,7 +7721,7 @@ function trackPageView(view){
   fetch("/api/analytics", {
     method: "POST",
     headers: { "content-type":"application/json" },
-    body: JSON.stringify({ visitorId:visitorId, view:view, device:analyticsDevice() })
+    body: JSON.stringify({ visitorId:visitorId, view:view, device:analyticsDevice(), src:getTrafficSource() })
   }).catch(function(){});
 }
 function trackAnalyticsEvent(name){
@@ -7710,7 +7730,7 @@ function trackAnalyticsEvent(name){
   fetch("/api/analytics", {
     method: "POST",
     headers: { "content-type":"application/json" },
-    body: JSON.stringify({ visitorId:visitorId, event:name })
+    body: JSON.stringify({ visitorId:visitorId, event:name, src:getTrafficSource() })
   }).catch(function(){});
 }
 /* بيبعت حدث لبكسل ميتا (فيسبوك/إنستجرام) عشان يستخدم في الريتارجتنج
@@ -8848,7 +8868,8 @@ function submitOrderNow(e){
       name: f.name, phone: f.phone, governorate: f.governorate, address: f.address, notes: f.notes,
       paymentMethod: cartCheckout.method,
       paymentProof: cartCheckout.proofData || null,
-      couponCode: CART_COUPON ? CART_COUPON.code : null
+      couponCode: CART_COUPON ? CART_COUPON.code : null,
+      source: getTrafficSource()
     })
   }).then(function(r){ return r.json(); }).then(function(res){
     btn.disabled = false;
@@ -13886,6 +13907,20 @@ function renderAdminAnalyticsPage(){
       }
       html += '</div>';
 
+      var SRC_LABELS = { fb_ad:"📣 الإعلان الممول (فيسبوك/إنستجرام)", fb_organic:"👍 فيسبوك/إنستجرام (منشورات عادية)", qr_ad:"📷 مسح كود QR من الإعلان", ad_link:"🔗 لينك التطبيق في نص الإعلان" };
+      var qrI = res.events.qrScanIos||0, qrA = res.events.qrScanAndroid||0;
+      html += '<div class="admin-card" style="margin-top:20px;"><h3>'+t("مصادر الزيارات والإعلانات (آخر 30 يوم)")+'</h3>'
+        + '<div class="stat-grid" style="margin-bottom:12px;">'
+        + '<div class="stat-card"><div class="stat-label">'+t("فتح تحميل تطبيق الآيفون (QR أو لينك الإعلان)")+'</div><div class="stat-value">'+fmtAnalyticsNum(qrI)+'</div><div class="stat-sub">App Store</div></div>'
+        + '<div class="stat-card"><div class="stat-label">'+t("فتح تحميل تطبيق الأندرويد (QR أو لينك الإعلان)")+'</div><div class="stat-value">'+fmtAnalyticsNum(qrA)+'</div><div class="stat-sub">Google Play</div></div>'
+        + '</div>';
+      if(res.sources && res.sources.length){
+        html += '<div style="overflow-x:auto"><table style="width:100%; border-collapse:collapse; font-size:13.5px;"><tr style="text-align:start; color:var(--ink-soft)"><th style="padding:6px">'+t("المصدر")+'</th><th>'+t("زوار")+'</th><th>'+t("زيارات")+'</th><th>'+t("إضافة للسلة")+'</th><th>'+t("طلبات")+'</th></tr>'
+          + res.sources.map(function(x){ return '<tr style="border-top:1px solid var(--border)"><td style="padding:8px 6px">'+escHtml(t(SRC_LABELS[x.src]||x.src))+'</td><td>'+fmtAnalyticsNum(x.visitors)+'</td><td>'+fmtAnalyticsNum(x.views)+'</td><td>'+fmtAnalyticsNum(x.addToCart)+'</td><td><b>'+fmtAnalyticsNum(x.orderPlaced)+'</b></td></tr>'; }).join("")
+          + '</table></div>';
+      } else {
+        html += '<p style="color:var(--ink-soft); font-size:13px;">'+t("لسه مفيش زيارات من إعلانات.")+'</p>';
+      }
       html += '</div>';
       box.innerHTML = html;
     })

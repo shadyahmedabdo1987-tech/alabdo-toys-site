@@ -17,6 +17,7 @@
 # notifications: red accent color + round store-badge status-bar icon
 # orders: order-status / replies pop up at the top (high-importance channel), checked every minute while the app is open and every 30 min when closed
 # push: instant notifications through Firebase Cloud Messaging (reads .github/firebase/google-services.json; polling stays as a fallback)
+# build 27: window background white (dark at night) after start, so no yellow shows under the keyboard while it opens
 # build 26: Noon-yellow look: yellow status bar (dark icons) + yellow splash; the site can set the bar color (AlAbdoNative.setBar)
 # build 25: offers & discounts arrive instantly too (every phone joins the "offers" topic, shown once even if the 30-min check finds them later)
 name: Build Android APK
@@ -399,6 +400,9 @@ jobs:
                   root.addView(content, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
                   root.addView(bottomBar, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0));
                   setContentView(root);
+                  /* build 27: خلفية الشباك نفسها بيضا (غامقة بالليل) - الأصفر لشاشة البداية بس،
+                     علشان ما يبانش أصفر تحت الكيبورد وهو طالع */
+                  w.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(night ? 0xFF121317 : 0xFFFFFFFF));
 
                   if (Build.VERSION.SDK_INT >= 30) {
                       w.setDecorFitsSystemWindows(false);

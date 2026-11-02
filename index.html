@@ -2592,16 +2592,26 @@ html[data-theme="dark"] .os-pill{filter:brightness(.9) saturate(1.2);}
 .v2-tl.is-cancel{display:block; padding:10px 12px; border-radius:12px; background:#fde7e7; color:#b3141c; font-weight:800; font-size:13.5px;}
 .v2-tl-eta{margin:2px 0 8px; font-size:12.5px; color:var(--ink-soft); text-align:center;}
 .v2-reorder{margin:6px 0 12px;}
-.os-pill.is-paywait{background:#fff1d6; color:#9a5a00;}
-.ao-pay{border-radius:12px; padding:10px 12px; background:#fff6e0; border:1.5px solid #f3c96b; color:#5a3d00; display:flex; flex-direction:column; gap:6px; font-size:13.5px;}
-.ao-pay p{margin:0; font-size:12.5px; line-height:1.6;}
-.ao-pay.is-done{background:#e5f7ec; border-color:#9fd9b4; color:#14603a; font-weight:800;}
+.os-pill.is-paywait{background:#fff3d1; color:#8a5a00; font-size:11px; font-weight:700; padding:3px 8px;}
+.ao-status-head .os-pill.is-paywait{display:none;}
+.ao-pay{border-radius:12px; padding:10px 12px; background:#fff8e6; border:1px solid #f0d68f; color:#5a3d00; display:flex; flex-direction:column; gap:8px; font-size:13px; font-weight:600; line-height:1.5;}
+.ao-pay .ao-pay-t{display:flex; align-items:center; gap:7px; font-size:13px; font-weight:800; line-height:1.4; margin:0; opacity:1;}
+.ao-pay-t i{flex:none; width:22px; height:22px; border-radius:50%; display:grid; place-items:center; background:#f6c445; color:#3d2a00; font-style:normal;}
+.ao-pay-t i svg, .ao-pay-btns svg{width:13px; height:13px;}
+.ao-pay p{margin:0; font-size:12px; line-height:1.65; font-weight:500; opacity:.9;}
+.ao-pay p b{font-weight:800; white-space:nowrap;}
+.ao-pay.is-done{flex-direction:row; align-items:center; gap:7px; padding:8px 12px; background:#e9f7ef; border-color:#a9dcbd; color:#14603a; font-size:12.5px; font-weight:700;}
+.ao-pay.is-done i{flex:none; width:20px; height:20px; border-radius:50%; display:grid; place-items:center; background:#1d9a55; color:#fff;}
+.ao-pay.is-done i svg{width:11px; height:11px;}
+.ao-pay.is-done span{opacity:.75; font-weight:600;}
 .ao-pay-btns{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
-.ao-pay-btns button{border:0; border-radius:12px; padding:11px 6px; font:inherit; font-size:13.5px; font-weight:900; cursor:pointer; color:#fff;}
-.ao-pay-btns .is-ok{background:#1d9a55;}
-.ao-pay-btns .is-no{background:#d23a4b;}
+.ao-pay-btns button{min-height:40px; border-radius:10px; padding:8px 6px; font:inherit; font-size:13px; font-weight:800; line-height:1.2; display:inline-flex; align-items:center; justify-content:center; gap:6px; cursor:pointer;}
+.ao-pay-btns .is-ok{background:#1d9a55; border:1px solid #1d9a55; color:#fff;}
+.ao-pay-btns .is-no{background:#fff; border:1px solid #e7a1a9; color:#c3303f;}
 .ao-pay-btns button:disabled, .ao-status-btns button:disabled{opacity:.55; cursor:not-allowed;}
-[data-theme="dark"] .ao-pay{background:#3a2f12; border-color:#6b5520; color:#ffe2a3;}
+[data-theme="dark"] .os-pill.is-paywait{background:#3a2f12; color:#ffd77a;}
+[data-theme="dark"] .ao-pay{background:#2e2712; border-color:#5c4a1c; color:#ffe2a3;}
+[data-theme="dark"] .ao-pay-btns .is-no{background:transparent; border-color:#7a3540; color:#ff9aa5;}
 [data-theme="dark"] .ao-pay.is-done{background:#123222; border-color:#2a6b45; color:#9be0b7;}
 .ao-status{border:1.5px solid var(--border); border-radius:14px; padding:12px; margin-top:12px; display:flex; flex-direction:column; gap:10px; background:var(--surface-3);}
 .ao-status-head{display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:14px;}
@@ -5010,6 +5020,7 @@ function adminProofReason(c){
   if(r === "edited") return t("الصورة متعدلة (برنامج تعديل صور أو أرقام مش متطابقة)")+(c.detail ? " — "+c.detail : "");
   if(r === "cropped") return t("الصورة متقصوصة، مش سكرين شوت كامل");
   if(r === "stale") return t("وقت التحويل في الإيصال قديم");
+  if(r === "no_reference") return t("الإيصال مش ظاهر فيه الرقم المرجعي للعملية");
   if(r === "network") return t("تعذر الاتصال بالسيرفر");
   return proofReasonText(r, c.amount, c.total);
 }
@@ -7362,7 +7373,8 @@ Object.assign(I18N_EN, {
  "نص الرسالة هيظهر هنا…": "The message text will show here…",
  "نوع الخصم": "Discount type",
  "هدايا حلوة بسعر صغير": "Nice gifts at a small price",
- "هنراجع الإيصال آليًا: لازم يبان فيه حساب المتجر (الرقم أو عنوان إنستاباي) والمبلغ المحوَّل.": "We'll check the receipt automatically: it must show the store's account (the number or InstaPay address) and the amount transferred.",
+ "هنراجع الإيصال آليًا: لازم يبان فيه حساب المتجر (الرقم أو عنوان إنستاباي) والمبلغ المحوَّل والرقم المرجعي للعملية.": "We'll check the receipt automatically: it must show the store's account (the number or InstaPay address), the amount transferred and the transaction reference number.",
+ "الإيصال لازم يبان فيه الرقم المرجعي للعملية (رقم العملية). ارفع سكرين شوت التحويل كامل يبان فيه الرقم المرجعي.": "The receipt must show the transaction reference number. Upload the full transfer screenshot with the reference number visible.",
  "هنعمل رابط للعميل": "We'll create a link for the customer",
  "هيتبعت للعملاء كل يوم الساعة": "It will be sent to customers every day at",
  "واتبعت إشعار للعميل": "and a notification was sent to the customer",
@@ -8057,6 +8069,7 @@ function proofReasonText(reason, amount, total){
     stale: t("الإيصال ده مش جديد. حوّل المبلغ وارفع سكرين شوت التحويل على طول."),
     edited: t("الصورة دي باين إنها متعدلة. ارفع سكرين شوت التحويل الأصلي زي ما هو من غير أي تعديل."),
     cropped: t("ارفع سكرين شوت كامل لشاشة التحويل من غير قص (الشاشة كلها زي ما هي)."),
+    no_reference: t("الإيصال لازم يبان فيه الرقم المرجعي للعملية (رقم العملية). ارفع سكرين شوت التحويل كامل يبان فيه الرقم المرجعي."),
     reused: t("الإيصال ده اتستخدم قبل كده في طلب تاني."),
     too_many: t("محاولات كتير، استنى شوية وجرّب تاني."),
     too_big: t("الصورة كبيرة جدًا، جرّب سكرين شوت عادي."),
@@ -8381,7 +8394,7 @@ function renderCartPaymentStep(){
       proofSection += proofCheckHtml();
       proofSection += '<div class="payment-proof-preview"><img src="'+cartCheckout.proofData+'" alt="سكرين شوت التحويل"><button type="button" id="paymentProofRemove" class="payment-proof-remove">'+t("إزالة الصورة واختيار غيرها")+'</button></div>';
     } else {
-      proofSection += '<p class="pv-hint">🔍 '+t("هنراجع الإيصال آليًا: لازم يبان فيه حساب المتجر (الرقم أو عنوان إنستاباي) والمبلغ المحوَّل.")+'</p>';
+      proofSection += '<p class="pv-hint">🔍 '+t("هنراجع الإيصال آليًا: لازم يبان فيه حساب المتجر (الرقم أو عنوان إنستاباي) والمبلغ المحوَّل والرقم المرجعي للعملية.")+'</p>';
       proofSection += '<div class="field" style="margin-bottom:0;"><label for="paymentProofInput">'+t("إرفاق سكرين شوت التحويل")+' *</label><input type="file" id="paymentProofInput" accept="image/*"></div>';
     }
   }
@@ -9781,7 +9794,7 @@ function orderStatusOf(o){ return (o && o.status) || "new"; }
 function orderStatusPill(o){
   var s = orderStatusOf(o);
   return '<span class="os-pill is-'+s+'">'+({ new:"🧾", preparing:"📦", shipped:"🚚", delivered:"🎉", cancelled:"❌" })[s]+' '+t(V2_STATUS_TXT[s])+'</span>'
-    + (o && o.payPending && s !== "cancelled" ? ' <span class="os-pill is-paywait">⏳ '+t("بانتظار تأكيد وصول التحويل")+'</span>' : '');
+    + (o && o.payPending && s !== "cancelled" ? ' <span class="os-pill is-paywait">⏳ '+t("بانتظار تأكيد الدفع")+'</span>' : '');
 }
 function v2TimelineHtml(o){
   var s = orderStatusOf(o);
@@ -10346,10 +10359,10 @@ function v2AdminStatusHtml(o){
   var steps = ["new", "preparing", "shipped", "delivered"];
   var wait = !!(o.payPending && s !== "cancelled");
   var payBox = wait
-    ? '<div class="ao-pay"><b>⏳ '+t("بانتظار تأكيد وصول الفلوس")+'</b>'
+    ? '<div class="ao-pay"><p class="ao-pay-t"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></i>'+t("بانتظار تأكيد وصول الفلوس")+'</p>'
       + '<p>'+t("افتح محفظة")+' '+t(paymentMethodLabel(o.paymentMethod))+' '+t("واتأكد إن مبلغ")+' <b class="tabular">'+fmt(+o.total||0)+' '+t("ج.م")+'</b> '+t("وصل فعلًا قبل ما تجهز الطلب. الإيصال لوحده مش ضمان (ممكن يكون متعدل).")+'</p>'
-      + '<div class="ao-pay-btns"><button type="button" data-pay="confirm" class="is-ok">✅ '+t("الفلوس وصلت")+'</button><button type="button" data-pay="reject" class="is-no">❌ '+t("الفلوس ما وصلتش")+'</button></div></div>'
-    : (o.payConfirmedAt ? '<div class="ao-pay is-done">💰 '+t("الفلوس وصلت واتأكدت")+' · '+escHtml(new Date(o.payConfirmedAt).toLocaleString(LANG==="en"?"en-US":"ar-EG", { day:"numeric", month:"short", hour:"numeric", minute:"2-digit" }))+'</div>' : '');
+      + '<div class="ao-pay-btns"><button type="button" data-pay="confirm" class="is-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'+t("الفلوس وصلت")+'</button><button type="button" data-pay="reject" class="is-no"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M7 7l10 10M17 7 7 17"/></svg>'+t("الفلوس ما وصلتش")+'</button></div></div>'
+    : (o.payConfirmedAt ? '<div class="ao-pay is-done"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>'+t("الفلوس وصلت واتأكدت")+' <span>· '+escHtml(new Date(o.payConfirmedAt).toLocaleString(LANG==="en"?"en-US":"ar-EG", { day:"numeric", month:"short", hour:"numeric", minute:"2-digit" }))+'</span></div>' : '');
   return '<div class="ao-status" id="aoStatusBox">'+payBox+'<div class="ao-status-head"><b>'+t("حالة الطلب")+'</b>'+orderStatusPill(o)+'</div>'
     + '<div class="ao-status-btns">'+steps.map(function(k){ var lock = wait && k !== "new"; return '<button type="button" data-set-status="'+k+'" class="'+(k === s ? 'on' : '')+'"'+(k === s || lock ? ' disabled' : '')+(lock ? ' title="'+t("أكد وصول الفلوس الأول")+'"' : '')+'>'+({ new:"🧾", preparing:"📦", shipped:"🚚", delivered:"🎉" })[k]+' '+t(V2_STATUS_TXT[k])+'</button>'; }).join("")
     + '<button type="button" data-set-status="cancelled" class="is-cancel'+(s === "cancelled" ? ' on' : '')+'"'+(s === "cancelled" ? ' disabled' : '')+'>❌ '+t("إلغاء")+'</button></div>'

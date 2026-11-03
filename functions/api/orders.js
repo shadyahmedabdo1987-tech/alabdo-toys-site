@@ -26,6 +26,12 @@ export async function onRequestGet({ request, env }){
       if(tail.length >= 9 && String(o.customerId || "").replace(/\D/g, "").slice(-10) === tail) return true;
       return false;
     });
+    /* تفاصيل مراجعة الإيصال للإدارة بس - العميل بيشوف حالة الدفع (payPending / payConfirmedAt) */
+    mine = mine.map(function(o){
+      var c = Object.assign({}, o);
+      delete c.proofCheck; delete c.payConfirmedBy; delete c.adminSeen; delete c.proofSize;
+      return c;
+    });
     return json({ ok:true, orders: mine });
   }
   return json({ ok:false, error:"unauthorized" }, 401);

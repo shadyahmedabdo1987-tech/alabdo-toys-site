@@ -2595,6 +2595,7 @@ html[data-theme="dark"] .os-pill{filter:brightness(.9) saturate(1.2);}
 .os-pill.is-paywait{background:#fff3d1; color:#8a5a00; font-size:11px; font-weight:700; padding:3px 8px;}
 .ao-status-head .os-pill.is-paywait{display:none;}
 .ao-pay{border-radius:12px; padding:10px 12px; background:#fff8e6; border:1px solid #f0d68f; color:#5a3d00; display:flex; flex-direction:column; gap:8px; font-size:13px; font-weight:600; line-height:1.5;}
+.pv-ib-spacer{flex:none; width:44px;}
 .ao-pay .ao-pay-t{display:flex; align-items:center; gap:7px; font-size:13px; font-weight:800; line-height:1.4; margin:0; opacity:1;}
 .ao-pay-t i{flex:none; width:22px; height:22px; border-radius:50%; display:grid; place-items:center; background:#f6c445; color:#3d2a00; font-style:normal;}
 .ao-pay-t i svg, .ao-pay-btns svg{width:13px; height:13px;}
@@ -5036,9 +5037,16 @@ function proofCheckAdminHtml(o){
   if(c.status === "ok") return '<div class="pv-admin is-ok">✅ '+t("اتراجع آليًا")+': '+(c.amount!=null ? t("المبلغ")+' '+fmt(+c.amount)+' '+t("ج.م")+' · ' : '')+t("المستلم")+' <bdi dir="ltr">'+escHtml(c.recipient||"-")+'</bdi>'+(c.reference ? ' · '+t("رقم العملية")+' <bdi dir="ltr">'+escHtml(c.reference)+'</bdi>' : '')+(c.date ? ' · '+escHtml(c.date) : '')+'</div>';
   return '<div class="pv-admin is-manual">⚠️ '+t("محتاج مراجعة يدوية — المراجعة الآلية ما اشتغلتش وقت الطلب. اتأكد إن الفلوس وصلت قبل الشحن.")+'</div>';
 }
-function proofBoxHtml(o){
-  return '<div class="proof-box" data-proof-box="'+escHtml(o.id)+'">'+proofCheckAdminHtml(o)
-    + '<div class="proof-box-head"><span>🧾 '+t("سكرين شوت التحويل")+'</span><bdi dir="ltr" class="proof-box-meta" data-proof-meta></bdi></div>'
+/* العميل بيشوف حالة الدفع بس (من غير تفاصيل المراجعة) - التفاصيل للإدارة فقط */
+function proofPayStatusHtml(o){
+  if(o.payRejected) return '<div class="pv-admin is-fail">❌ '+t("ما وصلناش التحويل")+'</div>';
+  if(o.payConfirmedAt) return '<div class="pv-admin is-ok">✅ '+t("تم تأكيد استلام المبلغ")+'</div>';
+  if(o.payPending) return '<div class="pv-admin is-manual">⏳ '+t("جاري مراجعة التحويل، وهنأكدلك أول ما المبلغ يوصل")+'</div>';
+  return "";
+}
+function proofBoxHtml(o, admin){
+  return '<div class="proof-box" data-proof-box="'+escHtml(o.id)+'">'+(admin ? proofCheckAdminHtml(o) : proofPayStatusHtml(o))
+    + '<div class="proof-box-head"><span>🧾 '+t(admin ? "سكرين شوت التحويل" : "إيصال التحويل")+'</span>'+(admin ? '<bdi dir="ltr" class="proof-box-meta" data-proof-meta></bdi>' : '')+'</div>'
     + '<button type="button" class="proof-thumb" data-proof-open aria-label="'+t("عرض سكرين التحويل بالحجم الكامل")+'">'
       + '<span data-proof-loading>'+t("جاري تحميل الصورة...")+'</span>'
       + '<img alt="'+t("سكرين شوت التحويل")+'" hidden>'
@@ -5068,7 +5076,7 @@ function hydrateProofBoxes(root, o, admin){
     loading.textContent = t("جاري تحميل الصورة...");
     loadProof(o, admin).then(function(p){
       img.src = p.url; img.hidden = false; zoomTag.hidden = false; loading.hidden = true;
-      meta.textContent = (p.w ? (p.w + "×" + p.h + " · ") : "") + fmtBytes(p.blob.size);
+      if(meta) meta.textContent = (p.w ? (p.w + "×" + p.h + " · ") : "") + fmtBytes(p.blob.size);
     }).catch(function(){
       loading.hidden = false;
       loading.textContent = t("تعذر تحميل الصورة — اضغط هنا للمحاولة تاني");
@@ -5141,11 +5149,11 @@ function openProofViewer(o, admin){
     + '<div class="pv-top">'
       + '<button type="button" class="pv-ib" data-pv-close aria-label="'+t("إغلاق")+'"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
       + '<div class="pv-title"><strong>🧾 '+t("إيصال طلب")+' <bdi dir="ltr">#'+escHtml(String(o.id||"").slice(-6))+'</bdi></strong>'
-        + '<span>'+escHtml(paymentMethodLabel(o.paymentMethod))+' · '+escHtml(fmt(+o.total||0))+' '+cur+' · '+escHtml(o.name || o.customerName || "")+'</span></div>'
-      + '<button type="button" class="pv-ib" data-pv-info aria-pressed="true">ℹ️ '+t("البيانات")+'</button>'
+        + '<span>'+escHtml(paymentMethodLabel(o.paymentMethod))+' · '+escHtml(fmt(+o.total||0))+' '+cur+(admin ? ' · '+escHtml(o.name || o.customerName || "") : '')+'</span></div>'
+      + (admin ? '<button type="button" class="pv-ib" data-pv-info aria-pressed="true">ℹ️ '+t("البيانات")+'</button>' : '<span class="pv-ib-spacer" aria-hidden="true"></span>')
     + '</div>'
     + '<div class="pv-stage" data-pv-stage><div class="pv-msg" data-pv-msg>'+t("جاري تحميل الصورة...")+'</div><img class="pv-img" alt="'+t("سكرين شوت التحويل")+'" hidden draggable="false"></div>'
-    + '<div class="pv-info" data-pv-infobox><dl>'+info+'</dl></div>'
+    + (admin ? '<div class="pv-info" data-pv-infobox><dl>'+info+'</dl></div>' : '')
     + '<div class="pv-bar">'
       + '<button type="button" class="pv-zbtn" data-pv-z="out" aria-label="'+t("تصغير")+'">−</button>'
       + '<span class="pv-zoomval" data-pv-zv>100%</span>'
@@ -5257,7 +5265,7 @@ function openProofViewer(o, admin){
       else zoomAt(1);
     });
   });
-  infoBtn.addEventListener("click", function(){
+  if(infoBtn) infoBtn.addEventListener("click", function(){
     var show = infoBox.hidden;
     infoBox.hidden = !show;
     infoBtn.setAttribute("aria-pressed", show ? "true" : "false");
@@ -5341,7 +5349,7 @@ function readProofImage(file, callback){
 }
 /* بيبني كارت فاتورة كامل لطلب واحد (الصنف/الكمية/السعر/الإجمالي وبيانات
    التوصيل) - مستخدم في شاشة تفاصيل الطلب اللي بتتفتح من قائمة "حسابي". */
-function orderInvoiceHtml(o){
+function orderInvoiceHtml(o, admin){
   var d = new Date(o.createdAt);
   var rows = (o.items||[]).map(function(it){
     var line = (+it.price||0) * (+it.qty||0);
@@ -5375,7 +5383,7 @@ function orderInvoiceHtml(o){
       + '<span>'+t("وسيلة الدفع")+'</span><strong style="color:var(--ink);">'+paymentMethodLabel(o.paymentMethod)+'</strong>'
     + '</div>';
     if(orderHasProof(o)){
-      paymentBlock += proofBoxHtml(o);
+      paymentBlock += proofBoxHtml(o, admin);
     } else if(paymentMethodNeedsProof(o.paymentMethod)){
       paymentBlock += '<div style="font-size:12px; color:var(--ink-soft);">'+t("العميل بيبعت سكرين شوت التحويل في محادثة الواتساب.")+'</div>';
     }
@@ -6962,6 +6970,10 @@ Object.assign(I18N_EN, {
  "اتبعت لكل الموبايلات اللي عليها نسخة 2.0.25": "Sent to every phone running version 2.0.25",
  "اتبعت — بص على الموبايل": "Sent — check the phone",
  "اتراجع آليًا": "Checked automatically",
+ "ما وصلناش التحويل": "We didn't receive the transfer",
+ "تم تأكيد استلام المبلغ": "Payment received and confirmed",
+ "جاري مراجعة التحويل، وهنأكدلك أول ما المبلغ يوصل": "We're reviewing your transfer and will confirm as soon as the payment arrives",
+ "إيصال التحويل": "Transfer receipt",
  "اتراجع بالذكاء الاصطناعي": "Checked by AI",
  "اتستخدم": "Used",
  "اتسجّل": "Registered",
@@ -13332,7 +13344,7 @@ function showAdminOrderInvoiceModal(order){
   var html = '<button class="modal-close" id="modalCloseBtn" aria-label="'+t("إغلاق")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>'
     + '<div class="modal-info" style="padding:30px 24px;">'
       + '<h3 style="margin-bottom:4px;">'+t("تفاصيل الطلب")+'</h3>'
-      + orderInvoiceHtml(order)
+      + orderInvoiceHtml(order, true)
       + '<div style="display:flex; gap:10px; margin-top:14px;">'
         + '<button type="button" class="btn btn-outline" id="aoEditBtn" style="flex:1;">'+t("✏️ تعديل الطلب")+'</button>'
         + '<button type="button" class="btn btn-outline" id="aoDeleteBtn" style="flex:1; color:var(--pink-deep); border-color:var(--pink-deep);">'+t("🗑️ حذف الطلب")+'</button>'

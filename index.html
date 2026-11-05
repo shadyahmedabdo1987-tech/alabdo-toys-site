@@ -949,6 +949,21 @@ html[dir="ltr"] .ab-bar i{transform-origin:left center;}
   .ab-slide{transition:none;}
   .ab-bar{display:none;}
 }
+/* سجّل منين / بيستخدم إيه */
+#adminCustomersPage .cv-cell{min-width:210px;}
+.cv-row{display:flex; flex-wrap:wrap; align-items:center; gap:5px; font-size:12px; line-height:1.4;}
+.cv-row + .cv-row{margin-top:5px;}
+.cv-row > b{font-size:11.5px; font-weight:800; color:var(--ink-soft); min-width:54px;}
+.cv-chip{display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; font-size:11.5px; font-weight:700; white-space:nowrap; background:var(--surface-3); color:var(--ink); border:1px solid var(--border);}
+.cv-chip small{font-size:10.5px; font-weight:600; opacity:.75;}
+.cv-chip.is-and{background:#e6f6ec; border-color:#b6e2c6; color:#16643a;}
+.cv-chip.is-ios{background:#eef0f6; border-color:#cdd3e3; color:#1b2a4e;}
+.cv-chip.is-web{background:#fff6d6; border-color:#efd98a; color:#6b5200;}
+.cv-chip.is-old{color:var(--ink-soft);}
+.cv-none{font-size:11.5px; color:var(--ink-soft);}
+[data-theme="dark"] .cv-chip.is-and{background:#133222; border-color:#285c40; color:#9be0b7;}
+[data-theme="dark"] .cv-chip.is-ios{background:#1d2436; border-color:#36415e; color:#c9d3f0;}
+[data-theme="dark"] .cv-chip.is-web{background:#332a10; border-color:#5c4b1c; color:#ffe08a;}
 /* بيانات العملاء على الموبايل: كل عميل كارت بدل جدول بيتسحب يمين وشمال */
 @media (max-width:720px){
   #adminCustomersPage .admin-card{overflow:visible !important; padding:0; background:none; border:0; box-shadow:none;}
@@ -958,7 +973,8 @@ html[dir="ltr"] .ab-bar i{transform-origin:left center;}
   #adminCustomersPage .admin-table td{display:block; padding:0; border:0; font-size:13px; color:var(--ink-soft); text-align:start !important;}
   #adminCustomersPage .admin-table td:nth-child(1){grid-column:1; font-size:15px; font-weight:800; color:var(--ink);}
   #adminCustomersPage .admin-table td:nth-child(2){grid-column:2; grid-row:1; font-weight:700; color:var(--ink);}
-  #adminCustomersPage .admin-table td:nth-child(3), #adminCustomersPage .admin-table td:nth-child(4), #adminCustomersPage .admin-table td:nth-child(5){grid-column:1 / -1;}
+  #adminCustomersPage .admin-table td:nth-child(3), #adminCustomersPage .admin-table td:nth-child(4), #adminCustomersPage .admin-table td:nth-child(5), #adminCustomersPage .admin-table td:nth-child(6){grid-column:1 / -1;}
+  #adminCustomersPage .admin-table td.cv-cell{margin-top:8px; padding-top:8px; border-top:1px dashed var(--border); min-width:0;}
   #adminCustomersPage .admin-table td:last-child{grid-column:1 / -1; display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; padding-top:10px; border-top:1px solid var(--border); white-space:normal !important;}
   #adminCustomersPage .admin-table td[colspan]{grid-column:1 / -1; border:0; margin:0; padding:0;}
 }
@@ -4543,8 +4559,8 @@ try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("messa
         </div>
         <div class="admin-card" style="overflow-x:auto;">
           <table class="admin-table">
-            <thead><tr><th data-i18n>الاسم</th><th data-i18n>الموبايل</th><th data-i18n>الإيميل</th><th data-i18n>المحافظة</th><th data-i18n>العنوان</th><th></th></tr></thead>
-            <tbody id="adminCustomersBody"><tr><td colspan="6" style="color:var(--ink-soft);" data-i18n>جاري التحميل...</td></tr></tbody>
+            <thead><tr><th data-i18n>الاسم</th><th data-i18n>الموبايل</th><th data-i18n>الإيميل</th><th data-i18n>المحافظة</th><th data-i18n>العنوان</th><th data-i18n>سجّل منين / بيستخدم إيه</th><th></th></tr></thead>
+            <tbody id="adminCustomersBody"><tr><td colspan="7" style="color:var(--ink-soft);" data-i18n>جاري التحميل...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -6970,6 +6986,17 @@ Object.assign(I18N_EN, {
  "اتبعت لكل الموبايلات اللي عليها نسخة 2.0.25": "Sent to every phone running version 2.0.25",
  "اتبعت — بص على الموبايل": "Sent — check the phone",
  "اتراجع آليًا": "Checked automatically",
+ "سجّل منين / بيستخدم إيه": "Signed up from / Uses",
+ "سجّل من": "Signed up",
+ "بيستخدم": "Uses",
+ "تطبيق الأندرويد": "Android app",
+ "تطبيق الآيفون": "iPhone app",
+ "من موبايل آيفون": "on iPhone",
+ "من موبايل أندرويد": "on Android phone",
+ "من كمبيوتر": "on computer",
+ "اتسجّل قبل التحديث": "Before this update",
+ "لسه ما ظهرش": "Not seen yet",
+ "من شوية": "just now",
  "ما وصلناش التحويل": "We didn't receive the transfer",
  "تم تأكيد استلام المبلغ": "Payment received and confirmed",
  "جاري مراجعة التحويل، وهنأكدلك أول ما المبلغ يوصل": "We're reviewing your transfer and will confirm as soon as the payment arrives",
@@ -12380,9 +12407,14 @@ function setCustomerSession(identifier, password, name, email, governorate, addr
 }
 function clearCustomerProfile(){ try{ localStorage.removeItem(CUSTOMER_SESSION_KEY); }catch(e){} }
 function isCustomerAuthed(){ return !!getCustomerProfile(); }
+/* العميل بيستخدم إيه: الموقع / تطبيق الأندرويد / تطبيق الآيفون (بيظهر للإدارة في بيانات العملاء) */
+function clientVia(){
+  if(!document.documentElement.classList.contains("app-mode")) return "web";
+  return /iPhone|iPad|iPod|\biOS\b/.test(navigator.userAgent || "") ? "ios" : "android";
+}
 function customerAuthHeaders(){
   var c = getCustomerProfile();
-  return c ? { "X-Customer-Id": c.identifier, "X-Customer-Pass": c.password } : {};
+  return c ? { "X-Customer-Id": c.identifier, "X-Customer-Pass": c.password, "X-AA-Via": clientVia() } : {};
 }
 
 function updateAccountLabel(){
@@ -12671,7 +12703,7 @@ function renderAccountModal(){
       btn.disabled = true;
       fetch("/api/customers/register", {
         method: "POST",
-        headers: { "content-type":"application/json" },
+        headers: { "content-type":"application/json", "X-AA-Via": clientVia() },
         body: JSON.stringify({ phone:identifier, name:name, email:email, governorate:governorate, address:address, password:password })
       }).then(function(r){ return r.json().then(function(j){ return {status:r.status, body:j}; }); })
         .then(function(res){
@@ -12711,7 +12743,7 @@ function renderAccountModal(){
       btn.disabled = true;
       fetch("/api/customers/login", {
         method: "POST",
-        headers: { "content-type":"application/json" },
+        headers: { "content-type":"application/json", "X-AA-Via": clientVia() },
         body: JSON.stringify({ identifier:identifier, password:password })
       }).then(function(r){ return r.json(); })
         .then(function(res){
@@ -16447,17 +16479,43 @@ function closeAdminCustomersPage(){
   document.getElementById("adminCustomersPage").classList.remove("active");
   document.getElementById("adminDashboard").classList.add("active");
 }
+/* سجّل منين / بيستخدم إيه: الموقع أو تطبيق الأندرويد أو تطبيق الآيفون */
+var CV_CH = {
+  android: { ic:"🤖", txt:"تطبيق الأندرويد", cls:"is-and" },
+  ios: { ic:"🍏", txt:"تطبيق الآيفون", cls:"is-ios" },
+  web: { ic:"🌐", txt:"الموقع", cls:"is-web" }
+};
+var CV_DEV = { iphone:"من موبايل آيفون", android:"من موبايل أندرويد", pc:"من كمبيوتر" };
+function custViaAgo(ms){
+  var m = Math.max(0, Math.round((Date.now() - ms) / 60000));
+  if(m < 60) return t("من شوية");
+  var h = Math.round(m / 60); if(h < 24) return t("من")+" "+fmt(h)+" "+t("ساعة");
+  var d = Math.round(h / 24); if(d < 60) return t("من")+" "+fmt(d)+" "+t("يوم");
+  return new Date(ms).toLocaleDateString(LANG==="en"?"en-US":"ar-EG", { day:"numeric", month:"short", year:"numeric" });
+}
+function custViaHtml(v){
+  v = v || {};
+  var s = CV_CH[v.s];
+  var reg = s
+    ? '<span class="cv-chip '+s.cls+'">'+s.ic+' '+t(s.txt)+(v.s === "web" && CV_DEV[v.sd] ? ' <small>'+t(CV_DEV[v.sd])+'</small>' : '')+'</span>'
+    : '<span class="cv-chip is-old">❔ '+t("اتسجّل قبل التحديث")+'</span>';
+  var used = ["android","ios","web"].filter(function(k){ return +v[k] > 0; })
+    .sort(function(a, b){ return v[b] - v[a]; })
+    .map(function(k){ var c = CV_CH[k]; return '<span class="cv-chip '+c.cls+'">'+c.ic+' '+t(c.txt)+(k === "web" && CV_DEV[v.wd] ? ' <small>'+t(CV_DEV[v.wd])+'</small>' : '')+' <small>· '+custViaAgo(+v[k])+'</small></span>'; }).join("");
+  return '<div class="cv-row"><b>'+t("سجّل من")+'</b>'+reg+'</div>'
+    + '<div class="cv-row"><b>'+t("بيستخدم")+'</b>'+(used || '<span class="cv-none">'+t("لسه ما ظهرش")+'</span>')+'</div>';
+}
 function renderAdminCustomersPage(){
   var body = document.getElementById("adminCustomersBody");
   if(!body) return;
-  body.innerHTML = '<tr><td colspan="6" style="color:var(--ink-soft);">'+t("جاري التحميل...")+'</td></tr>';
+  body.innerHTML = '<tr><td colspan="7" style="color:var(--ink-soft);">'+t("جاري التحميل...")+'</td></tr>';
   fetch("/api/admin/customers", { headers: adminAuthHeaders(), cache:"no-store" }).then(function(r){ return r.json(); })
     .then(function(res){
       var list = (res && res.ok) ? res.customers : [];
       ADMIN_CUSTOMERS_CACHE = list;
       var countEl = document.getElementById("adminCustomersCount");
       if(countEl) countEl.textContent = list.length;
-      if(!list.length){ body.innerHTML = '<tr><td colspan="6" style="color:var(--ink-soft);">'+t("لسه مفيش عملاء مسجّلين.")+'</td></tr>'; return; }
+      if(!list.length){ body.innerHTML = '<tr><td colspan="7" style="color:var(--ink-soft);">'+t("لسه مفيش عملاء مسجّلين.")+'</td></tr>'; return; }
       body.innerHTML = list.map(function(c, i){
         return '<tr>'
           + '<td>'+String(c.name||"-")+'</td>'
@@ -16465,6 +16523,7 @@ function renderAdminCustomersPage(){
           + '<td>'+String(c.email||"-")+'</td>'
           + '<td>'+(c.governorate?t(c.governorate):"-")+'</td>'
           + '<td>'+String(c.address||"-")+'</td>'
+          + '<td class="cv-cell">'+custViaHtml(c.via)+'</td>'
           + '<td style="white-space:nowrap;"><button type="button" class="btn btn-outline btn-sm" data-cust-edit="'+i+'">'+t("✏️ تعديل")+'</button> <button type="button" class="btn btn-outline btn-sm" data-cust-reset="'+i+'" title="'+t("رابط باسورد جديد")+'">🔑 '+t("باسورد")+'</button> <button type="button" class="btn btn-outline btn-sm" data-cust-del="'+i+'" style="color:var(--pink-deep);">🗑️</button></td>'
         + '</tr>';
       }).join("");
@@ -16483,7 +16542,7 @@ function renderAdminCustomersPage(){
         });
       });
     })
-    .catch(function(){ body.innerHTML = '<tr><td colspan="6" style="color:var(--pink-deep);">'+t("تعذر تحميل بيانات العملاء.")+'</td></tr>'; });
+    .catch(function(){ body.innerHTML = '<tr><td colspan="7" style="color:var(--pink-deep);">'+t("تعذر تحميل بيانات العملاء.")+'</td></tr>'; });
 }
 /* ---------- إعادة تعيين باسورد العميل من الإدارة ----------
    الأدمن بيعمل رابط لمرة واحدة (صالح 24 ساعة) ويبعته للعميل على

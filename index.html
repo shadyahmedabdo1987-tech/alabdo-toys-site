@@ -13,6 +13,12 @@
      ما يفتحش ثانية بالشكل الغلط (كان بيبان غامق وبعدين يرجع فاتح على الآيفون) */
   var th = localStorage.getItem("aa_theme");
   if(th === "dark" || th === "light") document.documentElement.setAttribute("data-theme", th);
+  /* البانرات زي ما الإدارة سايباها (آخر نسخة متخزنة على الموبايل) من أول لحظة: لو بانرات
+     الخصم اتلغت ما تبانش ثانية مع الريلود، ولو في بانرات جديدة ما تبانش القديمة مكانها */
+  var dbc = JSON.parse(localStorage.getItem("aa_disc_banners") || "null");
+  if(dbc && dbc.set) document.documentElement.classList.add(dbc.items && dbc.items.length ? "aa-db-custom" : "aa-db-empty");
+  var hbc = JSON.parse(localStorage.getItem("aa_hero_banners") || "null");
+  if(hbc && hbc.set) document.documentElement.classList.add(hbc.items && hbc.items.length ? "aa-hb-custom" : "aa-hb-empty");
 }catch(e){}})();</script>
 <!-- "وضع التطبيق": لما الموقع يتفتح من جوه تطبيق الأندرويد (أو متثبت كتطبيق على
      الشاشة الرئيسية) بنحط class="app-mode" على <html> قبل ما الصفحة ترسم، فيظهر
@@ -2828,6 +2834,9 @@ html.v2 .v2-sk{display:block;}
 .wholesale-discount-banner .carousel-slide-img[data-link], .hero-banner-wrap .carousel-slide-img[data-link]{cursor:pointer;}
 .wholesale-discount-banner[hidden], .hero-banner-wrap[hidden]{display:none;}
 html.app-mode section.db-empty{display:none;}
+html.aa-db-empty #discountBannerWrap, html.aa-hb-empty #heroBannerWrap{display:none !important;}
+html.app-mode.aa-db-empty #discountSection{display:none;}
+html.aa-db-custom #discountBannerWrap:not([data-db-sig]) img, html.aa-hb-custom #heroBannerWrap:not([data-db-sig]) img{visibility:hidden;}
 .pr-preview img{max-width:220px; max-height:300px; border-radius:16px; box-shadow:0 8px 22px hsl(var(--shadow)/.18);}
 /* إعلان الشاشة الرئيسية */
 .home-promo{position:fixed; inset:0; z-index:420; background:rgba(16,8,28,.62); display:flex; align-items:center; justify-content:center; padding:24px 20px calc(24px + env(safe-area-inset-bottom)); opacity:0; transition:opacity .25s ease; backdrop-filter:blur(2px);}
@@ -3390,7 +3399,7 @@ try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("messa
     </div>
   </section>
 
-  <section class="section reveal" style="padding-bottom:0">
+  <section class="section reveal" id="discountSection" style="padding-bottom:0">
     <div class="wrap">
       <div class="wholesale-promo">
         <div class="wholesale-top app-hide">
@@ -9278,6 +9287,9 @@ var BANNER_SLOTS = {
 };
 function bannerApply(slot, cfg){
   var S = BANNER_SLOTS[slot], wrap = document.getElementById(S.wrap); if(!wrap) return;
+  /* من هنا الصفحة نفسها هي اللي بتحدد البانرات (بدل شكل أول لحظة) */
+  if(slot === "discount") document.documentElement.classList.remove("aa-db-empty", "aa-db-custom");
+  else document.documentElement.classList.remove("aa-hb-empty", "aa-hb-custom");
   var sig = JSON.stringify(cfg && cfg.set ? cfg.items : "default");
   if((wrap.dataset.dbSig || JSON.stringify("default")) === sig) return;
   var section = wrap.closest("section");

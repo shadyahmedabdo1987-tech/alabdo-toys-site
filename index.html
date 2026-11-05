@@ -43,7 +43,13 @@
          الشاشة جوه الصفحة نفسها. */
     var nat = window.AlAbdoNative;
     if(nat && typeof nat.appReady === "function") window.AA_SPLASH = 1;
-    else d.classList.add("app-splash-web");
+    else {
+      /* الدخلة بتظهر أول مرة التطبيق يفتح بس - لو العميل عمل ريفريش (سحب لتحت)
+         الصفحة بتتحمّل من غير الدخلة، زي الأندرويد */
+      var seenSplash = false;
+      try{ seenSplash = sessionStorage.getItem("aa_splash_seen") === "1"; sessionStorage.setItem("aa_splash_seen", "1"); }catch(e){}
+      if(!seenSplash) d.classList.add("app-splash-web");
+    }
   }
 }catch(e){}})();</script>
 <!-- Google tag (gtag.js) -->

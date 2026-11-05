@@ -1,13 +1,17 @@
 import { json, getCustomers, saveCustomers, sha256Hex, requireAdmin, getList, saveList } from "../../_lib.js";
+import { getViaMap, dropVia } from "../../_via.js";
 
 /* Strips the password hash before sending a customer account back to the
    admin dashboard - the admin can see and edit everything else, but there
    is no reason the hash itself needs to leave the server. */
-function publicCustomer(c){
-  return {
+function publicCustomer(c, v){
+  var o = {
     id: c.id, name: c.name, identifier: c.identifier, email: c.email || "",
     governorate: c.governorate || "", address: c.address || ""
   };
+  /* where the account was created + when each channel was last used */
+  if(v) o.via = { s: v.s || "", sd: v.sd || "", sAt: +v.sAt || 0, android: +v.android || 0, ios: +v.ios || 0, web: +v.web || 0, wd: v.wd || "" };
+  return o;
 }
 
 /* GET /api/admin/customers - admin only. Returns every registered customer
@@ -16,7 +20,8 @@ export async function onRequestGet({ request, env }){
   var admin = await requireAdmin(request, env);
   if(!admin) return json({ ok:false, error:"unauthorized" }, 401);
   var list = await getCustomers(env);
-  return json({ ok:true, customers: list.map(publicCustomer) });
+  var via = await getViaMap(env);
+  return json({ ok:true, customers: list.map(function(c){ return publicCustomer(c, via[c.id]); }) });
 }
 
 /* POST /api/admin/customers - admin only. Body: {id, name, identifier,
@@ -77,6 +82,7 @@ export async function onRequestDelete({ request, env }){
   var next = list.filter(function(c){ return c.id !== id; });
   if(next.length === list.length) return json({ ok:false, error:"not_found" }, 404);
   await saveCustomers(env, next);
+  await dropVia(env, id);
   /* the deleted customer's phones stop getting instant notifications
      (the app itself logs out on its next check, within a minute) */
   try{

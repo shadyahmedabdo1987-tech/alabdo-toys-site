@@ -11782,6 +11782,48 @@ function updateAppTabbar(){
   var nm = document.querySelector(".site-header .brand-text .name");
   if(nm && nm.textContent.trim()==="متجر آل عبده") nm.innerHTML = '<b class="aa-n1">متجر</b> <b class="aa-n2">آل عبده</b>';
 })();
+/* اللوجو اللي فوق في التطبيق: كل 5 ثواني بيلف لفتين (نفس لفة شاشة الدخول، من اليمين للشمال)
+   والاسم بيتمسح وهو بيلف، ولما يقف الاسم بيتكتب تاني حرف حرف. تطبيق العملاء بس. */
+(function(){
+  if(!isAppMode() || isAdminApp()) return;
+  if(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  var nm = document.querySelector(".site-header .brand-text .name");
+  var logo = document.querySelector(".site-header .brand-logo");
+  if(!nm || !logo || !logo.animate) return;
+  var TURNS = 2, TURN_MS = 2000, REST = 5000, TYPE_MS = 75;
+  var n1 = nm.querySelector(".aa-n1"), n2 = nm.querySelector(".aa-n2");
+  var P1 = Array.from(n1 ? n1.textContent : nm.textContent.trim()), P2 = n2 ? Array.from(n2.textContent) : [];
+  var ALL = P1.concat(P2.length ? [" "] : [], P2), N1 = P1.length;
+  var label = nm.textContent.trim();
+  nm.setAttribute("aria-label", label);
+  function render(n){
+    var a = ALL.slice(0, n), s1 = a.slice(0, N1).join(""), s2 = a.slice(N1 + 1).join("");
+    if(!n2){ nm.textContent = a.join("") || "\u200b"; return; }
+    nm.innerHTML = '<b class="aa-n1">'+(s1 || "\u200b")+'</b>'+(a.length > N1 ? ' ' : '')+(s2 ? '<b class="aa-n2">'+s2+'</b>' : '');
+  }
+  function later(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+  function steps(from, to, ms){
+    return new Promise(function(done){
+      var n = from;
+      (function step(){ render(n); if(n === to){ done(); return; } n += (to > from ? 1 : -1); setTimeout(step, ms); })();
+    });
+  }
+  async function cycle(){
+    for(;;){
+      await later(REST);
+      if(document.hidden) continue;
+      var spin = logo.animate([
+        { transform:"perspective(900px) rotateY(0deg)" },
+        { transform:"perspective(900px) rotateY("+(TURNS * 360)+"deg)" }
+      ], { duration: TURNS * TURN_MS, easing:"cubic-bezier(.3,0,.7,1)" });
+      await steps(ALL.length, 0, Math.max(60, TYPE_MS * 0.9));
+      try{ await spin.finished; }catch(e){}
+      await later(150);
+      await steps(0, ALL.length, TYPE_MS);
+    }
+  }
+  cycle();
+})();
 function appEsc(v){ return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 var APP_ICONS = {
   box:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5Z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>',

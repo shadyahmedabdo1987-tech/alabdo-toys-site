@@ -1,4 +1,5 @@
 import { json, getCustomers, sha256Hex, linkGuestOrdersToCustomer } from "../../_lib.js";
+import { markVia } from "../../_via.js";
 
 /* POST /api/customers/login - public. Body: {identifier, password}.
    identifier can be either the registered phone number or the registered
@@ -23,5 +24,6 @@ export async function onRequestPost({ request, env }){
      فيها دخول، بنربطه بحسابه هنا كمان - مش بس وقت التسجيل الأول. */
   try{ await linkGuestOrdersToCustomer(env, acct); }catch(e){ /* الربط مش سبب لفشل الدخول نفسه */ }
 
+  await markVia(env, acct.id, request, false);
   return json({ ok:true, name: acct.name, phone: acct.identifier, email: acct.email, governorate: acct.governorate || "", address: acct.address || "" });
 }

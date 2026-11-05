@@ -1,5 +1,6 @@
 import { json, getCustomers, saveCustomers, sha256Hex, linkGuestOrdersToCustomer } from "../../_lib.js";
 import { adminWake } from "../../_push.js";
+import { markVia } from "../../_via.js";
 
 /* POST /api/customers/register - public. Body: {phone, name, email, governorate, address, password}.
    Creates a customer account on the server (same trust model as the admin
@@ -45,6 +46,8 @@ export async function onRequestPost({ request, env, waitUntil }){
      القديمة بحسابه الجديد على طول عشان تبان له في "طلباتي". */
   try{ await linkGuestOrdersToCustomer(env, acct); }catch(e){ /* الربط مش سبب لفشل التسجيل نفسه */ }
 
+  /* اتسجّل منين: الموقع / تطبيق الأندرويد / تطبيق الآيفون */
+  await markVia(env, acct.id, request, true);
   try{ waitUntil(adminWake(env, "customer")); }catch(e){}
   return json({ ok:true, name: acct.name, phone: acct.identifier, email: acct.email, governorate: acct.governorate, address: acct.address });
 }

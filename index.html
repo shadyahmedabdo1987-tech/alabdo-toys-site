@@ -15177,9 +15177,15 @@ function aaGoLink(link){
   else if(link === "new") state.badge = "new";
   else if(link.indexOf("cat:") === 0) state.cat = link.slice(4);
   else if(link.indexOf("p:") === 0){
-    var id = +link.slice(2);
+    var pid = link.slice(2);
     goToView("products"); renderProductsView();
-    if(PRODUCTS.some(function(p){ return p.id === id; })) setTimeout(function(){ openProductModal(id); }, 250);
+    /* لو التطبيق لسه فاتح والمنتجات لسه بتتحمّل، نستنى شوية ونفتح المنتج نفسه */
+    var tries = 0;
+    (function openWhenReady(){
+      var pp = preqFindProduct(pid);
+      if(pp){ setTimeout(function(){ openProductModal(pp.id); }, 250); return; }
+      if(++tries < 30) setTimeout(openWhenReady, 300);
+    })();
     return;
   }
   goToView("products"); renderProductsView(); window.scrollTo(0, 0);
@@ -15724,7 +15730,8 @@ document.addEventListener("click", function(e){
   if(!e.target.closest("#preqWrap")) return;
   if(e.target.closest("[data-notif-clear]")){ preqClearAll(); return; }
   var z = e.target.closest("[data-preq-zoom]"); if(z){ preqZoom(z.dataset.preqZoom); return; }
-  var v = e.target.closest("[data-preq-view]"); if(v){ closeAllPanels(); openProductModal(v.dataset.preqView); return; }
+  /* "افتح المنتج": رقم المنتج في الزرار نص، فبنجيب المنتج نفسه ونفتحه برقمه الحقيقي */
+  var v = e.target.closest("[data-preq-view]"); if(v){ var vp = preqFindProduct(v.dataset.preqView); closeAllPanels(); if(vp) openProductModal(vp.id); else goToView("products"); return; }
   var d = e.target.closest("[data-preq-del]");
   if(d){
     var id = d.dataset.preqDel;

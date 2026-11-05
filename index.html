@@ -9,6 +9,10 @@
     document.documentElement.setAttribute("lang","en");
     document.documentElement.setAttribute("dir","ltr");
   }
+  /* الوضع الليلي/النهاري اللي العميل اختاره بيتطبّق من أول لحظة، عشان الريفريش
+     ما يفتحش ثانية بالشكل الغلط (كان بيبان غامق وبعدين يرجع فاتح على الآيفون) */
+  var th = localStorage.getItem("aa_theme");
+  if(th === "dark" || th === "light") document.documentElement.setAttribute("data-theme", th);
 }catch(e){}})();</script>
 <!-- "وضع التطبيق": لما الموقع يتفتح من جوه تطبيق الأندرويد (أو متثبت كتطبيق على
      الشاشة الرئيسية) بنحط class="app-mode" على <html> قبل ما الصفحة ترسم، فيظهر

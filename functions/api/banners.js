@@ -12,7 +12,7 @@ const SLOTS = {
   discount: { key: "discount_banners", defaults: /^discount-(10|15)\.jpg$/ },
   hero:     { key: "hero_banners",     defaults: /^hero-banner-(3|4)\.jpg$/ }
 };
-const LINKS = /^(home|offers|products|new|cat:[\w-]{1,40}|p:\d{1,12}|none)$/;
+const LINKS = /^(home|offers|products|new|cat:[\w-]{1,40}|p:\d{1,15}|none)$/;
 const UPLOADED = /^\/api\/img\?id=[a-f0-9]{16,64}$/;
 
 function slotOf(request){

@@ -107,7 +107,7 @@ export async function onRequestPost({ request, env, waitUntil }){
         if(pushConfigured(env)){
           var toks = await tokensFor(env, r.customerId, r.phone || r.customerId);
           if(toks.length){
-            var pid = r.reply.productId && /^\d{1,12}$/.test(String(r.reply.productId)) ? String(r.reply.productId) : "";
+            var pid = r.reply.productId && /^\d{1,15}$/.test(String(r.reply.productId)) ? String(r.reply.productId) : "";
             await sendPush(env, toks, { id: r.id, kind: "preq", title: "💬 رد على طلبك: " + String(r.productName || "").slice(0, 60), body: r.reply.message || (status === "available" ? "المنتج متوفر" : "رد جديد من المتجر"), link: pid ? "p:" + pid : "home", at: String(r.reply.at) });
           }
         }

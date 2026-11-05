@@ -11,7 +11,7 @@ import { json, getList, saveList, requireAdmin } from "../_lib.js";
 import { pushConfigured, sendTopic } from "../_push.js";
 
 const KEY = "broadcasts";
-const LINKS = /^(home|offers|products|new|cat:[\w-]{1,40}|p:\d{1,12})$/;
+const LINKS = /^(home|offers|products|new|cat:[\w-]{1,40}|p:\d{1,15})$/;
 const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
 const DAY_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
 const TZ = "Africa/Cairo";

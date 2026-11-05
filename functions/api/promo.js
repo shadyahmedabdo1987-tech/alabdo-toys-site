@@ -6,7 +6,7 @@
 import { json, requireAdmin } from "../_lib.js";
 
 const KEY = "home_promo";
-const LINKS = /^(home|offers|products|new|cat:[\w-]{1,40}|p:\d{1,12}|none)$/;
+const LINKS = /^(home|offers|products|new|cat:[\w-]{1,40}|p:\d{1,15}|none)$/;
 
 async function current(env){
   let p = null;

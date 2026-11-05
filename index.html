@@ -45,22 +45,9 @@
   var standalone = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone===true;
   if(fromApp || standalone || (ss && ss.getItem("aa_app_mode")==="1")){
     d.classList.add("app-mode");
-    /* اسم «متجر آل عبده» اللي فوق بيستنى خطه يحمّل قبل ما يظهر، عشان مع الريفريش
-       ما يبانش لحظة بخط تاني وبعدين يتغير (كان بيحصل على الآيفون) */
-    d.classList.add("aa-fw");
     /* الشكل الجديد (التطبيق 5 وبعد كده) من أول لحظة، عشان شكل التحميل يطلع صح من غير ما الصفحة تتنطط */
     var aaV = String(navigator.userAgent || "").match(/AlAbdoApp\/(\d+)/);
     try{ if((aaV && +aaV[1] >= 5) || localStorage.getItem("aa_v2") === "1") d.classList.add("v2"); }catch(e){}
-    var aaFontOk = function(){ d.classList.remove("aa-fw"); };
-    setTimeout(aaFontOk, 2500);
-    var aaFontLoad = function(){ try{ document.fonts.load('800 27px "Baloo Bhaijaan 2"', "متجر آل عبده").then(function(f){ if(f && f.length) aaFontOk(); }, function(){}); }catch(e){ aaFontOk(); } };
-    document.addEventListener("DOMContentLoaded", function(){
-      /* ملف الخطوط بيحمل في الخلفية: نستنى لما يحمل وبعدين الخط نفسه */
-      var lk = document.querySelector('link[href*="fonts.googleapis.com/css2"]');
-      if(!lk || lk.media === "all") aaFontLoad();
-      if(lk) lk.addEventListener("load", function(){ setTimeout(aaFontLoad, 0); });
-      if(!window.FontFace) aaFontOk();
-    });
     /* شاشة الافتتاح (اللوجو اللي بيلف لحد ما المنتجات تحمل):
        - تطبيق الأندرويد الجديد عنده شاشة افتتاح أصلية فيها اللوجو بيلف، وبتفضل
          ظاهرة لحد ما الصفحة تقولها "خلاص" (AlAbdoNative.appReady) - فالصفحة
@@ -1780,7 +1767,6 @@ html.app-mode .header-row{flex-wrap:wrap; gap:8px 10px; padding-block:8px 10px;}
 html.app-mode .brand{flex:1 1 auto; min-width:0; gap:8px;}
 html.app-mode .brand-logo{width:34px; height:34px; animation:none;}
 html.app-mode .brand-text .name{font-size:17px;}
-html.app-mode.aa-fw .site-header .brand-text .name{visibility:hidden;}
 html.app-mode .brand-text .tag{display:none;}
 html.app-mode .header-search{display:block !important; order:10; flex:1 1 100%; max-width:none;}
 html.app-mode .header-search input{padding:10px 42px 10px 14px; border-radius:12px; border:1.5px solid var(--border); background:var(--surface-3); font-size:14px;}

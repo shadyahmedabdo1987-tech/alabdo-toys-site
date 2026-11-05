@@ -36,7 +36,7 @@ jobs:
     runs-on: macos-latest
     env:
       RUN: ${{ github.run_number }}
-      APP_VERSION: "1.0.1"
+      APP_VERSION: "1.0.2"
       BUNDLE_ID: com.alabdotoys.app
     steps:
       - name: Checkout
@@ -122,7 +122,7 @@ jobs:
                   CFBundleDevelopmentRegion: ar
                   CFBundleShortVersionString: "${APP_VERSION}"
                   CFBundleVersion: "${RUN}"
-                  UILaunchScreen: {}
+                  UILaunchScreen: {UIColorName: LaunchBg}
                   UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
                   UIStatusBarStyle: UIStatusBarStyleDarkContent
                   UIViewControllerBasedStatusBarAppearance: true
@@ -166,6 +166,12 @@ jobs:
 
           cat > "$P/Sources/Assets.xcassets/Contents.json" <<'EOF'
           { "info" : { "author" : "xcode", "version" : 1 } }
+          EOF
+          # 1.0.2: شاشة فتح التطبيق صفرا (زي الأندرويد) بدل البيضا، لحد ما دخلة اللوجو تبدأ
+          mkdir -p "$P/Sources/Assets.xcassets/LaunchBg.colorset"
+          cat > "$P/Sources/Assets.xcassets/LaunchBg.colorset/Contents.json" <<'EOF'
+          { "colors" : [ { "color" : { "color-space" : "srgb", "components" : { "alpha" : "1.000", "red" : "0xFA", "green" : "0xE5", "blue" : "0x68" } }, "idiom" : "universal" } ],
+            "info" : { "author" : "xcode", "version" : 1 } }
           EOF
           cat > "$P/Sources/Assets.xcassets/AppIcon.appiconset/Contents.json" <<'EOF'
           { "images" : [ { "filename" : "icon-1024.png", "idiom" : "universal", "platform" : "ios", "size" : "1024x1024" } ],
@@ -309,7 +315,8 @@ jobs:
               override func viewDidLoad() {
                   super.viewDidLoad()
                   WebViewController.shared = self
-                  view.backgroundColor = .white
+                  /* أصفر لحد ما الصفحة تفتح (مفيش شاشة بيضا قبل دخلة اللوجو) */
+                  view.backgroundColor = barYellow
 
                   let bridge = """
                   window.AlAbdoNative = {
@@ -343,7 +350,7 @@ jobs:
                   web.uiDelegate = self
                   web.allowsBackForwardNavigationGestures = true
                   web.isOpaque = false
-                  web.backgroundColor = .white
+                  web.backgroundColor = barYellow
                   web.translatesAutoresizingMaskIntoConstraints = false
                   view.addSubview(web)
 
@@ -391,6 +398,8 @@ jobs:
               func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
                   if !loaded {
                       loaded = true
+                      view.backgroundColor = .white
+                      web.backgroundColor = .white
                       if let p = WebViewController.pendingLink {
                           WebViewController.pendingLink = nil
                           DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { WebViewController.open(link: p) }

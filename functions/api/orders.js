@@ -4,6 +4,7 @@ import { dataUrlToBytes, sha256Bytes, checkReceipt, normRef } from "../_payproof
 import { getTierConfig, activeTiers, pickTier, tierAmount } from "../_tiers.js";
 import { getNotes, saveNotes } from "../_notes.js";
 import { adminWake } from "../_push.js";
+import { markVia } from "../_via.js";
 
 /* GET /api/orders - admin headers return every order (for the admin
    dashboard's order list); customer headers return only that customer's
@@ -17,6 +18,7 @@ export async function onRequestGet({ request, env }){
   }
   var customer = await requireCustomer(request, env);
   if(customer){
+    await markVia(env, customer.id, request, false);
     var list = await getList(env, "orders");
     var id = String(customer.identifier || "").toLowerCase();
     var tail = String(customer.identifier || "").replace(/\D/g, "").slice(-10);
@@ -50,6 +52,7 @@ export async function onRequestGet({ request, env }){
    اند لفودافون كاش/إنستاباي (مش بتتفحص تاني هنا). notes اختياري. */
 export async function onRequestPost({ request, env, waitUntil }){
   var customer = await requireCustomer(request, env);
+  if(customer) await markVia(env, customer.id, request, false);
 
   var body;
   try{ body = await request.json(); }catch(e){ return json({ ok:false, error:"bad_json" }, 400); }

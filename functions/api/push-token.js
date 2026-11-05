@@ -11,6 +11,7 @@
                                            customer's devices
    (ASCII-only comments on purpose, same as _lib.js.) */
 import { json, requireAdmin, requireCustomer, getList } from "../_lib.js";
+import { markVia } from "../_via.js";
 import { addToken, removeToken, getTokens, tokensFor, sendPush, pushConfigured, pushInfo, logPush, getPushLog } from "../_push.js";
 
 var TOKEN_RE = /^[\w:\-.]{20,4096}$/;
@@ -21,6 +22,7 @@ export async function onRequestPost({ request, env }){
   var acc = await requireCustomer(request, env);
   if(!acc) return json({ ok:false, error:"unauthorized" }, 401);
   var b = await bodyOf(request);
+  await markVia(env, acc.id, request, false);
   /* the app page says "I'm open" (for the admin card history) */
   if(b && b.action === "ping"){
     await logPush(env, { a: "open", cid: String(acc.identifier).toLowerCase(), nat: String(b.nat || "").slice(0, 20) });

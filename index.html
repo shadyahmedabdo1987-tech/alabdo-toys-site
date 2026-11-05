@@ -69,6 +69,9 @@
       var seenSplash = false;
       try{ seenSplash = sessionStorage.getItem("aa_splash_seen") === "1"; sessionStorage.setItem("aa_splash_seen", "1"); }catch(e){}
       if(!seenSplash) d.classList.add("app-splash-web");
+      /* ريلود جوه التطبيق (الآيفون): الخطوط بتتحمّل قبل ما الصفحة ترسم، والكلام بيستنى
+         خطه الحقيقي بدل ما يبان لحظة بخط تاني ويتغير (الملفات متخزنة فبتيجي على طول) */
+      else document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;600;700;800&family=Almarai:wght@300;400;700;800&display=block">');
     }
   }
 }catch(e){}})();</script>

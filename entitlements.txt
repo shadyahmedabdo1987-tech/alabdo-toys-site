@@ -1,0 +1,17 @@
+Executable=/Users/runner/work/_temp/ios/local/x/Payload/AlabdoToys.app/AlabdoToys
+[Dict]
+	[Key] application-identifier
+	[Value]
+		[String] 8G52ACR278.com.alabdotoys.app
+	[Key] aps-environment
+	[Value]
+		[String] production
+	[Key] beta-reports-active
+	[Value]
+		[Bool] true
+	[Key] com.apple.developer.team-identifier
+	[Value]
+		[String] 8G52ACR278
+	[Key] get-task-allow
+	[Value]
+		[Bool] false

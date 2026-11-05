@@ -285,7 +285,7 @@ export async function pushForNote(env, note){
   var kind = note.type || "inquiry";
   var title, body = note.message || "", link = "home";
   if(kind === "order"){ title = note.title || "تحديث طلبك"; link = "orders"; }
-  else if(kind === "stock"){ title = "🎉 رجع متوفر"; if(note.productId && /^\d{1,12}$/.test(String(note.productId))) link = "p:" + note.productId; }
+  else if(kind === "stock"){ title = "🎉 رجع متوفر"; if(note.productId && /^\d{1,15}$/.test(String(note.productId))) link = "p:" + note.productId; }
   else { title = "💬 رد على استفسارك"; }
   return sendPush(env, toks, { id: note.id, kind: kind, title: title, body: body || "متجر آل عبده", link: link, at: String(note.at || Date.now()) });
 }

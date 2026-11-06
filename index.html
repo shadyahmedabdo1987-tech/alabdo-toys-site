@@ -76,8 +76,9 @@
   gtag('js', new Date());
   gtag('config', 'G-2XED7JY5D6');
 </script>
-<!-- Meta Pixel Code -->
+<!-- Meta Pixel Code (بيكسلين: 604071008636850 + 3632924536870300 «متجر آل عبده») - مش بيشتغل في صفحات الإدارة -->
 <script>
+if(!document.documentElement.classList.contains("admin-app")){
 !function(f,b,e,v,n,t,s)
 {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
 n.callMethod.apply(n,arguments):n.queue.push(arguments)};
@@ -87,10 +88,14 @@ t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window, document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
 fbq('init', '604071008636850');
+fbq('init', '3632924536870300');
 fbq('track', 'PageView');
+}
 </script>
 <noscript><img height="1" width="1" style="display:none"
 src="https://www.facebook.com/tr?id=604071008636850&ev=PageView&noscript=1"
+/><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=3632924536870300&ev=PageView&noscript=1"
 /></noscript>
 <!-- End Meta Pixel Code -->
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -7845,8 +7850,16 @@ function trackAnalyticsEvent(name){
 /* بيبعت حدث لبكسل ميتا (فيسبوك/إنستجرام) عشان يستخدم في الريتارجتنج
    وجمهور اللوك-ألايك - لو حد ضغط بلوك على السكريبت أو معاش لسه اتحمّل
    (fbq undefined)، بنتجاهل بهدوء زي أي تتبع اختياري تاني. */
-function fbTrack(name, params){
-  if(typeof fbq === "function") fbq("track", name, params || {});
+function fbTrack(name, params, eventId){
+  if(typeof fbq !== "function" || document.documentElement.classList.contains("admin-app")) return;
+  try{ if(eventId) fbq("track", name, params || {}, { eventID: String(eventId) }); else fbq("track", name, params || {}); }catch(e){}
+}
+/* أحداث ميتا الأساسية من الكود الحقيقي للمتجر (مش من قراية الزراير) */
+var FB_LAST = {};
+function fbOnce(key, ms){ var n = Date.now(); if(FB_LAST[key] && n - FB_LAST[key] < (ms || 3000)) return false; FB_LAST[key] = n; return true; }
+function fbCartParams(){
+  var items = cartItems();
+  return { value: cartTotal(), currency:"EGP", content_type:"product", content_ids: items.map(function(it){ return String(it.p.id); }), num_items: items.reduce(function(a, it){ return a + (+it.qty || 0); }, 0) };
 }
 
 /* ---------- رسايل التأكيد والتنبيه (شكل التطبيق) ----------
@@ -8287,7 +8300,7 @@ function addToCart(id, qty, colorName, sizeLabel){
   haptic("add");
   saveCart(); renderCartBadge(); renderCartDrawer();
   trackAnalyticsEvent("addToCart");
-  fbTrack("AddToCart", { content_name:p.name, content_ids:[String(p.id)], value:priceForSize(p, sizeLabel), currency:"EGP" });
+  fbTrack("AddToCart", { content_name:p.name, content_ids:[String(p.id)], content_type:"product", value:priceForSize(p, sizeLabel), currency:"EGP" });
   /* أول ما ينضاف منتج للسلة، نوجّه العميل للسلة على طول (بنقفل أي حاجة
      تانية مفتوحة زي مودال تفاصيل المنتج الأول، عشان السلة تظهر واضحة من
      غير ما تتراكب على حاجة تانية). */
@@ -8830,6 +8843,7 @@ function goToInfoStep(){
     if(msgs.length){ showToast(msgs[0]); return; }
     if(!cartItems().length) return;
     cartCheckout.step = "info";
+    if(fbOnce("checkout", 20000)) fbTrack("InitiateCheckout", fbCartParams());
     renderCartFoot();
   });
 }
@@ -8847,6 +8861,7 @@ document.getElementById("infoConfirmBtn").addEventListener("click", function(){
   var f = readCheckoutFields(true);
   if(!f) return;
   cartCheckout.step = "payment";
+  if(fbOnce("payinfo", 20000)) fbTrack("AddPaymentInfo", fbCartParams());
   renderCartFoot();
 });
 ["checkoutName", "checkoutPhone", "checkoutAddress"].forEach(function(id){
@@ -8999,7 +9014,7 @@ function submitOrderNow(e){
       renderBestSellers(); renderNewArrivals();
       if(document.getElementById("view-products").classList.contains("active")) renderProductsView();
       trackAnalyticsEvent("orderPlaced");
-      fbTrack("Purchase", { value:grand, currency:"EGP", content_ids:items.map(function(it){ return String(it.p.id); }), num_items:items.length });
+      fbTrack("Purchase", { value:grand, currency:"EGP", content_type:"product", content_ids:items.map(function(it){ return String(it.p.id); }), num_items:items.length }, res.orderId ? "order_" + res.orderId : null);
       clearCart();
       resetCheckoutFields();
       resetCartCheckout();
@@ -11193,6 +11208,7 @@ function openStockNotifyModal(p, colorName, sizeLabel){
     }).then(function(r){ return r.json(); }).then(function(res){
       btn.disabled = false;
       if(res && res.ok){
+        fbTrack("Lead", { content_name:p.name, content_ids:[String(p.id)], content_category:"notify_back_in_stock" });
         closeAllPanels();
         showToast("✅ هنكلمك أول ما المنتج يتوفر تاني");
       } else {
@@ -11214,6 +11230,7 @@ var modalOpenToken = 0;
 function openProductModal(id){
   var p = PRODUCTS.find(function(x){ return x.id===id; });
   if(!p) return;
+  if(fbOnce("view_" + p.id, 8000)) fbTrack("ViewContent", { content_name:p.name, content_ids:[String(p.id)], content_type:"product", value:+p.price || 0, currency:"EGP" });
   var myModalToken = ++modalOpenToken;
   modalSelectedColor = null;
   modalSelectedSize = null;
@@ -11797,7 +11814,10 @@ function doSearch(q){ state.q=q; state.cat="all"; state.badge=null; state.disc=0
 /* بحث فوري: المنتجات بتظهر مع أول حروف بتتكتب، ولو البحث اتمسح بترجع كل
    المنتجات تاني (من غير ما نضغط زرار البحث). */
 var liveSearchTimer = null;
+var fbSearchTimer;
 function liveSearch(inp){
+  clearTimeout(fbSearchTimer);
+  fbSearchTimer = setTimeout(function(){ var q = String(inp.value || "").trim(); if(q.length >= 2 && fbOnce("search_" + q, 60000)) fbTrack("Search", { search_string:q }); }, 1500);
   clearTimeout(liveSearchTimer);
   liveSearchTimer = setTimeout(function(){
     var q = inp.value;
@@ -12825,6 +12845,7 @@ function renderAccountModal(){
         .then(function(res){
           btn.disabled = false;
           if(res.body && res.body.ok){
+            fbTrack("CompleteRegistration", { status:true, currency:"EGP", value:0 });
             setCustomerSession(res.body.phone, password, res.body.name, res.body.email, res.body.governorate, res.body.address);
             setAdminAuthed(false);
             broadcastAdminKill();
@@ -15834,6 +15855,7 @@ function openProductRequestForm(prefill){
     }).then(function(r){ return r.json().then(function(j){ return { status:r.status, body:j }; }); })
       .then(function(res){
         if(res.body && res.body.ok){
+          fbTrack("Lead", { content_name:name, content_category:"product_request" });
           PREQ.img = null;
           sheetReturn = null;
           closeAllPanels();
@@ -17278,9 +17300,12 @@ function hashToView(rawHash){
   }
   return KNOWN_VIEWS.indexOf(rawHash)!==-1 ? rawHash : "home";
 }
+var FB_VIEW = null;
 function goToView(name){
   /* تطبيق الإدارة فيه لوحة التحكم بس */
   if(isAdminApp()) name = "admin";
+  if(FB_VIEW !== null && name !== FB_VIEW) fbTrack("PageView");
+  FB_VIEW = name;
   if(sheetReturn && sheetReturn.type==="view" && name!==sheetReturn.view) sheetReturn = null;
   if(name==="delete-account") setTimeout(updateDeleteAcctBtn, 0);
   setTimeout(updateBackToAccount, 0);

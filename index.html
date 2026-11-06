@@ -30,7 +30,7 @@
   /* تطبيق "آل عبده - الإدارة" (com.alabdotoys.admin) بيفتح بـ ?source=admin:
      بيفضل بشكل الموقع العادي (من غير شكل تطبيق العملاء)، وبعد تسجيل الخروج
      بيرجع لشاشة دخول لوحة التحكم بدل الرئيسية. */
-  var fromAdminApp = ref.indexOf("android-app://com.alabdotoys.admin")===0 || /[?&]source=admin\b/.test(location.search) || /AlAbdoAdmin\//.test(navigator.userAgent);
+  var fromAdminApp = /^\/admin\/?$/.test(location.pathname) || ref.indexOf("android-app://com.alabdotoys.admin")===0 || /[?&]source=admin\b/.test(location.search) || /AlAbdoAdmin\//.test(navigator.userAgent);
   if(fromAdminApp && ss) ss.setItem("aa_admin_app","1");
   if(fromAdminApp || (ss && ss.getItem("aa_admin_app")==="1")){
     d.classList.add("admin-app");
@@ -2820,7 +2820,7 @@ html.v2 .v2-sk{display:block;}
 .wholesale-discount-banner .carousel-slide-img[data-link], .hero-banner-wrap .carousel-slide-img[data-link]{cursor:pointer;}
 .wholesale-discount-banner[hidden], .hero-banner-wrap[hidden]{display:none;}
 html.app-mode section.db-empty{display:none;}
-html.aa-db-empty #discountBannerWrap, html.aa-hb-empty #heroBannerWrap{display:none !important;}
+html.aa-db-empty #discountBannerWrap, html.aa-hb-empty #heroBannerWrap, #discountBannerWrap:empty{display:none !important;}
 html.app-mode.aa-db-empty #discountSection{display:none;}
 html.aa-db-custom #discountBannerWrap:not([data-db-sig]) img, html.aa-hb-custom #heroBannerWrap:not([data-db-sig]) img{visibility:hidden;}
 .pr-preview img{max-width:220px; max-height:300px; border-radius:16px; box-shadow:0 8px 22px hsl(var(--shadow)/.18);}
@@ -3385,7 +3385,7 @@ try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("messa
     </div>
   </section>
 
-  <section class="section reveal" id="discountSection" style="padding-bottom:0">
+  <section class="section reveal db-empty" id="discountSection" style="padding-bottom:0">
     <div class="wrap">
       <div class="wholesale-promo">
         <div class="wholesale-top app-hide">
@@ -3395,10 +3395,7 @@ try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("messa
           </div>
           <button type="button" class="wholesale-register-btn" id="wholesaleRegisterBtn" data-i18n>سجّل الآن</button>
         </div>
-        <div class="wholesale-discount-banner" id="discountBannerWrap">
-          <img class="carousel-slide-img active" src="discount-10.jpg" alt="خصم 10% على الفواتير بقيمة 5,000 جنيه ومافوق" data-i18n-alt>
-          <img class="carousel-slide-img" src="discount-15.jpg" alt="خصم 15% على الفواتير بقيمة 10,000 جنيه ومافوق" data-i18n-alt>
-        </div>
+        <div class="wholesale-discount-banner" id="discountBannerWrap"></div>
       </div>
     </div>
   </section>
@@ -9268,8 +9265,8 @@ var BANNER_SLOTS = {
     defaults: function(){ return '<img class="carousel-slide-img active" src="hero-banner-3.jpg" alt="'+escHtml(t("متجر آل عبده — كل اللي طفلك بيحبه في مكان واحد"))+'" fetchpriority="high" decoding="async">'
       + '<img class="carousel-slide-img" src="hero-banner-4.jpg" alt="'+escHtml(t("متجر آل عبده — متعة أكبر.. طفولة أجمل"))+'" loading="lazy" decoding="async">'; } },
   discount: { wrap:"discountBannerWrap", cls:"wholesale-discount-banner", cache:"aa_disc_banners", interval:5500, hideSection:true,
-    defaults: function(){ return '<img class="carousel-slide-img active" src="discount-10.jpg" alt="'+escHtml(t("خصم 10% على الفواتير بقيمة 5,000 جنيه ومافوق"))+'">'
-      + '<img class="carousel-slide-img" src="discount-15.jpg" alt="'+escHtml(t("خصم 15% على الفواتير بقيمة 10,000 جنيه ومافوق"))+'">'; } }
+    /* مفيش بانرات خصم جاهزة: بيظهر بس اللي الإدارة بتضيفه */
+    defaults: function(){ return ''; } }
 };
 function bannerApply(slot, cfg){
   var S = BANNER_SLOTS[slot], wrap = document.getElementById(S.wrap); if(!wrap) return;
@@ -9290,7 +9287,7 @@ function bannerApply(slot, cfg){
   }
   if(wrap._carStop) wrap._carStop();
   wrap.parentNode.replaceChild(nw, wrap);
-  var empty = !!(cfg && cfg.set && !cfg.items.length);
+  var empty = !nw.querySelector("img");
   nw.hidden = empty;
   if(section && S.hideSection){ section.classList.toggle("db-empty", empty); }
   Array.prototype.forEach.call(nw.querySelectorAll("img"), function(im){ if(im.complete && im.naturalWidth) nw.classList.add("img-ready"); });
@@ -15175,7 +15172,7 @@ makeBannerEditor("hero", "bh",
   [ { id:"h3", image:"hero-banner-3.jpg", link:"none" }, { id:"h4", image:"hero-banner-4.jpg", link:"none" } ],
   { ratio:"1480/484", hidden:"البانرات الرئيسية مخفية عند العملاء", hiddenDone:"البانرات الرئيسية اتخفت عند العملاء", hideQ:"تخفي البانرات الرئيسية؟", resetMsg:"البانرين الأصليين اللي فوق الصفحة الرئيسية هيرجعوا زي ما كانوا، وأي بانرات ضفتها هتتشال." });
 makeBannerEditor("discount", "bn",
-  [ { id:"d10", image:"discount-10.jpg", link:"none" }, { id:"d15", image:"discount-15.jpg", link:"none" } ],
+  [],
   { ratio:"1600/620", hidden:"قسم البانرات مخفي عند العملاء", hiddenDone:"قسم البانرات اتخفى عند العملاء", hideQ:"تخفي قسم البانرات؟", resetMsg:"بانر خصم 10% وبانر خصم 15% هيرجعوا زي ما كانوا، وأي بانرات ضفتها هتتشال." });
 function renderAdminBanners(){ BN_EDITORS.hero.render(); BN_EDITORS.discount.render(); renderAdminTicker(); }
 
@@ -17274,7 +17271,11 @@ document.getElementById("adminResetBtn").addEventListener("click", function(){
 var ADMIN_SECRET_HASH = "ld2Hmke8ryGU7G5QRI56vgwE58fe";
 var KNOWN_VIEWS = ["home","products","about","contact","terms","privacy","delete-account"];
 function hashToView(rawHash){
-  if(rawHash === ADMIN_SECRET_HASH) return "admin";
+  if(rawHash === ADMIN_SECRET_HASH){
+    /* الإدارة ليها لينك لوحدها: https://alabdo-toys.com/admin */
+    if(!/^\/admin\/?$/.test(location.pathname)){ location.replace("/admin"); return "home"; }
+    return "admin";
+  }
   return KNOWN_VIEWS.indexOf(rawHash)!==-1 ? rawHash : "home";
 }
 function goToView(name){

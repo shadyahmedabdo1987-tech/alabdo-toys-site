@@ -11,7 +11,7 @@
    - لوحة التحكم بتطلب /api/products?fresh=1، وده بيعدّي على السيرفر مباشرة
      دايمًا، عشان التعديل يتعمل على آخر نسخة حقيقية (ومفيش منتج يتمسح).
    - باقي /api/* (الطلبات والحسابات...) وملف التطبيق .apk: من السيرفر دايمًا. */
-var CACHE_NAME = "aalabda-store-v16";
+var CACHE_NAME = "aalabda-store-v17";
 var IMG_CACHE = "aalabda-img-v1";
 /* ندي الشبكة أولوية أطول شوية عشان تحديثات زي بانر التقييم توصل قبل النسخة القديمة */
 var NAV_TIMEOUT_MS = 4000;
@@ -84,13 +84,15 @@ self.addEventListener("fetch", function (event) {
   if (/\.apk$/i.test(url.pathname)) return;
 
   if (req.mode === "navigate") {
+    /* صفحة العملاء وصفحة الإدارة (/admin) كل واحدة ليها نسخة محفوظة لوحدها */
+    var pageKey = /^\/admin\/?$/.test(url.pathname) ? "./admin-page" : "./index.html";
     event.respondWith(
       caches.open(CACHE_NAME).then(function (cache) {
-        return cache.match("./index.html").then(function (cached) {
+        return cache.match(pageKey).then(function (cached) {
           var servedCached = false;
           var network = fetch(req).then(function (response) {
-            if (response && response.ok) {
-              cache.put("./index.html", response.clone());
+            if (response && response.ok && !response.redirected) {
+              cache.put(pageKey, response.clone());
               /* النت كان بطيء فاتفتحت النسخة المحفوظة، والنسخة اللي وصلت من
                  السيرفر أحدث منها: نبلّغ الصفحة عشان تتحدّث لوحدها */
               if (servedCached && cached) {

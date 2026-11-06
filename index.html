@@ -978,6 +978,34 @@ html[dir="ltr"] .ab-bar i{transform-origin:left center;}
   .ab-slide{transition:none;}
   .ab-bar{display:none;}
 }
+/* سلات ما كملتش (الإدارة) */
+.ac-filters{display:flex; gap:6px; padding:4px; border-radius:14px; background:var(--surface-3); border:1.5px solid var(--border); margin:0 0 12px;}
+.ac-filters button{flex:1; border:0; background:none; color:var(--ink-soft); font:inherit; font-size:12.5px; font-weight:800; padding:8px 4px; border-radius:10px; cursor:pointer; white-space:nowrap;}
+.ac-filters button.on{background:var(--surface); color:var(--ink); box-shadow:0 2px 8px hsl(var(--shadow)/.12);}
+.ac-list{display:flex; flex-direction:column; gap:10px;}
+.ac-card{background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:14px; display:flex; flex-direction:column; gap:10px;}
+.ac-card.is-done{opacity:.78;}
+.ac-head{display:flex; justify-content:space-between; gap:10px; align-items:flex-start;}
+.ac-head > div:first-child{display:flex; flex-direction:column; gap:2px; min-width:0;}
+.ac-head b{font-size:15px; color:var(--ink);}
+.ac-phone{font-size:13px; font-weight:700; color:var(--ink); text-decoration:none; text-align:start;}
+.ac-head small{font-size:12px; color:var(--ink-soft);}
+.ac-meta{display:flex; flex-direction:column; align-items:flex-end; gap:5px; flex:none;}
+.ac-when{font-size:11.5px; color:var(--ink-soft); white-space:nowrap;}
+.ac-chip{font-size:11px; font-weight:800; padding:3px 9px; border-radius:999px; background:#fff3d1; color:#8a5a00; white-space:nowrap;}
+.ac-chip.is-done{background:#e5f7ec; color:#14603a;}
+[data-theme="dark"] .ac-chip{background:#3a2f12; color:#ffd77a;}
+[data-theme="dark"] .ac-chip.is-done{background:#123222; color:#9be0b7;}
+.ac-items{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px;}
+.ac-items li{display:flex; justify-content:space-between; gap:10px; font-size:13px; color:var(--ink); padding:7px 10px; border-radius:10px; background:var(--surface-3);}
+.ac-items li small{color:var(--ink-soft);}
+.ac-items li b{white-space:nowrap; font-size:12.5px;}
+.ac-total{display:flex; justify-content:space-between; font-size:14px; font-weight:800; color:var(--ink); padding-top:2px;}
+.ac-note{margin:0; font-size:12px; color:var(--ink-soft);}
+.ac-acts{display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:6px;}
+.ac-acts > *{min-height:38px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--ink); font:inherit; font-size:12.5px; font-weight:800; display:inline-flex; align-items:center; justify-content:center; gap:4px; text-decoration:none; cursor:pointer; padding:0 8px;}
+.ac-acts .ac-wa{background:#1fa855; border-color:#1fa855; color:#fff;}
+.ac-acts .ac-del{width:42px; padding:0;}
 /* سجّل منين / بيستخدم إيه */
 #adminCustomersPage .cv-cell{min-width:210px;}
 .cv-row{display:flex; flex-wrap:wrap; align-items:center; gap:5px; font-size:12px; line-height:1.4;}
@@ -4163,6 +4191,7 @@ try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("messa
             <button class="btn btn-primary btn-sm" id="adminReviewsBtn" type="button" data-i18n>⭐ تقييمات العملاء</button>
             <button class="btn btn-primary btn-sm" id="adminProdReqBtn" type="button"><span data-i18n>🧸 طلبات توفير منتجات</span><span id="adminProdReqBadge"></span></button>
             <button class="btn btn-primary btn-sm" id="adminCustomersBtn" type="button" data-i18n>👥 بيانات العملاء</button>
+            <button class="btn btn-primary btn-sm" id="adminCartsBtn" type="button">🛒 سلات ما كملتش</button>
             <button class="btn btn-primary btn-sm" id="adminCouponsBtn" type="button" data-i18n>🎟️ أكواد الخصم</button>
             <button class="btn btn-primary btn-sm" id="adminTiersBtn" type="button" data-i18n>🏆 خصم قيمة الطلب</button>
             <button class="btn btn-primary btn-sm" id="adminSalesBtn" type="button" data-i18n>💰 تقرير المبيعات</button>
@@ -4638,6 +4667,19 @@ try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("messa
             <tbody id="adminCustomersBody"><tr><td colspan="7" style="color:var(--ink-soft);" data-i18n>جاري التحميل...</td></tr></tbody>
           </table>
         </div>
+      </div>
+
+      <div id="adminCartsPage" class="admin-wrap">
+        <div class="admin-bar">
+          <div><h1 style="font-size:22px;"><span>🛒 سلات ما كملتش</span> (<span id="adminCartsCount">0</span>)</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;">العملاء المسجّلين اللي ضافوا منتجات للسلة وما عملوش طلب بعدها — بالاسم والموبايل واللي في سلته، عشان تكلمه أو تبعتله على واتساب.</p></div>
+          <div class="admin-actions">
+            <button class="btn btn-outline btn-sm" id="adminCartsBackBtn" type="button">رجوع للوحة التحكم</button>
+          </div>
+        </div>
+        <div class="ac-filters" id="adminCartsFilters" role="tablist">
+          <button type="button" class="on" data-ac-f="all">الكل</button><button type="button" data-ac-f="new">لسه ما اتكلمش</button><button type="button" data-ac-f="done">اتكلم معاه</button>
+        </div>
+        <div id="adminCartsList" class="ac-list"><p class="apr-note">جاري التحميل...</p></div>
       </div>
 
     </div>
@@ -7917,7 +7959,22 @@ function appAlert(o){ return appDialog(o || {}, false); }
 /* ---------- Cart ---------- */
 var cart = {};
 try{ cart = JSON.parse(localStorage.getItem("aa_cart") || "{}"); }catch(e){ cart = {}; }
-function saveCart(){ try{ localStorage.setItem("aa_cart", JSON.stringify(cart)); }catch(e){} if(typeof v2SyncQuick === "function" && AA_V2) requestAnimationFrame(v2SyncQuick); }
+function saveCart(){ try{ localStorage.setItem("aa_cart", JSON.stringify(cart)); }catch(e){} if(typeof v2SyncQuick === "function" && AA_V2) requestAnimationFrame(v2SyncQuick); cartServerSync(); }
+/* سلة العميل المسجّل بتتبعت للسيرفر (لصاحب المتجر في «سلات ما كملتش» ببرنامج الإدارة) */
+var cartSyncTimer = null;
+function cartServerSync(delay){
+  clearTimeout(cartSyncTimer);
+  cartSyncTimer = setTimeout(function(){
+    try{
+      if(typeof CATALOG_READY === "undefined" || !CATALOG_READY || !isCustomerAuthed() || isAdminApp()) return;
+      var items = cartItems().map(function(it){ return { id:String(it.p.id), name:it.p.name, qty:+it.qty || 1, price:priceForSize(it.p, it.sizeLabel), color:it.colorName || "", size:it.sizeLabel || "" }; });
+      var sig = JSON.stringify(items);
+      if(sig === cartServerSync.last) return;
+      fetch("/api/carts", { method:"POST", headers: Object.assign({ "content-type":"application/json" }, customerAuthHeaders()), body: JSON.stringify({ items: items }) })
+        .then(function(r){ if(r.ok) cartServerSync.last = sig; }).catch(function(){});
+    }catch(e){}
+  }, delay == null ? 2500 : delay);
+}
 
 /* ---------- المفضلة (Wishlist) ---------- محفوظة على حساب العميل نفسه في
    السيرفر (مش في تخزين المتصفح)، عشان كل عميل يشوف مفضلته هو بس، حتى لو
@@ -12540,6 +12597,8 @@ function setCustomerSession(identifier, password, name, email, governorate, addr
       governorate: governorate || "", address: address || ""
     }));
   }catch(e){}
+  cartServerSync.last = null;
+  if(typeof cartServerSync === "function") cartServerSync(1500);
 }
 function clearCustomerProfile(){ try{ localStorage.removeItem(CUSTOMER_SESSION_KEY); }catch(e){} }
 function isCustomerAuthed(){ return !!getCustomerProfile(); }
@@ -16970,6 +17029,91 @@ function showAdminCustomerEditForm(c){
   });
 }
 document.getElementById("adminCustomersBtn").addEventListener("click", openAdminCustomersPage);
+/* ---------- «سلات ما كملتش»: عملاء مسجّلين ضافوا للسلة وما طلبوش ---------- */
+var ADMIN_CARTS = { list:null, f:"all" };
+function openAdminCartsPage(){
+  document.getElementById("adminDashboard").classList.remove("active");
+  document.getElementById("adminCartsPage").classList.add("active");
+  window.scrollTo(0, 0);
+  renderAdminCartsPage();
+}
+function closeAdminCartsPage(){
+  document.getElementById("adminCartsPage").classList.remove("active");
+  document.getElementById("adminDashboard").classList.add("active");
+}
+function acAgo(ms){
+  var m = Math.max(0, Math.round((Date.now() - ms) / 60000));
+  if(m < 60) return m < 2 ? "من دقيقة" : "من "+fmt(m)+" دقيقة";
+  var h = Math.round(m / 60); if(h < 24) return "من "+fmt(h)+" ساعة";
+  var d = Math.round(h / 24); if(d < 30) return "من "+fmt(d)+" يوم";
+  return new Date(ms).toLocaleDateString("ar-EG", { day:"numeric", month:"short" });
+}
+function acWaText(c){
+  var first = String(c.name || "").split(" ")[0];
+  var names = c.items.slice(0, 3).map(function(it){ return it.name; }).join("، ");
+  return "أهلاً "+first+" 👋\nمعاك متجر آل عبده. لاحظنا إن في سلتك: "+names+(c.items.length > 3 ? " وحاجات تانية" : "")+".\nلو محتاج أي مساعدة أو عندك سؤال عن الطلب احنا معاك 🙏";
+}
+function acDraw(){
+  var box = document.getElementById("adminCartsList"), all = ADMIN_CARTS.list || [];
+  var cnt = document.getElementById("adminCartsCount"); if(cnt) cnt.textContent = fmt(all.length);
+  var list = all.filter(function(c){ return ADMIN_CARTS.f === "all" || (ADMIN_CARTS.f === "new" ? !c.contacted : c.contacted); });
+  if(!list.length){ box.innerHTML = '<p class="apr-note">'+(all.length ? "مفيش سلات هنا." : "مفيش سلات متروكة دلوقتي 👌 — أول ما عميل مسجّل يضيف للسلة وما يطلبش هيظهر هنا.")+'</p>'; return; }
+  box.innerHTML = list.map(function(c){
+    var phone = String(c.phone || "");
+    return '<article class="ac-card'+(c.contacted ? ' is-done' : '')+'" data-ac-id="'+escHtml(c.id)+'">'
+      + '<div class="ac-head"><div><b>'+escHtml(c.name || "-")+'</b><a class="ac-phone" href="tel:'+escHtml(phone.replace(/[^0-9+]/g, ""))+'" dir="ltr">'+escHtml(phone)+'</a>'+(c.governorate ? '<small>📍 '+escHtml(t(c.governorate))+'</small>' : '')+'</div>'
+        + '<div class="ac-meta"><span class="ac-when">🕒 '+acAgo(c.at)+'</span>'+(c.contacted ? '<span class="ac-chip is-done">✓ اتكلم معاه</span>' : '<span class="ac-chip">لسه ما اتكلمش</span>')+'</div></div>'
+      + '<ul class="ac-items">'+c.items.map(function(it){ return '<li><span>'+escHtml(it.name)+(it.color ? ' <small>('+escHtml(it.color)+')</small>' : '')+(it.size ? ' <small>('+escHtml(it.size)+')</small>' : '')+'</span><b class="tabular">'+fmt(it.qty)+' × '+fmt(it.price)+' ج.م</b></li>'; }).join("")+'</ul>'
+      + '<div class="ac-total"><span>إجمالي السلة</span><b class="tabular">'+fmt(c.total)+' ج.م</b></div>'
+      + (c.lastOrderAt ? '<p class="ac-note">آخر طلب عمله: '+escHtml(new Date(c.lastOrderAt).toLocaleDateString("ar-EG", { day:"numeric", month:"short", year:"numeric" }))+'</p>' : '<p class="ac-note">لسه ما عملش أي طلب قبل كده</p>')
+      + '<div class="ac-acts">'
+        + '<button type="button" class="ac-wa" data-ac-wa>💬 واتساب</button>'
+        + '<a class="ac-call" href="tel:'+escHtml(phone.replace(/[^0-9+]/g, ""))+'">📞 اتصال</a>'
+        + '<button type="button" class="ac-mark" data-ac-mark>'+(c.contacted ? '↩️ لسه' : '✓ كلمته')+'</button>'
+        + '<button type="button" class="ac-del" data-ac-del aria-label="شيل من القائمة">🗑️</button>'
+      + '</div></article>';
+  }).join("");
+}
+function renderAdminCartsPage(){
+  var box = document.getElementById("adminCartsList");
+  if(!ADMIN_CARTS.list) box.innerHTML = '<p class="apr-note">جاري التحميل...</p>';
+  fetch("/api/carts", { headers: adminAuthHeaders(), cache:"no-store" })
+    .then(function(r){ if(r.status === 404) throw "missing"; return r.json(); })
+    .then(function(res){ if(!res || !res.ok) throw 0; ADMIN_CARTS.list = res.carts || []; acDraw(); })
+    .catch(function(e){ box.innerHTML = '<p class="apr-note is-err">'+(e === "missing" ? "⚠️ ارفع ملف carts.js الأول" : "تعذر تحميل السلات.")+'</p>'; });
+}
+document.getElementById("adminCartsBtn").addEventListener("click", openAdminCartsPage);
+document.getElementById("adminCartsBackBtn").addEventListener("click", closeAdminCartsPage);
+document.getElementById("adminCartsFilters").addEventListener("click", function(e){
+  var b = e.target.closest("[data-ac-f]"); if(!b) return;
+  ADMIN_CARTS.f = b.dataset.acF;
+  Array.prototype.forEach.call(this.querySelectorAll("[data-ac-f]"), function(x){ x.classList.toggle("on", x === b); });
+  acDraw();
+});
+document.getElementById("adminCartsList").addEventListener("click", function(e){
+  var card = e.target.closest("[data-ac-id]"); if(!card) return;
+  var id = card.dataset.acId, c = (ADMIN_CARTS.list || []).find(function(x){ return x.id === id; }); if(!c) return;
+  if(e.target.closest("[data-ac-wa]")){
+    var url = "https://wa.me/" + waPhone(c.phone) + "?text=" + encodeURIComponent(acWaText(c));
+    if(window.AlAbdoNative) location.href = url; else window.open(url, "_blank", "noopener");
+    return;
+  }
+  if(e.target.closest("[data-ac-mark]")){
+    var to = !c.contacted;
+    fetch("/api/carts", { method:"PATCH", headers: Object.assign({ "content-type":"application/json" }, adminAuthHeaders()), body: JSON.stringify({ id:id, contacted:to }) })
+      .then(function(r){ return r.json(); }).then(function(j){ if(j && j.ok){ c.contacted = to; acDraw(); showToast(to ? "✅ اتعلّم إنك كلمته" : "↩️ رجع «لسه ما اتكلمش»"); } else showToast("⚠️ تعذر الحفظ، جرّب تاني."); })
+      .catch(function(){ showToast("⚠️ تعذر الحفظ، جرّب تاني."); });
+    return;
+  }
+  if(e.target.closest("[data-ac-del]")){
+    appConfirm({ icon:"🗑️", title:"تشيل السلة دي من القائمة؟", message:"هتختفي من «سلات ما كملتش». لو العميل غيّر في سلته تاني هترجع تظهر.", ok:"شيلها", danger:true }).then(function(ok){
+      if(!ok) return;
+      fetch("/api/carts", { method:"DELETE", headers: Object.assign({ "content-type":"application/json" }, adminAuthHeaders()), body: JSON.stringify({ id:id }) })
+        .then(function(r){ return r.json(); }).then(function(j){ if(j && j.ok){ ADMIN_CARTS.list = ADMIN_CARTS.list.filter(function(x){ return x.id !== id; }); acDraw(); showToast("✅ اتشالت"); } else showToast("⚠️ تعذر الحذف، جرّب تاني."); })
+        .catch(function(){ showToast("⚠️ تعذر الحذف، جرّب تاني."); });
+    });
+  }
+});
 document.getElementById("adminCustomersBackBtn").addEventListener("click", closeAdminCustomersPage);
 
 function fillAdminSettingsForm(){
@@ -17527,6 +17671,7 @@ var ADM = null;
     analytics: { page:"adminAnalyticsPage", open:openAdminAnalyticsPage, render:renderAdminAnalyticsPage, title:"تحليل الزوار" },
     inquiries: { page:"adminInquiriesPage", open:openAdminInquiriesPage, render:renderAdminInquiriesPage, title:"استفسارات العملاء" },
     customers: { page:"adminCustomersPage", open:openAdminCustomersPage, render:renderAdminCustomersPage, title:"بيانات العملاء" },
+    carts:     { page:"adminCartsPage",     open:openAdminCartsPage,     render:renderAdminCartsPage,     title:"سلات ما كملتش" },
     coupons:   { page:"adminCouponsPage",   open:openAdminCouponsPage,   render:renderAdminCouponsPage,   title:"أكواد الخصم" },
     tiers:     { page:"adminTiersPage",     open:openAdminTiersPage,     render:renderAdminTiersPage,     title:"خصم قيمة الطلب" },
     inventory: { page:"adminInventoryPage", open:openAdminInventoryPage, render:renderInventoryPage,      title:"تقرير المخزون" },
@@ -18247,6 +18392,7 @@ var ADM = null;
       + li("prodreq", "🧸", t("طلبات توفير منتجات"), t("ألعاب العملاء عايزينها ومش عندنا"), stats.prodreq)
       + li("stock", "🔔", t("طلبات التوفر"), t("عملاء مستنيين منتجات ترجع"), stats.stock)
       + li("inquiries", "📨", t("استفسارات العملاء"), t("رسايل صفحة تواصل معنا"), stats.inquiries)
+      + li("carts", "🛒", "سلات ما كملتش", "عملاء ضافوا للسلة وما طلبوش — كلّمهم على طول")
       + li("customers", "👥", t("بيانات العملاء"), "")
       + li("reviews", "⭐", t("تقييمات العملاء"), t("عدّل أو اخفي أو امسح تقييمات المنتجات"))
       + li("broadcast", "📣", t("العروض والإعلانات"), t("إشعارات، إعلان، شريط متحرك وبانرات"))

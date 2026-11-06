@@ -979,8 +979,8 @@ html[dir="ltr"] .ab-bar i{transform-origin:left center;}
   .ab-bar{display:none;}
 }
 /* سلات ما كملتش (الإدارة) */
-.ac-filters{display:flex; gap:6px; padding:4px; border-radius:14px; background:var(--surface-3); border:1.5px solid var(--border); margin:0 0 12px;}
-.ac-filters button{flex:1; border:0; background:none; color:var(--ink-soft); font:inherit; font-size:12.5px; font-weight:800; padding:8px 4px; border-radius:10px; cursor:pointer; white-space:nowrap;}
+.ac-filters{display:flex; gap:6px; padding:4px; border-radius:14px; background:var(--surface-3); border:1.5px solid var(--border); margin:0 0 12px; flex-wrap:wrap;}
+.ac-filters button{flex:1 1 auto; border:0; background:none; color:var(--ink-soft); font:inherit; font-size:12.5px; font-weight:800; padding:8px 4px; border-radius:10px; cursor:pointer; white-space:nowrap;}
 .ac-filters button.on{background:var(--surface); color:var(--ink); box-shadow:0 2px 8px hsl(var(--shadow)/.12);}
 .ac-list{display:flex; flex-direction:column; gap:10px;}
 .ac-card{background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:14px; display:flex; flex-direction:column; gap:10px;}
@@ -996,6 +996,9 @@ html[dir="ltr"] .ab-bar i{transform-origin:left center;}
 .ac-chip.is-done{background:#e5f7ec; color:#14603a;}
 [data-theme="dark"] .ac-chip{background:#3a2f12; color:#ffd77a;}
 [data-theme="dark"] .ac-chip.is-done{background:#123222; color:#9be0b7;}
+.ac-chip.ac-guest{background:#e8eefc; color:#2a4a9a; margin-inline-start:6px; vertical-align:middle;}
+[data-theme="dark"] .ac-chip.ac-guest{background:#1a2440; color:#a9c0ff;}
+.ac-nophone{color:var(--ink-soft); font-style:italic;}
 .ac-items{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px;}
 .ac-items li{display:flex; justify-content:space-between; gap:10px; font-size:13px; color:var(--ink); padding:7px 10px; border-radius:10px; background:var(--surface-3);}
 .ac-items li small{color:var(--ink-soft);}
@@ -4671,13 +4674,13 @@ try{ if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("messa
 
       <div id="adminCartsPage" class="admin-wrap">
         <div class="admin-bar">
-          <div><h1 style="font-size:22px;"><span>🛒 سلات ما كملتش</span> (<span id="adminCartsCount">0</span>)</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;">العملاء المسجّلين اللي ضافوا منتجات للسلة وما عملوش طلب بعدها — بالاسم والموبايل واللي في سلته، عشان تكلمه أو تبعتله على واتساب.</p></div>
+          <div><h1 style="font-size:22px;"><span>🛒 سلات ما كملتش</span> (<span id="adminCartsCount">0</span>)</h1><p style="color:var(--ink-soft); font-size:13px; margin-top:4px;">أي حد ضاف منتجات للسلة وما عملش طلب بعدها — العملاء المسجّلين، والزوار اللي من غير حساب (بيظهر اسمهم ورقمهم لو كتبوهم في خانات الطلب) — عشان تكلمه أو تبعتله على واتساب.</p></div>
           <div class="admin-actions">
             <button class="btn btn-outline btn-sm" id="adminCartsBackBtn" type="button">رجوع للوحة التحكم</button>
           </div>
         </div>
         <div class="ac-filters" id="adminCartsFilters" role="tablist">
-          <button type="button" class="on" data-ac-f="all">الكل</button><button type="button" data-ac-f="new">لسه ما اتكلمش</button><button type="button" data-ac-f="done">اتكلم معاه</button>
+          <button type="button" class="on" data-ac-f="all">الكل</button><button type="button" data-ac-f="new">لسه ما اتكلمش</button><button type="button" data-ac-f="done">اتكلم معاه</button><button type="button" data-ac-f="reg">مسجّلين</button><button type="button" data-ac-f="guest">من غير حساب</button>
         </div>
         <div id="adminCartsList" class="ac-list"><p class="apr-note">جاري التحميل...</p></div>
       </div>
@@ -7966,11 +7969,19 @@ function cartServerSync(delay){
   clearTimeout(cartSyncTimer);
   cartSyncTimer = setTimeout(function(){
     try{
-      if(typeof CATALOG_READY === "undefined" || !CATALOG_READY || !isCustomerAuthed() || isAdminApp()) return;
+      if(typeof CATALOG_READY === "undefined" || !CATALOG_READY || isAdminApp()) return;
+      var authed = isCustomerAuthed();
       var items = cartItems().map(function(it){ return { id:String(it.p.id), name:it.p.name, qty:+it.qty || 1, price:priceForSize(it.p, it.sizeLabel), color:it.colorName || "", size:it.sizeLabel || "" }; });
-      var sig = JSON.stringify(items);
+      var payload = { items: items, vid: getAnalyticsVisitorId() };
+      if(!authed){
+        /* زائر من غير حساب: بنبعت اللي كتبه في خانات الطلب (لو كتب) عشان يظهر في «سلات ما كملتش» */
+        var fv = function(id){ var el = document.getElementById(id); return el ? String(el.value || "").trim() : ""; };
+        payload.contact = { name: fv("checkoutName"), phone: fv("checkoutPhone"), governorate: fv("checkoutGovernorate"), address: fv("checkoutAddress") };
+        if(!items.length && !cartServerSync.last) return;
+      }
+      var sig = (authed ? "a" : "g") + JSON.stringify([items, payload.contact || null]);
       if(sig === cartServerSync.last) return;
-      fetch("/api/carts", { method:"POST", headers: Object.assign({ "content-type":"application/json" }, customerAuthHeaders()), body: JSON.stringify({ items: items }) })
+      fetch("/api/carts", { method:"POST", headers: Object.assign({ "content-type":"application/json" }, authed ? customerAuthHeaders() : {}), body: JSON.stringify(payload) })
         .then(function(r){ if(r.ok) cartServerSync.last = sig; }).catch(function(){});
     }catch(e){}
   }, delay == null ? 2500 : delay);
@@ -8924,10 +8935,12 @@ document.getElementById("infoConfirmBtn").addEventListener("click", function(){
 ["checkoutName", "checkoutPhone", "checkoutAddress"].forEach(function(id){
   document.getElementById(id).addEventListener("input", function(){
     if(this.value.trim()) document.getElementById("checkoutPhoneError").style.display = "none";
+    if(!isCustomerAuthed()) cartServerSync(4000);
   });
 });
 document.getElementById("checkoutGovernorate").addEventListener("change", function(){
   if(this.value) document.getElementById("checkoutPhoneError").style.display = "none";
+  if(!isCustomerAuthed()) cartServerSync(4000);
   updateGovShipLine();
 });
 /* "🚚 الشحن للإسكندرية: 50 ج.م" تحت اختيار المحافظة */
@@ -17049,26 +17062,36 @@ function acAgo(ms){
   return new Date(ms).toLocaleDateString("ar-EG", { day:"numeric", month:"short" });
 }
 function acWaText(c){
-  var first = String(c.name || "").split(" ")[0];
+  var first = String(c.name || "").split(" ")[0] || "بيك";
   var names = c.items.slice(0, 3).map(function(it){ return it.name; }).join("، ");
   return "أهلاً "+first+" 👋\nمعاك متجر آل عبده. لاحظنا إن في سلتك: "+names+(c.items.length > 3 ? " وحاجات تانية" : "")+".\nلو محتاج أي مساعدة أو عندك سؤال عن الطلب احنا معاك 🙏";
 }
 function acDraw(){
   var box = document.getElementById("adminCartsList"), all = ADMIN_CARTS.list || [];
   var cnt = document.getElementById("adminCartsCount"); if(cnt) cnt.textContent = fmt(all.length);
-  var list = all.filter(function(c){ return ADMIN_CARTS.f === "all" || (ADMIN_CARTS.f === "new" ? !c.contacted : c.contacted); });
-  if(!list.length){ box.innerHTML = '<p class="apr-note">'+(all.length ? "مفيش سلات هنا." : "مفيش سلات متروكة دلوقتي 👌 — أول ما عميل مسجّل يضيف للسلة وما يطلبش هيظهر هنا.")+'</p>'; return; }
+  var f = ADMIN_CARTS.f;
+  var list = all.filter(function(c){
+    if(f === "new") return !c.contacted;
+    if(f === "done") return c.contacted;
+    if(f === "reg") return !c.guest;
+    if(f === "guest") return !!c.guest;
+    return true;
+  });
+  if(!list.length){ box.innerHTML = '<p class="apr-note">'+(all.length ? "مفيش سلات هنا." : "مفيش سلات متروكة دلوقتي 👌 — أول ما حد يضيف للسلة وما يطلبش هيظهر هنا.")+'</p>'; return; }
   box.innerHTML = list.map(function(c){
-    var phone = String(c.phone || "");
-    return '<article class="ac-card'+(c.contacted ? ' is-done' : '')+'" data-ac-id="'+escHtml(c.id)+'">'
-      + '<div class="ac-head"><div><b>'+escHtml(c.name || "-")+'</b><a class="ac-phone" href="tel:'+escHtml(phone.replace(/[^0-9+]/g, ""))+'" dir="ltr">'+escHtml(phone)+'</a>'+(c.governorate ? '<small>📍 '+escHtml(t(c.governorate))+'</small>' : '')+'</div>'
+    var phone = String(c.phone || ""), tel = phone.replace(/[^0-9+]/g, ""), hasPhone = tel.replace(/\D/g, "").length >= 9;
+    var who = c.name ? escHtml(c.name) : (c.guest ? "زائر" : "-");
+    return '<article class="ac-card'+(c.contacted ? ' is-done' : '')+(c.guest ? ' is-guest' : '')+'" data-ac-id="'+escHtml(c.id)+'">'
+      + '<div class="ac-head"><div><b>'+who+'</b>'+(c.guest ? '<span class="ac-chip ac-guest">ضيف · من غير حساب</span>' : '')
+        + (hasPhone ? '<a class="ac-phone" href="tel:'+escHtml(tel)+'" dir="ltr">'+escHtml(phone)+'</a>' : (c.guest ? '<small class="ac-nophone">ما كتبش رقمه لسه</small>' : ''))
+        + (c.governorate ? '<small>📍 '+escHtml(t(c.governorate))+'</small>' : '')
+        + (c.address ? '<small>🏠 '+escHtml(c.address)+'</small>' : '')+'</div>'
         + '<div class="ac-meta"><span class="ac-when">🕒 '+acAgo(c.at)+'</span>'+(c.contacted ? '<span class="ac-chip is-done">✓ اتكلم معاه</span>' : '<span class="ac-chip">لسه ما اتكلمش</span>')+'</div></div>'
       + '<ul class="ac-items">'+c.items.map(function(it){ return '<li><span>'+escHtml(it.name)+(it.color ? ' <small>('+escHtml(it.color)+')</small>' : '')+(it.size ? ' <small>('+escHtml(it.size)+')</small>' : '')+'</span><b class="tabular">'+fmt(it.qty)+' × '+fmt(it.price)+' ج.م</b></li>'; }).join("")+'</ul>'
       + '<div class="ac-total"><span>إجمالي السلة</span><b class="tabular">'+fmt(c.total)+' ج.م</b></div>'
-      + (c.lastOrderAt ? '<p class="ac-note">آخر طلب عمله: '+escHtml(new Date(c.lastOrderAt).toLocaleDateString("ar-EG", { day:"numeric", month:"short", year:"numeric" }))+'</p>' : '<p class="ac-note">لسه ما عملش أي طلب قبل كده</p>')
+      + (c.lastOrderAt ? '<p class="ac-note">آخر طلب عمله: '+escHtml(new Date(c.lastOrderAt).toLocaleDateString("ar-EG", { day:"numeric", month:"short", year:"numeric" }))+'</p>' : '<p class="ac-note">'+(c.guest && !hasPhone ? "زائر ضاف للسلة وما كتبش بياناته — مش هتقدر تكلمه، بس تعرف هو كان عايز إيه" : "لسه ما عملش أي طلب قبل كده")+'</p>')
       + '<div class="ac-acts">'
-        + '<button type="button" class="ac-wa" data-ac-wa>💬 واتساب</button>'
-        + '<a class="ac-call" href="tel:'+escHtml(phone.replace(/[^0-9+]/g, ""))+'">📞 اتصال</a>'
+        + (hasPhone ? '<button type="button" class="ac-wa" data-ac-wa>💬 واتساب</button><a class="ac-call" href="tel:'+escHtml(tel)+'">📞 اتصال</a>' : '')
         + '<button type="button" class="ac-mark" data-ac-mark>'+(c.contacted ? '↩️ لسه' : '✓ كلمته')+'</button>'
         + '<button type="button" class="ac-del" data-ac-del aria-label="شيل من القائمة">🗑️</button>'
       + '</div></article>';
